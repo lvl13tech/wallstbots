@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - BitBot13</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        background: #f5f7fa;
+        color: #333;
+      }
+
+      header {
+        background: white;
+        border-bottom: 1px solid #eee;
+        padding: 20px 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo {
+        font-size: 20px;
+        font-weight: 700;
+        color: #f57c00;
+      }
+
+      .nav {
+        display: flex;
+        gap: 30px;
+        align-items: center;
+      }
+
+      .nav a {
+        text-decoration: none;
+        color: #666;
+        font-size: 14px;
+        transition: color 0.2s;
+      }
+
+      .nav a:hover {
+        color: #f57c00;
+      }
+
+      .user-menu {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .user-info {
+        font-size: 13px;
+        color: #666;
+      }
+
+      .logout-btn {
+        padding: 8px 16px;
+        background: #f0f0f0;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: background 0.2s;
+      }
+
+      .logout-btn:hover {
+        background: #e0e0e0;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+
+      h1 {
+        font-size: 28px;
+        margin-bottom: 30px;
+        color: #333;
+      }
+
+      .bots-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+      }
+
+      .bot-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+      }
+
+      .bot-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+      }
+
+      .bot-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 15px;
+      }
+
+      .bot-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .bot-platform {
+        display: inline-block;
+        padding: 4px 12px;
+        background: #fff3e0;
+        color: #f57c00;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .bot-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+      }
+
+      .stat {
+        text-align: center;
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+      }
+
+      .stat-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .stat-value.positive {
+        color: #27ae60;
+      }
+
+      .stat-value.negative {
+        color: #e74c3c;
+      }
+
+      .create-bot-btn {
+        padding: 12px 24px;
+        background: #f57c00;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .create-bot-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(245, 124, 0, 0.3);
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+      }
+
+      .empty-state h2 {
+        font-size: 20px;
+        margin-bottom: 10px;
+        color: #666;
+      }
+
+      .cross-platform-notice {
+        background: #fff3e0;
+        border: 1px solid #ffe0b2;
+        border-radius: 4px;
+        padding: 15px;
+        margin-bottom: 30px;
+        color: #e65100;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <div class="header-content">
+        <div class="logo">BitBot13 - Crypto Trading</div>
+        <nav class="nav">
+          <a href="/">Dashboard</a>
+          <a href="#faq">FAQ</a>
+          <a href="#support">Support</a>
+        </nav>
+        <div class="user-menu">
+          <div class="user-info" id="userEmail">Loading...</div>
+          <button class="logout-btn" id="logoutBtn">Log Out</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="cross-platform-notice">
+        💡 One login works across BitBot13, Level XIII Tech, and Wall St. Bots. Access all your bots from any platform.
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1>Your Crypto Bots</h1>
+        <button class="create-bot-btn" id="createBotBtn">+ Create New Bot</button>
+      </div>
+
+      <div id="botsContainer" class="bots-grid">
+        <div class="loading">Loading bots...</div>
+      </div>
+    </div>
+
+    <script src="../lvl13.tech/auth.js"></script>
+    <script src="../lvl13.tech/api.js"></script>
+    <script>
+      // Configuration
+      const API_BASE_URL = "https://wallstbots-backend-868128114349.us-east1.run.app";
+
+      // Initialize auth and API
+      const auth = new WallStBotsAuth(API_BASE_URL);
+      const api = new WallStBotsAPI(API_BASE_URL, auth);
+
+      // Check authentication
+      if (!auth.isAuthenticated()) {
+        // Redirect to lvl13.tech login
+        window.location.href = "https://lvl13.tech/login.html?redirect=" + encodeURIComponent(window.location.href);
+      }
+
+      // Load user profile
+      async function loadUserProfile() {
+        try {
+          const response = await api.getUserProfile();
+          document.getElementById("userEmail").textContent = response.email;
+        } catch (error) {
+          console.error("Failed to load profile:", error);
+          document.getElementById("userEmail").textContent = "User";
+        }
+      }
+
+      // Load and display bots
+      async function loadBots() {
+        try {
+          const response = await api.getBots();
+          const bots = (response.bots || []).filter((b) => b.platform === "bitbot13");
+
+          const container = document.getElementById("botsContainer");
+
+          if (bots.length === 0) {
+            container.innerHTML = `
+              <div class="empty-state" style="grid-column: 1 / -1;">
+                <h2>No crypto bots yet</h2>
+                <p>Click "Create New Bot" to start tracking your favorite cryptocurrencies</p>
+                <p style="margin-top: 10px; font-size: 12px;">BitBot13 tracks top 50 cryptocurrencies (no stablecoins)</p>
+              </div>
+            `;
+            return;
+          }
+
+          container.innerHTML = bots
+            .map(
+              (bot) => `
+            <div class="bot-card" onclick="window.location.href='/bot-detail.html?id=${bot.id}'">
+              <div class="bot-header">
+                <div>
+                  <div class="bot-name">${bot.name}</div>
+                </div>
+                <span class="bot-platform">bitbot13</span>
+              </div>
+
+              <div class="bot-stats">
+                <div class="stat">
+                  <div class="stat-label">Portfolio Value</div>
+                  <div class="stat-value" id="value-${bot.id}">--</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-label">Return</div>
+                  <div class="stat-value" id="return-${bot.id}">--</div>
+                </div>
+              </div>
+
+              <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; color: #999; font-size: 12px;">
+                Created ${new Date(bot.created_at).toLocaleDateString()}
+              </div>
+            </div>
+          `
+            )
+            .join("");
+
+          // Load performance data for each bot
+          for (const bot of bots) {
+            loadBotPerformance(bot.id);
+          }
+        } catch (error) {
+          console.error("Failed to load bots:", error);
+          document.getElementById("botsContainer").innerHTML =
+            '<div class="error">Failed to load bots. Please try again.</div>';
+        }
+      }
+
+      async function loadBotPerformance(botId) {
+        try {
+          const bot = await api.getBot(botId);
+
+          if (bot.bot.performance) {
+            const perf = bot.bot.performance;
+            document.getElementById(`value-${botId}`).textContent = `$${perf.total_value?.toFixed(2) || "0.00"}`;
+
+            const returnEl = document.getElementById(`return-${botId}`);
+            const returnValue = perf.gain_loss_pct || 0;
+            returnEl.textContent = `${returnValue >= 0 ? "+" : ""}${returnValue.toFixed(2)}%`;
+            returnEl.className = `stat-value ${returnValue >= 0 ? "positive" : "negative"}`;
+          }
+        } catch (error) {
+          console.error(`Failed to load performance for bot ${botId}:`, error);
+        }
+      }
+
+      // Handle logout
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        auth.logout();
+        window.location.href = "https://lvl13.tech/login.html";
+      });
+
+      // Handle create bot button
+      document.getElementById("createBotBtn").addEventListener("click", () => {
+        // TODO: Show modal for creating new bot
+        alert("Create new bot modal coming soon");
+      });
+
+      // Initial load
+      loadUserProfile();
+      loadBots();
+
+      // Refresh bots every 30 seconds
+      setInterval(loadBots, 30000);
+    </script>
+  </body>
+</html>

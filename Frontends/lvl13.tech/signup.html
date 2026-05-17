@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up - Level XIII Tech</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .signup-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        max-width: 420px;
+        padding: 40px;
+      }
+
+      .logo {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .logo h1 {
+        font-size: 28px;
+        color: #333;
+        margin-bottom: 5px;
+      }
+
+      .logo p {
+        color: #999;
+        font-size: 14px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .submit-btn {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-top: 10px;
+      }
+
+      .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+      }
+
+      .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .error {
+        color: #e74c3c;
+        font-size: 13px;
+        margin-top: 5px;
+        display: none;
+      }
+
+      .error.show {
+        display: block;
+      }
+
+      .login-link {
+        text-align: center;
+        margin-top: 20px;
+        color: #999;
+        font-size: 13px;
+      }
+
+      .login-link a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .login-link a:hover {
+        text-decoration: underline;
+      }
+
+      .loading {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="signup-container">
+      <div class="logo">
+        <h1>Level XIII Tech</h1>
+        <p>AI & Quantum Trading</p>
+      </div>
+
+      <form id="signupForm">
+        <div class="form-group">
+          <label for="fullName">Full Name</label>
+          <input type="text" id="fullName" name="fullName" placeholder="John Doe" />
+          <div class="error" id="nameError"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" required placeholder="you@example.com" />
+          <div class="error" id="emailError"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            placeholder="At least 8 characters"
+          />
+          <div class="error" id="passwordError"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            required
+            placeholder="Confirm your password"
+          />
+          <div class="error" id="confirmError"></div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">Create Account</button>
+
+        <div class="error show" id="generalError" style="text-align: center; margin-top: 15px;"></div>
+      </form>
+
+      <div class="login-link">
+        Already have an account? <a href="/login.html">Log in here</a>
+      </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+      // Configuration
+      const API_BASE_URL = "https://wallstbots-backend-868128114349.us-east1.run.app";
+
+      // Initialize auth
+      const auth = new WallStBotsAuth(API_BASE_URL);
+
+      // If already logged in, redirect to dashboard
+      if (auth.isAuthenticated()) {
+        window.location.href = "/index.html";
+      }
+
+      // Handle signup form
+      document.getElementById("signupForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const fullName = document.getElementById("fullName").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const confirmPassword = document.getElementById("confirmPassword").value;
+        const submitBtn = document.getElementById("submitBtn");
+        const generalError = document.getElementById("generalError");
+
+        // Clear previous errors
+        document.querySelectorAll(".error").forEach((el) => (el.textContent = ""));
+
+        // Validate
+        if (!email) {
+          document.getElementById("emailError").textContent = "Email is required";
+          return;
+        }
+
+        if (password.length < 8) {
+          document.getElementById("passwordError").textContent = "Password must be at least 8 characters";
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          document.getElementById("confirmError").textContent = "Passwords do not match";
+          return;
+        }
+
+        // Disable submit button
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading"></span>Creating account...';
+
+        try {
+          await auth.signup(email, password, fullName);
+
+          // Redirect to dashboard
+          window.location.href = "/index.html";
+        } catch (error) {
+          generalError.textContent = error.message || "Signup failed. Please try again.";
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Create Account";
+        }
+      });
+    </script>
+  </body>
+</html>

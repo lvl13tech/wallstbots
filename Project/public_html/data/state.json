@@ -1,0 +1,1431 @@
+{
+  "starting_capital": 43000,
+  "last_refresh": "2026-05-14T16:50:14",
+  "snapshots": [],
+  "funds": {
+    "oracle": {
+      "id": "oracle",
+      "name": "ORACLE",
+      "color": "#a855f7",
+      "icon": "OR",
+      "tagline": "Weekly bot. Trades every Monday. All-in on the week's best bets.",
+      "inception": "2026-05-12",
+      "starting_capital": 43000,
+      "value": {
+        "total": 43000,
+        "cash": 4.3,
+        "pos_val": 42995.7,
+        "pnl": 0,
+        "pnl_pct": 0.0,
+        "day_pnl": 0,
+        "day_pct": 0,
+        "positions": [
+          {
+            "symbol": "AMD",
+            "shares": 21.965691,
+            "entry_price": 448.29,
+            "cost_basis": 9847.0
+          },
+          {
+            "symbol": "MU",
+            "shares": 11.342065,
+            "entry_price": 766.58,
+            "cost_basis": 8694.6
+          },
+          {
+            "symbol": "INTC",
+            "shares": 69.592902,
+            "entry_price": 120.61,
+            "cost_basis": 8393.6
+          },
+          {
+            "symbol": "NVTS",
+            "shares": 422.405195,
+            "entry_price": 19.25,
+            "cost_basis": 8131.3
+          },
+          {
+            "symbol": "QUBT",
+            "shares": 673.106976,
+            "entry_price": 11.78,
+            "cost_basis": 7929.2
+          }
+        ]
+      },
+      "current_strategy": {
+        "week": "2026-05-11",
+        "decision": "TRADE",
+        "rationale": "Concentrating capital in 5 names (AMD, MU, INTC, NVTS, QUBT). Average composite score +160.0. Strategy combines 5d/20d momentum, MACD bias, RSI positioning, and volume confirmation, while penalizing high-vol chaos.",
+        "picks": [
+          {
+            "symbol": "AMD",
+            "weight": 0.229,
+            "score": 183.16,
+            "indicators": {
+              "price": 448.29,
+              "mom_5d": 26.19,
+              "mom_20d": 75.75,
+              "rsi_14": 76.0,
+              "macd_pct": 15.46,
+              "vol_ratio": 1.3,
+              "volatility": 6.09,
+              "score": 183.16
+            },
+            "rationale": "AMD: strong 5d momentum (+26.19%), healthy 20d trend (+75.75%), bullish MACD (15.46%), RSI hot (76.0) - watch for fade. Composite +183.2."
+          },
+          {
+            "symbol": "MU",
+            "weight": 0.2022,
+            "score": 161.71,
+            "indicators": {
+              "price": 766.58,
+              "mom_5d": 19.74,
+              "mom_20d": 64.62,
+              "rsi_14": 82.4,
+              "macd_pct": 16.11,
+              "vol_ratio": 1.53,
+              "volatility": 5.05,
+              "score": 161.71
+            },
+            "rationale": "MU: strong 5d momentum (+19.74%), healthy 20d trend (+64.62%), bullish MACD (16.11%), volume surge (x1.53), RSI hot (82.4) - watch for fade. Composite +161.7."
+          },
+          {
+            "symbol": "INTC",
+            "weight": 0.1952,
+            "score": 156.14,
+            "indicators": {
+              "price": 120.61,
+              "mom_5d": 11.52,
+              "mom_20d": 89.01,
+              "rsi_14": 81.1,
+              "macd_pct": 19.22,
+              "vol_ratio": 1.19,
+              "volatility": 7.16,
+              "score": 156.14
+            },
+            "rationale": "INTC: strong 5d momentum (+11.52%), healthy 20d trend (+89.01%), bullish MACD (19.22%), RSI hot (81.1) - watch for fade. Composite +156.1."
+          },
+          {
+            "symbol": "NVTS",
+            "weight": 0.1891,
+            "score": 151.27,
+            "indicators": {
+              "price": 19.25,
+              "mom_5d": 9.69,
+              "mom_20d": 95.04,
+              "rsi_14": 51.7,
+              "macd_pct": 14.13,
+              "vol_ratio": 1.2,
+              "volatility": 11.4,
+              "score": 151.27
+            },
+            "rationale": "NVTS: strong 5d momentum (+9.69%), healthy 20d trend (+95.04%), bullish MACD (14.13%). Composite +151.3."
+          },
+          {
+            "symbol": "QUBT",
+            "weight": 0.1844,
+            "score": 147.5,
+            "indicators": {
+              "price": 11.78,
+              "mom_5d": 23.22,
+              "mom_20d": 45.25,
+              "rsi_14": 63.5,
+              "macd_pct": 8.0,
+              "vol_ratio": 2.81,
+              "volatility": 6.57,
+              "score": 147.5
+            },
+            "rationale": "QUBT: strong 5d momentum (+23.22%), healthy 20d trend (+45.25%), bullish MACD (8.0%), volume surge (x2.81). Composite +147.5."
+          }
+        ],
+        "scored_universe": [
+          {
+            "sym": "AMD",
+            "score": 183.1628240000859,
+            "indicators": {
+              "price": 448.29,
+              "mom_5d": 26.19,
+              "mom_20d": 75.75,
+              "rsi_14": 76.0,
+              "macd_pct": 15.46,
+              "vol_ratio": 1.3,
+              "volatility": 6.09,
+              "score": 183.16
+            }
+          },
+          {
+            "sym": "MU",
+            "score": 161.70627423316373,
+            "indicators": {
+              "price": 766.58,
+              "mom_5d": 19.74,
+              "mom_20d": 64.62,
+              "rsi_14": 82.4,
+              "macd_pct": 16.11,
+              "vol_ratio": 1.53,
+              "volatility": 5.05,
+              "score": 161.71
+            }
+          },
+          {
+            "sym": "INTC",
+            "score": 156.13998752962107,
+            "indicators": {
+              "price": 120.61,
+              "mom_5d": 11.52,
+              "mom_20d": 89.01,
+              "rsi_14": 81.1,
+              "macd_pct": 19.22,
+              "vol_ratio": 1.19,
+              "volatility": 7.16,
+              "score": 156.14
+            }
+          },
+          {
+            "sym": "NVTS",
+            "score": 151.2686564454533,
+            "indicators": {
+              "price": 19.25,
+              "mom_5d": 9.69,
+              "mom_20d": 95.04,
+              "rsi_14": 51.7,
+              "macd_pct": 14.13,
+              "vol_ratio": 1.2,
+              "volatility": 11.4,
+              "score": 151.27
+            }
+          },
+          {
+            "sym": "QUBT",
+            "score": 147.50089316524856,
+            "indicators": {
+              "price": 11.78,
+              "mom_5d": 23.22,
+              "mom_20d": 45.25,
+              "rsi_14": 63.5,
+              "macd_pct": 8.0,
+              "vol_ratio": 2.81,
+              "volatility": 6.57,
+              "score": 147.5
+            }
+          },
+          {
+            "sym": "IONQ",
+            "score": 137.73947163597776,
+            "indicators": {
+              "price": 55.87,
+              "mom_5d": 16.4,
+              "mom_20d": 56.24,
+              "rsi_14": 62.5,
+              "macd_pct": 11.22,
+              "vol_ratio": 1.29,
+              "volatility": 7.0,
+              "score": 137.74
+            }
+          },
+          {
+            "sym": "SMCI",
+            "score": 111.90673961407686,
+            "indicators": {
+              "price": 32.79,
+              "mom_5d": 17.82,
+              "mom_20d": 20.55,
+              "rsi_14": 58.2,
+              "macd_pct": 7.73,
+              "vol_ratio": 2.0,
+              "volatility": 6.63,
+              "score": 111.91
+            }
+          },
+          {
+            "sym": "CRWD",
+            "score": 103.68921434502431,
+            "indicators": {
+              "price": 546.18,
+              "mom_5d": 14.62,
+              "mom_20d": 37.06,
+              "rsi_14": 75.2,
+              "macd_pct": 6.68,
+              "vol_ratio": 1.09,
+              "volatility": 2.58,
+              "score": 103.69
+            }
+          },
+          {
+            "sym": "HQ",
+            "score": 92.66203710235067,
+            "indicators": {
+              "price": 11.76,
+              "mom_5d": 21.36,
+              "mom_20d": 13.29,
+              "rsi_14": 48.9,
+              "macd_pct": 3.28,
+              "vol_ratio": 1.35,
+              "volatility": 8.72,
+              "score": 92.66
+            }
+          },
+          {
+            "sym": "TMQ",
+            "score": 84.22405040317908,
+            "indicators": {
+              "price": 4.73,
+              "mom_5d": 12.09,
+              "mom_20d": 14.25,
+              "rsi_14": 52.4,
+              "macd_pct": 4.16,
+              "vol_ratio": 1.32,
+              "volatility": 4.96,
+              "score": 84.22
+            }
+          },
+          {
+            "sym": "NVDA",
+            "score": 75.89101503309865,
+            "indicators": {
+              "price": 220.78,
+              "mom_5d": 12.36,
+              "mom_20d": 12.35,
+              "rsi_14": 64.2,
+              "macd_pct": 3.75,
+              "vol_ratio": 1.1,
+              "volatility": 2.33,
+              "score": 75.89
+            }
+          },
+          {
+            "sym": "QBTS",
+            "score": 73.99234726230017,
+            "indicators": {
+              "price": 22.35,
+              "mom_5d": 3.76,
+              "mom_20d": 31.7,
+              "rsi_14": 53.7,
+              "macd_pct": 8.61,
+              "vol_ratio": 1.02,
+              "volatility": 7.24,
+              "score": 73.99
+            }
+          },
+          {
+            "sym": "BBAI",
+            "score": 63.227366040318074,
+            "indicators": {
+              "price": 4.19,
+              "mom_5d": 1.21,
+              "mom_20d": 19.03,
+              "rsi_14": 54.8,
+              "macd_pct": 4.41,
+              "vol_ratio": 1.24,
+              "volatility": 4.42,
+              "score": 63.23
+            }
+          },
+          {
+            "sym": "RGTI",
+            "score": 58.050203209685485,
+            "indicators": {
+              "price": 19.07,
+              "mom_5d": 4.38,
+              "mom_20d": 13.04,
+              "rsi_14": 52.8,
+              "macd_pct": 5.58,
+              "vol_ratio": 1.11,
+              "volatility": 5.9,
+              "score": 58.05
+            }
+          },
+          {
+            "sym": "SNOW",
+            "score": 53.90766437137857,
+            "indicators": {
+              "price": 151.98,
+              "mom_5d": 7.25,
+              "mom_20d": 12.19,
+              "rsi_14": 46.8,
+              "macd_pct": 0.69,
+              "vol_ratio": 0.9,
+              "volatility": 3.62,
+              "score": 53.91
+            }
+          }
+        ],
+        "skipped": []
+      },
+      "top10": null,
+      "per_top_dollars": null,
+      "per_rest_dollars": null
+    },
+    "wizard": {
+      "id": "wizard",
+      "name": "WIZARD",
+      "color": "#10b981",
+      "icon": "WZ",
+      "tagline": "Monthly hold bot. Buys the 1st trading day, sells the last. Slow and patient.",
+      "inception": "2026-05-12",
+      "starting_capital": 43000,
+      "value": {
+        "total": 43000,
+        "cash": 0.0,
+        "pos_val": 43000.0,
+        "pnl": 0,
+        "pnl_pct": 0.0,
+        "day_pnl": 0,
+        "day_pct": 0,
+        "positions": [
+          {
+            "symbol": "INTC",
+            "shares": 65.564215,
+            "entry_price": 120.61,
+            "cost_basis": 7907.7
+          },
+          {
+            "symbol": "NVTS",
+            "shares": 354.722078,
+            "entry_price": 19.25,
+            "cost_basis": 6828.4
+          },
+          {
+            "symbol": "AMD",
+            "shares": 15.107408,
+            "entry_price": 448.29,
+            "cost_basis": 6772.5
+          },
+          {
+            "symbol": "MU",
+            "shares": 7.572595,
+            "entry_price": 766.58,
+            "cost_basis": 5805.0
+          },
+          {
+            "symbol": "IONQ",
+            "shares": 81.274389,
+            "entry_price": 55.87,
+            "cost_basis": 4540.8
+          },
+          {
+            "symbol": "MRVL",
+            "shares": 24.989666,
+            "entry_price": 164.5,
+            "cost_basis": 4110.8
+          },
+          {
+            "symbol": "QUBT",
+            "shares": 318.302214,
+            "entry_price": 11.78,
+            "cost_basis": 3749.6
+          },
+          {
+            "symbol": "CRWD",
+            "shares": 6.014867,
+            "entry_price": 546.18,
+            "cost_basis": 3285.2
+          }
+        ]
+      },
+      "current_strategy": {
+        "month": "2026-05",
+        "decision": "TRADE",
+        "rationale": "Spreading across 8 names for the month (INTC, NVTS, AMD, MU, IONQ, MRVL, QUBT, CRWD). Avg score +333.4. Long-horizon signals: 20d/60d momentum, distance from 50d MA, risk-adjusted return.",
+        "picks": [
+          {
+            "symbol": "INTC",
+            "weight": 0.1839,
+            "score": 490.4,
+            "indicators": {
+              "price": 120.61,
+              "mom_20d": 89.01,
+              "mom_60d": 157.77,
+              "sma50_dist": 84.72,
+              "rsi_14": 81.1,
+              "macd_pct": 19.22,
+              "volatility": 6.26,
+              "risk_adj": 14.22,
+              "score": 490.4
+            },
+            "rationale": "INTC: 20d trend +89.01%, 60d trend +157.77%, +84.72% above 50d MA, risk-adj 14.22, MACD bullish. Composite +490.4."
+          },
+          {
+            "symbol": "NVTS",
+            "weight": 0.1588,
+            "score": 423.45,
+            "indicators": {
+              "price": 19.25,
+              "mom_20d": 95.04,
+              "mom_60d": 131.93,
+              "sma50_dist": 59.89,
+              "rsi_14": 51.7,
+              "macd_pct": 14.13,
+              "volatility": 9.78,
+              "risk_adj": 9.72,
+              "score": 423.45
+            },
+            "rationale": "NVTS: 20d trend +95.04%, 60d trend +131.93%, +59.89% above 50d MA, risk-adj 9.72, MACD bullish. Composite +423.5."
+          },
+          {
+            "symbol": "AMD",
+            "weight": 0.1575,
+            "score": 420.04,
+            "indicators": {
+              "price": 448.29,
+              "mom_20d": 75.75,
+              "mom_60d": 116.23,
+              "sma50_dist": 69.37,
+              "rsi_14": 76.0,
+              "macd_pct": 15.46,
+              "volatility": 5.03,
+              "risk_adj": 15.06,
+              "score": 420.04
+            },
+            "rationale": "AMD: 20d trend +75.75%, 60d trend +116.23%, +69.37% above 50d MA, risk-adj 15.06, MACD bullish. Composite +420.0."
+          },
+          {
+            "symbol": "MU",
+            "weight": 0.135,
+            "score": 359.96,
+            "indicators": {
+              "price": 766.58,
+              "mom_20d": 64.62,
+              "mom_60d": 86.3,
+              "sma50_dist": 65.34,
+              "rsi_14": 82.4,
+              "macd_pct": 16.11,
+              "volatility": 4.64,
+              "risk_adj": 13.92,
+              "score": 359.96
+            },
+            "rationale": "MU: 20d trend +64.62%, 60d trend +86.3%, +65.34% above 50d MA, risk-adj 13.92, MACD bullish. Composite +360.0."
+          },
+          {
+            "symbol": "IONQ",
+            "weight": 0.1056,
+            "score": 281.65,
+            "indicators": {
+              "price": 55.87,
+              "mom_20d": 56.24,
+              "mom_60d": 63.79,
+              "sma50_dist": 47.44,
+              "rsi_14": 62.5,
+              "macd_pct": 11.22,
+              "volatility": 6.92,
+              "risk_adj": 8.13,
+              "score": 281.65
+            },
+            "rationale": "IONQ: 20d trend +56.24%, 60d trend +63.79%, +47.44% above 50d MA, risk-adj 8.13, MACD bullish. Composite +281.6."
+          },
+          {
+            "symbol": "MRVL",
+            "weight": 0.0956,
+            "score": 255.08,
+            "indicators": {
+              "price": 164.5,
+              "mom_20d": 22.92,
+              "mom_60d": 109.37,
+              "sma50_dist": 34.79,
+              "rsi_14": 55.0,
+              "macd_pct": 8.2,
+              "volatility": 3.97,
+              "risk_adj": 5.77,
+              "score": 255.08
+            },
+            "rationale": "MRVL: 20d trend +22.92%, 60d trend +109.37%, +34.79% above 50d MA, risk-adj 5.77, MACD bullish. Composite +255.1."
+          },
+          {
+            "symbol": "QUBT",
+            "weight": 0.0872,
+            "score": 232.69,
+            "indicators": {
+              "price": 11.78,
+              "mom_20d": 45.25,
+              "mom_60d": 39.08,
+              "sma50_dist": 44.42,
+              "rsi_14": 63.5,
+              "macd_pct": 8.0,
+              "volatility": 5.95,
+              "risk_adj": 7.61,
+              "score": 232.69
+            },
+            "rationale": "QUBT: 20d trend +45.25%, 60d trend +39.08%, +44.42% above 50d MA, risk-adj 7.61, MACD bullish. Composite +232.7."
+          },
+          {
+            "symbol": "CRWD",
+            "weight": 0.0764,
+            "score": 203.64,
+            "indicators": {
+              "price": 546.18,
+              "mom_20d": 37.06,
+              "mom_60d": 27.13,
+              "sma50_dist": 26.34,
+              "rsi_14": 75.2,
+              "macd_pct": 6.68,
+              "volatility": 3.14,
+              "risk_adj": 11.8,
+              "score": 203.64
+            },
+            "rationale": "CRWD: 20d trend +37.06%, 60d trend +27.13%, +26.34% above 50d MA, risk-adj 11.8, MACD bullish. Composite +203.6."
+          }
+        ],
+        "scored_universe": [
+          {
+            "sym": "INTC",
+            "score": 490.3967835879792,
+            "indicators": {
+              "price": 120.61,
+              "mom_20d": 89.01,
+              "mom_60d": 157.77,
+              "sma50_dist": 84.72,
+              "rsi_14": 81.1,
+              "macd_pct": 19.22,
+              "volatility": 6.26,
+              "risk_adj": 14.22,
+              "score": 490.4
+            }
+          },
+          {
+            "sym": "NVTS",
+            "score": 423.4503333585626,
+            "indicators": {
+              "price": 19.25,
+              "mom_20d": 95.04,
+              "mom_60d": 131.93,
+              "sma50_dist": 59.89,
+              "rsi_14": 51.7,
+              "macd_pct": 14.13,
+              "volatility": 9.78,
+              "risk_adj": 9.72,
+              "score": 423.45
+            }
+          },
+          {
+            "sym": "AMD",
+            "score": 420.04467623823746,
+            "indicators": {
+              "price": 448.29,
+              "mom_20d": 75.75,
+              "mom_60d": 116.23,
+              "sma50_dist": 69.37,
+              "rsi_14": 76.0,
+              "macd_pct": 15.46,
+              "volatility": 5.03,
+              "risk_adj": 15.06,
+              "score": 420.04
+            }
+          },
+          {
+            "sym": "MU",
+            "score": 359.9641212456644,
+            "indicators": {
+              "price": 766.58,
+              "mom_20d": 64.62,
+              "mom_60d": 86.3,
+              "sma50_dist": 65.34,
+              "rsi_14": 82.4,
+              "macd_pct": 16.11,
+              "volatility": 4.64,
+              "risk_adj": 13.92,
+              "score": 359.96
+            }
+          },
+          {
+            "sym": "IONQ",
+            "score": 281.6462004436966,
+            "indicators": {
+              "price": 55.87,
+              "mom_20d": 56.24,
+              "mom_60d": 63.79,
+              "sma50_dist": 47.44,
+              "rsi_14": 62.5,
+              "macd_pct": 11.22,
+              "volatility": 6.92,
+              "risk_adj": 8.13,
+              "score": 281.65
+            }
+          },
+          {
+            "sym": "MRVL",
+            "score": 255.07811906404714,
+            "indicators": {
+              "price": 164.5,
+              "mom_20d": 22.92,
+              "mom_60d": 109.37,
+              "sma50_dist": 34.79,
+              "rsi_14": 55.0,
+              "macd_pct": 8.2,
+              "volatility": 3.97,
+              "risk_adj": 5.77,
+              "score": 255.08
+            }
+          },
+          {
+            "sym": "QUBT",
+            "score": 232.68545318300949,
+            "indicators": {
+              "price": 11.78,
+              "mom_20d": 45.25,
+              "mom_60d": 39.08,
+              "sma50_dist": 44.42,
+              "rsi_14": 63.5,
+              "macd_pct": 8.0,
+              "volatility": 5.95,
+              "risk_adj": 7.61,
+              "score": 232.69
+            }
+          },
+          {
+            "sym": "CRWD",
+            "score": 203.6381180206331,
+            "indicators": {
+              "price": 546.18,
+              "mom_20d": 37.06,
+              "mom_60d": 27.13,
+              "sma50_dist": 26.34,
+              "rsi_14": 75.2,
+              "macd_pct": 6.68,
+              "volatility": 3.14,
+              "risk_adj": 11.8,
+              "score": 203.64
+            }
+          },
+          {
+            "sym": "NBIS",
+            "score": 190.50898981600452,
+            "indicators": {
+              "price": 179.11,
+              "mom_20d": 10.6,
+              "mom_60d": 82.75,
+              "sma50_dist": 34.42,
+              "rsi_14": 59.3,
+              "macd_pct": 9.12,
+              "volatility": 5.72,
+              "risk_adj": 1.85,
+              "score": 190.51
+            }
+          },
+          {
+            "sym": "QBTS",
+            "score": 149.6909087387339,
+            "indicators": {
+              "price": 22.35,
+              "mom_20d": 31.7,
+              "mom_60d": 13.62,
+              "sma50_dist": 23.79,
+              "rsi_14": 53.7,
+              "macd_pct": 8.61,
+              "volatility": 7.03,
+              "risk_adj": 4.51,
+              "score": 149.69
+            }
+          },
+          {
+            "sym": "GOOGL",
+            "score": 136.42896609555496,
+            "indicators": {
+              "price": 387.35,
+              "mom_20d": 16.35,
+              "mom_60d": 26.79,
+              "sma50_dist": 18.5,
+              "rsi_14": 79.3,
+              "macd_pct": 6.09,
+              "volatility": 2.36,
+              "risk_adj": 6.93,
+              "score": 136.43
+            }
+          },
+          {
+            "sym": "AAPL",
+            "score": 125.19798985192918,
+            "indicators": {
+              "price": 294.8,
+              "mom_20d": 14.0,
+              "mom_60d": 15.36,
+              "sma50_dist": 11.78,
+              "rsi_14": 76.0,
+              "macd_pct": 3.08,
+              "volatility": 1.51,
+              "risk_adj": 9.26,
+              "score": 125.2
+            }
+          },
+          {
+            "sym": "NVDA",
+            "score": 123.31405503434644,
+            "indicators": {
+              "price": 220.78,
+              "mom_20d": 12.35,
+              "mom_60d": 20.78,
+              "sma50_dist": 16.04,
+              "rsi_14": 64.2,
+              "macd_pct": 3.75,
+              "volatility": 2.21,
+              "risk_adj": 5.59,
+              "score": 123.31
+            }
+          },
+          {
+            "sym": "SMCI",
+            "score": 120.47280166293517,
+            "indicators": {
+              "price": 32.79,
+              "mom_20d": 20.55,
+              "mom_60d": 7.37,
+              "sma50_dist": 18.07,
+              "rsi_14": 58.2,
+              "macd_pct": 7.73,
+              "volatility": 5.92,
+              "risk_adj": 3.47,
+              "score": 120.47
+            }
+          },
+          {
+            "sym": "AMZN",
+            "score": 119.57404478246589,
+            "indicators": {
+              "price": 265.82,
+              "mom_20d": 6.75,
+              "mom_60d": 33.72,
+              "sma50_dist": 13.81,
+              "rsi_14": 62.8,
+              "macd_pct": 4.36,
+              "volatility": 1.68,
+              "risk_adj": 4.03,
+              "score": 119.57
+            }
+          }
+        ],
+        "skipped": []
+      },
+      "top10": null,
+      "per_top_dollars": null,
+      "per_rest_dollars": null
+    },
+    "equalizer": {
+      "id": "equalizer",
+      "name": "EQUALIZER",
+      "color": "#00d4ff",
+      "icon": "EQ",
+      "tagline": "Equal weight. No favorites. $1,000 in every stock.",
+      "inception": "2026-05-12",
+      "starting_capital": 43000,
+      "value": {
+        "total": 43000,
+        "cash": 0.0,
+        "pos_val": 43000.0,
+        "pnl": 0,
+        "pnl_pct": 0.0,
+        "day_pnl": 0,
+        "day_pct": 0,
+        "positions": [
+          {
+            "symbol": "NVDA",
+            "shares": 4.529396,
+            "entry_price": 220.78,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "MSFT",
+            "shares": 2.452363,
+            "entry_price": 407.77,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "GOOGL",
+            "shares": 2.581644,
+            "entry_price": 387.35,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "AMZN",
+            "shares": 3.761944,
+            "entry_price": 265.82,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "AAPL",
+            "shares": 3.39213,
+            "entry_price": 294.8,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "META",
+            "shares": 1.658375,
+            "entry_price": 603.0,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "AVGO",
+            "shares": 2.384927,
+            "entry_price": 419.3,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "TSM",
+            "shares": 2.517116,
+            "entry_price": 397.28,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "INTC",
+            "shares": 8.291186,
+            "entry_price": 120.61,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "ORCL",
+            "shares": 5.352459,
+            "entry_price": 186.83,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "AMD",
+            "shares": 2.230699,
+            "entry_price": 448.29,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "CRM",
+            "shares": 5.837371,
+            "entry_price": 171.31,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "NOW",
+            "shares": 11.235955,
+            "entry_price": 89.0,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "IBM",
+            "shares": 4.561628,
+            "entry_price": 219.22,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "PLTR",
+            "shares": 7.352941,
+            "entry_price": 136.0,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "GEV",
+            "shares": 0.932853,
+            "entry_price": 1071.98,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "MU",
+            "shares": 1.304495,
+            "entry_price": 766.58,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "ANET",
+            "shares": 7.015575,
+            "entry_price": 142.54,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "CRWD",
+            "shares": 1.830898,
+            "entry_price": 546.18,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "SNOW",
+            "shares": 6.579813,
+            "entry_price": 151.98,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "MRVL",
+            "shares": 6.079027,
+            "entry_price": 164.5,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "WDAY",
+            "shares": 8.430281,
+            "entry_price": 118.62,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "NBIS",
+            "shares": 5.583161,
+            "entry_price": 179.11,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "NVTS",
+            "shares": 51.948052,
+            "entry_price": 19.25,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "SOUN",
+            "shares": 124.069472,
+            "entry_price": 8.06,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "HON",
+            "shares": 4.575822,
+            "entry_price": 218.54,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "IONQ",
+            "shares": 17.898694,
+            "entry_price": 55.87,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "SMCI",
+            "shares": 30.497102,
+            "entry_price": 32.79,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "QBTS",
+            "shares": 44.742729,
+            "entry_price": 22.35,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "RGTI",
+            "shares": 52.438386,
+            "entry_price": 19.07,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "INFQ",
+            "shares": 76.335876,
+            "entry_price": 13.1,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "XNDU",
+            "shares": 70.67138,
+            "entry_price": 14.15,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "HQ",
+            "shares": 85.034012,
+            "entry_price": 11.76,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "QUBT",
+            "shares": 84.889645,
+            "entry_price": 11.78,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "ARQQ",
+            "shares": 69.444446,
+            "entry_price": 14.4,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "LAES",
+            "shares": 340.136048,
+            "entry_price": 2.94,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "ZPTA",
+            "shares": 1249.999981,
+            "entry_price": 0.8,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "QSI",
+            "shares": 1058.761217,
+            "entry_price": 0.9445,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "AI",
+            "shares": 113.765643,
+            "entry_price": 8.79,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "BBAI",
+            "shares": 238.663481,
+            "entry_price": 4.19,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "RXRX",
+            "shares": 317.460308,
+            "entry_price": 3.15,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "ABAT",
+            "shares": 307.692308,
+            "entry_price": 3.25,
+            "cost_basis": 1000.0
+          },
+          {
+            "symbol": "TMQ",
+            "shares": 211.41649,
+            "entry_price": 4.73,
+            "cost_basis": 1000.0
+          }
+        ]
+      },
+      "current_strategy": null,
+      "top10": null,
+      "per_top_dollars": null,
+      "per_rest_dollars": null
+    },
+    "titan": {
+      "id": "titan",
+      "name": "TITAN",
+      "color": "#ff8c00",
+      "icon": "TT",
+      "tagline": "Half on the heavyweights. Half on the rest. Concentration meets coverage.",
+      "inception": "2026-05-12",
+      "starting_capital": 43000,
+      "value": {
+        "total": 43000,
+        "cash": 0.0,
+        "pos_val": 43000.0,
+        "pnl": 0,
+        "pnl_pct": 0.0,
+        "day_pnl": 0,
+        "day_pct": 0,
+        "positions": [
+          {
+            "symbol": "NVDA",
+            "shares": 9.738201,
+            "entry_price": 220.78,
+            "cost_basis": 2150.0
+          },
+          {
+            "symbol": "MSFT",
+            "shares": 5.27258,
+            "entry_price": 407.77,
+            "cost_basis": 2150.0
+          },
+          {
+            "symbol": "GOOGL",
+            "shares": 5.550536,
+            "entry_price": 387.35,
+            "cost_basis": 2150.0
+          },
+          {
+            "symbol": "AMZN",
+            "shares": 8.08818,
+            "entry_price": 265.82,
+            "cost_basis": 2150.0
+          },
+          {
+            "symbol": "AAPL",
+            "shares": 7.29308,
+            "entry_price": 294.8,
+            "cost_basis": 2150.0
+          },
+          {
+            "symbol": "META",
+            "shares": 3.565506,
+            "entry_price": 603.0,
+            "cost_basis": 2150.0
+          },
+          {
+            "symbol": "AVGO",
+            "shares": 5.127594,
+            "entry_price": 419.3,
+            "cost_basis": 2150.0
+          },
+          {
+            "symbol": "TSM",
+            "shares": 5.4118,
+            "entry_price": 397.28,
+            "cost_basis": 2150.0
+          },
+          {
+            "symbol": "INTC",
+            "shares": 17.826051,
+            "entry_price": 120.61,
+            "cost_basis": 2150.0
+          },
+          {
+            "symbol": "ORCL",
+            "shares": 11.507788,
+            "entry_price": 186.83,
+            "cost_basis": 2150.0
+          },
+          {
+            "symbol": "AMD",
+            "shares": 1.453334,
+            "entry_price": 448.29,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "CRM",
+            "shares": 3.803136,
+            "entry_price": 171.31,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "NOW",
+            "shares": 7.320395,
+            "entry_price": 89.0,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "IBM",
+            "shares": 2.971969,
+            "entry_price": 219.22,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "PLTR",
+            "shares": 4.790553,
+            "entry_price": 136.0,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "GEV",
+            "shares": 0.607768,
+            "entry_price": 1071.98,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "MU",
+            "shares": 0.849898,
+            "entry_price": 766.58,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "ANET",
+            "shares": 4.570753,
+            "entry_price": 142.54,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "CRWD",
+            "shares": 1.192858,
+            "entry_price": 546.18,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "SNOW",
+            "shares": 4.286848,
+            "entry_price": 151.98,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "MRVL",
+            "shares": 3.960578,
+            "entry_price": 164.5,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "WDAY",
+            "shares": 5.492456,
+            "entry_price": 118.62,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "NBIS",
+            "shares": 3.637514,
+            "entry_price": 179.11,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "NVTS",
+            "shares": 33.844943,
+            "entry_price": 19.25,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "SOUN",
+            "shares": 80.833141,
+            "entry_price": 8.06,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "HON",
+            "shares": 2.981217,
+            "entry_price": 218.54,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "IONQ",
+            "shares": 11.66127,
+            "entry_price": 55.87,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "SMCI",
+            "shares": 19.869324,
+            "entry_price": 32.79,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "QBTS",
+            "shares": 29.150566,
+            "entry_price": 22.35,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "RGTI",
+            "shares": 34.164403,
+            "entry_price": 19.07,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "INFQ",
+            "shares": 49.73398,
+            "entry_price": 13.1,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "XNDU",
+            "shares": 46.043475,
+            "entry_price": 14.15,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "HQ",
+            "shares": 55.400947,
+            "entry_price": 11.76,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "QUBT",
+            "shares": 55.30689,
+            "entry_price": 11.78,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "ARQQ",
+            "shares": 45.244109,
+            "entry_price": 14.4,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "LAES",
+            "shares": 221.603789,
+            "entry_price": 2.94,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "ZPTA",
+            "shares": 814.393927,
+            "entry_price": 0.8,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "QSI",
+            "shares": 689.798975,
+            "entry_price": 0.9445,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "AI",
+            "shares": 74.12004,
+            "entry_price": 8.79,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "BBAI",
+            "shares": 155.492874,
+            "entry_price": 4.19,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "RXRX",
+            "shares": 206.830201,
+            "entry_price": 3.15,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "ABAT",
+            "shares": 200.4662,
+            "entry_price": 3.25,
+            "cost_basis": 651.52
+          },
+          {
+            "symbol": "TMQ",
+            "shares": 137.741046,
+            "entry_price": 4.73,
+            "cost_basis": 651.52
+          }
+        ]
+      },
+      "current_strategy": null,
+      "top10": [
+        "NVDA",
+        "MSFT",
+        "GOOGL",
+        "AMZN",
+        "AAPL",
+        "META",
+        "AVGO",
+        "TSM",
+        "INTC",
+        "ORCL"
+      ],
+      "per_top_dollars": 2150.0,
+      "per_rest_dollars": 651.52
+    }
+  },
+  "leaderboards": {
+    "week": [
+      {
+        "fund": "oracle",
+        "week_pnl": 0,
+        "week_pct": 0.0,
+        "week_grade": "C"
+      },
+      {
+        "fund": "wizard",
+        "week_pnl": 0,
+        "week_pct": 0.0,
+        "week_grade": "C"
+      },
+      {
+        "fund": "equalizer",
+        "week_pnl": 0,
+        "week_pct": 0.0,
+        "week_grade": "C"
+      },
+      {
+        "fund": "titan",
+        "week_pnl": 0,
+        "week_pct": 0.0,
+        "week_grade": "C"
+      }
+    ],
+    "all": [
+      {
+        "fund": "oracle",
+        "all_pnl": 0,
+        "all_pct": 0.0,
+        "overall_grade": "C"
+      },
+      {
+        "fund": "wizard",
+        "all_pnl": 0,
+        "all_pct": 0.0,
+        "overall_grade": "C"
+      },
+      {
+        "fund": "equalizer",
+        "all_pnl": 0,
+        "all_pct": 0.0,
+        "overall_grade": "C"
+      },
+      {
+        "fund": "titan",
+        "all_pnl": 0,
+        "all_pct": 0.0,
+        "overall_grade": "C"
+      }
+    ]
+  }
+}
