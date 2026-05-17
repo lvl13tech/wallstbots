@@ -10,7 +10,7 @@ import os
 import jwt
 import json
 from datetime import datetime, timedelta, timezone
-from typing import Optional, List
+from typing import Optional, List, Any
 from decimal import Decimal
 
 from fastapi import FastAPI, Depends, HTTPException, status, Header
@@ -38,6 +38,9 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID")
 PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET")
 PAYPAL_MODE = os.getenv("PAYPAL_MODE", "sandbox")
+
+# Internal key used by the GCP VM to push tracker data — never exposed publicly
+INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY", "")
 
 PAYPAL_API_BASE = (
     "https://api.paypal.com" if PAYPAL_MODE == "live"
@@ -146,6 +149,11 @@ class SubscriptionCreateRequest(BaseModel):
 class PayPalWebhookEvent(BaseModel):
     event_type: str
     resource: dict
+
+class TrackerPushRequest(BaseModel):
+    data_type: str   # 'state' | 'news' | 'signals' | 'reports'
+    platform:  str   # 'lvl13' | 'bitbot13' | 'wallstbots'
+    data:      Any   # the full JSON payload (dict or list)
 
 # ============================================================================
 # AUTH HELPERS
@@ -685,6 +693,120 @@ async def handle_paypal_webhook(event: PayPalWebhookEvent):
     finally:
         cursor.close()
         return_db_connection(conn)
+
+# ============================================================================
+# TRACKER ENDPOINTS
+# Data pushed from the GCP VM after each tracker run.
+# Internal write is key-gated; public read is open (data is non-sensitive).
+# ============================================================================
+
+VALID_DATA_TYPES = {"state", "news", "signals", "reports"}
+
+def verify_internal_key(x_internal_key: str = Header(...)):
+    """
+    Dependency: verifies the X-Internal-Key header matches INTERNAL_API_KEY.
+    Only the GCP VM should know this key — it is never exposed to browsers.
+    """
+    if not INTERNAL_API_KEY:
+        raise HTTPException(status_code=500, detail="INTERNAL_API_KEY not configured on server")
+    if x_internal_key != INTERNAL_API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid internal key")
+
+@app.post("/internal/tracker/push")
+async def tracker_push(
+    payload: TrackerPushRequest,
+    _: None = Depends(verify_internal_key)
+):
+    """
+    Receive tracker data from the GCP VM and upsert into tracker_live_data.
+    Called by refresh_data.py and refresh_news.py after each run.
+
+    Body:
+        data_type: 'state' | 'news' | 'signals' | 'reports'
+        platform:  'lvl13' | 'bitbot13' | 'wallstbots'
+        data:      the full JSON payload (dict or list)
+    """
+    if payload.data_type not in VALID_DATA_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid data_type. Must be one of: {', '.join(VALID_DATA_TYPES)}"
+        )
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+
+        cursor.execute("""
+            INSERT INTO tracker_live_data (data_type, platform, data, pushed_at)
+            VALUES (%s, %s, %s::jsonb, NOW())
+            ON CONFLICT (data_type, platform) DO UPDATE
+                SET data      = EXCLUDED.data,
+                    pushed_at = EXCLUDED.pushed_at
+            RETURNING id, data_type, platform, pushed_at
+        """, (payload.data_type, payload.platform, json.dumps(payload.data)))
+
+        row = cursor.fetchone()
+        conn.commit()
+
+        return {
+            "success":   True,
+            "id":        row["id"],
+            "data_type": row["data_type"],
+            "platform":  row["platform"],
+            "pushed_at": str(row["pushed_at"])
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/public/tracker/{data_type}")
+async def tracker_read(
+    data_type: str,
+    platform: str = "lvl13"
+):
+    """
+    Return the latest tracker payload for a given data_type and platform.
+    Public — no auth required. Fronts are all read-only here.
+
+    Path:   /public/tracker/state  (or news | signals | reports)
+    Query:  ?platform=lvl13        (default)
+    """
+    if data_type not in VALID_DATA_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid data_type. Must be one of: {', '.join(VALID_DATA_TYPES)}"
+        )
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+
+        cursor.execute("""
+            SELECT data, pushed_at
+            FROM tracker_live_data
+            WHERE data_type = %s AND platform = %s
+        """, (data_type, platform))
+
+        row = cursor.fetchone()
+
+        if not row:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No {data_type} data found for platform '{platform}'"
+            )
+
+        return {
+            "success":   True,
+            "data_type": data_type,
+            "platform":  platform,
+            "pushed_at": str(row["pushed_at"]),
+            "data":      row["data"]   # Postgres returns JSONB as Python dict already
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
 
 # ============================================================================
 # HEALTH CHECK

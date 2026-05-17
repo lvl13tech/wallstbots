@@ -15,6 +15,11 @@ import sys
 import datetime as dt
 from pathlib import Path
 
+try:
+    import requests as _requests
+except ImportError:
+    _requests = None
+
 ROOT = Path(__file__).resolve().parents[1]
 SECRETS_PATH = ROOT / "config" / "secrets.json"
 DATA_OUT = ROOT / "public_html" / "data"
@@ -232,8 +237,16 @@ def main():
         print(f"[data] wrote signals.json ({len(recs.get('recommendations', []))} stocks)")
 
     reports = load_json(tracker_dir / "reports.json", default=[])
-    (DATA_OUT / "reports.json").write_text(json.dumps({"reports": reports}, indent=2))
+    reports_payload = {"reports": reports}
+    (DATA_OUT / "reports.json").write_text(json.dumps(reports_payload, indent=2))
     print(f"[data] wrote reports.json ({len(reports)} reports)")
+
+    # ── Push to Supabase via Cloud Run API (dual-write; HostGator already done above) ──
+    print("[push] pushing to Supabase...")
+    push_to_api(secrets, "state",   state)
+    if recs:
+        push_to_api(secrets, "signals", recs)
+    push_to_api(secrets, "reports", reports_payload)
 
 
 def grade(pct):
@@ -253,6 +266,40 @@ def grade_overall(pct, inception_iso, today):
         return grade(pct / weeks)
     except Exception:
         return grade(pct)
+
+
+def push_to_api(secrets, data_type, payload):
+    """
+    Push a JSON payload to the Cloud Run API so the frontend can read it
+    from Supabase instead of HostGator.  Fails silently — HostGator write
+    already happened, so this is additive only.
+    """
+    if _requests is None:
+        print(f"  [push] requests not installed — skipping API push for {data_type}")
+        return
+
+    api_url = secrets.get("api_url", "")
+    api_key  = secrets.get("internal_api_key", "")
+    platform = secrets.get("platform", "lvl13")
+
+    if not api_url or not api_key:
+        print(f"  [push] api_url/internal_api_key not in secrets.json — skipping push for {data_type}")
+        return
+
+    endpoint = f"{api_url.rstrip('/')}/internal/tracker/push"
+    try:
+        r = _requests.post(
+            endpoint,
+            json={"data_type": data_type, "platform": platform, "data": payload},
+            headers={"X-Internal-Key": api_key},
+            timeout=15,
+        )
+        if r.status_code == 200:
+            print(f"  [push] ✓ {data_type} → Supabase (pushed_at={r.json().get('pushed_at','')})")
+        else:
+            print(f"  [push] ✗ {data_type} HTTP {r.status_code}: {r.text[:200]}")
+    except Exception as e:
+        print(f"  [push] ✗ {data_type} error: {e}")
 
 
 if __name__ == "__main__":

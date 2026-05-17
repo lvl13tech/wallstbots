@@ -21,6 +21,9 @@ except ImportError:
     print("Missing requests. Install with: pip install requests")
     sys.exit(1)
 
+# Alias so push_to_api can use it without a separate import block
+_requests = requests
+
 ROOT = Path(__file__).resolve().parents[1]
 SECRETS_PATH = ROOT / "config" / "secrets.json"
 OUT_PATH = ROOT / "public_html" / "data" / "news.json"
@@ -103,6 +106,39 @@ def main():
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUT_PATH.write_text(json.dumps(payload, indent=2))
     print(f"[news] wrote {len(all_items)} headlines → {OUT_PATH}")
+
+    # ── Push to Supabase via Cloud Run API (dual-write; HostGator file already written) ──
+    push_to_api(secrets, "news", payload)
+
+
+def push_to_api(secrets, data_type, payload):
+    """
+    Push a tracker JSON payload to Cloud Run so it lands in Supabase.
+    Silent on failure — HostGator file write already succeeded.
+    """
+    api_url = secrets.get("api_url", "")
+    api_key  = secrets.get("internal_api_key", "")
+    platform = secrets.get("platform", "lvl13")
+
+    if not api_url or not api_key:
+        print(f"  [push] api_url/internal_api_key not in secrets.json — skipping push for {data_type}")
+        return
+
+    endpoint = f"{api_url.rstrip('/')}/internal/tracker/push"
+    try:
+        r = _requests.post(
+            endpoint,
+            json={"data_type": data_type, "platform": platform, "data": payload},
+            headers={"X-Internal-Key": api_key},
+            timeout=15,
+        )
+        if r.status_code == 200:
+            print(f"  [push] ✓ {data_type} → Supabase (pushed_at={r.json().get('pushed_at','')})")
+        else:
+            print(f"  [push] ✗ {data_type} HTTP {r.status_code}: {r.text[:200]}")
+    except Exception as e:
+        print(f"  [push] ✗ {data_type} error: {e}")
+
 
 if __name__ == "__main__":
     main()
