@@ -31,14 +31,16 @@ const FUND_META = {
 const FUND_ORDER = ['bot13','oracle','wizard','equalizer','titan'];
 
 // ============ DATA LOADING ============
+const TRACKER_API = 'https://wallstbots-backend-868128114349.us-east1.run.app/public/tracker';
+
 async function loadAll() {
   if (location.protocol === 'file:') { showFileProtocolWarning(); return; }
   try {
     const r = await Promise.allSettled([
-      fetch('data/state.json',   { cache: 'no-store' }).then(r => r.json()),
-      fetch('data/news.json',    { cache: 'no-store' }).then(r => r.json()),
-      fetch('data/signals.json', { cache: 'no-store' }).then(r => r.json()),
-      fetch('data/reports.json', { cache: 'no-store' }).then(r => r.json()),
+      fetch(`${TRACKER_API}/state`,   { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetch(`${TRACKER_API}/news`,    { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetch(`${TRACKER_API}/signals`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetch(`${TRACKER_API}/reports`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
     ]);
     STATE.funds   = r[0].status === 'fulfilled' ? r[0].value : null;
     STATE.news    = r[1].status === 'fulfilled' ? r[1].value : { items: [] };
