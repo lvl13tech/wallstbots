@@ -215,6 +215,19 @@ function renderHome() {
     + '<div class="panel" style="margin-top:18px"><h3>Performance Trajectory — All 5 Strategies</h3>'
     + '<div class="chart-wrap"><canvas id="chartRace"></canvas></div></div>'
 
+    + '<div class="panel" style="margin-top:28px">'
+    + '<div style="color:var(--muted);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">Also From Level XIII Tech</div>'
+    + '<div class="grid grid-2">'
+    + '<a href="https://lvl13.tech" class="card clickable" target="_blank" rel="noopener noreferrer" style="text-decoration:none">'
+    + '<div style="color:var(--blue);font-weight:700;font-size:15px;margin-bottom:4px">lvl13.tech</div>'
+    + '<div style="color:var(--muted);font-size:13px;line-height:1.5">AI &amp; Quantum Stock Tracker. The same 5 bots racing on 43 hand-picked AI &amp; Quantum names.</div>'
+    + '</a>'
+    + '<a href="https://bitbot13.tech" class="card clickable" target="_blank" rel="noopener noreferrer" style="text-decoration:none">'
+    + '<div style="color:var(--blue);font-weight:700;font-size:15px;margin-bottom:4px">bitbot13.tech</div>'
+    + '<div style="color:var(--muted);font-size:13px;line-height:1.5">Crypto Trading Bot Tracker. Top 50 coins by market cap. 24/7 markets. Same 5 strategies.</div>'
+    + '</a>'
+    + '</div></div>'
+
     + getYoursHint('Run this exact dashboard on YOUR stocks. Custom bots, custom news.');
   drawTrajectory();
 }
