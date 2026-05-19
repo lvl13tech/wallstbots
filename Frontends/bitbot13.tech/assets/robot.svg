@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" fill="none" stroke="#00d4ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <defs>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.4" result="b1"/>
+      <feGaussianBlur stdDeviation="5"   result="b2"/>
+      <feMerge>
+        <feMergeNode in="b2"/>
+        <feMergeNode in="b1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#glow)">
+    <!-- Antenna -->
+    <line x1="100" y1="8" x2="100" y2="16"/>
+    <line x1="92"  y1="14" x2="108" y2="14"/>
+    <circle cx="100" cy="28" r="9"/>
+    <line x1="100" y1="37" x2="100" y2="60"/>
+    <path d="M88 60 H112 V66 H88 Z"/>
+    <!-- Head -->
+    <rect x="34" y="68" width="132" height="98" rx="22" ry="22"/>
+    <line x1="34" y1="86" x2="166" y2="86"/>
+    <!-- Side accents -->
+    <line x1="20" y1="100" x2="34"  y2="100"/>
+    <line x1="20" y1="118" x2="34"  y2="118"/>
+    <line x1="166" y1="118" x2="180" y2="118"/>
+    <!-- Eyes (outer rings + inner pupils) -->
+    <ellipse cx="74"  cy="120" rx="20" ry="14"/>
+    <ellipse cx="126" cy="120" rx="20" ry="14"/>
+    <circle  cx="74"  cy="120" r="6"/>
+    <circle  cx="126" cy="120" r="6"/>
+    <!-- Mouth bar -->
+    <line x1="44" y1="166" x2="156" y2="166"/>
+    <!-- Base panel -->
+    <rect x="54" y="186" width="92" height="40" rx="14" ry="14"/>
+    <circle cx="76"  cy="206" r="6"/>
+    <circle cx="100" cy="206" r="4"/>
+    <circle cx="124" cy="206" r="6"/>
+  </g>
+</svg>

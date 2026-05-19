@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 280" fill="none" stroke="#00d4ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <defs>
+    <filter id="lglow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2"   result="b1"/>
+      <feGaussianBlur stdDeviation="4.5" result="b2"/>
+      <feMerge>
+        <feMergeNode in="b2"/>
+        <feMergeNode in="b1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g filter="url(#lglow)" transform="translate(20,20)">
+    <!-- Robot (left) -->
+    <g>
+      <!-- Antenna -->
+      <line x1="100" y1="0"  x2="100" y2="8"/>
+      <line x1="92"  y1="6"  x2="108" y2="6"/>
+      <circle cx="100" cy="20" r="8"/>
+      <line x1="100" y1="28" x2="100" y2="50"/>
+      <path d="M88 50 H112 V56 H88 Z"/>
+      <!-- Head -->
+      <rect x="34" y="58" width="132" height="98" rx="22" ry="22"/>
+      <line x1="34" y1="76" x2="166" y2="76"/>
+      <line x1="20" y1="92"  x2="34"  y2="92"/>
+      <line x1="20" y1="110" x2="34"  y2="110"/>
+      <line x1="166" y1="110" x2="180" y2="110"/>
+      <!-- Eyes -->
+      <ellipse cx="74"  cy="112" rx="20" ry="14"/>
+      <ellipse cx="126" cy="112" rx="20" ry="14"/>
+      <circle  cx="74"  cy="112" r="6"/>
+      <circle  cx="126" cy="112" r="6"/>
+      <!-- Mouth bar -->
+      <line x1="44" y1="156" x2="156" y2="156"/>
+      <!-- Base -->
+      <rect x="54" y="176" width="92" height="40" rx="14" ry="14"/>
+      <circle cx="76"  cy="196" r="6"/>
+      <circle cx="100" cy="196" r="4"/>
+      <circle cx="124" cy="196" r="6"/>
+    </g>
+
+    <!-- Wordmark (right) -->
+    <g font-family="Verdana, Geneva, sans-serif" font-weight="700" letter-spacing="4" fill="#7df5ff" stroke="#00d4ff" stroke-width="0.8">
+      <text x="220" y="68"  font-size="58">Level</text>
+      <text x="220" y="138" font-size="58">XIII</text>
+      <text x="220" y="208" font-size="58">Tech</text>
+    </g>
+  </g>
+</svg>

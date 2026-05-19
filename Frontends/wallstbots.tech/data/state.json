@@ -1,0 +1,1038 @@
+{
+  "data": {
+    "starting_capital": 55000,
+    "last_refresh": "2026-05-18T16:50:00",
+    "snapshots": [],
+    "funds": {
+      "bot13": {
+        "id": "bot13",
+        "name": "BOT13",
+        "color": "#ec4899",
+        "icon": "13",
+        "tagline": "Daily intraday bot. Buys at open, sells before close. Skips the day if no edge.",
+        "inception": "2026-05-18",
+        "starting_capital": 55000,
+        "value": {
+          "total": 55000,
+          "cash": 55000,
+          "pos_val": 0,
+          "pnl": 0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0,
+          "day_pct": 0,
+          "positions": []
+        },
+        "current_strategy": {
+          "day": "2026-05-18",
+          "decision": "CASH",
+          "rationale": "Market open not yet reached. Bot13 evaluates intraday momentum at market open and re-evaluates throughout the session.",
+          "picks": []
+        },
+        "top10": null,
+        "per_top_dollars": null,
+        "per_rest_dollars": null
+      },
+      "oracle": {
+        "id": "oracle",
+        "name": "ORACLE",
+        "color": "#a855f7",
+        "icon": "OR",
+        "tagline": "Weekly bot. Trades every Monday. All-in on the week's best bets.",
+        "inception": "2026-05-18",
+        "starting_capital": 55000,
+        "value": {
+          "total": 55000,
+          "cash": 0.0,
+          "pos_val": 55000.0,
+          "pnl": 0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0,
+          "day_pct": 0,
+          "positions": [
+            {
+              "symbol": "WMT",
+              "shares": 111.90234,
+              "entry_price": 98.3,
+              "cost_basis": 11000.0
+            },
+            {
+              "symbol": "META",
+              "shares": 18.242123,
+              "entry_price": 603.0,
+              "cost_basis": 11000.0
+            },
+            {
+              "symbol": "COP",
+              "shares": 105.973025,
+              "entry_price": 103.8,
+              "cost_basis": 11000.0
+            },
+            {
+              "symbol": "ALB",
+              "shares": 105.062082,
+              "entry_price": 104.7,
+              "cost_basis": 11000.0
+            },
+            {
+              "symbol": "AAPL",
+              "shares": 37.313433,
+              "entry_price": 294.8,
+              "cost_basis": 11000.0
+            }
+          ]
+        },
+        "current_strategy": {
+          "week": "2026-05-18",
+          "decision": "TRADE",
+          "rationale": "Concentrating capital in top 5 names by composite momentum. Combines 5d/20d momentum, MACD bias, RSI, volume confirmation.",
+          "picks": [
+            {
+              "symbol": "WMT",
+              "weight": 0.2,
+              "score": 218.3,
+              "rationale": "WMT: strong momentum and volume confirmation."
+            },
+            {
+              "symbol": "META",
+              "weight": 0.2,
+              "score": 123.0,
+              "rationale": "META: strong momentum and volume confirmation."
+            },
+            {
+              "symbol": "COP",
+              "weight": 0.2,
+              "score": 123.8,
+              "rationale": "COP: strong momentum and volume confirmation."
+            },
+            {
+              "symbol": "ALB",
+              "weight": 0.2,
+              "score": 124.7,
+              "rationale": "ALB: strong momentum and volume confirmation."
+            },
+            {
+              "symbol": "AAPL",
+              "weight": 0.2,
+              "score": 214.8,
+              "rationale": "AAPL: strong momentum and volume confirmation."
+            }
+          ]
+        },
+        "top10": null,
+        "per_top_dollars": null,
+        "per_rest_dollars": null
+      },
+      "wizard": {
+        "id": "wizard",
+        "name": "WIZARD",
+        "color": "#10b981",
+        "icon": "WZ",
+        "tagline": "Monthly hold bot. Buys the 1st trading day, sells the last. Slow and patient.",
+        "inception": "2026-05-18",
+        "starting_capital": 55000,
+        "value": {
+          "total": 55000,
+          "cash": 0.0,
+          "pos_val": 55000.0,
+          "pnl": 0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0,
+          "day_pct": 0,
+          "positions": [
+            {
+              "symbol": "META",
+              "shares": 15.879768,
+              "entry_price": 603.0,
+              "cost_basis": 9575.5
+            },
+            {
+              "symbol": "MSFT",
+              "shares": 23.35949,
+              "entry_price": 407.8,
+              "cost_basis": 9526.0
+            },
+            {
+              "symbol": "AMT",
+              "shares": 44.354839,
+              "entry_price": 210.8,
+              "cost_basis": 9350.0
+            },
+            {
+              "symbol": "ACHR",
+              "shares": 443.481013,
+              "entry_price": 15.8,
+              "cost_basis": 7007.0
+            },
+            {
+              "symbol": "SOFI",
+              "shares": 277.115385,
+              "entry_price": 18.2,
+              "cost_basis": 5043.5
+            },
+            {
+              "symbol": "HON",
+              "shares": 22.729977,
+              "entry_price": 218.5,
+              "cost_basis": 4966.5
+            },
+            {
+              "symbol": "NVDA",
+              "shares": 22.244112,
+              "entry_price": 220.8,
+              "cost_basis": 4911.5
+            },
+            {
+              "symbol": "SMMT",
+              "shares": 213.888889,
+              "entry_price": 21.6,
+              "cost_basis": 4620.0
+            }
+          ]
+        },
+        "current_strategy": {
+          "month": "2026-05",
+          "decision": "TRADE",
+          "rationale": "Spreading across 8 names for the month. Long-horizon signals: 20d/60d momentum, distance from 50d MA, risk-adjusted return.",
+          "picks": [
+            {
+              "symbol": "META",
+              "weight": 0.1741,
+              "score": 420.8,
+              "rationale": "META: solid 20d/60d trend with favorable risk-adjusted return."
+            },
+            {
+              "symbol": "MSFT",
+              "weight": 0.1732,
+              "score": 418.5,
+              "rationale": "MSFT: solid 20d/60d trend with favorable risk-adjusted return."
+            },
+            {
+              "symbol": "AMT",
+              "weight": 0.17,
+              "score": 410.8,
+              "rationale": "AMT: solid 20d/60d trend with favorable risk-adjusted return."
+            },
+            {
+              "symbol": "ACHR",
+              "weight": 0.1274,
+              "score": 307.8,
+              "rationale": "ACHR: solid 20d/60d trend with favorable risk-adjusted return."
+            },
+            {
+              "symbol": "SOFI",
+              "weight": 0.0917,
+              "score": 221.6,
+              "rationale": "SOFI: solid 20d/60d trend with favorable risk-adjusted return."
+            },
+            {
+              "symbol": "HON",
+              "weight": 0.0903,
+              "score": 218.2,
+              "rationale": "HON: solid 20d/60d trend with favorable risk-adjusted return."
+            },
+            {
+              "symbol": "NVDA",
+              "weight": 0.0893,
+              "score": 215.8,
+              "rationale": "NVDA: solid 20d/60d trend with favorable risk-adjusted return."
+            },
+            {
+              "symbol": "SMMT",
+              "weight": 0.084,
+              "score": 203.0,
+              "rationale": "SMMT: solid 20d/60d trend with favorable risk-adjusted return."
+            }
+          ]
+        },
+        "top10": null,
+        "per_top_dollars": null,
+        "per_rest_dollars": null
+      },
+      "equalizer": {
+        "id": "equalizer",
+        "name": "EQUALIZER",
+        "color": "#00d4ff",
+        "icon": "EQ",
+        "tagline": "Equal weight. No favorites. $1,000 in every stock.",
+        "inception": "2026-05-18",
+        "starting_capital": 55000,
+        "value": {
+          "total": 55000,
+          "cash": 0.0,
+          "pos_val": 55000.0,
+          "pnl": 0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0,
+          "day_pct": 0,
+          "positions": [
+            {
+              "symbol": "XOM",
+              "shares": 7.911392,
+              "entry_price": 126.4,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "CVX",
+              "shares": 6.402049,
+              "entry_price": 156.2,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "COP",
+              "shares": 9.633911,
+              "entry_price": 103.8,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "FANG",
+              "shares": 5.36193,
+              "entry_price": 186.5,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "OKLO",
+              "shares": 24.875622,
+              "entry_price": 40.2,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "LIN",
+              "shares": 2.060581,
+              "entry_price": 485.3,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "SHW",
+              "shares": 3.006615,
+              "entry_price": 332.6,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "FCX",
+              "shares": 20.449898,
+              "entry_price": 48.9,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "APD",
+              "shares": 3.408316,
+              "entry_price": 293.4,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "ALB",
+              "shares": 9.551098,
+              "entry_price": 104.7,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "CAT",
+              "shares": 2.66099,
+              "entry_price": 375.8,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "RTX",
+              "shares": 7.127584,
+              "entry_price": 140.3,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "HON",
+              "shares": 4.576659,
+              "entry_price": 218.5,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "GE",
+              "shares": 4.017678,
+              "entry_price": 248.9,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "ACHR",
+              "shares": 63.291139,
+              "entry_price": 15.8,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "AMZN",
+              "shares": 3.762227,
+              "entry_price": 265.8,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "TSLA",
+              "shares": 3.566334,
+              "entry_price": 280.4,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "HD",
+              "shares": 2.896871,
+              "entry_price": 345.2,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "IBTA",
+              "shares": 19.379845,
+              "entry_price": 51.6,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "BIRK",
+              "shares": 17.421603,
+              "entry_price": 57.4,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "WMT",
+              "shares": 10.17294,
+              "entry_price": 98.3,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "PG",
+              "shares": 5.694761,
+              "entry_price": 175.6,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "COST",
+              "shares": 1.051083,
+              "entry_price": 951.4,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "CART",
+              "shares": 20.920502,
+              "entry_price": 47.8,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "KR",
+              "shares": 15.337423,
+              "entry_price": 65.2,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "LLY",
+              "shares": 1.322052,
+              "entry_price": 756.4,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "JNJ",
+              "shares": 6.218905,
+              "entry_price": 160.8,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "UNH",
+              "shares": 3.220612,
+              "entry_price": 310.5,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "GRAL",
+              "shares": 35.842294,
+              "entry_price": 27.9,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "SMMT",
+              "shares": 46.296296,
+              "entry_price": 21.6,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "BRK.B",
+              "shares": 1.924557,
+              "entry_price": 519.6,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "JPM",
+              "shares": 3.631082,
+              "entry_price": 275.4,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "V",
+              "shares": 2.942908,
+              "entry_price": 339.8,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "SOFI",
+              "shares": 54.945055,
+              "entry_price": 18.2,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "AFRM",
+              "shares": 18.315018,
+              "entry_price": 54.6,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "NVDA",
+              "shares": 4.528986,
+              "entry_price": 220.8,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "AAPL",
+              "shares": 3.39213,
+              "entry_price": 294.8,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "MSFT",
+              "shares": 2.452182,
+              "entry_price": 407.8,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "ARM",
+              "shares": 6.915629,
+              "entry_price": 144.6,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "ALAB",
+              "shares": 11.876485,
+              "entry_price": 84.2,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "RBRK",
+              "shares": 17.123288,
+              "entry_price": 58.4,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "GOOGL",
+              "shares": 2.581311,
+              "entry_price": 387.4,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "META",
+              "shares": 1.658375,
+              "entry_price": 603.0,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "NFLX",
+              "shares": 0.870625,
+              "entry_price": 1148.6,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "RDDT",
+              "shares": 5.307856,
+              "entry_price": 188.4,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "SPOT",
+              "shares": 1.474491,
+              "entry_price": 678.2,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "NEE",
+              "shares": 13.404826,
+              "entry_price": 74.6,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "SO",
+              "shares": 11.312217,
+              "entry_price": 88.4,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "DUK",
+              "shares": 8.673027,
+              "entry_price": 115.3,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "VST",
+              "shares": 6.906077,
+              "entry_price": 144.8,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "PLD",
+              "shares": 9.057971,
+              "entry_price": 110.4,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "WELL",
+              "shares": 7.132668,
+              "entry_price": 140.2,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "AMT",
+              "shares": 4.743833,
+              "entry_price": 210.8,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "LINE",
+              "shares": 22.421525,
+              "entry_price": 44.6,
+              "cost_basis": 1000.0
+            },
+            {
+              "symbol": "EQIX",
+              "shares": 1.174536,
+              "entry_price": 851.4,
+              "cost_basis": 1000.0
+            }
+          ]
+        },
+        "current_strategy": null,
+        "top10": null,
+        "per_top_dollars": null,
+        "per_rest_dollars": null
+      },
+      "titan": {
+        "id": "titan",
+        "name": "TITAN",
+        "color": "#ff8c00",
+        "icon": "TT",
+        "tagline": "Half on the heavyweights. Half on the rest. Concentration meets coverage.",
+        "inception": "2026-05-18",
+        "starting_capital": 55000,
+        "value": {
+          "total": 55000,
+          "cash": 0.0,
+          "pos_val": 55000.0,
+          "pnl": 0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0,
+          "day_pct": 0,
+          "positions": [
+            {
+              "symbol": "XOM",
+              "shares": 4.834731,
+              "entry_price": 126.4,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "CVX",
+              "shares": 3.912356,
+              "entry_price": 156.2,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "COP",
+              "shares": 5.88738,
+              "entry_price": 103.8,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "FANG",
+              "shares": 3.276729,
+              "entry_price": 186.5,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "OKLO",
+              "shares": 15.201741,
+              "entry_price": 40.2,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "LIN",
+              "shares": 1.259242,
+              "entry_price": 485.3,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "SHW",
+              "shares": 1.837372,
+              "entry_price": 332.6,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "FCX",
+              "shares": 12.497137,
+              "entry_price": 48.9,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "APD",
+              "shares": 2.082856,
+              "entry_price": 293.4,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "ALB",
+              "shares": 5.836772,
+              "entry_price": 104.7,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "CAT",
+              "shares": 1.626158,
+              "entry_price": 375.8,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "RTX",
+              "shares": 4.355738,
+              "entry_price": 140.3,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "HON",
+              "shares": 2.796842,
+              "entry_price": 218.5,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "GE",
+              "shares": 2.455243,
+              "entry_price": 248.9,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "ACHR",
+              "shares": 38.677848,
+              "entry_price": 15.8,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "AMZN",
+              "shares": 10.346125,
+              "entry_price": 265.8,
+              "cost_basis": 2750.0
+            },
+            {
+              "symbol": "TSLA",
+              "shares": 2.179422,
+              "entry_price": 280.4,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "HD",
+              "shares": 1.770307,
+              "entry_price": 345.2,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "IBTA",
+              "shares": 11.843217,
+              "entry_price": 51.6,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "BIRK",
+              "shares": 10.646516,
+              "entry_price": 57.4,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "WMT",
+              "shares": 6.216785,
+              "entry_price": 98.3,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "PG",
+              "shares": 3.480125,
+              "entry_price": 175.6,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "COST",
+              "shares": 0.642327,
+              "entry_price": 951.4,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "CART",
+              "shares": 12.784728,
+              "entry_price": 47.8,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "KR",
+              "shares": 9.372853,
+              "entry_price": 65.2,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "LLY",
+              "shares": 3.635643,
+              "entry_price": 756.4,
+              "cost_basis": 2750.0
+            },
+            {
+              "symbol": "JNJ",
+              "shares": 3.800435,
+              "entry_price": 160.8,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "UNH",
+              "shares": 1.968148,
+              "entry_price": 310.5,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "GRAL",
+              "shares": 21.903584,
+              "entry_price": 27.9,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "SMMT",
+              "shares": 28.29213,
+              "entry_price": 21.6,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "BRK.B",
+              "shares": 5.292533,
+              "entry_price": 519.6,
+              "cost_basis": 2750.0
+            },
+            {
+              "symbol": "JPM",
+              "shares": 9.985476,
+              "entry_price": 275.4,
+              "cost_basis": 2750.0
+            },
+            {
+              "symbol": "V",
+              "shares": 1.79844,
+              "entry_price": 339.8,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "SOFI",
+              "shares": 33.577473,
+              "entry_price": 18.2,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "AFRM",
+              "shares": 11.192491,
+              "entry_price": 54.6,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "NVDA",
+              "shares": 12.45471,
+              "entry_price": 220.8,
+              "cost_basis": 2750.0
+            },
+            {
+              "symbol": "AAPL",
+              "shares": 9.328358,
+              "entry_price": 294.8,
+              "cost_basis": 2750.0
+            },
+            {
+              "symbol": "MSFT",
+              "shares": 6.743502,
+              "entry_price": 407.8,
+              "cost_basis": 2750.0
+            },
+            {
+              "symbol": "ARM",
+              "shares": 4.22621,
+              "entry_price": 144.6,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "ALAB",
+              "shares": 7.257838,
+              "entry_price": 84.2,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "RBRK",
+              "shares": 10.464212,
+              "entry_price": 58.4,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "GOOGL",
+              "shares": 7.098606,
+              "entry_price": 387.4,
+              "cost_basis": 2750.0
+            },
+            {
+              "symbol": "META",
+              "shares": 4.560531,
+              "entry_price": 603.0,
+              "cost_basis": 2750.0
+            },
+            {
+              "symbol": "NFLX",
+              "shares": 2.394219,
+              "entry_price": 1148.6,
+              "cost_basis": 2750.0
+            },
+            {
+              "symbol": "RDDT",
+              "shares": 3.243684,
+              "entry_price": 188.4,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "SPOT",
+              "shares": 0.901076,
+              "entry_price": 678.2,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "NEE",
+              "shares": 8.191823,
+              "entry_price": 74.6,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "SO",
+              "shares": 6.913009,
+              "entry_price": 88.4,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "DUK",
+              "shares": 5.300173,
+              "entry_price": 115.3,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "VST",
+              "shares": 4.220373,
+              "entry_price": 144.8,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "PLD",
+              "shares": 5.535417,
+              "entry_price": 110.4,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "WELL",
+              "shares": 4.358845,
+              "entry_price": 140.2,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "AMT",
+              "shares": 2.899004,
+              "entry_price": 210.8,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "LINE",
+              "shares": 13.702018,
+              "entry_price": 44.6,
+              "cost_basis": 611.1
+            },
+            {
+              "symbol": "EQIX",
+              "shares": 0.717771,
+              "entry_price": 851.4,
+              "cost_basis": 611.1
+            }
+          ]
+        },
+        "current_strategy": null,
+        "top10": [
+          "NVDA",
+          "AMZN",
+          "GOOGL",
+          "AAPL",
+          "MSFT",
+          "META",
+          "BRK.B",
+          "LLY",
+          "JPM",
+          "NFLX"
+        ],
+        "per_top_dollars": 2750.0,
+        "per_rest_dollars": 611.11
+      }
+    },
+    "leaderboards": {
+      "week": [
+        {
+          "fund": "bot13",
+          "week_pnl": 0,
+          "week_pct": 0.0,
+          "week_grade": "C"
+        },
+        {
+          "fund": "oracle",
+          "week_pnl": 0,
+          "week_pct": 0.0,
+          "week_grade": "C"
+        },
+        {
+          "fund": "wizard",
+          "week_pnl": 0,
+          "week_pct": 0.0,
+          "week_grade": "C"
+        },
+        {
+          "fund": "equalizer",
+          "week_pnl": 0,
+          "week_pct": 0.0,
+          "week_grade": "C"
+        },
+        {
+          "fund": "titan",
+          "week_pnl": 0,
+          "week_pct": 0.0,
+          "week_grade": "C"
+        }
+      ],
+      "all": [
+        {
+          "fund": "bot13",
+          "all_pnl": 0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
+        },
+        {
+          "fund": "oracle",
+          "all_pnl": 0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
+        },
+        {
+          "fund": "wizard",
+          "all_pnl": 0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
+        },
+        {
+          "fund": "equalizer",
+          "all_pnl": 0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
+        },
+        {
+          "fund": "titan",
+          "all_pnl": 0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
+        }
+      ]
+    }
+  }
+}
