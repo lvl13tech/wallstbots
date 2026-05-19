@@ -38,6 +38,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID")
 PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET")
 PAYPAL_MODE = os.getenv("PAYPAL_MODE", "sandbox")
+POLYGON_API_KEY = os.getenv("POLYGON_API_KEY", "")
 
 # Internal key used by the GCP VM to push tracker data — never exposed publicly
 INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY", "")
@@ -50,12 +51,38 @@ PAYPAL_API_BASE = (
 # ============================================================================
 # DATABASE POOL
 # ============================================================================
+# Root-cause of previous hangs: Cloud Run idles between requests; Supabase
+# PgBouncer drops TCP connections after ~10 min.  Without keepalives the OS
+# still shows the socket as ESTABLISHED, so cursor.execute() blocks forever
+# waiting for an ACK that never comes.
+#
+# Fixes applied:
+#   • check=ConnectionPool.check_connection  — validates with SELECT 1 before
+#     returning any connection from the pool
+#   • keepalives + keepalives_idle/interval/count  — OS-level TCP keepalives
+#     detect dead sockets within ~80 s instead of never
+#   • connect_timeout  — caps the initial connection handshake
+#   • statement_timeout  — server-side 15 s cap; last line of defense
+# ============================================================================
 
-db_pool = ConnectionPool(DATABASE_URL, min_size=1, max_size=20)
+db_pool = ConnectionPool(
+    DATABASE_URL,
+    min_size=1,
+    max_size=20,
+    check=ConnectionPool.check_connection,   # ping before returning to caller
+    kwargs={
+        "connect_timeout": 10,
+        "keepalives": 1,
+        "keepalives_idle": 30,
+        "keepalives_interval": 10,
+        "keepalives_count": 5,
+        "options": "-c statement_timeout=15000",  # 15 s max per query
+    },
+)
 
 def get_db_connection():
-    """Get a connection from the pool."""
-    return db_pool.getconn()
+    """Get a validated connection from the pool (blocks up to 10 s)."""
+    return db_pool.getconn(timeout=10.0)
 
 def return_db_connection(conn):
     """Return a connection to the pool."""
@@ -154,6 +181,14 @@ class TrackerPushRequest(BaseModel):
     data_type: str   # 'state' | 'news' | 'signals' | 'reports'
     platform:  str   # 'lvl13' | 'bitbot13' | 'wallstbots'
     data:      Any   # the full JSON payload (dict or list)
+
+class StockPick(BaseModel):
+    ticker: str
+    name: Optional[str] = None
+
+class SaveStocksRequest(BaseModel):
+    stocks: List[StockPick]
+    platform: str = "lvl13"  # 'lvl13' | 'wallstbots' | 'bitbot13'
 
 # ============================================================================
 # AUTH HELPERS
@@ -809,6 +844,184 @@ async def tracker_read(
 
 
 # ============================================================================
+# STOCK SEARCH  (Polygon.io free-tier proxy — key never reaches the browser)
+# ============================================================================
+
+@app.get("/stocks/search")
+async def search_stocks(q: str = "", limit: int = 15):
+    """
+    Proxy ticker/name search to Polygon.io reference API.
+    No auth required — search is not sensitive.
+    Falls back to empty list if POLYGON_API_KEY is not set.
+    """
+    q = q.strip()
+    if not q:
+        return {"results": []}
+
+    if not POLYGON_API_KEY:
+        # Graceful degradation: return empty, frontend shows manual-entry fallback
+        return {"results": [], "manual_entry": True}
+
+    try:
+        url = "https://api.polygon.io/v3/reference/tickers"
+        params = {
+            "search": q,
+            "active":  "true",
+            "market":  "stocks",
+            "limit":   min(limit, 20),
+            "apiKey":  POLYGON_API_KEY,
+        }
+        r = requests.get(url, params=params, timeout=10)
+        if r.status_code == 200:
+            data = r.json()
+            return {
+                "results": [
+                    {
+                        "ticker":    t.get("ticker", ""),
+                        "name":      t.get("name", ""),
+                        "market":    t.get("market", ""),
+                        "type":      t.get("type", ""),
+                        "exchange":  t.get("primary_exchange", ""),
+                    }
+                    for t in data.get("results", [])
+                    if t.get("ticker")
+                ]
+            }
+        return {"results": []}
+    except Exception as e:
+        return {"results": [], "error": str(e)}
+
+
+# ============================================================================
+# USER STOCK PICKS
+# ============================================================================
+
+@app.post("/user/stocks")
+async def save_user_stocks(
+    request: SaveStocksRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Save (replace) a user's stock picks for a given platform.
+    Max 50 stocks. Called after onboarding completes.
+    """
+    if len(request.stocks) > 50:
+        raise HTTPException(status_code=400, detail="Maximum 50 stocks allowed")
+
+    platform = request.platform.lower()
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+
+        # Full replace: delete existing picks for this user + platform
+        cursor.execute("""
+            DELETE FROM user_stock_picks
+            WHERE user_id = %s AND platform = %s
+        """, (current_user["user_id"], platform))
+
+        # Insert new picks
+        if request.stocks:
+            for s in request.stocks:
+                cursor.execute("""
+                    INSERT INTO user_stock_picks (user_id, platform, ticker, company_name)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (user_id, platform, ticker) DO UPDATE
+                        SET company_name = EXCLUDED.company_name
+                """, (
+                    current_user["user_id"],
+                    platform,
+                    s.ticker.upper().strip(),
+                    s.name or s.ticker.upper().strip(),
+                ))
+
+        # Mark subscription as provisioned
+        cursor.execute("""
+            INSERT INTO user_platform_subs (user_id, platform, status, provisioned_at)
+            VALUES (%s, %s, 'active', NOW())
+            ON CONFLICT (user_id, platform) DO UPDATE
+                SET status         = 'active',
+                    provisioned_at = NOW(),
+                    updated_at     = NOW()
+        """, (current_user["user_id"], platform))
+
+        conn.commit()
+
+        return {
+            "success": True,
+            "saved":   len(request.stocks),
+            "message": "Stock picks saved. Your private dashboard will be live within 24 hours."
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/user/stocks")
+async def get_user_stocks(
+    platform: str = "lvl13",
+    current_user: dict = Depends(get_current_user)
+):
+    """Return a user's saved stock picks for a platform."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+
+        cursor.execute("""
+            SELECT ticker, company_name, added_at
+            FROM user_stock_picks
+            WHERE user_id = %s AND platform = %s
+            ORDER BY added_at
+        """, (current_user["user_id"], platform.lower()))
+
+        picks = cursor.fetchall()
+
+        return {
+            "success": True,
+            "stocks": [
+                {
+                    "ticker":   p["ticker"],
+                    "name":     p["company_name"],
+                    "added_at": str(p["added_at"]),
+                }
+                for p in picks
+            ]
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/user/subscription")
+async def get_user_subscription(
+    platform: str = "lvl13",
+    current_user: dict = Depends(get_current_user)
+):
+    """Return subscription status for a given platform."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+
+        cursor.execute("""
+            SELECT status, provisioned_at, created_at
+            FROM user_platform_subs
+            WHERE user_id = %s AND platform = %s
+        """, (current_user["user_id"], platform.lower()))
+
+        sub = cursor.fetchone()
+
+        return {
+            "success":        True,
+            "subscribed":     sub is not None,
+            "status":         sub["status"] if sub else None,
+            "provisioned_at": str(sub["provisioned_at"]) if sub and sub["provisioned_at"] else None,
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+# ============================================================================
 # HEALTH CHECK
 # ============================================================================
 
@@ -845,8 +1058,9 @@ async def health_check_db():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    """Close all database connections."""
-    db_pool.close()
+    """Close all database connections on graceful shutdown."""
+    if db_pool:
+        db_pool.close()
 
 if __name__ == "__main__":
     import uvicorn

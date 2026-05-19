@@ -30,12 +30,15 @@ OUT_PATH = ROOT / "public_html" / "data" / "news.json"
 
 # Sector → NewsAPI search query
 SECTOR_QUERIES = {
-    "AI & Quantum": '("artificial intelligence" OR "quantum computing" OR "AI chip" OR "qubit" OR Nvidia OR Anthropic OR OpenAI OR IonQ OR Quantinuum OR Rigetti)',
-    "Biotech":      '(biotech OR mRNA OR CRISPR OR "gene therapy" OR "FDA approval" OR clinical OR Moderna OR BioNTech OR Vertex)',
-    "Energy":       '(oil OR LNG OR renewables OR solar OR "energy storage" OR Aramco OR Exxon OR Chevron OR "First Solar")',
-    "Defense":      '(defense OR Lockheed OR Raytheon OR "Northrop Grumman" OR BAE OR hypersonic OR "missile defense")',
-    "Finance":      '(JPMorgan OR Goldman OR "Bank of America" OR Visa OR Mastercard OR "Federal Reserve" OR earnings)',
+    "AI & Quantum": '("artificial intelligence" OR "quantum computing" OR "AI chip" OR "qubit" OR Nvidia OR Anthropic OR OpenAI OR IonQ OR Quantinuum OR Rigetti OR Palantir OR "C3.ai" OR Arista OR "Super Micro" OR AMD OR "Applied Digital") AND (stock OR shares OR earnings OR revenue OR CEO OR "market cap" OR investor OR trading OR "Wall Street")',
+    "Biotech":      '(biotech OR mRNA OR CRISPR OR "gene therapy" OR "FDA approval" OR clinical OR Moderna OR BioNTech OR Vertex OR Regeneron OR Illumina) AND (stock OR earnings OR FDA OR trial OR shares)',
+    "Energy":       '(oil OR LNG OR renewables OR solar OR "energy storage" OR Aramco OR Exxon OR Chevron OR "First Solar" OR "NextEra") AND (stock OR earnings OR price OR production OR investor)',
+    "Defense":      '(defense OR Lockheed OR Raytheon OR "Northrop Grumman" OR BAE OR hypersonic OR "missile defense" OR "General Dynamics" OR "L3Harris") AND (stock OR contract OR earnings OR Pentagon)',
+    "Finance":      '(JPMorgan OR Goldman OR "Bank of America" OR Visa OR Mastercard OR "Federal Reserve" OR "interest rate" OR earnings OR "S&P 500") AND (stock OR market OR earnings OR investor)',
 }
+
+# Domains to exclude from all news results
+EXCLUDE_DOMAINS = 'pypi.org,github.com,stackoverflow.com,reddit.com,medium.com,dev.to,hackernews.com,npmjs.com'
 
 def load_secrets():
     if not SECRETS_PATH.exists():
@@ -51,6 +54,7 @@ def fetch_sector(api_key, sector, query, page_size=8):
     params = {
         "q": query, "from": from_date, "language": "en",
         "sortBy": "publishedAt", "pageSize": page_size, "apiKey": api_key,
+        "excludeDomains": EXCLUDE_DOMAINS,
     }
     try:
         r = requests.get(url, params=params, timeout=15)

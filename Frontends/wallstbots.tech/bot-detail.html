@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio — Wall St. Bots</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #06080d;
+      --panel: #0d1117;
+      --panel2: #141b27;
+      --border: #1e2633;
+      --text: #e6edf3;
+      --muted: #7d8590;
+      --green: #3fb950;
+      --green-dim: #1a3d21;
+      --green-glow: rgba(63,185,80,0.15);
+      --red: #f85149;
+      --red-dim: #3d1a1a;
+      --radius: 10px;
+      --pad: 20px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.5);
+      --max: 1200px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    a { text-decoration: none; color: inherit; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 var(--pad);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+
+    .logo { font-size: 17px; font-weight: 800; color: var(--green); letter-spacing: -0.5px; }
+    .logo span { color: var(--text); }
+
+    .header-right { display: flex; align-items: center; gap: 12px; }
+
+    .btn-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: color 0.2s;
+    }
+
+    .btn-back:hover { color: var(--text); }
+
+    .btn-logout {
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+    /* ─── CONTAINER ─── */
+    .container {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 32px var(--pad);
+    }
+
+    /* ─── PORTFOLIO HEADER ─── */
+    .portfolio-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 28px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .port-title-group { flex: 1; }
+
+    .port-name {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+
+    .port-meta { font-size: 13px; color: var(--muted); }
+
+    .port-actions { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+
+    .btn-add-stock {
+      padding: 10px 20px;
+      background: var(--green);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-add-stock:hover {
+      background: #4dcb60;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(63,185,80,0.3);
+    }
+
+    .btn-delete-portfolio {
+      padding: 10px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-delete-portfolio:hover { border-color: var(--red); color: var(--red); }
+
+    /* ─── STATS ROW ─── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .stat-val {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .stat-val.up { color: var(--green); }
+    .stat-val.dn { color: var(--red); }
+
+    .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* ─── MAIN GRID (chart + table) ─── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* ─── HOLDINGS TABLE ─── */
+    .holdings-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title { font-size: 14px; font-weight: 700; }
+    .panel-count { font-size: 12px; color: var(--muted); }
+
+    .holdings-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .holdings-table th {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .holdings-table th:last-child { text-align: right; }
+    .holdings-table th.num { text-align: right; }
+
+    .holdings-table td {
+      padding: 14px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(30,38,51,0.5);
+      vertical-align: middle;
+    }
+
+    .holdings-table tr:last-child td { border-bottom: none; }
+
+    .holdings-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .sym { font-weight: 700; font-size: 14px; }
+    .co { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .td-num { text-align: right; }
+    .td-up { text-align: right; color: var(--green); font-weight: 600; }
+    .td-dn { text-align: right; color: var(--red); font-weight: 600; }
+
+    .remove-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .remove-btn:hover { border-color: var(--red); color: var(--red); }
+
+    /* ─── CHART PANEL ─── */
+    .chart-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .chart-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+
+    .chart-wrapper { position: relative; height: 220px; }
+
+    .allocation-list {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .allocation-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+    }
+
+    .alloc-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .alloc-sym { font-weight: 700; flex: 1; }
+    .alloc-pct { color: var(--muted); }
+
+    /* ─── EMPTY HOLDINGS ─── */
+    .empty-holdings {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .empty-holdings h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .empty-holdings p { font-size: 13px; margin-bottom: 20px; line-height: 1.6; }
+
+    /* ─── NEW PORTFOLIO BANNER ─── */
+    .new-portfolio-banner {
+      background: var(--green-dim);
+      border: 1px solid rgba(63,185,80,0.3);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--green);
+    }
+
+    /* ─── LOADING ─── */
+    .loading-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .loading-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      margin: 0 3px;
+      animation: bounce 1.2s infinite;
+    }
+
+    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ─── ADD STOCK MODAL ─── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title { font-size: 16px; font-weight: 700; }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+
+    .modal-close:hover { color: var(--text); }
+
+    .modal-body { padding: 24px; }
+
+    .form-group { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+
+    input:focus { border-color: var(--green); }
+    input::placeholder { color: var(--muted); }
+
+    /* Stock search results dropdown */
+    .search-wrapper { position: relative; }
+
+    .search-results {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 300;
+      display: none;
+    }
+
+    .search-results.show { display: block; }
+
+    .search-result-item {
+      padding: 10px 14px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(30,38,51,0.5);
+      transition: background 0.1s;
+    }
+
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover { background: rgba(63,185,80,0.08); }
+    .search-result-item.selected { background: var(--green-dim); }
+
+    .sr-left .sr-sym { font-size: 14px; font-weight: 700; }
+    .sr-left .sr-name { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .sr-right { font-size: 11px; color: var(--muted); }
+
+    .search-no-results {
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .selected-stock {
+      padding: 10px 14px;
+      background: var(--green-dim);
+      border: 1px solid rgba(63,185,80,0.3);
+      border-radius: var(--radius);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .selected-stock.show { display: flex; }
+
+    .ss-sym { font-size: 14px; font-weight: 700; color: var(--green); }
+    .ss-name { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .ss-clear {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 16px;
+      transition: color 0.2s;
+    }
+
+    .ss-clear:hover { color: var(--red); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+    .modal-error {
+      background: rgba(248,81,73,0.1);
+      border: 1px solid rgba(248,81,73,0.3);
+      color: var(--red);
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding: 18px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-cancel {
+      padding: 10px 20px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+
+    .btn-confirm {
+      padding: 10px 24px;
+      background: var(--green);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-confirm:hover { background: #4dcb60; }
+    .btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .chart-panel { order: 2; }
+    }
+
+    @media (max-width: 600px) {
+      .stats-row { grid-template-columns: 1fr; }
+      .portfolio-header { flex-direction: column; }
+      .two-col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <a href="/" class="logo">Wall St. <span>Bots</span></a>
+      <div class="header-right">
+        <button class="btn-back" onclick="window.location.href='/dashboard.html'">← Dashboard</button>
+        <button class="btn-logout" id="logoutBtn">Log Out</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container" id="mainContent">
+    <div class="loading-state">
+      <div style="margin-bottom:16px;">
+        <span class="loading-dot"></span>
+        <span class="loading-dot"></span>
+        <span class="loading-dot"></span>
+      </div>
+      Loading portfolio…
+    </div>
+  </div>
+
+  <!-- ADD STOCK MODAL -->
+  <div class="modal-overlay" id="addStockModal" onclick="handleOverlayClick(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Add Stock</div>
+        <button class="modal-close" onclick="closeAddModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-error" id="addError"></div>
+
+        <!-- Stock search -->
+        <div class="form-group">
+          <label>Search Stock</label>
+          <div class="search-wrapper">
+            <input type="text" id="stockSearch" placeholder="AAPL, Apple, NVDA…" autocomplete="off" />
+            <div class="search-results" id="searchResults"></div>
+          </div>
+        </div>
+
+        <!-- Selected stock display -->
+        <div class="selected-stock" id="selectedStockDisplay">
+          <div>
+            <div class="ss-sym" id="selSymbol">—</div>
+            <div class="ss-name" id="selName">—</div>
+          </div>
+          <button class="ss-clear" onclick="clearSelectedStock()">×</button>
+        </div>
+
+        <!-- Position details -->
+        <div class="two-col">
+          <div class="form-group">
+            <label>Shares Owned</label>
+            <input type="number" id="holdingQty" placeholder="e.g. 10" min="0" step="any" />
+            <div class="hint">How many shares you hold</div>
+          </div>
+          <div class="form-group">
+            <label>Avg Entry Price ($)</label>
+            <input type="number" id="holdingEntry" placeholder="e.g. 145.00" min="0" step="any" />
+            <div class="hint">Your average cost per share</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Portfolio Weight (%)</label>
+          <input type="number" id="holdingWeight" placeholder="e.g. 20" min="0" max="100" step="any" />
+          <div class="hint">Percentage of this portfolio allocated to this stock</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+        <button class="btn-confirm" id="addBtn" onclick="addHolding()">Add to Portfolio</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/auth.js"></script>
+  <script src="/api.js"></script>
+  <script>
+    const API_BASE = "https://wallstbots-backend-868128114349.us-east1.run.app";
+    const auth = new WallStBotsAuth(API_BASE);
+    const api = new WallStBotsAPI(API_BASE, auth);
+
+    // Auth guard
+    if (!auth.isAuthenticated()) {
+      window.location.href = "/login.html?redirect=" + encodeURIComponent(window.location.href);
+    }
+
+    // Get bot ID from URL
+    const params = new URLSearchParams(window.location.search);
+    const BOT_ID = params.get("id");
+    const IS_NEW = params.get("new") === "1";
+
+    if (!BOT_ID) window.location.href = "/dashboard.html";
+
+    let botData = null;
+    let holdings = [];
+    let pieChart = null;
+    let selectedStock = null;
+    let searchTimeout = null;
+
+    // Chart colors
+    const CHART_COLORS = [
+      "#3fb950","#00d4ff","#a855f7","#ff8c00","#ec4899",
+      "#facc15","#10b981","#f85149","#60a5fa","#fb923c"
+    ];
+
+    // ── LOAD PORTFOLIO ──
+    async function loadPortfolio() {
+      try {
+        const data = await api.getBot(BOT_ID);
+        botData = data.bot || data;
+
+        const holdingsData = await api.getBotHoldings(BOT_ID);
+        holdings = holdingsData.holdings || holdingsData || [];
+
+        renderPortfolio();
+      } catch (err) {
+        console.error("Load failed:", err);
+        document.getElementById("mainContent").innerHTML = `
+          <div style="text-align:center;padding:80px 20px;color:var(--muted)">
+            <p style="font-size:16px;margin-bottom:12px;">Failed to load portfolio.</p>
+            <button onclick="loadPortfolio()" style="padding:10px 20px;background:var(--green);color:#000;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Retry</button>
+          </div>
+        `;
+      }
+    }
+
+    function renderPortfolio() {
+      const perf = botData.performance || {};
+      const totalVal = perf.total_value || 0;
+      const totalCost = perf.total_cost || 0;
+      const gainLoss = totalVal - totalCost;
+      const gainPct = perf.gain_loss_pct || 0;
+      const holdingCount = holdings.length;
+
+      document.title = `${botData.name} — Wall St. Bots`;
+
+      document.getElementById("mainContent").innerHTML = `
+
+        ${IS_NEW ? `
+          <div class="new-portfolio-banner">
+            🎉 Portfolio created! Now add your first stocks below.
+          </div>
+        ` : ''}
+
+        <!-- Portfolio header -->
+        <div class="portfolio-header">
+          <div class="port-title-group">
+            <div class="port-name" id="portName">${escHtml(botData.name)}</div>
+            <div class="port-meta">${holdingCount} holdings · Created ${formatDate(botData.created_at)}</div>
+          </div>
+          <div class="port-actions">
+            <button class="btn-add-stock" onclick="openAddModal()">+ Add Stock</button>
+            <button class="btn-delete-portfolio" onclick="confirmDelete()">Delete</button>
+          </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Total Value</div>
+            <div class="stat-val" id="statValue">${totalVal > 0 ? '$' + fmt(totalVal) : '—'}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Gain / Loss</div>
+            <div class="stat-val ${gainLoss >= 0 ? 'up' : 'dn'}" id="statGainLoss">
+              ${totalCost > 0 ? (gainLoss >= 0 ? '+' : '') + '$' + fmt(gainLoss) : '—'}
+            </div>
+            <div class="stat-sub" id="statGainPct">
+              ${gainPct !== 0 ? (gainPct >= 0 ? '+' : '') + gainPct.toFixed(2) + '%' : ''}
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Holdings</div>
+            <div class="stat-val">${holdingCount}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Cost Basis</div>
+            <div class="stat-val">${totalCost > 0 ? '$' + fmt(totalCost) : '—'}</div>
+          </div>
+        </div>
+
+        <!-- Main grid -->
+        <div class="main-grid">
+
+          <!-- Holdings table -->
+          <div class="holdings-panel">
+            <div class="panel-header">
+              <div class="panel-title">Holdings</div>
+              <div class="panel-count">${holdingCount} / 50 stocks</div>
+            </div>
+            <div id="holdingsTableWrapper">
+              ${renderHoldingsTable()}
+            </div>
+          </div>
+
+          <!-- Allocation chart -->
+          <div class="chart-panel" id="chartPanel">
+            <div class="chart-title">Allocation</div>
+            ${holdingCount > 0 ? `
+              <div class="chart-wrapper">
+                <canvas id="pieChart"></canvas>
+              </div>
+              <div class="allocation-list" id="allocList"></div>
+            ` : `
+              <div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">
+                Add stocks to see allocation.
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+
+      if (holdingCount > 0) {
+        renderChart();
+      }
+    }
+
+    function renderHoldingsTable() {
+      if (holdings.length === 0) {
+        return `
+          <div class="empty-holdings">
+            <h3>No stocks yet</h3>
+            <p>Add your first stock to start tracking this portfolio's performance.</p>
+            <button class="btn-add-stock" onclick="openAddModal()">+ Add Your First Stock</button>
+          </div>
+        `;
+      }
+
+      const rows = holdings.map((h, i) => {
+        const cost = (h.entry_price || 0) * (h.quantity || 0);
+        const currentVal = h.current_value || h.value || cost;
+        const gl = currentVal - cost;
+        const glPct = cost > 0 ? (gl / cost) * 100 : 0;
+        const glClass = gl >= 0 ? 'td-up' : 'td-dn';
+        const color = CHART_COLORS[i % CHART_COLORS.length];
+
+        return `
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></div>
+                <div>
+                  <div class="sym">${escHtml(h.symbol)}</div>
+                  <div class="co">${escHtml(h.company_name || h.name || '')}</div>
+                </div>
+              </div>
+            </td>
+            <td class="td-num">${h.quantity != null ? h.quantity.toLocaleString() : '—'}</td>
+            <td class="td-num">${h.entry_price != null ? '$' + h.entry_price.toFixed(2) : '—'}</td>
+            <td class="td-num">${h.current_price != null ? '$' + h.current_price.toFixed(2) : '—'}</td>
+            <td class="td-num">${currentVal > 0 ? '$' + fmt(currentVal) : '—'}</td>
+            <td class="${cost > 0 ? glClass : 'td-num'}">
+              ${cost > 0 ? (gl >= 0 ? '+' : '') + glPct.toFixed(2) + '%' : '—'}
+            </td>
+            <td style="text-align:right">
+              <button class="remove-btn" onclick="removeHolding('${h.id}', '${escHtml(h.symbol)}')">Remove</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      return `
+        <table class="holdings-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th class="num">Shares</th>
+              <th class="num">Entry</th>
+              <th class="num">Price</th>
+              <th class="num">Value</th>
+              <th class="num">Return</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function renderChart() {
+      if (!document.getElementById("pieChart")) return;
+
+      const labels = holdings.map(h => h.symbol);
+      const weights = holdings.map(h => {
+        if (h.weight) return h.weight;
+        const cost = (h.entry_price || 0) * (h.quantity || 0);
+        return cost;
+      });
+
+      const colors = holdings.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
+
+      if (pieChart) pieChart.destroy();
+
+      pieChart = new Chart(document.getElementById("pieChart"), {
+        type: "doughnut",
+        data: {
+          labels,
+          datasets: [{
+            data: weights,
+            backgroundColor: colors,
+            borderColor: "transparent",
+            borderWidth: 0,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => {
+                  const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                  const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                  return ` ${ctx.label}: ${pct}%`;
+                }
+              }
+            }
+          },
+          cutout: "60%",
+        }
+      });
+
+      // Render allocation list
+      const total = weights.reduce((a, b) => a + b, 0);
+      const allocList = document.getElementById("allocList");
+      if (allocList) {
+        allocList.innerHTML = holdings.map((h, i) => {
+          const pct = total > 0 ? ((weights[i] / total) * 100).toFixed(1) : 0;
+          return `
+            <div class="allocation-item">
+              <div class="alloc-dot" style="background:${CHART_COLORS[i % CHART_COLORS.length]}"></div>
+              <div class="alloc-sym">${escHtml(h.symbol)}</div>
+              <div class="alloc-pct">${pct}%</div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // ── ADD STOCK MODAL ──
+    function openAddModal() {
+      selectedStock = null;
+      document.getElementById("stockSearch").value = '';
+      document.getElementById("holdingQty").value = '';
+      document.getElementById("holdingEntry").value = '';
+      document.getElementById("holdingWeight").value = '';
+      document.getElementById("searchResults").classList.remove("show");
+      document.getElementById("selectedStockDisplay").classList.remove("show");
+      document.getElementById("addError").style.display = "none";
+      document.getElementById("addStockModal").classList.add("open");
+      setTimeout(() => document.getElementById("stockSearch").focus(), 100);
+    }
+
+    function closeAddModal() {
+      document.getElementById("addStockModal").classList.remove("open");
+      document.getElementById("searchResults").classList.remove("show");
+    }
+
+    function handleOverlayClick(e) {
+      if (e.target === document.getElementById("addStockModal")) closeAddModal();
+    }
+
+    // Stock search
+    document.addEventListener("DOMContentLoaded", () => {
+      const searchInput = document.getElementById("stockSearch");
+      if (searchInput) {
+        searchInput.addEventListener("input", () => {
+          clearTimeout(searchTimeout);
+          const q = searchInput.value.trim();
+          if (q.length < 1) {
+            document.getElementById("searchResults").classList.remove("show");
+            return;
+          }
+          searchTimeout = setTimeout(() => doSearch(q), 350);
+        });
+      }
+    });
+
+    // Also wire up after page renders
+    function wireSearchInput() {
+      const searchInput = document.getElementById("stockSearch");
+      if (!searchInput) return;
+      searchInput.addEventListener("input", () => {
+        clearTimeout(searchTimeout);
+        const q = searchInput.value.trim();
+        if (!q) { document.getElementById("searchResults").classList.remove("show"); return; }
+        searchTimeout = setTimeout(() => doSearch(q), 350);
+      });
+    }
+
+    async function doSearch(q) {
+      const resultsEl = document.getElementById("searchResults");
+      resultsEl.innerHTML = '<div class="search-no-results">Searching…</div>';
+      resultsEl.classList.add("show");
+
+      try {
+        const data = await api.searchStocks(q);
+        const results = data.results || data || [];
+
+        if (!results.length) {
+          resultsEl.innerHTML = '<div class="search-no-results">No results for "' + escHtml(q) + '"</div>';
+          return;
+        }
+
+        resultsEl.innerHTML = results.slice(0, 8).map(r => `
+          <div class="search-result-item" onclick="selectStock('${escHtml(r.ticker || r.symbol)}', '${escHtml(r.name || r.company_name || '')}')">
+            <div class="sr-left">
+              <div class="sr-sym">${escHtml(r.ticker || r.symbol)}</div>
+              <div class="sr-name">${escHtml(r.name || r.company_name || '')}</div>
+            </div>
+            <div class="sr-right">${escHtml(r.market || r.exchange || '')}</div>
+          </div>
+        `).join('');
+      } catch (err) {
+        resultsEl.innerHTML = '<div class="search-no-results">Search failed. Try again.</div>';
+      }
+    }
+
+    function selectStock(symbol, name) {
+      selectedStock = { symbol, name };
+      document.getElementById("stockSearch").value = symbol;
+      document.getElementById("searchResults").classList.remove("show");
+      document.getElementById("selSymbol").textContent = symbol;
+      document.getElementById("selName").textContent = name;
+      document.getElementById("selectedStockDisplay").classList.add("show");
+      document.getElementById("holdingQty").focus();
+    }
+
+    function clearSelectedStock() {
+      selectedStock = null;
+      document.getElementById("stockSearch").value = '';
+      document.getElementById("selectedStockDisplay").classList.remove("show");
+      document.getElementById("stockSearch").focus();
+    }
+
+    async function addHolding() {
+      const errEl = document.getElementById("addError");
+      errEl.style.display = "none";
+
+      if (!selectedStock) {
+        errEl.textContent = "Please search and select a stock.";
+        errEl.style.display = "block";
+        return;
+      }
+
+      const qty = parseFloat(document.getElementById("holdingQty").value);
+      const entry = parseFloat(document.getElementById("holdingEntry").value);
+      const weight = parseFloat(document.getElementById("holdingWeight").value);
+
+      if (isNaN(qty) && isNaN(weight)) {
+        errEl.textContent = "Enter shares or a portfolio weight percentage.";
+        errEl.style.display = "block";
+        return;
+      }
+
+      const btn = document.getElementById("addBtn");
+      btn.disabled = true;
+      btn.textContent = "Adding…";
+
+      try {
+        await api.addHolding(
+          BOT_ID,
+          selectedStock.symbol,
+          isNaN(weight) ? null : weight,
+          isNaN(qty) ? null : qty,
+          isNaN(entry) ? null : entry
+        );
+        closeAddModal();
+        await loadPortfolio();
+      } catch (err) {
+        errEl.textContent = err.message || "Failed to add stock. Try again.";
+        errEl.style.display = "block";
+        btn.disabled = false;
+        btn.textContent = "Add to Portfolio";
+      }
+    }
+
+    // ── REMOVE HOLDING ──
+    async function removeHolding(holdingId, symbol) {
+      if (!confirm(`Remove ${symbol} from this portfolio?`)) return;
+      try {
+        await api.removeHolding(BOT_ID, holdingId);
+        await loadPortfolio();
+      } catch (err) {
+        alert("Failed to remove holding: " + (err.message || "Try again."));
+      }
+    }
+
+    // ── DELETE PORTFOLIO ──
+    async function confirmDelete() {
+      if (!confirm(`Delete portfolio "${botData?.name}"? This cannot be undone.`)) return;
+      try {
+        await api.deleteBot(BOT_ID);
+        window.location.href = "/dashboard.html";
+      } catch (err) {
+        alert("Failed to delete portfolio: " + (err.message || "Try again."));
+      }
+    }
+
+    // ── LOGOUT ──
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      auth.logout();
+      window.location.href = "/";
+    });
+
+    // ── HELPERS ──
+    function escHtml(str) {
+      return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function fmt(n) {
+      return Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatDate(ts) {
+      if (!ts) return '';
+      try { return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+      catch { return ''; }
+    }
+
+    // ── INIT ──
+    loadPortfolio().then(() => wireSearchInput());
+
+    // Keyboard: Escape to close modals
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeAddModal();
+    });
+
+    // Auto-refresh every 2 minutes
+    setInterval(loadPortfolio, 120000);
+  </script>
+</body>
+</html>

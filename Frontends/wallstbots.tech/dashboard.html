@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Wall St. Bots</title>
+  <style>
+    :root {
+      --bg: #06080d;
+      --panel: #0d1117;
+      --panel2: #141b27;
+      --border: #1e2633;
+      --text: #e6edf3;
+      --muted: #7d8590;
+      --green: #3fb950;
+      --green-dim: #1a3d21;
+      --green-glow: rgba(63,185,80,0.15);
+      --red: #f85149;
+      --radius: 10px;
+      --pad: 20px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.5);
+      --max: 1200px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    a { text-decoration: none; color: inherit; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 var(--pad);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+
+    .logo { font-size: 17px; font-weight: 800; color: var(--green); letter-spacing: -0.5px; }
+    .logo span { color: var(--text); }
+
+    nav { display: flex; gap: 24px; }
+    nav a { font-size: 13px; color: var(--muted); transition: color 0.2s; font-weight: 500; }
+    nav a:hover, nav a.active { color: var(--text); }
+
+    .user-controls { display: flex; align-items: center; gap: 12px; }
+
+    .user-email {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 6px 12px;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .btn-logout {
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+    /* ─── MAIN CONTAINER ─── */
+    .container {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 32px var(--pad);
+    }
+
+    /* ─── PAGE HEADER ─── */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+      gap: 20px;
+    }
+
+    .page-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+    .page-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    .btn-create {
+      padding: 10px 20px;
+      background: var(--green);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .btn-create:hover {
+      background: #4dcb60;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(63,185,80,0.3);
+    }
+
+    /* ─── SUMMARY STATS BAR ─── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+
+    .stat-card-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .stat-card-val {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .stat-card-val.up { color: var(--green); }
+    .stat-card-val.dn { color: var(--red); }
+
+    /* ─── PORTFOLIO GRID ─── */
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .portfolio-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+
+    .portfolio-card:hover {
+      border-color: var(--green);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+    }
+
+    .pc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .pc-name { font-size: 15px; font-weight: 700; }
+    .pc-desc { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+    .pc-badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      background: var(--green-dim);
+      color: var(--green);
+      border-radius: 4px;
+    }
+
+    .pc-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      margin-top: 16px;
+    }
+
+    .pc-stat { text-align: center; }
+    .pc-stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+    .pc-stat-val { font-size: 16px; font-weight: 700; }
+    .pc-stat-val.up { color: var(--green); }
+    .pc-stat-val.dn { color: var(--red); }
+
+    .pc-footer {
+      margin-top: 14px;
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .pc-arrow {
+      color: var(--green);
+      font-size: 16px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .portfolio-card:hover .pc-arrow { opacity: 1; }
+
+    /* ─── EMPTY STATE ─── */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--muted);
+    }
+
+    .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state h2 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .empty-state p { font-size: 14px; max-width: 360px; margin: 0 auto 24px; line-height: 1.6; }
+
+    /* ─── LOADING ─── */
+    .loading-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px;
+      color: var(--muted);
+    }
+
+    .loading-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      margin: 0 3px;
+      animation: bounce 1.2s infinite;
+    }
+
+    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ─── NEWS SIDEBAR SECTION ─── */
+    .news-section {
+      margin-top: 40px;
+    }
+
+    .news-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .news-title { font-size: 16px; font-weight: 700; }
+
+    .news-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .news-item {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      gap: 14px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .news-item:hover { border-color: var(--green); }
+
+    .news-item-source {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--green);
+      white-space: nowrap;
+      padding-top: 2px;
+      min-width: 80px;
+    }
+
+    .news-item-content { flex: 1; }
+    .news-item-headline { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 4px; }
+    .news-item-time { font-size: 11px; color: var(--muted); }
+
+    /* ─── CREATE MODAL ─── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title { font-size: 16px; font-weight: 700; }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+
+    .modal-close:hover { color: var(--text); }
+
+    .modal-body { padding: 24px; }
+
+    .form-group { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+
+    input:focus, textarea:focus { border-color: var(--green); }
+    input::placeholder, textarea::placeholder { color: var(--muted); }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding: 20px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-cancel {
+      padding: 10px 20px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+
+    .btn-confirm {
+      padding: 10px 24px;
+      background: var(--green);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-confirm:hover { background: #4dcb60; }
+    .btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .modal-error {
+      background: rgba(248,81,73,0.1);
+      border: 1px solid rgba(248,81,73,0.3);
+      color: var(--red);
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 700px) {
+      .stats-bar { grid-template-columns: 1fr 1fr; }
+      nav { display: none; }
+      .page-header { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <a href="/" class="logo">Wall St. <span>Bots</span></a>
+      <nav>
+        <a href="/dashboard.html" class="active">Portfolios</a>
+        <a href="/#news">Market News</a>
+        <a href="https://bitbot13.tech" target="_blank">BitBot13</a>
+        <a href="https://lvl13.tech" target="_blank">Level XIII</a>
+      </nav>
+      <div class="user-controls">
+        <div class="user-email" id="userEmail">—</div>
+        <button class="btn-logout" id="logoutBtn">Log Out</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div>
+        <div class="page-title">Your Portfolios</div>
+        <div class="page-sub" id="portfolioCount">Loading…</div>
+      </div>
+      <button class="btn-create" onclick="openCreateModal()">+ New Portfolio</button>
+    </div>
+
+    <!-- Summary stats -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-card-label">Total Value</div>
+        <div class="stat-card-val" id="totalValue">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Total Gain / Loss</div>
+        <div class="stat-card-val" id="totalReturn">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Portfolios</div>
+        <div class="stat-card-val" id="totalBots">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Platform</div>
+        <div class="stat-card-val" style="font-size:14px;color:var(--green)">Wall St. Bots</div>
+      </div>
+    </div>
+
+    <!-- Portfolio grid -->
+    <div class="portfolio-grid" id="portfolioGrid">
+      <div class="loading-state">
+        <div style="margin-bottom:16px;">
+          <span class="loading-dot"></span>
+          <span class="loading-dot"></span>
+          <span class="loading-dot"></span>
+        </div>
+        Loading your portfolios…
+      </div>
+    </div>
+
+    <!-- Market news strip -->
+    <div class="news-section">
+      <div class="news-header">
+        <div class="news-title">Market News</div>
+        <a href="/#news" style="font-size:12px;color:var(--green);">View all →</a>
+      </div>
+      <div class="news-list" id="newsList">
+        <div style="color:var(--muted);font-size:13px;padding:16px 0;">Loading headlines…</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CREATE PORTFOLIO MODAL -->
+  <div class="modal-overlay" id="createModal" onclick="handleOverlayClick(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Create New Portfolio</div>
+        <button class="modal-close" onclick="closeCreateModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-error" id="createError"></div>
+        <div class="form-group">
+          <label for="portfolioName">Portfolio Name</label>
+          <input type="text" id="portfolioName" placeholder="e.g. Tech Growth, Dividend Kings" maxlength="60" />
+        </div>
+        <div class="form-group">
+          <label for="portfolioDesc">Description <span style="color:var(--muted);font-weight:400;text-transform:none">(optional)</span></label>
+          <textarea id="portfolioDesc" placeholder="What's the strategy or theme?"></textarea>
+        </div>
+        <div class="hint">You'll add stocks from the portfolio detail page after creation.</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeCreateModal()">Cancel</button>
+        <button class="btn-confirm" id="createBtn" onclick="createPortfolio()">Create Portfolio</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/auth.js"></script>
+  <script src="/api.js"></script>
+  <script>
+    const API_BASE = "https://wallstbots-backend-868128114349.us-east1.run.app";
+    const auth = new WallStBotsAuth(API_BASE);
+    const api = new WallStBotsAPI(API_BASE, auth);
+
+    // Auth guard
+    if (!auth.isAuthenticated()) {
+      window.location.href = "/login.html?redirect=" + encodeURIComponent(window.location.href);
+    }
+
+    let allBots = [];
+
+    // ── LOAD USER PROFILE ──
+    async function loadProfile() {
+      try {
+        const profile = await api.getUserProfile();
+        document.getElementById("userEmail").textContent = profile.email || "User";
+      } catch (err) {
+        console.error("Profile load failed:", err);
+      }
+    }
+
+    // ── LOAD PORTFOLIOS ──
+    async function loadPortfolios() {
+      try {
+        const response = await api.getBots();
+        allBots = (response.bots || []).filter(b => b.platform === "wallstbots");
+
+        const count = allBots.length;
+        document.getElementById("totalBots").textContent = count;
+        document.getElementById("portfolioCount").textContent =
+          count === 0 ? "No portfolios yet" :
+          count === 1 ? "1 portfolio" : `${count} portfolios`;
+
+        renderPortfolios();
+        loadPerformance();
+      } catch (err) {
+        console.error("Portfolio load failed:", err);
+        document.getElementById("portfolioGrid").innerHTML =
+          '<div class="loading-state">Failed to load portfolios. <a href="#" onclick="loadPortfolios()" style="color:var(--green)">Retry</a></div>';
+      }
+    }
+
+    function renderPortfolios() {
+      const grid = document.getElementById("portfolioGrid");
+
+      if (allBots.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📊</div>
+            <h2>No portfolios yet</h2>
+            <p>Create your first portfolio and start tracking NYSE &amp; NASDAQ stocks in real time.</p>
+            <button class="btn-create" onclick="openCreateModal()">+ Create Your First Portfolio</button>
+          </div>
+        `;
+        document.getElementById("totalValue").textContent = "$0.00";
+        document.getElementById("totalReturn").textContent = "—";
+        return;
+      }
+
+      grid.innerHTML = allBots.map(bot => `
+        <div class="portfolio-card" onclick="window.location.href='/bot-detail.html?id=${bot.id}'">
+          <div class="pc-header">
+            <div>
+              <div class="pc-name">${escHtml(bot.name)}</div>
+              ${bot.description ? `<div class="pc-desc">${escHtml(bot.description)}</div>` : ''}
+            </div>
+            <div class="pc-badge">WSB</div>
+          </div>
+          <div class="pc-stats">
+            <div class="pc-stat">
+              <div class="pc-stat-label">Value</div>
+              <div class="pc-stat-val" id="val-${bot.id}">—</div>
+            </div>
+            <div class="pc-stat">
+              <div class="pc-stat-label">Return</div>
+              <div class="pc-stat-val" id="ret-${bot.id}">—</div>
+            </div>
+            <div class="pc-stat">
+              <div class="pc-stat-label">Holdings</div>
+              <div class="pc-stat-val" id="hld-${bot.id}">—</div>
+            </div>
+          </div>
+          <div class="pc-footer">
+            <span>Created ${formatDate(bot.created_at)}</span>
+            <span class="pc-arrow">→</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadPerformance() {
+      let totalValue = 0;
+      let totalCost = 0;
+
+      const promises = allBots.map(async bot => {
+        try {
+          const data = await api.getBot(bot.id);
+          const perf = data?.bot?.performance;
+          const holdings = data?.bot?.holdings_count ?? data?.bot?.holdings?.length ?? '—';
+
+          document.getElementById(`hld-${bot.id}`).textContent = holdings;
+
+          if (perf) {
+            const val = perf.total_value || 0;
+            const pct = perf.gain_loss_pct || 0;
+            totalValue += val;
+
+            const valEl = document.getElementById(`val-${bot.id}`);
+            const retEl = document.getElementById(`ret-${bot.id}`);
+
+            valEl.textContent = `$${val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            retEl.textContent = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+            retEl.className = `pc-stat-val ${pct >= 0 ? 'up' : 'dn'}`;
+          }
+        } catch (err) {
+          console.warn(`Perf load failed for ${bot.id}:`, err);
+        }
+      });
+
+      await Promise.all(promises);
+
+      // Update summary bar
+      if (totalValue > 0) {
+        document.getElementById("totalValue").textContent =
+          `$${totalValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      } else {
+        document.getElementById("totalValue").textContent = "$0.00";
+      }
+    }
+
+    // ── LOAD NEWS ──
+    async function loadNews() {
+      try {
+        const data = await fetch(`${API_BASE}/public/tracker/news?platform=lvl13`).then(r => r.json());
+        const articles = (data.data || []).slice(0, 5);
+        const list = document.getElementById("newsList");
+
+        if (!articles.length) {
+          list.innerHTML = '<div style="color:var(--muted);font-size:13px;">No recent news.</div>';
+          return;
+        }
+
+        list.innerHTML = articles.map(a => `
+          <a href="${a.url || '#'}" target="_blank" rel="noopener" class="news-item">
+            <div class="news-item-source">${a.source || 'News'}</div>
+            <div class="news-item-content">
+              <div class="news-item-headline">${escHtml(a.title || a.headline || '')}</div>
+              <div class="news-item-time">${formatTime(a.published_at || a.timestamp)}</div>
+            </div>
+          </a>
+        `).join('');
+      } catch (err) {
+        console.warn("News load failed:", err);
+      }
+    }
+
+    // ── CREATE MODAL ──
+    function openCreateModal() {
+      document.getElementById("portfolioName").value = '';
+      document.getElementById("portfolioDesc").value = '';
+      document.getElementById("createError").style.display = 'none';
+      document.getElementById("createModal").classList.add("open");
+      setTimeout(() => document.getElementById("portfolioName").focus(), 100);
+    }
+
+    function closeCreateModal() {
+      document.getElementById("createModal").classList.remove("open");
+    }
+
+    function handleOverlayClick(e) {
+      if (e.target === document.getElementById("createModal")) closeCreateModal();
+    }
+
+    async function createPortfolio() {
+      const name = document.getElementById("portfolioName").value.trim();
+      const desc = document.getElementById("portfolioDesc").value.trim();
+      const errEl = document.getElementById("createError");
+
+      if (!name) {
+        errEl.textContent = "Portfolio name is required.";
+        errEl.style.display = "block";
+        return;
+      }
+
+      const btn = document.getElementById("createBtn");
+      btn.disabled = true;
+      btn.textContent = "Creating…";
+      errEl.style.display = "none";
+
+      try {
+        const result = await api.createBot(name, "wallstbots", desc || null);
+        closeCreateModal();
+        // Go straight to the detail page to add stocks
+        if (result?.bot?.id || result?.id) {
+          const id = result?.bot?.id || result?.id;
+          window.location.href = `/bot-detail.html?id=${id}&new=1`;
+        } else {
+          await loadPortfolios();
+        }
+      } catch (err) {
+        errEl.textContent = err.message || "Failed to create portfolio. Try again.";
+        errEl.style.display = "block";
+        btn.disabled = false;
+        btn.textContent = "Create Portfolio";
+      }
+    }
+
+    // Enter key support in modal
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeCreateModal();
+      if (e.key === "Enter" && document.getElementById("createModal").classList.contains("open")) {
+        createPortfolio();
+      }
+    });
+
+    // ── LOGOUT ──
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      auth.logout();
+      window.location.href = "/";
+    });
+
+    // ── HELPERS ──
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function formatDate(ts) {
+      if (!ts) return '';
+      try { return new Date(ts).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}); }
+      catch { return ''; }
+    }
+
+    function formatTime(ts) {
+      if (!ts) return '';
+      try {
+        const d = new Date(ts);
+        const diff = Math.floor((Date.now() - d) / 60000);
+        if (diff < 60) return `${diff}m ago`;
+        if (diff < 1440) return `${Math.floor(diff/60)}h ago`;
+        return d.toLocaleDateString();
+      } catch { return ''; }
+    }
+
+    // ── INIT ──
+    loadProfile();
+    loadPortfolios();
+    loadNews();
+
+    // Refresh portfolios every 60 seconds
+    setInterval(loadPortfolios, 60000);
+  </script>
+</body>
+</html>
