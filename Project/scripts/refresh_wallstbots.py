@@ -157,22 +157,36 @@ def get_live_prices(symbols):
     if yf is None:
         print("  [ERROR] yfinance not installed.")
         return {}, {}
+    import pandas as pd
     yf_syms     = [YF_OVERRIDE.get(s, s) for s in symbols]
     prices      = {}
     prev_closes = {}
     print(f"  [yfinance] fetching {len(yf_syms)} tickers (live prices)...")
-    for yf_sym in yf_syms:
-        state_sym = YF_TO_STATE.get(yf_sym, yf_sym)
-        try:
-            t  = yf.Ticker(yf_sym)
-            fi = getattr(t, "fast_info", None) or {}
-            p  = float(fi.get("last_price") or 0)
-            pc = float(fi.get("previous_close") or 0)
-            if p > 0:
-                prices[state_sym]      = round(p, 4)
-                prev_closes[state_sym] = round(pc if pc > 0 else p, 4)
-        except Exception as e:
-            print(f"    [warn] {yf_sym}: {e}")
+    try:
+        raw = yf.download(
+            yf_syms,
+            period="2d",
+            auto_adjust=True,
+            progress=False,
+        )
+        if not raw.empty:
+            for yf_sym in yf_syms:
+                state_sym = YF_TO_STATE.get(yf_sym, yf_sym)
+                try:
+                    if isinstance(raw.columns, pd.MultiIndex):
+                        closes = raw["Close"][yf_sym].dropna()
+                    else:
+                        closes = raw["Close"].dropna()
+                    if len(closes) >= 1:
+                        p  = float(closes.iloc[-1])
+                        pc = float(closes.iloc[-2]) if len(closes) >= 2 else p
+                        if p > 0:
+                            prices[state_sym]      = round(p, 4)
+                            prev_closes[state_sym] = round(pc, 4)
+                except Exception:
+                    pass
+    except Exception as e:
+        print(f"  [yfinance] download error: {e}")
     print(f"  [yfinance] got {len(prices)}/{len(symbols)} prices")
     return prices, prev_closes
 

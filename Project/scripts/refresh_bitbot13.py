@@ -136,30 +136,32 @@ def get_live_prices(state_symbols):
         print("  [ERROR] yfinance not installed. Run:  pip install yfinance requests")
         return {}, {}
 
+    import pandas as pd
     prices, prev_closes = {}, {}
     print(f"  [yfinance] fetching {len(state_symbols)} crypto tickers...")
 
-    for sym in state_symbols:
-        yf_sym = UNIVERSE_MAP.get(sym, f"{sym}-USD")
-        try:
-            t  = yf.Ticker(yf_sym)
-            fi = getattr(t, "fast_info", None) or {}
-            p  = float(fi.get("last_price") or 0)
-            pc = float(fi.get("previous_close") or 0)
-            if p > 0:
-                prices[sym]      = p
-                prev_closes[sym] = pc if pc > 0 else p
-            else:
-                # Fallback: try fetching 2-day history
-                hist = t.history(period="2d", interval="1d")
-                if len(hist) >= 1:
-                    p  = float(hist["Close"].iloc[-1])
-                    pc = float(hist["Close"].iloc[-2]) if len(hist) >= 2 else p
-                    if p > 0:
-                        prices[sym]      = p
-                        prev_closes[sym] = pc
-        except Exception as e:
-            print(f"    [warn] {sym} ({yf_sym}): {e}")
+    yf_syms   = [UNIVERSE_MAP.get(s, f"{s}-USD") for s in state_symbols]
+    sym_map   = {UNIVERSE_MAP.get(s, f"{s}-USD"): s for s in state_symbols}
+    try:
+        raw = yf.download(yf_syms, period="2d", auto_adjust=True, progress=False)
+        if not raw.empty:
+            for yf_sym in yf_syms:
+                state_sym = sym_map.get(yf_sym, yf_sym)
+                try:
+                    if isinstance(raw.columns, pd.MultiIndex):
+                        closes = raw["Close"][yf_sym].dropna()
+                    else:
+                        closes = raw["Close"].dropna()
+                    if len(closes) >= 1:
+                        p  = float(closes.iloc[-1])
+                        pc = float(closes.iloc[-2]) if len(closes) >= 2 else p
+                        if p > 0:
+                            prices[state_sym]      = p
+                            prev_closes[state_sym] = pc
+                except Exception:
+                    pass
+    except Exception as e:
+        print(f"  [yfinance] download error: {e}")
 
     # For any coins that yfinance missed, try CoinGecko (no auth needed, free tier)
     missing = [s for s in state_symbols if s not in prices]
