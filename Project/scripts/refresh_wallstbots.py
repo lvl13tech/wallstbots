@@ -850,7 +850,7 @@ def push_to_api(data_type, data, secrets):
         r = _requests.post(
             f"{api_url}/internal/tracker/push",
             json={"platform": "wallstbots", "data_type": data_type, "data": data},
-            headers={"internal_api_key": internal_key},
+            headers={"x-internal-key": internal_key},
             timeout=20,
         )
         if r.status_code == 200:

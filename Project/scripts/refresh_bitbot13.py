@@ -408,39 +408,30 @@ def fetch_news(api_key):
     return all_items
 
 
-def push_news_to_api(items, secrets):
-    """Push news items to the backend tracker API (platform=bitbot13)."""
-    if _requests is None:
-        print("  [news-push] requests not available — skipping")
-        return
-    api_url      = secrets.get("api_url") or os.environ.get("TRACKER_API_URL", "")
-    internal_key = secrets.get("internal_api_key") or os.environ.get("INTERNAL_API_KEY", "")
-    if not api_url or not internal_key:
-        print("  [news-push] missing api_url or internal_api_key — skipping push")
-        return
+BACKEND_URL = "https://wallstbots-backend-868128114349.us-east1.run.app"
 
-    payload = {
-        "platform":  "bitbot13",
-        "data_type": "news",
-        "data": {
-            "items":        items,
-            "sectors":      sorted({it["sector"] for it in items}),
-            "generated_at": dt.datetime.utcnow().isoformat() + "Z",
-        },
-    }
+def push_to_api(data_type, data, secrets):
+    """Push any data_type (state/signals/news/reports) to the backend tracker API."""
+    if _requests is None:
+        return
+    api_url      = secrets.get("api_url") or os.environ.get("TRACKER_API_URL", BACKEND_URL)
+    internal_key = secrets.get("internal_api_key") or os.environ.get("INTERNAL_API_KEY", "")
+    if not internal_key:
+        print(f"  [push:{data_type}] no INTERNAL_API_KEY — skipping")
+        return
     try:
         r = _requests.post(
             f"{api_url}/internal/tracker/push",
-            json=payload,
-            headers={"internal_api_key": internal_key},
+            json={"platform": "bitbot13", "data_type": data_type, "data": data},
+            headers={"x-internal-key": internal_key},
             timeout=20,
         )
         if r.status_code == 200:
-            print(f"  [news-push] ✓ pushed {len(items)} articles to backend API")
+            print(f"  [push:{data_type}] ✓ pushed to backend API")
         else:
-            print(f"  [news-push] HTTP {r.status_code}: {r.text[:200]}")
+            print(f"  [push:{data_type}] HTTP {r.status_code}: {r.text[:120]}")
     except Exception as e:
-        print(f"  [news-push] error: {e}")
+        print(f"  [push:{data_type}] error: {e}")
 
 # ── Git push ───────────────────────────────────────────────────────────────────
 def git_push(msg):
@@ -487,8 +478,7 @@ def main():
     prices, prev_closes = get_live_prices(sorted(need_syms))
 
     if not prices:
-        print("[bitbot13] ERROR: zero prices returned. Check yfinance install and internet.")
-        sys.exit(1)
+        print("[bitbot13] WARNING: zero prices returned — positions will not update but continuing.")
 
     today_iso = dt.date.today().isoformat()
     now_iso   = dt.datetime.now().isoformat(timespec="seconds")
@@ -622,39 +612,40 @@ def main():
     wk_lb.sort(key=lambda r: -r["week_pct"])
     all_lb.sort(key=lambda r: -r["all_pct"])
 
-    # ── 7. Write state.json ─────────────────────────────────────────────────────
-    state_out = {
-        "data": {
-            "starting_capital": sc_global,
-            "last_refresh":     now_iso,
-            "snapshots":        snapshots,
-            "funds":            funds_out,
-            "leaderboards":     {"week": wk_lb, "all": all_lb},
-        }
+    # ── 7. State → write local + push to backend API ──────────────────────────
+    state_data = {
+        "starting_capital": sc_global,
+        "last_refresh":     now_iso,
+        "snapshots":        snapshots,
+        "funds":            funds_out,
+        "leaderboards":     {"week": wk_lb, "all": all_lb},
     }
-    STATE_FILE.write_text(json.dumps(state_out, indent=2))
-    print(f"[bitbot13] ✓ state.json  — {len(funds_out)} funds, {len(snapshots)} snapshots")
+    STATE_FILE.write_text(json.dumps({"data": state_data}, indent=2))
+    print(f"[bitbot13] ✓ state — {len(funds_out)} funds, {len(snapshots)} snapshots")
+    push_to_api("state", state_data, secrets)
 
-    # ── 8. Write signals.json ───────────────────────────────────────────────────
+    # ── 8. Signals → write local + push to backend API ─────────────────────────
     signals = generate_signals(prices, prev_closes)
     (DATA_DIR / "signals.json").write_text(json.dumps({"data": signals}, indent=2))
     n_sig = len(signals["recommendations"])
-    print(f"[bitbot13] ✓ signals.json — {n_sig} signals  "
-          f"(BUY:{signals['summary']['BUY']+signals['summary']['STRONG BUY']}  "
-          f"HOLD:{signals['summary']['HOLD']}  "
-          f"SELL:{signals['summary']['SELL']+signals['summary']['STRONG SELL']})")
+    print(f"[bitbot13] ✓ signals — {n_sig} signals")
+    push_to_api("signals", signals, secrets)
 
-
-    # ── 9. Fetch news + push to backend API ────────────────────────────────────
+    # ── 9. News → fetch + push to backend API ──────────────────────────────────
     print("[bitbot13] fetching news...")
     news_items = fetch_news(newsapi_key)
-    if news_items:
-        push_news_to_api(news_items, secrets)
-    else:
-        print("  [news] 0 articles — skipping push")
-    print(f"[bitbot13] ✓ news done — {len(news_items)} articles")
+    news_data = {
+        "items":        news_items,
+        "sectors":      sorted({it["sector"] for it in news_items}) if news_items else [],
+        "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+    }
+    print(f"[bitbot13] ✓ news — {len(news_items)} articles")
+    push_to_api("news", news_data, secrets)
 
-    # ── 10. Git push (optional) ─────────────────────────────────────────────────
+    # ── Reports placeholder ─────────────────────────────────────────────────────
+    push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
+
+    # ── 10. Git push (optional — static files as backup) ───────────────────────
     if args.push:
         print("[bitbot13] pushing to GitHub...")
         git_push("bitbot13.tech data refresh")
