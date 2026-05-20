@@ -775,82 +775,99 @@ def generate_signals(prices, prev_closes, hist_data):
 
 
 # ── News ─────────────────────────────────────────────────────────────────────────
-def fetch_news():
-    """Fetch financial news from free RSS feeds — no API key, works from GitHub Actions."""
-    import xml.etree.ElementTree as ET
-    import re
-    from email.utils import parsedate_to_datetime
+SECTOR_QUERIES = {
+    "AI & Quantum": '("artificial intelligence" OR "quantum computing" OR "AI chip" OR "qubit" OR Nvidia OR Anthropic OR OpenAI OR IonQ OR Quantinuum OR Rigetti)',
+    "Biotech":      '(biotech OR mRNA OR CRISPR OR "gene therapy" OR "FDA approval" OR clinical OR Moderna OR BioNTech OR Vertex)',
+    "Energy":       '(oil OR LNG OR renewables OR solar OR "energy storage" OR Aramco OR Exxon OR Chevron OR "First Solar")',
+    "Defense":      '(defense OR Lockheed OR Raytheon OR "Northrop Grumman" OR BAE OR hypersonic OR "missile defense")',
+    "Finance":      '(JPMorgan OR Goldman OR "Bank of America" OR Visa OR Mastercard OR "Federal Reserve" OR earnings)',
+}
 
+def fetch_news(api_key):
+    """Fetch financial news from NewsAPI.org — same pattern as lvl13.tech."""
     if _requests is None:
         print("  [news] requests not available — skipping")
         return []
+    if not api_key:
+        print("  [news] no NewsAPI key — skipping")
+        return []
 
-    # Free RSS feeds: (url, sector_tag)
-    RSS_FEEDS = [
-        ("https://finance.yahoo.com/rss/topstories",                "MARKET"),
-        ("https://www.cnbc.com/id/100003114/device/rss/rss.html",   "MARKET"),
-        ("https://feeds.marketwatch.com/marketwatch/topstories/",   "MARKET"),
-        ("https://www.cnbc.com/id/100727362/device/rss/rss.html",   "IT"),
-        ("https://www.cnbc.com/id/10000664/device/rss/rss.html",    "FINANCIALS"),
-        ("https://www.cnbc.com/id/10001147/device/rss/rss.html",    "ENERGY"),
-        ("https://www.cnbc.com/id/15839135/device/rss/rss.html",    "HEALTH CARE"),
-        ("https://www.cnbc.com/id/10001054/device/rss/rss.html",    "CONSUMER DISCRETIONARY"),
-    ]
+    from_date = (dt.datetime.utcnow() - dt.timedelta(days=3)).strftime("%Y-%m-%d")
+    all_items = []
+    seen = set()
 
-    HEADERS = {
-        "User-Agent": (
-            "Mozilla/5.0 (compatible; WallStBots/1.0; +https://wallstbots.tech)"
-        )
-    }
-
-    items, seen = [], set()
-
-    for feed_url, sector in RSS_FEEDS:
+    for sector, query in SECTOR_QUERIES.items():
         try:
-            r = _requests.get(feed_url, headers=HEADERS, timeout=15)
-            if r.status_code != 200:
-                print(f"  [news] {sector} HTTP {r.status_code} — {feed_url}")
-                continue
-
-            root = ET.fromstring(r.content)
-            channel = root.find("channel")
-            feed_items = (
-                channel.findall("item") if channel is not None
-                else root.findall(".//item")
+            r = _requests.get(
+                "https://newsapi.org/v2/everything",
+                params={
+                    "q": query, "from": from_date, "language": "en",
+                    "sortBy": "publishedAt", "pageSize": 8, "apiKey": api_key,
+                },
+                timeout=15,
             )
-
-            count = 0
-            for itm in feed_items[:6]:
-                title = (itm.findtext("title") or "").strip()
-                if not title or title in seen or "[Removed]" in title:
-                    continue
-                desc = re.sub(r"<[^>]+>", "", (itm.findtext("description") or "")).strip()
-                url  = (itm.findtext("link") or "").strip()
-                pub  = (itm.findtext("pubDate") or "").strip()
-                src_el = itm.find("source")
-                source = src_el.text.strip() if src_el is not None else feed_url.split("/")[2]
-                try:
-                    pub_iso = parsedate_to_datetime(pub).isoformat()
-                except Exception:
-                    pub_iso = pub
-                seen.add(title)
-                items.append({
-                    "title":        title,
-                    "description":  desc[:250],
-                    "url":          url,
-                    "source":       source,
-                    "sector":       sector,
-                    "published_at": pub_iso,
-                })
-                count += 1
-            print(f"  [news] {sector} from {feed_url.split('/')[2]}: {count} articles")
-
+            if r.status_code == 200:
+                data = r.json()
+                count = 0
+                for a in data.get("articles", []):
+                    title = (a.get("title") or "").split(" - ")[0].strip()
+                    key   = title[:80].lower()
+                    if not title or key in seen or "[Removed]" in title:
+                        continue
+                    seen.add(key)
+                    all_items.append({
+                        "title":        title,
+                        "source":       (a.get("source") or {}).get("name", ""),
+                        "sector":       sector,
+                        "published_at": a.get("publishedAt"),
+                        "url":          a.get("url", "#"),
+                    })
+                    count += 1
+                print(f"  [news] {sector}: {count} articles")
+            else:
+                print(f"  [news] {sector} HTTP {r.status_code}: {r.text[:120]}")
         except Exception as e:
-            print(f"  [news] {sector} {feed_url.split('/')[2]}: {e}")
+            print(f"  [news] {sector} error: {e}")
 
-    items.sort(key=lambda it: it.get("published_at", ""), reverse=True)
-    print(f"  [news] fetched {len(items)} total articles")
-    return items
+    all_items.sort(key=lambda x: x.get("published_at", ""), reverse=True)
+    all_items = all_items[:30]
+    print(f"  [news] fetched {len(all_items)} total articles")
+    return all_items
+
+
+def push_news_to_api(items, secrets):
+    """Push news items to the backend tracker API (platform=wallstbots)."""
+    if _requests is None:
+        print("  [news-push] requests not available — skipping")
+        return
+    api_url      = secrets.get("api_url") or os.environ.get("TRACKER_API_URL", "")
+    internal_key = secrets.get("internal_api_key") or os.environ.get("INTERNAL_API_KEY", "")
+    if not api_url or not internal_key:
+        print("  [news-push] missing api_url or internal_api_key — skipping push")
+        return
+
+    payload = {
+        "platform":  "wallstbots",
+        "data_type": "news",
+        "data": {
+            "items":        items,
+            "sectors":      sorted({it["sector"] for it in items}),
+            "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+        },
+    }
+    try:
+        r = _requests.post(
+            f"{api_url}/internal/tracker/push",
+            json=payload,
+            headers={"internal_api_key": internal_key},
+            timeout=20,
+        )
+        if r.status_code == 200:
+            print(f"  [news-push] ✓ pushed {len(items)} articles to backend API")
+        else:
+            print(f"  [news-push] HTTP {r.status_code}: {r.text[:200]}")
+    except Exception as e:
+        print(f"  [news-push] error: {e}")
 
 
 # ── Git push ──────────────────────────────────────────────────────────────────────
@@ -1111,6 +1128,7 @@ def main():
     wk_lb.sort(key=lambda r: -r["week_pct"])
     all_lb.sort(key=lambda r: -r["all_pct"])
 
+
     # ── Write state.json ──────────────────────────────────────────────────────
     state_out = {"data": {
         "starting_capital": sc_global,
@@ -1128,17 +1146,14 @@ def main():
     n_sig = len(signals["recommendations"])
     print(f"[wallstbots] signals.json — {n_sig} signals")
 
-    # ── Write news.json ───────────────────────────────────────────────────────
+    # ── Fetch news + push to backend API ─────────────────────────────────────
     print("[wallstbots] fetching news...")
-    news_items = fetch_news()
-    all_sectors = sorted({it["sector"] for it in news_items}) or [
-        "ENERGY","MATERIALS","INDUSTRIALS","CONSUMER DISCRETIONARY",
-        "CONSUMER STAPLES","HEALTH CARE","FINANCIALS","IT",
-        "COMMUNICATION SERVICES","UTILITIES","REAL ESTATE",
-    ]
-    news_out = {"data": {"items": news_items, "sectors": all_sectors, "generated_at": now_iso}}
-    (DATA_DIR / "news.json").write_text(json.dumps(news_out, indent=2))
-    print(f"[wallstbots] news.json — {len(news_items)} articles")
+    news_items = fetch_news(newsapi_key)
+    if news_items:
+        push_news_to_api(news_items, secrets)
+    else:
+        print("  [news] 0 articles — skipping push")
+    print(f"[wallstbots] news done — {len(news_items)} articles")
 
     # ── Git push ──────────────────────────────────────────────────────────────
     if args.push:

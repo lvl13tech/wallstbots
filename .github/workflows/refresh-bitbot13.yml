@@ -1,0 +1,55 @@
+name: Refresh bitbot13.tech
+
+# Runs automatically every 4 hours — crypto never closes.
+# Fetches live coin prices, recalculates all bot P&L, generates signals + news,
+# commits updated JSON files, Cloudflare Pages auto-deploys on push.
+
+on:
+  schedule:
+    # Every 4 hours around the clock (crypto trades 24/7)
+    - cron: '0 */4 * * *'
+  workflow_dispatch:   # allow manual trigger from GitHub Actions UI if needed
+
+permissions:
+  contents: write      # needed to push updated data files back to the repo
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-bitbot13-${{ hashFiles('**/refresh_bitbot13.py') }}
+          restore-keys: pip-bitbot13-
+
+      - name: Install dependencies
+        run: pip install yfinance requests
+
+      - name: Run bitbot13 refresh
+        env:
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+        run: python Project/scripts/refresh_bitbot13.py
+
+      - name: Commit and push updated data
+        run: |
+          git config user.name  "BitBot13 Bot"
+          git config user.email "bot@bitbot13.tech"
+          git add Frontends/bitbot13.tech/data/
+          # Only commit if files actually changed (avoids empty commit errors)
+          git diff --staged --quiet || git commit -m "auto: bitbot13 data refresh [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git push

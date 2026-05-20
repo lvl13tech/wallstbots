@@ -30,13 +30,21 @@ const FUND_META = {
 };
 const FUND_ORDER = ['bot13','oracle','wizard','equalizer','titan'];
 
-// ============ DATA LOADING — local files ============
+const TRACKER_API = 'https://wallstbots-backend-868128114349.us-east1.run.app/public/tracker';
+
+function fetchWithTimeout(url, opts = {}, ms = 8000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(t));
+}
+
+// ============ DATA LOADING — backend API ============
 async function loadAll() {
   if (location.protocol === 'file:') { showFileProtocolWarning(); return; }
   try {
     const r = await Promise.allSettled([
       fetch('data/state.json',   { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
-      fetch('data/news.json',    { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/news?platform=wallstbots`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
       fetch('data/signals.json', { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
       fetch('data/reports.json', { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
     ]);

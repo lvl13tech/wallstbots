@@ -57,6 +57,7 @@ jobs:
       - name: Run wallstbots refresh
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
         run: |
           echo "=== Running refresh script ==="
           python Project/scripts/refresh_wallstbots.py

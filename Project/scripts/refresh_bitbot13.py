@@ -347,82 +347,100 @@ def generate_signals(prices, prev_closes):
     }
 
 # ── News ───────────────────────────────────────────────────────────────────────
-def fetch_news():
-    """Fetch crypto news from free RSS feeds — no API key, works from GitHub Actions."""
-    import xml.etree.ElementTree as ET
-    import re
-    from email.utils import parsedate_to_datetime
+SECTOR_QUERIES = {
+    "Bitcoin":    '(Bitcoin OR BTC OR "Bitcoin ETF" OR "Bitcoin halving" OR "Bitcoin price")',
+    "Ethereum":   '(Ethereum OR ETH OR "Ethereum upgrade" OR "smart contracts" OR Solidity)',
+    "Altcoins":   '(Solana OR Cardano OR XRP OR Avalanche OR Polkadot OR Chainlink OR altcoin)',
+    "DeFi":       '("decentralized finance" OR DeFi OR Uniswap OR Aave OR "yield farming" OR liquidity)',
+    "Regulation": '(crypto regulation OR SEC crypto OR CFTC OR "crypto law" OR stablecoin regulation)',
+    "Blockchain": '(blockchain OR Web3 OR NFT OR "crypto adoption" OR "crypto hack" OR exchange)',
+}
 
+def fetch_news(api_key):
+    """Fetch crypto news from NewsAPI.org — same pattern as lvl13.tech."""
     if _requests is None:
         print("  [news] requests not available — skipping")
         return []
+    if not api_key:
+        print("  [news] no NewsAPI key — skipping")
+        return []
 
-    # Free crypto RSS feeds: (url, sector_tag)
-    RSS_FEEDS = [
-        ("https://www.coindesk.com/arc/outboundfeeds/rss/",   "BITCOIN"),
-        ("https://cointelegraph.com/rss",                     "BITCOIN"),
-        ("https://decrypt.co/feed",                           "ETHEREUM"),
-        ("https://bitcoinmagazine.com/.rss/full/",            "BITCOIN"),
-        ("https://cointelegraph.com/rss/tag/altcoin",         "ALTCOINS"),
-        ("https://cointelegraph.com/rss/tag/defi",            "BLOCKCHAIN"),
-        ("https://cointelegraph.com/rss/tag/regulation",      "REGULATION"),
-        ("https://cointelegraph.com/rss/tag/ethereum",        "ETHEREUM"),
-    ]
+    from_date = (dt.datetime.utcnow() - dt.timedelta(days=3)).strftime("%Y-%m-%d")
+    all_items = []
+    seen = set()
 
-    HEADERS = {
-        "User-Agent": (
-            "Mozilla/5.0 (compatible; BitBot13/1.0; +https://bitbot13.tech)"
-        )
-    }
-
-    items, seen = [], set()
-
-    for feed_url, sector in RSS_FEEDS:
+    for sector, query in SECTOR_QUERIES.items():
         try:
-            r = _requests.get(feed_url, headers=HEADERS, timeout=15)
-            if r.status_code != 200:
-                print(f"  [news] {sector} HTTP {r.status_code} — {feed_url}")
-                continue
-
-            root = ET.fromstring(r.content)
-            channel = root.find("channel")
-            feed_items = (
-                channel.findall("item") if channel is not None
-                else root.findall(".//item")
+            r = _requests.get(
+                "https://newsapi.org/v2/everything",
+                params={
+                    "q": query, "from": from_date, "language": "en",
+                    "sortBy": "publishedAt", "pageSize": 8, "apiKey": api_key,
+                },
+                timeout=15,
             )
-
-            count = 0
-            for itm in feed_items[:6]:
-                title = (itm.findtext("title") or "").strip()
-                if not title or title in seen or "[Removed]" in title:
-                    continue
-                desc = re.sub(r"<[^>]+>", "", (itm.findtext("description") or "")).strip()
-                url  = (itm.findtext("link") or "").strip()
-                pub  = (itm.findtext("pubDate") or "").strip()
-                src_el = itm.find("source")
-                source = src_el.text.strip() if src_el is not None else feed_url.split("/")[2]
-                try:
-                    pub_iso = parsedate_to_datetime(pub).isoformat()
-                except Exception:
-                    pub_iso = pub
-                seen.add(title)
-                items.append({
-                    "title":        title,
-                    "description":  desc[:250],
-                    "url":          url,
-                    "source":       source,
-                    "sector":       sector,
-                    "published_at": pub_iso,
-                })
-                count += 1
-            print(f"  [news] {sector} from {feed_url.split('/')[2]}: {count} articles")
-
+            if r.status_code == 200:
+                data = r.json()
+                count = 0
+                for a in data.get("articles", []):
+                    title = (a.get("title") or "").split(" - ")[0].strip()
+                    key   = title[:80].lower()
+                    if not title or key in seen or "[Removed]" in title:
+                        continue
+                    seen.add(key)
+                    all_items.append({
+                        "title":        title,
+                        "source":       (a.get("source") or {}).get("name", ""),
+                        "sector":       sector,
+                        "published_at": a.get("publishedAt"),
+                        "url":          a.get("url", "#"),
+                    })
+                    count += 1
+                print(f"  [news] {sector}: {count} articles")
+            else:
+                print(f"  [news] {sector} HTTP {r.status_code}: {r.text[:120]}")
         except Exception as e:
-            print(f"  [news] {sector} {feed_url.split('/')[2]}: {e}")
+            print(f"  [news] {sector} error: {e}")
 
-    items.sort(key=lambda it: it.get("published_at", ""), reverse=True)
-    print(f"  [news] fetched {len(items)} total articles")
-    return items
+    all_items.sort(key=lambda x: x.get("published_at", ""), reverse=True)
+    all_items = all_items[:30]
+    print(f"  [news] fetched {len(all_items)} total articles")
+    return all_items
+
+
+def push_news_to_api(items, secrets):
+    """Push news items to the backend tracker API (platform=bitbot13)."""
+    if _requests is None:
+        print("  [news-push] requests not available — skipping")
+        return
+    api_url      = secrets.get("api_url") or os.environ.get("TRACKER_API_URL", "")
+    internal_key = secrets.get("internal_api_key") or os.environ.get("INTERNAL_API_KEY", "")
+    if not api_url or not internal_key:
+        print("  [news-push] missing api_url or internal_api_key — skipping push")
+        return
+
+    payload = {
+        "platform":  "bitbot13",
+        "data_type": "news",
+        "data": {
+            "items":        items,
+            "sectors":      sorted({it["sector"] for it in items}),
+            "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+        },
+    }
+    try:
+        r = _requests.post(
+            f"{api_url}/internal/tracker/push",
+            json=payload,
+            headers={"internal_api_key": internal_key},
+            timeout=20,
+        )
+        if r.status_code == 200:
+            print(f"  [news-push] ✓ pushed {len(items)} articles to backend API")
+        else:
+            print(f"  [news-push] HTTP {r.status_code}: {r.text[:200]}")
+    except Exception as e:
+        print(f"  [news-push] error: {e}")
 
 # ── Git push ───────────────────────────────────────────────────────────────────
 def git_push(msg):
@@ -626,23 +644,17 @@ def main():
           f"HOLD:{signals['summary']['HOLD']}  "
           f"SELL:{signals['summary']['SELL']+signals['summary']['STRONG SELL']})")
 
-    # ── 9. Fetch + write news.json ──────────────────────────────────────────────
-    print("[bitbot13] fetching news...")
-    news_items = fetch_news()
-    all_sectors = sorted({it["sector"] for it in news_items}) or [
-        "BITCOIN","ETHEREUM","ALTCOINS","REGULATION","BLOCKCHAIN","SECURITY",
-    ]
-    news_out = {
-        "data": {
-            "items":        news_items,
-            "sectors":      all_sectors,
-            "generated_at": now_iso,
-        }
-    }
-    (DATA_DIR / "news.json").write_text(json.dumps(news_out, indent=2))
-    print(f"[bitbot13] \u2713 news.json   \u2014 {len(news_items)} articles")
 
-    # \u2500\u2500 10. Git push (optional) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+    # ── 9. Fetch news + push to backend API ────────────────────────────────────
+    print("[bitbot13] fetching news...")
+    news_items = fetch_news(newsapi_key)
+    if news_items:
+        push_news_to_api(news_items, secrets)
+    else:
+        print("  [news] 0 articles — skipping push")
+    print(f"[bitbot13] ✓ news done — {len(news_items)} articles")
+
+    # ── 10. Git push (optional) ─────────────────────────────────────────────────
     if args.push:
         print("[bitbot13] pushing to GitHub...")
         git_push("bitbot13.tech data refresh")
