@@ -43,10 +43,10 @@ async function loadAll() {
   if (location.protocol === 'file:') { showFileProtocolWarning(); return; }
   try {
     const r = await Promise.allSettled([
-      fetch('data/state.json',   { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
-      fetchWithTimeout(`${TRACKER_API}/news?platform=wallstbots`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
-      fetch('data/signals.json', { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
-      fetch('data/reports.json', { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/state?platform=wallstbots`,   { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/news?platform=wallstbots`,    { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/signals?platform=wallstbots`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/reports?platform=wallstbots`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
     ]);
     STATE.funds   = r[0].status === 'fulfilled' ? r[0].value : null;
     STATE.news    = r[1].status === 'fulfilled' ? r[1].value : { items: [] };

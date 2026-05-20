@@ -38,15 +38,15 @@ function fetchWithTimeout(url, opts = {}, ms = 8000) {
   return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(t));
 }
 
-// ============ DATA LOADING — backend API for news ============
+// ============ DATA LOADING — backend API (all data types) ============
 async function loadAll() {
   if (location.protocol === 'file:') { showFileProtocolWarning(); return; }
   try {
     const r = await Promise.allSettled([
-      fetch('data/state.json',   { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
-      fetchWithTimeout(`${TRACKER_API}/news?platform=bitbot13`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
-      fetch('data/signals.json', { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
-      fetch('data/reports.json', { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/state?platform=bitbot13`,   { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/news?platform=bitbot13`,    { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/signals?platform=bitbot13`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/reports?platform=bitbot13`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
     ]);
     STATE.funds   = r[0].status === 'fulfilled' ? r[0].value : null;
     STATE.news    = r[1].status === 'fulfilled' ? r[1].value : { items: [] };

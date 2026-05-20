@@ -835,39 +835,30 @@ def fetch_news(api_key):
     return all_items
 
 
-def push_news_to_api(items, secrets):
-    """Push news items to the backend tracker API (platform=wallstbots)."""
-    if _requests is None:
-        print("  [news-push] requests not available — skipping")
-        return
-    api_url      = secrets.get("api_url") or os.environ.get("TRACKER_API_URL", "")
-    internal_key = secrets.get("internal_api_key") or os.environ.get("INTERNAL_API_KEY", "")
-    if not api_url or not internal_key:
-        print("  [news-push] missing api_url or internal_api_key — skipping push")
-        return
+BACKEND_URL = "https://wallstbots-backend-868128114349.us-east1.run.app"
 
-    payload = {
-        "platform":  "wallstbots",
-        "data_type": "news",
-        "data": {
-            "items":        items,
-            "sectors":      sorted({it["sector"] for it in items}),
-            "generated_at": dt.datetime.utcnow().isoformat() + "Z",
-        },
-    }
+def push_to_api(data_type, data, secrets):
+    """Push any data_type (state/signals/news/reports) to the backend tracker API."""
+    if _requests is None:
+        return
+    api_url      = secrets.get("api_url") or os.environ.get("TRACKER_API_URL", BACKEND_URL)
+    internal_key = secrets.get("internal_api_key") or os.environ.get("INTERNAL_API_KEY", "")
+    if not internal_key:
+        print(f"  [push:{data_type}] no INTERNAL_API_KEY — skipping")
+        return
     try:
         r = _requests.post(
             f"{api_url}/internal/tracker/push",
-            json=payload,
+            json={"platform": "wallstbots", "data_type": data_type, "data": data},
             headers={"internal_api_key": internal_key},
             timeout=20,
         )
         if r.status_code == 200:
-            print(f"  [news-push] ✓ pushed {len(items)} articles to backend API")
+            print(f"  [push:{data_type}] ✓ pushed to backend API")
         else:
-            print(f"  [news-push] HTTP {r.status_code}: {r.text[:200]}")
+            print(f"  [push:{data_type}] HTTP {r.status_code}: {r.text[:120]}")
     except Exception as e:
-        print(f"  [news-push] error: {e}")
+        print(f"  [push:{data_type}] error: {e}")
 
 
 # ── Git push ──────────────────────────────────────────────────────────────────────
@@ -922,8 +913,7 @@ def main():
     print(f"[wallstbots] fetching prices for {len(need_syms)} symbols...")
     prices, prev_closes = get_live_prices(sorted(need_syms))
     if not prices:
-        print("[wallstbots] ERROR: zero prices returned.")
-        sys.exit(1)
+        print("[wallstbots] WARNING: zero prices returned — positions will not update but continuing.")
 
     # ── Fetch historical data for strategy scoring ───────────────────────────
     hist_data = get_hist_data(list(need_syms))
@@ -1129,33 +1119,42 @@ def main():
     all_lb.sort(key=lambda r: -r["all_pct"])
 
 
-    # ── Write state.json ──────────────────────────────────────────────────────
-    state_out = {"data": {
+    # ── Build state payload ───────────────────────────────────────────────────
+    state_data = {
         "starting_capital": sc_global,
         "last_refresh":     now_iso,
         "snapshots":        snapshots,
         "funds":            funds_out,
         "leaderboards":     {"week": wk_lb, "all": all_lb},
-    }}
-    STATE_FILE.write_text(json.dumps(state_out, indent=2))
-    print(f"[wallstbots] state.json written — {len(funds_out)} funds, {len(snapshots)} snapshots")
+    }
+    # Write local file (backup) + push to backend API
+    STATE_FILE.write_text(json.dumps({"data": state_data}, indent=2))
+    print(f"[wallstbots] state — {len(funds_out)} funds, {len(snapshots)} snapshots")
+    push_to_api("state", state_data, secrets)
 
-    # ── Write signals.json ────────────────────────────────────────────────────
+    # ── Signals ───────────────────────────────────────────────────────────────
     signals = generate_signals(prices, prev_closes, hist_data)
-    (DATA_DIR / "signals.json").write_text(json.dumps({"data": signals}, indent=2))
+    signals_data = signals
+    (DATA_DIR / "signals.json").write_text(json.dumps({"data": signals_data}, indent=2))
     n_sig = len(signals["recommendations"])
-    print(f"[wallstbots] signals.json — {n_sig} signals")
+    print(f"[wallstbots] signals — {n_sig} signals")
+    push_to_api("signals", signals_data, secrets)
 
-    # ── Fetch news + push to backend API ─────────────────────────────────────
+    # ── News ──────────────────────────────────────────────────────────────────
     print("[wallstbots] fetching news...")
     news_items = fetch_news(newsapi_key)
-    if news_items:
-        push_news_to_api(news_items, secrets)
-    else:
-        print("  [news] 0 articles — skipping push")
-    print(f"[wallstbots] news done — {len(news_items)} articles")
+    news_data = {
+        "items":        news_items,
+        "sectors":      sorted({it["sector"] for it in news_items}) if news_items else [],
+        "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+    }
+    print(f"[wallstbots] news — {len(news_items)} articles")
+    push_to_api("news", news_data, secrets)
 
-    # ── Git push ──────────────────────────────────────────────────────────────
+    # ── Reports (placeholder — keeps API consistent) ──────────────────────────
+    push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
+
+    # ── Git push (optional — static files as backup) ─────────────────────────
     if args.push:
         git_push("wallstbots.tech data refresh")
 
