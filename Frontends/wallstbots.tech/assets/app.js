@@ -698,7 +698,7 @@ async function applyRefCode() {
 
   msg.innerHTML = '<span style="color:var(--muted)">Validating…</span>';
   try {
-    const r = await fetch('https://api.lvl13.tech/subscriptions/validate-referral?code=' + encodeURIComponent(code));
+    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/subscriptions/validate-referral?code=' + encodeURIComponent(code));
     const d = await r.json();
     if (d.valid) {
       GY_REF   = d.code;
@@ -856,7 +856,7 @@ async function loadReferralDashboard() {
   }
 
   try {
-    const r = await fetch('https://api.lvl13.tech/account/referral', {
+    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/account/referral', {
       headers: { 'Authorization': 'Bearer ' + token }
     });
     if (!r.ok) throw new Error('not_authed');

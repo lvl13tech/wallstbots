@@ -3,7 +3,7 @@ Wall St. Bots FastAPI Backend
 Unified API for lvl13.tech, bitbot13.tech, wallstbots.tech
 
 Author: Claude (AI Senior Engineer)
-Date: 2026-05-16
+Date: 2026-05-20 — v2 (admin system + bug fixes)
 """
 
 import os
@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Any
 from decimal import Decimal
 
-from fastapi import FastAPI, Depends, HTTPException, status, Header
+from fastapi import FastAPI, Depends, HTTPException, status, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
@@ -29,19 +29,19 @@ load_dotenv()
 # CONFIGURATION
 # ============================================================================
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
-JWT_SECRET = os.getenv("JWT_SECRET")
-DATABASE_URL = os.getenv("DATABASE_URL")
+SUPABASE_URL             = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_ROLE_KEY= os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+SUPABASE_ANON_KEY        = os.getenv("SUPABASE_ANON_KEY")
+JWT_SECRET               = os.getenv("JWT_SECRET")
+DATABASE_URL             = os.getenv("DATABASE_URL")
 
-PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID")
-PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET")
-PAYPAL_MODE = os.getenv("PAYPAL_MODE", "sandbox")
-POLYGON_API_KEY = os.getenv("POLYGON_API_KEY", "")
+PAYPAL_CLIENT_ID         = os.getenv("PAYPAL_CLIENT_ID")
+PAYPAL_CLIENT_SECRET     = os.getenv("PAYPAL_CLIENT_SECRET")
+PAYPAL_MODE              = os.getenv("PAYPAL_MODE", "sandbox")
+POLYGON_API_KEY          = os.getenv("POLYGON_API_KEY", "")
 
-# Internal key used by the GCP VM to push tracker data — never exposed publicly
-INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY", "")
+# Internal key used by GitHub Actions to push tracker data — never exposed publicly
+INTERNAL_API_KEY         = os.getenv("INTERNAL_API_KEY", "")
 
 PAYPAL_API_BASE = (
     "https://api.paypal.com" if PAYPAL_MODE == "live"
@@ -51,41 +51,26 @@ PAYPAL_API_BASE = (
 # ============================================================================
 # DATABASE POOL
 # ============================================================================
-# Root-cause of previous hangs: Cloud Run idles between requests; Supabase
-# PgBouncer drops TCP connections after ~10 min.  Without keepalives the OS
-# still shows the socket as ESTABLISHED, so cursor.execute() blocks forever
-# waiting for an ACK that never comes.
-#
-# Fixes applied:
-#   • check=ConnectionPool.check_connection  — validates with SELECT 1 before
-#     returning any connection from the pool
-#   • keepalives + keepalives_idle/interval/count  — OS-level TCP keepalives
-#     detect dead sockets within ~80 s instead of never
-#   • connect_timeout  — caps the initial connection handshake
-#   • statement_timeout  — server-side 15 s cap; last line of defense
-# ============================================================================
 
 db_pool = ConnectionPool(
     DATABASE_URL,
     min_size=1,
     max_size=20,
-    check=ConnectionPool.check_connection,   # ping before returning to caller
+    check=ConnectionPool.check_connection,
     kwargs={
         "connect_timeout": 10,
         "keepalives": 1,
         "keepalives_idle": 30,
         "keepalives_interval": 10,
         "keepalives_count": 5,
-        "options": "-c statement_timeout=15000",  # 15 s max per query
+        "options": "-c statement_timeout=15000",
     },
 )
 
 def get_db_connection():
-    """Get a validated connection from the pool (blocks up to 10 s)."""
     return db_pool.getconn(timeout=10.0)
 
 def return_db_connection(conn):
-    """Return a connection to the pool."""
     db_pool.putconn(conn)
 
 # ============================================================================
@@ -95,14 +80,13 @@ def return_db_connection(conn):
 app = FastAPI(
     title="Wall St. Bots API",
     description="Unified backend for AI/Crypto/Stock trackers",
-    version="1.0.0"
+    version="2.0.0"
 )
 
-# CORS for all three domains
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",  # local dev
+        "http://localhost:3000",
         "https://lvl13.tech",
         "https://bitbot13.tech",
         "https://wallstbots.tech",
@@ -141,15 +125,8 @@ class UserResponse(BaseModel):
 
 class BotCreate(BaseModel):
     name: str
-    platform: str  # 'lvl13', 'bitbot13', 'wallstbots'
-    description: Optional[str] = None
-
-class BotResponse(BaseModel):
-    id: str
-    name: str
     platform: str
-    status: str
-    created_at: str
+    description: Optional[str] = None
 
 class BotHoldingCreate(BaseModel):
     symbol: str
@@ -163,8 +140,8 @@ class PromoCodeValidateRequest(BaseModel):
 
 class PromoCodeValidateResponse(BaseModel):
     valid: bool
-    discount_amount: Optional[float]
-    discount_percentage: Optional[float]
+    discount_amount: Optional[float] = None
+    discount_percentage: Optional[float] = None
     message: str
 
 class SubscriptionCreateRequest(BaseModel):
@@ -180,7 +157,7 @@ class PayPalWebhookEvent(BaseModel):
 class TrackerPushRequest(BaseModel):
     data_type: str   # 'state' | 'news' | 'signals' | 'reports'
     platform:  str   # 'lvl13' | 'bitbot13' | 'wallstbots'
-    data:      Any   # the full JSON payload (dict or list)
+    data:      Any
 
 class StockPick(BaseModel):
     ticker: str
@@ -188,69 +165,69 @@ class StockPick(BaseModel):
 
 class SaveStocksRequest(BaseModel):
     stocks: List[StockPick]
-    platform: str = "lvl13"  # 'lvl13' | 'wallstbots' | 'bitbot13'
+    platform: str = "lvl13"
+
+class AdminUserUpdate(BaseModel):
+    role: Optional[str] = None          # 'user' | 'admin'
+    max_free_bots: Optional[int] = None
 
 # ============================================================================
 # AUTH HELPERS
 # ============================================================================
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
-    """
-    Verify JWT token and return user claims.
-    Token comes from Supabase Auth.
-    """
+    """Verify JWT token and return basic user claims (no DB hit)."""
     try:
         token = credentials.credentials
-
-        # Decode JWT (Supabase uses HS256 with JWT_SECRET)
-        payload = jwt.decode(
-            token,
-            JWT_SECRET,
-            algorithms=["HS256"]
-        )
-
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
         user_id: str = payload.get("sub")
         if user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token"
-            )
-
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
         return {"user_id": user_id, "email": payload.get("email")}
-
     except jwt.ExpiredSignatureError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token expired"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
     except jwt.InvalidTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+
+def get_current_user_with_role(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    """Verify JWT and fetch role from DB. Use when role matters for the endpoint."""
+    user = get_current_user(credentials)
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("SELECT role, max_free_bots FROM users WHERE id = %s", (user["user_id"],))
+        row = cursor.fetchone()
+        if row:
+            user["role"]          = row["role"]
+            user["max_free_bots"] = row["max_free_bots"] or 0
+        else:
+            user["role"]          = "user"
+            user["max_free_bots"] = 0
+        return user
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+def require_admin(current_user: dict = Depends(get_current_user_with_role)) -> dict:
+    """Dependency: raises 403 unless the calling user is an admin."""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return current_user
+
 
 def call_supabase_auth(method: str, endpoint: str, data: dict = None) -> dict:
-    """Call Supabase Auth API."""
     url = f"{SUPABASE_URL}/auth/v1{endpoint}"
-
-    headers = {
-        "apikey": SUPABASE_ANON_KEY,
-        "Content-Type": "application/json"
-    }
-
+    headers = {"apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json"}
     if method == "POST":
         response = requests.post(url, json=data, headers=headers)
     elif method == "GET":
         response = requests.get(url, headers=headers)
     else:
         raise ValueError(f"Unsupported method: {method}")
-
     if response.status_code not in [200, 201]:
-        raise HTTPException(
-            status_code=response.status_code,
-            detail=response.text
-        )
-
+        raise HTTPException(status_code=response.status_code, detail=response.text)
     return response.json()
 
 # ============================================================================
@@ -261,33 +238,42 @@ def call_supabase_auth(method: str, endpoint: str, data: dict = None) -> dict:
 async def signup(request: SignUpRequest):
     """
     Sign up a new user.
-    Creates auth user in Supabase Auth and row in public.users.
+    Creates auth user in Supabase Auth and a row in public.users.
+    Also inserts a referral_codes row so the FK constraint is satisfied.
     """
     try:
-        # Create auth user via Supabase
         auth_response = call_supabase_auth("POST", "/signup", {
             "email": request.email,
             "password": request.password,
-            "user_metadata": {
-                "full_name": request.full_name or ""
-            }
+            "user_metadata": {"full_name": request.full_name or ""}
         })
 
         user_id = auth_response["user"]["id"]
 
-        # Create row in public.users (RLS will allow since they're authenticated)
+        # Generate the referral code deterministically (must match DB trigger logic)
+        import hashlib
+        raw_code = "REF_" + hashlib.md5(user_id.encode()).hexdigest()[:8].upper()
+
         conn = get_db_connection()
         try:
             cursor = conn.cursor(row_factory=dict_row)
 
+            # 1. Ensure the referral_codes row exists first (satisfies FK)
             cursor.execute("""
-                INSERT INTO users (id, email, full_name)
-                VALUES (%s, %s, %s)
+                INSERT INTO referral_codes (code, created_by_user_id)
+                VALUES (%s, %s)
+                ON CONFLICT (code) DO NOTHING
+            """, (raw_code, user_id))
+
+            # 2. Insert the user row (trigger also fires but we set referral_code explicitly)
+            cursor.execute("""
+                INSERT INTO users (id, email, full_name, referral_code)
+                VALUES (%s, %s, %s, %s)
                 ON CONFLICT (id) DO UPDATE SET
-                    email = EXCLUDED.email,
-                    full_name = EXCLUDED.full_name
-                RETURNING *
-            """, (user_id, request.email, request.full_name))
+                    email      = EXCLUDED.email,
+                    full_name  = EXCLUDED.full_name
+                RETURNING id, email, referral_code
+            """, (user_id, request.email, request.full_name, raw_code))
 
             user = cursor.fetchone()
             conn.commit()
@@ -295,9 +281,9 @@ async def signup(request: SignUpRequest):
             return {
                 "success": True,
                 "user": {
-                    "id": user["id"],
-                    "email": user["email"],
-                    "referral_code": user["referral_code"]
+                    "id":            user["id"],
+                    "email":         user["email"],
+                    "referral_code": user["referral_code"],
                 },
                 "message": "Signup successful. Check your email to confirm."
             }
@@ -305,40 +291,31 @@ async def signup(request: SignUpRequest):
             cursor.close()
             return_db_connection(conn)
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.post("/auth/login")
 async def login(request: LoginRequest):
-    """
-    Log in with email and password.
-    Returns JWT token from Supabase Auth.
-    """
     try:
         auth_response = call_supabase_auth("POST", "/token?grant_type=password", {
             "email": request.email,
             "password": request.password
         })
-
         return {
-            "success": True,
-            "access_token": auth_response["access_token"],
+            "success":       True,
+            "access_token":  auth_response["access_token"],
             "refresh_token": auth_response.get("refresh_token"),
-            "expires_in": auth_response.get("expires_in", 3600)
+            "expires_in":    auth_response.get("expires_in", 3600)
         }
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid email or password"
-        )
 
 @app.post("/auth/logout")
 async def logout(current_user: dict = Depends(get_current_user)):
-    """
-    Log out the current user.
-    (Frontend should discard JWT token)
-    """
     return {"success": True, "message": "Logged out"}
 
 # ============================================================================
@@ -347,57 +324,90 @@ async def logout(current_user: dict = Depends(get_current_user)):
 
 @app.get("/user/profile", response_model=UserResponse)
 async def get_user_profile(current_user: dict = Depends(get_current_user)):
-    """Get current user's profile."""
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-
         cursor.execute("""
             SELECT id, email, full_name, role, referral_code, referral_credit_balance, created_at
-            FROM users
-            WHERE id = %s
+            FROM users WHERE id = %s
         """, (current_user["user_id"],))
-
         user = cursor.fetchone()
-
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-
         return {
-            "id": str(user["id"]),
-            "email": user["email"],
-            "full_name": user["full_name"],
-            "role": user["role"],
-            "referral_code": user["referral_code"],
-            "referral_credit_balance": float(user["referral_credit_balance"]),
-            "created_at": str(user["created_at"])
+            "id":                      str(user["id"]),
+            "email":                   user["email"],
+            "full_name":               user["full_name"],
+            "role":                    user["role"],
+            "referral_code":           user["referral_code"],
+            "referral_credit_balance": float(user["referral_credit_balance"] or 0),
+            "created_at":              str(user["created_at"])
         }
     finally:
         cursor.close()
         return_db_connection(conn)
+
 
 @app.put("/user/profile")
 async def update_user_profile(
     full_name: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Update user's profile."""
+    """Update user's profile. Returns current profile even if no changes."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        if full_name:
+            cursor.execute("""
+                UPDATE users SET full_name = %s WHERE id = %s
+                RETURNING id, email, full_name, role, referral_code, referral_credit_balance
+            """, (full_name, current_user["user_id"]))
+            updated_user = cursor.fetchone()
+            conn.commit()
+        else:
+            # No changes — just return current profile
+            cursor.execute("""
+                SELECT id, email, full_name, role, referral_code, referral_credit_balance
+                FROM users WHERE id = %s
+            """, (current_user["user_id"],))
+            updated_user = cursor.fetchone()
+        return {"success": True, "user": dict(updated_user) if updated_user else {}}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/account/referral")
+async def get_referral_info(current_user: dict = Depends(get_current_user)):
+    """
+    Return the current user's referral code, credit balance, and referred user count.
+    Called by the referral dashboard section in all three app.js files.
+    """
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
 
-        if full_name:
-            cursor.execute("""
-                UPDATE users
-                SET full_name = %s
-                WHERE id = %s
-                RETURNING *
-            """, (full_name, current_user["user_id"]))
+        # Get user's referral code and balance
+        cursor.execute("""
+            SELECT u.referral_code, u.referral_credit_balance,
+                   rc.used_count, rc.total_referral_credits
+            FROM users u
+            LEFT JOIN referral_codes rc ON rc.code = u.referral_code
+            WHERE u.id = %s
+        """, (current_user["user_id"],))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found")
 
-        updated_user = cursor.fetchone()
-        conn.commit()
-
-        return {"success": True, "user": updated_user}
+        return {
+            "success":          True,
+            "referral_code":    row["referral_code"],
+            "credit_balance":   float(row["referral_credit_balance"] or 0),
+            "referred_count":   row["used_count"] or 0,
+            "total_earned":     float(row["total_referral_credits"] or 0),
+            # Build shareable link
+            "share_link":       f"https://lvl13.tech/#/get-yours?ref={row['referral_code']}",
+        }
     finally:
         cursor.close()
         return_db_connection(conn)
@@ -408,169 +418,107 @@ async def update_user_profile(
 
 @app.get("/bots")
 async def list_bots(current_user: dict = Depends(get_current_user)):
-    """List all bots for the current user."""
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-
         cursor.execute("""
-            SELECT id, name, platform, status, created_at
-            FROM bots
+            SELECT id, name, platform, status, created_at FROM bots
             WHERE user_id = %s AND status != 'deleted'
             ORDER BY created_at DESC
         """, (current_user["user_id"],))
-
         bots = cursor.fetchall()
-
-        return {
-            "success": True,
-            "bots": [
-                {
-                    "id": str(bot["id"]),
-                    "name": bot["name"],
-                    "platform": bot["platform"],
-                    "status": bot["status"],
-                    "created_at": str(bot["created_at"])
-                }
-                for bot in bots
-            ]
-        }
+        return {"success": True, "bots": [
+            {"id": str(b["id"]), "name": b["name"], "platform": b["platform"],
+             "status": b["status"], "created_at": str(b["created_at"])}
+            for b in bots
+        ]}
     finally:
         cursor.close()
         return_db_connection(conn)
 
+
 @app.post("/bots")
-async def create_bot(
-    bot: BotCreate,
-    current_user: dict = Depends(get_current_user)
-):
-    """Create a new bot for the current user."""
+async def create_bot(bot: BotCreate, current_user: dict = Depends(get_current_user)):
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-
         cursor.execute("""
             INSERT INTO bots (user_id, name, platform, description)
             VALUES (%s, %s, %s, %s)
             RETURNING id, name, platform, status, created_at
-        """, (
-            current_user["user_id"],
-            bot.name,
-            bot.platform,
-            bot.description
-        ))
-
+        """, (current_user["user_id"], bot.name, bot.platform, bot.description))
         new_bot = cursor.fetchone()
         conn.commit()
-
-        return {
-            "success": True,
-            "bot": {
-                "id": str(new_bot["id"]),
-                "name": new_bot["name"],
-                "platform": new_bot["platform"],
-                "status": new_bot["status"],
-                "created_at": str(new_bot["created_at"])
-            }
-        }
+        return {"success": True, "bot": {
+            "id": str(new_bot["id"]), "name": new_bot["name"],
+            "platform": new_bot["platform"], "status": new_bot["status"],
+            "created_at": str(new_bot["created_at"])
+        }}
     finally:
         cursor.close()
         return_db_connection(conn)
 
+
 @app.get("/bots/{bot_id}")
-async def get_bot(
-    bot_id: str,
-    current_user: dict = Depends(get_current_user)
-):
-    """Get a specific bot (with performance data)."""
+async def get_bot(bot_id: str, current_user: dict = Depends(get_current_user)):
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-
-        # Get bot
         cursor.execute("""
-            SELECT id, name, platform, status, created_at
-            FROM bots
+            SELECT id, name, platform, status, created_at FROM bots
             WHERE id = %s AND user_id = %s
         """, (bot_id, current_user["user_id"]))
-
         bot = cursor.fetchone()
-
         if not bot:
             raise HTTPException(status_code=404, detail="Bot not found")
 
-        # Get latest performance
         cursor.execute("""
             SELECT total_value, entry_cost, gain_loss, gain_loss_pct, snapshot_date, strategy_name
-            FROM bot_latest_performance
-            WHERE bot_id = %s
+            FROM bot_latest_performance WHERE bot_id = %s
         """, (bot_id,))
-
         performance = cursor.fetchone()
 
-        # Get holdings
         cursor.execute("""
             SELECT id, symbol, asset_type, weight, quantity, entry_price
-            FROM bot_holdings
-            WHERE bot_id = %s AND removed_at IS NULL
+            FROM bot_holdings WHERE bot_id = %s AND removed_at IS NULL
         """, (bot_id,))
-
         holdings = cursor.fetchall()
 
-        return {
-            "success": True,
-            "bot": {
-                "id": str(bot["id"]),
-                "name": bot["name"],
-                "platform": bot["platform"],
-                "status": bot["status"],
-                "created_at": str(bot["created_at"]),
-                "performance": {
-                    "total_value": float(performance["total_value"]) if performance else 0,
-                    "entry_cost": float(performance["entry_cost"]) if performance else 0,
-                    "gain_loss": float(performance["gain_loss"]) if performance else 0,
-                    "gain_loss_pct": float(performance["gain_loss_pct"]) if performance else 0,
-                    "snapshot_date": str(performance["snapshot_date"]) if performance else None,
-                    "strategy_name": performance["strategy_name"] if performance else None
-                } if performance else None,
-                "holdings": [
-                    {
-                        "id": str(h["id"]),
-                        "symbol": h["symbol"],
-                        "asset_type": h["asset_type"],
-                        "weight": float(h["weight"]) if h["weight"] else 0,
-                        "quantity": float(h["quantity"]) if h["quantity"] else 0,
-                        "entry_price": float(h["entry_price"]) if h["entry_price"] else 0
-                    }
-                    for h in holdings
-                ]
-            }
-        }
+        return {"success": True, "bot": {
+            "id": str(bot["id"]), "name": bot["name"],
+            "platform": bot["platform"], "status": bot["status"],
+            "created_at": str(bot["created_at"]),
+            "performance": {
+                "total_value":    float(performance["total_value"]) if performance else 0,
+                "entry_cost":     float(performance["entry_cost"]) if performance else 0,
+                "gain_loss":      float(performance["gain_loss"]) if performance else 0,
+                "gain_loss_pct":  float(performance["gain_loss_pct"]) if performance else 0,
+                "snapshot_date":  str(performance["snapshot_date"]) if performance else None,
+                "strategy_name":  performance["strategy_name"] if performance else None,
+            } if performance else None,
+            "holdings": [
+                {"id": str(h["id"]), "symbol": h["symbol"], "asset_type": h["asset_type"],
+                 "weight": float(h["weight"] or 0), "quantity": float(h["quantity"] or 0),
+                 "entry_price": float(h["entry_price"] or 0)}
+                for h in holdings
+            ]
+        }}
     finally:
         cursor.close()
         return_db_connection(conn)
 
+
 @app.delete("/bots/{bot_id}")
-async def delete_bot(
-    bot_id: str,
-    current_user: dict = Depends(get_current_user)
-):
-    """Delete (soft delete) a bot."""
+async def delete_bot(bot_id: str, current_user: dict = Depends(get_current_user)):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-
         cursor.execute("""
-            UPDATE bots
-            SET status = 'deleted'
-            WHERE id = %s AND user_id = %s
+            UPDATE bots SET status = 'deleted' WHERE id = %s AND user_id = %s
         """, (bot_id, current_user["user_id"]))
-
         if cursor.rowcount == 0:
             raise HTTPException(status_code=404, detail="Bot not found")
-
         conn.commit()
-
         return {"success": True, "message": "Bot deleted"}
     finally:
         cursor.close()
@@ -582,39 +530,59 @@ async def delete_bot(
 
 @app.post("/promo-codes/validate", response_model=PromoCodeValidateResponse)
 async def validate_promo_code(request: PromoCodeValidateRequest):
-    """Validate a promo code and return discount."""
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-
         cursor.execute("""
             SELECT code, code_type, discount_amount, discount_percentage,
                    max_uses, current_uses, active, grants_unlimited_bots
-            FROM promo_codes
-            WHERE code = %s AND active = TRUE
+            FROM promo_codes WHERE code = %s AND active = TRUE
         """, (request.code,))
-
         promo = cursor.fetchone()
-
         if not promo:
-            return PromoCodeValidateResponse(
-                valid=False,
-                message="Promo code not found or expired"
-            )
-
-        # Check usage limit
+            return PromoCodeValidateResponse(valid=False, message="Promo code not found or expired")
         if promo["max_uses"] and promo["current_uses"] >= promo["max_uses"]:
-            return PromoCodeValidateResponse(
-                valid=False,
-                message="Promo code has reached its usage limit"
-            )
-
+            return PromoCodeValidateResponse(valid=False, message="Promo code has reached its usage limit")
         return PromoCodeValidateResponse(
             valid=True,
             discount_amount=float(promo["discount_amount"]) if promo["discount_amount"] else None,
             discount_percentage=float(promo["discount_percentage"]) if promo["discount_percentage"] else None,
             message="Promo code is valid"
         )
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/subscriptions/validate-referral")
+async def validate_referral_code(code: str = Query(..., description="Referral code to validate")):
+    """
+    Validate a referral code (REF_XXXXXXXX format generated per-user).
+    Called from the Get Yours page on all three sites when a visitor
+    arrives via a referral link.
+    """
+    if not code or len(code) < 4:
+        return {"valid": False, "code": code, "message": "Invalid code format"}
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        # Check in referral_codes table (one row per user)
+        cursor.execute("""
+            SELECT rc.code, u.email AS owner_email
+            FROM referral_codes rc
+            LEFT JOIN users u ON u.referral_code = rc.code
+            WHERE rc.code = %s
+        """, (code.upper(),))
+        row = cursor.fetchone()
+        if not row:
+            return {"valid": False, "code": code, "message": "Referral code not found"}
+        return {
+            "valid":   True,
+            "code":    row["code"],
+            "message": "Valid referral code — you'll save $75 on your subscription",
+            "discount": 75.00
+        }
     finally:
         cursor.close()
         return_db_connection(conn)
@@ -630,147 +598,116 @@ async def calculate_subscription_price(
     referral_code: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Calculate final subscription price with discounts."""
-
-    # Base pricing
-    if bot_count == 1:
-        base_price = 799.00
-    else:
-        base_price = 799.00 + (bot_count - 1) * 349.00
-
+    base_price    = 799.00 if bot_count == 1 else 799.00 + (bot_count - 1) * 349.00
     discount_amount = 0.0
-    applied_promo = None
-    applied_referral = None
+    applied_promo   = None
+    applied_referral= None
 
-    # Check promo code
-    if promo_code:
-        conn = get_db_connection()
-        try:
-            cursor = conn.cursor(row_factory=dict_row)
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
 
+        if promo_code:
             cursor.execute("""
                 SELECT discount_amount, discount_percentage, max_uses, current_uses
-                FROM promo_codes
-                WHERE code = %s AND active = TRUE
+                FROM promo_codes WHERE code = %s AND active = TRUE
             """, (promo_code,))
-
             promo = cursor.fetchone()
-
             if promo and (not promo["max_uses"] or promo["current_uses"] < promo["max_uses"]):
                 if promo["discount_amount"]:
                     discount_amount += float(promo["discount_amount"])
                 if promo["discount_percentage"]:
                     discount_amount += base_price * (float(promo["discount_percentage"]) / 100)
                 applied_promo = promo_code
-        finally:
-            cursor.close()
-            return_db_connection(conn)
 
-    # Check referral code
-    if referral_code:
-        conn = get_db_connection()
-        try:
-            cursor = conn.cursor(row_factory=dict_row)
-
-            cursor.execute("""
-                SELECT * FROM referral_codes WHERE code = %s
-            """, (referral_code,))
-
-            referral = cursor.fetchone()
-
-            if referral:
-                discount_amount += 75.00  # $75 referral credit
+        if referral_code:
+            cursor.execute("SELECT code FROM referral_codes WHERE code = %s", (referral_code,))
+            if cursor.fetchone():
+                discount_amount += 75.00
                 applied_referral = referral_code
-        finally:
-            cursor.close()
-            return_db_connection(conn)
+
+    finally:
+        cursor.close()
+        return_db_connection(conn)
 
     final_price = max(0, base_price - discount_amount)
-
     return {
-        "success": True,
-        "base_price": base_price,
+        "success":         True,
+        "base_price":      base_price,
         "discount_amount": discount_amount,
-        "final_price": final_price,
-        "applied_promo": applied_promo,
-        "applied_referral": applied_referral
+        "final_price":     final_price,
+        "applied_promo":   applied_promo,
+        "applied_referral": applied_referral,
     }
+
 
 @app.post("/paypal/webhook")
 async def handle_paypal_webhook(event: PayPalWebhookEvent):
-    """
-    Handle PayPal webhooks for subscription payments.
-    Verifies signature and processes payment events.
-    """
-
-    # TODO: Verify PayPal signature
-    # See: https://developer.paypal.com/docs/checkout/integration-features/webhooks/
-
+    """Handle PayPal webhooks for subscription payments."""
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-
-        # Log webhook for debugging
         cursor.execute("""
             INSERT INTO paypal_webhook_log (event_type, payload)
             VALUES (%s, %s)
         """, (event.event_type, json.dumps(event.dict())))
-
         conn.commit()
 
-        # Handle specific event types
         if event.event_type == "CHECKOUT.ORDER.COMPLETED":
-            # Extract transaction details and activate subscription
-            pass
+            resource  = event.resource
+            txn_id    = resource.get("id", "")
+            payer     = resource.get("payer", {})
+            payer_email = payer.get("email_address", "")
+            amount_str  = resource.get("purchase_units", [{}])[0].get("amount", {}).get("value", "0")
+            try:
+                amount = float(amount_str)
+            except Exception:
+                amount = 0.0
+
+            # Look up user by payer email
+            cursor2 = conn.cursor(row_factory=dict_row)
+            cursor2.execute("SELECT id FROM users WHERE email = %s", (payer_email,))
+            user_row = cursor2.fetchone()
+            if user_row:
+                # Activate subscription
+                cursor2.execute("""
+                    INSERT INTO subscriptions
+                        (user_id, bot_count, final_price, status, paypal_transaction_id)
+                    VALUES (%s, 1, %s, 'completed', %s)
+                    ON CONFLICT DO NOTHING
+                """, (user_row["id"], amount, txn_id))
+                conn.commit()
+            cursor2.close()
 
         return {"success": True, "message": "Webhook processed"}
-
     finally:
         cursor.close()
         return_db_connection(conn)
 
 # ============================================================================
 # TRACKER ENDPOINTS
-# Data pushed from the GCP VM after each tracker run.
-# Internal write is key-gated; public read is open (data is non-sensitive).
 # ============================================================================
 
 VALID_DATA_TYPES = {"state", "news", "signals", "reports"}
 
 def verify_internal_key(x_internal_key: str = Header(...)):
-    """
-    Dependency: verifies the X-Internal-Key header matches INTERNAL_API_KEY.
-    Only the GCP VM should know this key — it is never exposed to browsers.
-    """
     if not INTERNAL_API_KEY:
         raise HTTPException(status_code=500, detail="INTERNAL_API_KEY not configured on server")
     if x_internal_key != INTERNAL_API_KEY:
         raise HTTPException(status_code=403, detail="Invalid internal key")
+
 
 @app.post("/internal/tracker/push")
 async def tracker_push(
     payload: TrackerPushRequest,
     _: None = Depends(verify_internal_key)
 ):
-    """
-    Receive tracker data from the GCP VM and upsert into tracker_live_data.
-    Called by refresh_data.py and refresh_news.py after each run.
-
-    Body:
-        data_type: 'state' | 'news' | 'signals' | 'reports'
-        platform:  'lvl13' | 'bitbot13' | 'wallstbots'
-        data:      the full JSON payload (dict or list)
-    """
     if payload.data_type not in VALID_DATA_TYPES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid data_type. Must be one of: {', '.join(VALID_DATA_TYPES)}"
-        )
-
+        raise HTTPException(status_code=400,
+            detail=f"Invalid data_type. Must be one of: {', '.join(VALID_DATA_TYPES)}")
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-
         cursor.execute("""
             INSERT INTO tracker_live_data (data_type, platform, data, pushed_at)
             VALUES (%s, %s, %s::jsonb, NOW())
@@ -779,10 +716,8 @@ async def tracker_push(
                     pushed_at = EXCLUDED.pushed_at
             RETURNING id, data_type, platform, pushed_at
         """, (payload.data_type, payload.platform, json.dumps(payload.data)))
-
         row = cursor.fetchone()
         conn.commit()
-
         return {
             "success":   True,
             "id":        row["id"],
@@ -796,197 +731,110 @@ async def tracker_push(
 
 
 @app.get("/public/tracker/{data_type}")
-async def tracker_read(
-    data_type: str,
-    platform: str = "lvl13"
-):
-    """
-    Return the latest tracker payload for a given data_type and platform.
-    Public — no auth required. Fronts are all read-only here.
-
-    Path:   /public/tracker/state  (or news | signals | reports)
-    Query:  ?platform=lvl13        (default)
-    """
+async def tracker_read(data_type: str, platform: str = "lvl13"):
     if data_type not in VALID_DATA_TYPES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid data_type. Must be one of: {', '.join(VALID_DATA_TYPES)}"
-        )
-
+        raise HTTPException(status_code=400,
+            detail=f"Invalid data_type. Must be one of: {', '.join(VALID_DATA_TYPES)}")
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-
         cursor.execute("""
-            SELECT data, pushed_at
-            FROM tracker_live_data
+            SELECT data, pushed_at FROM tracker_live_data
             WHERE data_type = %s AND platform = %s
         """, (data_type, platform))
-
         row = cursor.fetchone()
-
         if not row:
-            raise HTTPException(
-                status_code=404,
-                detail=f"No {data_type} data found for platform '{platform}'"
-            )
-
+            raise HTTPException(status_code=404,
+                detail=f"No {data_type} data found for platform '{platform}'")
         return {
             "success":   True,
             "data_type": data_type,
             "platform":  platform,
             "pushed_at": str(row["pushed_at"]),
-            "data":      row["data"]   # Postgres returns JSONB as Python dict already
+            "data":      row["data"]
         }
     finally:
         cursor.close()
         return_db_connection(conn)
 
-
 # ============================================================================
-# STOCK SEARCH  (Polygon.io free-tier proxy — key never reaches the browser)
+# STOCK SEARCH
 # ============================================================================
 
 @app.get("/stocks/search")
 async def search_stocks(q: str = "", limit: int = 15):
-    """
-    Proxy ticker/name search to Polygon.io reference API.
-    No auth required — search is not sensitive.
-    Falls back to empty list if POLYGON_API_KEY is not set.
-    """
     q = q.strip()
     if not q:
         return {"results": []}
-
     if not POLYGON_API_KEY:
-        # Graceful degradation: return empty, frontend shows manual-entry fallback
         return {"results": [], "manual_entry": True}
-
     try:
-        url = "https://api.polygon.io/v3/reference/tickers"
-        params = {
-            "search": q,
-            "active":  "true",
-            "market":  "stocks",
-            "limit":   min(limit, 20),
-            "apiKey":  POLYGON_API_KEY,
-        }
-        r = requests.get(url, params=params, timeout=10)
+        r = requests.get("https://api.polygon.io/v3/reference/tickers", params={
+            "search": q, "active": "true", "market": "stocks",
+            "limit": min(limit, 20), "apiKey": POLYGON_API_KEY,
+        }, timeout=10)
         if r.status_code == 200:
             data = r.json()
-            return {
-                "results": [
-                    {
-                        "ticker":    t.get("ticker", ""),
-                        "name":      t.get("name", ""),
-                        "market":    t.get("market", ""),
-                        "type":      t.get("type", ""),
-                        "exchange":  t.get("primary_exchange", ""),
-                    }
-                    for t in data.get("results", [])
-                    if t.get("ticker")
-                ]
-            }
+            return {"results": [
+                {"ticker": t.get("ticker",""), "name": t.get("name",""),
+                 "market": t.get("market",""), "type": t.get("type",""),
+                 "exchange": t.get("primary_exchange","")}
+                for t in data.get("results", []) if t.get("ticker")
+            ]}
         return {"results": []}
     except Exception as e:
         return {"results": [], "error": str(e)}
 
-
 # ============================================================================
-# USER STOCK PICKS
+# USER STOCK PICKS & SUBSCRIPTION
 # ============================================================================
 
 @app.post("/user/stocks")
-async def save_user_stocks(
-    request: SaveStocksRequest,
-    current_user: dict = Depends(get_current_user)
-):
-    """
-    Save (replace) a user's stock picks for a given platform.
-    Max 50 stocks. Called after onboarding completes.
-    """
+async def save_user_stocks(request: SaveStocksRequest, current_user: dict = Depends(get_current_user)):
     if len(request.stocks) > 50:
         raise HTTPException(status_code=400, detail="Maximum 50 stocks allowed")
-
     platform = request.platform.lower()
-
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-
-        # Full replace: delete existing picks for this user + platform
-        cursor.execute("""
-            DELETE FROM user_stock_picks
-            WHERE user_id = %s AND platform = %s
-        """, (current_user["user_id"], platform))
-
-        # Insert new picks
-        if request.stocks:
-            for s in request.stocks:
-                cursor.execute("""
-                    INSERT INTO user_stock_picks (user_id, platform, ticker, company_name)
-                    VALUES (%s, %s, %s, %s)
-                    ON CONFLICT (user_id, platform, ticker) DO UPDATE
-                        SET company_name = EXCLUDED.company_name
-                """, (
-                    current_user["user_id"],
-                    platform,
-                    s.ticker.upper().strip(),
-                    s.name or s.ticker.upper().strip(),
-                ))
-
-        # Mark subscription as provisioned
+        cursor.execute("DELETE FROM user_stock_picks WHERE user_id = %s AND platform = %s",
+                       (current_user["user_id"], platform))
+        for s in request.stocks:
+            cursor.execute("""
+                INSERT INTO user_stock_picks (user_id, platform, ticker, company_name)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (user_id, platform, ticker) DO UPDATE
+                    SET company_name = EXCLUDED.company_name
+            """, (current_user["user_id"], platform,
+                  s.ticker.upper().strip(), s.name or s.ticker.upper().strip()))
         cursor.execute("""
             INSERT INTO user_platform_subs (user_id, platform, status, provisioned_at)
             VALUES (%s, %s, 'active', NOW())
             ON CONFLICT (user_id, platform) DO UPDATE
-                SET status         = 'active',
-                    provisioned_at = NOW(),
-                    updated_at     = NOW()
+                SET status = 'active', provisioned_at = NOW(), updated_at = NOW()
         """, (current_user["user_id"], platform))
-
         conn.commit()
-
-        return {
-            "success": True,
-            "saved":   len(request.stocks),
-            "message": "Stock picks saved. Your private dashboard will be live within 24 hours."
-        }
+        return {"success": True, "saved": len(request.stocks),
+                "message": "Stock picks saved. Your private dashboard will be live within 24 hours."}
     finally:
         cursor.close()
         return_db_connection(conn)
 
 
 @app.get("/user/stocks")
-async def get_user_stocks(
-    platform: str = "lvl13",
-    current_user: dict = Depends(get_current_user)
-):
-    """Return a user's saved stock picks for a platform."""
+async def get_user_stocks(platform: str = "lvl13", current_user: dict = Depends(get_current_user)):
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-
         cursor.execute("""
-            SELECT ticker, company_name, added_at
-            FROM user_stock_picks
-            WHERE user_id = %s AND platform = %s
-            ORDER BY added_at
+            SELECT ticker, company_name, added_at FROM user_stock_picks
+            WHERE user_id = %s AND platform = %s ORDER BY added_at
         """, (current_user["user_id"], platform.lower()))
-
         picks = cursor.fetchall()
-
-        return {
-            "success": True,
-            "stocks": [
-                {
-                    "ticker":   p["ticker"],
-                    "name":     p["company_name"],
-                    "added_at": str(p["added_at"]),
-                }
-                for p in picks
-            ]
-        }
+        return {"success": True, "stocks": [
+            {"ticker": p["ticker"], "name": p["company_name"], "added_at": str(p["added_at"])}
+            for p in picks
+        ]}
     finally:
         cursor.close()
         return_db_connection(conn)
@@ -995,21 +843,24 @@ async def get_user_stocks(
 @app.get("/user/subscription")
 async def get_user_subscription(
     platform: str = "lvl13",
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_with_role)
 ):
-    """Return subscription status for a given platform."""
+    """
+    Return subscription status for a given platform.
+    Admin users are always treated as subscribed (free access).
+    """
+    # Admins always have access
+    if current_user.get("role") == "admin":
+        return {"success": True, "subscribed": True, "status": "admin", "provisioned_at": None}
+
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-
         cursor.execute("""
-            SELECT status, provisioned_at, created_at
-            FROM user_platform_subs
+            SELECT status, provisioned_at, created_at FROM user_platform_subs
             WHERE user_id = %s AND platform = %s
         """, (current_user["user_id"], platform.lower()))
-
         sub = cursor.fetchone()
-
         return {
             "success":        True,
             "subscribed":     sub is not None,
@@ -1020,6 +871,306 @@ async def get_user_subscription(
         cursor.close()
         return_db_connection(conn)
 
+# ============================================================================
+# ADMIN ENDPOINTS  (/admin/*)
+# All require role = 'admin'
+# ============================================================================
+
+@app.get("/admin/stats")
+async def admin_stats(admin: dict = Depends(require_admin)):
+    """High-level platform stats: users, revenue, active subscriptions."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+
+        cursor.execute("SELECT COUNT(*) AS total FROM users")
+        total_users = cursor.fetchone()["total"]
+
+        cursor.execute("SELECT COUNT(*) AS total FROM users WHERE role = 'admin'")
+        admin_users = cursor.fetchone()["total"]
+
+        cursor.execute("""
+            SELECT COUNT(*) AS total, COALESCE(SUM(final_price),0) AS revenue
+            FROM subscriptions WHERE status = 'completed'
+        """)
+        payment_row = cursor.fetchone()
+
+        cursor.execute("""
+            SELECT COUNT(DISTINCT user_id) AS active
+            FROM user_platform_subs WHERE status = 'active'
+        """)
+        active_subs = cursor.fetchone()["active"]
+
+        cursor.execute("""
+            SELECT platform, COUNT(*) AS cnt FROM tracker_live_data GROUP BY platform
+        """)
+        tracker_rows = cursor.fetchall()
+
+        return {
+            "success":      True,
+            "total_users":  total_users,
+            "admin_users":  admin_users,
+            "total_revenue": float(payment_row["revenue"] or 0),
+            "paid_orders":  payment_row["total"],
+            "active_subs":  active_subs,
+            "tracker_data": {r["platform"]: r["cnt"] for r in tracker_rows},
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/admin/users")
+async def admin_list_users(
+    limit: int = 50,
+    offset: int = 0,
+    search: Optional[str] = None,
+    admin: dict = Depends(require_admin)
+):
+    """List all users with subscription status and payment totals."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        where = "WHERE 1=1"
+        params: list = []
+        if search:
+            where += " AND (u.email ILIKE %s OR u.full_name ILIKE %s)"
+            params += [f"%{search}%", f"%{search}%"]
+
+        cursor.execute(f"""
+            SELECT
+                u.id, u.email, u.full_name, u.role, u.referral_code,
+                u.referral_credit_balance, u.max_free_bots, u.created_at,
+                COALESCE(sub_counts.active_platforms, 0) AS active_platforms,
+                COALESCE(pay_totals.total_paid, 0)       AS total_paid
+            FROM users u
+            LEFT JOIN (
+                SELECT user_id, COUNT(*) AS active_platforms
+                FROM user_platform_subs WHERE status = 'active'
+                GROUP BY user_id
+            ) sub_counts ON sub_counts.user_id = u.id
+            LEFT JOIN (
+                SELECT user_id, SUM(final_price) AS total_paid
+                FROM subscriptions WHERE status = 'completed'
+                GROUP BY user_id
+            ) pay_totals ON pay_totals.user_id = u.id
+            {where}
+            ORDER BY u.created_at DESC
+            LIMIT %s OFFSET %s
+        """, params + [limit, offset])
+        users = cursor.fetchall()
+
+        cursor.execute(f"SELECT COUNT(*) AS total FROM users u {where}", params)
+        total = cursor.fetchone()["total"]
+
+        return {
+            "success": True,
+            "total":   total,
+            "offset":  offset,
+            "limit":   limit,
+            "users": [
+                {
+                    "id":              str(u["id"]),
+                    "email":           u["email"],
+                    "full_name":       u["full_name"] or "",
+                    "role":            u["role"],
+                    "referral_code":   u["referral_code"],
+                    "credit_balance":  float(u["referral_credit_balance"] or 0),
+                    "max_free_bots":   u["max_free_bots"] or 0,
+                    "active_platforms":u["active_platforms"],
+                    "total_paid":      float(u["total_paid"] or 0),
+                    "created_at":      str(u["created_at"]),
+                }
+                for u in users
+            ]
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/admin/users/{user_id}")
+async def admin_get_user(user_id: str, admin: dict = Depends(require_admin)):
+    """Full detail on one user — profile, subs, payments, platform access."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("""
+            SELECT id, email, full_name, role, referral_code,
+                   referral_credit_balance, max_free_bots, created_at
+            FROM users WHERE id = %s
+        """, (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        cursor.execute("""
+            SELECT platform, status, provisioned_at FROM user_platform_subs
+            WHERE user_id = %s ORDER BY provisioned_at DESC
+        """, (user_id,))
+        subs = cursor.fetchall()
+
+        cursor.execute("""
+            SELECT id, bot_count, final_price, status, paypal_transaction_id, created_at
+            FROM subscriptions WHERE user_id = %s ORDER BY created_at DESC
+        """, (user_id,))
+        payments = cursor.fetchall()
+
+        return {
+            "success": True,
+            "user": {
+                "id":             str(user["id"]),
+                "email":          user["email"],
+                "full_name":      user["full_name"] or "",
+                "role":           user["role"],
+                "referral_code":  user["referral_code"],
+                "credit_balance": float(user["referral_credit_balance"] or 0),
+                "max_free_bots":  user["max_free_bots"] or 0,
+                "created_at":     str(user["created_at"]),
+            },
+            "subscriptions": [
+                {"platform": s["platform"], "status": s["status"],
+                 "provisioned_at": str(s["provisioned_at"]) if s["provisioned_at"] else None}
+                for s in subs
+            ],
+            "payments": [
+                {"id": str(p["id"]), "bot_count": p["bot_count"],
+                 "amount": float(p["final_price"] or 0), "status": p["status"],
+                 "txn_id": p["paypal_transaction_id"],
+                 "created_at": str(p["created_at"])}
+                for p in payments
+            ]
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.put("/admin/users/{user_id}")
+async def admin_update_user(
+    user_id: str,
+    body: AdminUserUpdate,
+    admin: dict = Depends(require_admin)
+):
+    """Update a user's role or max_free_bots. Used to grant/revoke admin."""
+    if body.role and body.role not in ("user", "admin"):
+        raise HTTPException(status_code=400, detail="role must be 'user' or 'admin'")
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        updates, params = [], []
+        if body.role is not None:
+            updates.append("role = %s::user_role")
+            params.append(body.role)
+        if body.max_free_bots is not None:
+            updates.append("max_free_bots = %s")
+            params.append(body.max_free_bots)
+        if not updates:
+            raise HTTPException(status_code=400, detail="Nothing to update")
+        params.append(user_id)
+        cursor.execute(
+            f"UPDATE users SET {', '.join(updates)} WHERE id = %s RETURNING id, email, role, max_free_bots",
+            params
+        )
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found")
+        conn.commit()
+        return {"success": True, "user": dict(row)}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.post("/admin/users/{user_id}/grant-access")
+async def admin_grant_platform_access(
+    user_id: str,
+    platform: str,
+    admin: dict = Depends(require_admin)
+):
+    """Manually grant a user active subscription for a platform (no payment needed)."""
+    if platform not in ("lvl13", "bitbot13", "wallstbots"):
+        raise HTTPException(status_code=400, detail="Invalid platform")
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO user_platform_subs (user_id, platform, status, provisioned_at)
+            VALUES (%s, %s, 'active', NOW())
+            ON CONFLICT (user_id, platform) DO UPDATE
+                SET status = 'active', provisioned_at = NOW(), updated_at = NOW()
+        """, (user_id, platform))
+        conn.commit()
+        return {"success": True, "message": f"Access granted for {platform}"}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/admin/payments")
+async def admin_list_payments(
+    limit: int = 50,
+    offset: int = 0,
+    admin: dict = Depends(require_admin)
+):
+    """All payment records (subscriptions + PayPal webhook log)."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("""
+            SELECT s.id, s.bot_count, s.final_price, s.status,
+                   s.paypal_transaction_id, s.created_at,
+                   u.email, u.full_name
+            FROM subscriptions s
+            JOIN users u ON u.id = s.user_id
+            ORDER BY s.created_at DESC
+            LIMIT %s OFFSET %s
+        """, (limit, offset))
+        payments = cursor.fetchall()
+
+        cursor.execute("SELECT COUNT(*) AS total FROM subscriptions")
+        total = cursor.fetchone()["total"]
+
+        return {
+            "success": True,
+            "total":   total,
+            "payments": [
+                {
+                    "id":       str(p["id"]),
+                    "email":    p["email"],
+                    "name":     p["full_name"] or "",
+                    "bots":     p["bot_count"],
+                    "amount":   float(p["final_price"] or 0),
+                    "status":   p["status"],
+                    "txn_id":   p["paypal_transaction_id"],
+                    "date":     str(p["created_at"]),
+                }
+                for p in payments
+            ]
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/admin/promo-codes")
+async def admin_list_promo_codes(admin: dict = Depends(require_admin)):
+    """List all promo codes and usage."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("""
+            SELECT code, code_type, description, discount_amount, discount_percentage,
+                   max_uses, current_uses, active, grants_unlimited_bots,
+                   created_at, expires_at
+            FROM promo_codes ORDER BY created_at DESC
+        """)
+        codes = cursor.fetchall()
+        return {"success": True, "promo_codes": [dict(c) for c in codes]}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
 
 # ============================================================================
 # HEALTH CHECK
@@ -1027,25 +1178,19 @@ async def get_user_subscription(
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint - simple API status, no DB dependency."""
-    return {
-        "status": "ok",
-        "service": "Wall St. Bots API",
-        "version": "1.0.0"
-    }
+    return {"status": "ok", "service": "Wall St. Bots API", "version": "2.0.0"}
+
 
 @app.get("/health/db")
 async def health_check_db():
-    """Database health check - tests actual DB connection."""
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
         cursor.execute("SELECT 1")
         cursor.fetchone()
-
         return {
-            "status": "healthy",
-            "database": "connected",
+            "status":    "healthy",
+            "database":  "connected",
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
     finally:
@@ -1058,7 +1203,6 @@ async def health_check_db():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    """Close all database connections on graceful shutdown."""
     if db_pool:
         db_pool.close()
 

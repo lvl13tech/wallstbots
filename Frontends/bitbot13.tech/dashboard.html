@@ -693,7 +693,7 @@
     // ── LOAD NEWS ──
     async function loadNews() {
       try {
-        const data = await fetch(`${API_BASE}/public/tracker/news?platform=lvl13`).then(r => r.json());
+        const data = await fetch(`${API_BASE}/public/tracker/news?platform=bitbot13`).then(r => r.json());
         const articles = (data.data || []).slice(0, 5);
         const list = document.getElementById("newsList");
 

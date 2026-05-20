@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Wall St. Bots</title>
+  <style>
+    :root {
+      --bg: #0a0a0f; --surface: #12121a; --border: #1e1e2e;
+      --text: #e8e8f0; --muted: #6b7280; --blue: #3b82f6;
+      --green: #10b981; --red: #ef4444; --orange: #f59e0b;
+      --purple: #a855f7;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+    a { color: var(--blue); text-decoration: none; }
+
+    /* ── Layout ── */
+    .admin-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+    .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .admin-header h1 { font-size: 22px; font-weight: 700; }
+    .admin-header .badge { background: #7c3aed; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: 1px; margin-left: 10px; }
+    .logout-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+    .logout-btn:hover { color: var(--red); border-color: var(--red); }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+    .tab { padding: 10px 20px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; }
+    .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .tab:hover { color: var(--text); }
+
+    /* ── Stat cards ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .stat-card .label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+    .stat-card .value { font-size: 28px; font-weight: 800; }
+    .stat-card .sub   { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .value.green { color: var(--green); }
+    .value.blue  { color: var(--blue); }
+    .value.orange{ color: var(--orange); }
+    .value.purple{ color: var(--purple); }
+
+    /* ── Search bar ── */
+    .search-row { display: flex; gap: 12px; margin-bottom: 20px; }
+    .search-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; }
+    .search-row input:focus { outline: none; border-color: var(--blue); }
+    .search-row button { background: var(--blue); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
+
+    /* ── Tables ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 10px 12px; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); background: var(--surface); }
+    td { padding: 12px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:hover td { background: rgba(255,255,255,.02); }
+    .badge-role { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: .5px; }
+    .badge-role.admin { background: rgba(124,58,237,.2); color: #a78bfa; border: 1px solid rgba(124,58,237,.3); }
+    .badge-role.user  { background: rgba(59,130,246,.1); color: var(--blue); border: 1px solid rgba(59,130,246,.2); }
+    .badge-status { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+    .badge-status.active    { background: rgba(16,185,129,.1); color: var(--green); }
+    .badge-status.completed { background: rgba(16,185,129,.1); color: var(--green); }
+    .badge-status.pending   { background: rgba(245,158,11,.1); color: var(--orange); }
+    .badge-status.failed    { background: rgba(239,68,68,.1);  color: var(--red); }
+    .action-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .action-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .action-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── Pagination ── */
+    .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; font-size: 13px; color: var(--muted); }
+    .pager button { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+    .pager button:disabled { opacity: .4; cursor: default; }
+
+    /* ── Panel ── */
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    .panel h3 { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+
+    /* ── Auth gate ── */
+    #authGate { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 16px; }
+    #authGate h2 { font-size: 20px; font-weight: 700; }
+    #authGate p  { color: var(--muted); font-size: 14px; }
+    #authGate .not-admin { color: var(--red); font-size: 14px; }
+
+    .loading { color: var(--muted); text-align: center; padding: 40px; }
+    .error   { color: var(--red);   text-align: center; padding: 20px; font-size: 13px; }
+    .section { display: none; }
+    .section.active { display: block; }
+  </style>
+</head>
+<body>
+
+<div id="authGate" style="display:none">
+  <h2>🔐 Admin Access Only</h2>
+  <p>You must be logged in as an admin to view this page.</p>
+  <p class="not-admin" id="authMsg"></p>
+  <a href="/login.html" style="background:var(--blue);color:#fff;padding:10px 24px;border-radius:8px;font-weight:600">Log In →</a>
+</div>
+
+<div class="admin-wrap" id="adminWrap" style="display:none">
+  <div class="admin-header">
+    <div style="display:flex;align-items:center;gap:8px">
+      <h1>Admin Panel</h1>
+      <span class="badge">ADMIN</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span id="adminEmail" style="font-size:13px;color:var(--muted)"></span>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('stats',this)">Overview</div>
+    <div class="tab" onclick="switchTab('users',this)">Users</div>
+    <div class="tab" onclick="switchTab('payments',this)">Payments</div>
+    <div class="tab" onclick="switchTab('promos',this)">Promo Codes</div>
+  </div>
+
+  <!-- ── STATS TAB ── -->
+  <div id="tab-stats" class="section active">
+    <div class="stat-grid" id="statsGrid">
+      <div class="loading">Loading stats…</div>
+    </div>
+    <div class="panel">
+      <h3>Tracker Data Coverage</h3>
+      <div id="trackerTable" class="loading">Loading…</div>
+    </div>
+  </div>
+
+  <!-- ── USERS TAB ── -->
+  <div id="tab-users" class="section">
+    <div class="search-row">
+      <input type="text" id="userSearch" placeholder="Search by email or name…" onkeydown="if(event.key==='Enter')searchUsers()">
+      <button onclick="searchUsers()">Search</button>
+    </div>
+    <div class="panel" style="padding:0">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Email</th><th>Name</th><th>Role</th>
+            <th>Platforms</th><th>Total Paid</th><th>Joined</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="usersBody"><tr><td colspan="7" class="loading">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <button id="prevBtn" onclick="changePage(-1)" disabled>← Prev</button>
+        <span id="pageInfo">—</span>
+        <button id="nextBtn" onclick="changePage(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PAYMENTS TAB ── -->
+  <div id="tab-payments" class="section">
+    <div class="panel" style="padding:0">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Date</th><th>Email</th><th>Name</th>
+            <th>Bots</th><th>Amount</th><th>Status</th><th>PayPal TXN</th>
+          </tr></thead>
+          <tbody id="paymentsBody"><tr><td colspan="7" class="loading">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <button id="prevPayBtn" onclick="changePayPage(-1)" disabled>← Prev</button>
+        <span id="payPageInfo">—</span>
+        <button id="nextPayBtn" onclick="changePayPage(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PROMOS TAB ── -->
+  <div id="tab-promos" class="section">
+    <div class="panel" style="padding:0">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Code</th><th>Type</th><th>Discount</th>
+            <th>Uses</th><th>Max Uses</th><th>Status</th><th>Expires</th>
+          </tr></thead>
+          <tbody id="promosBody"><tr><td colspan="7" class="loading">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'https://wallstbots-backend-868128114349.us-east1.run.app';
+let userOffset = 0, userTotal = 0, userLimit = 25;
+let payOffset  = 0, payTotal  = 0, payLimit  = 25;
+let currentTab = 'stats';
+
+// ── Auth ──
+function getToken() { return localStorage.getItem('auth_token'); }
+function doLogout() { localStorage.clear(); location.href = '/login.html'; }
+
+async function checkAdminAccess() {
+  const token = getToken();
+  if (!token) { showAuthGate('Not logged in.'); return; }
+  try {
+    const r = await fetch(`${API_BASE}/admin/stats`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (r.status === 401) { showAuthGate('Session expired. Please log in again.'); return; }
+    if (r.status === 403) { showAuthGate('Your account does not have admin access.'); return; }
+    if (!r.ok) { showAuthGate('Server error (' + r.status + ').'); return; }
+    const d = await r.json();
+    // Authed — show admin panel
+    document.getElementById('authGate').style.display  = 'none';
+    document.getElementById('adminWrap').style.display = 'block';
+    // Set email
+    try {
+      const prof = await fetch(`${API_BASE}/user/profile`, { headers: { 'Authorization': 'Bearer ' + token } });
+      const pd   = await prof.json();
+      document.getElementById('adminEmail').textContent = pd.email || '';
+    } catch(e) {}
+    renderStats(d);
+    loadUsers();
+  } catch(e) {
+    showAuthGate('Network error: ' + e.message);
+  }
+}
+
+function showAuthGate(msg) {
+  document.getElementById('authGate').style.display = 'flex';
+  document.getElementById('adminWrap').style.display = 'none';
+  document.getElementById('authMsg').textContent = msg;
+}
+
+// ── Tab routing ──
+function switchTab(name, el) {
+  currentTab = name;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'payments') loadPayments();
+  if (name === 'promos')   loadPromos();
+}
+
+// ── Stats ──
+function renderStats(d) {
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="label">Total Users</div>
+      <div class="value blue">${d.total_users}</div>
+      <div class="sub">${d.admin_users} admin${d.admin_users!==1?'s':''}</div></div>
+    <div class="stat-card"><div class="label">Active Subscriptions</div>
+      <div class="value green">${d.active_subs}</div>
+      <div class="sub">Across all platforms</div></div>
+    <div class="stat-card"><div class="label">Total Revenue</div>
+      <div class="value orange">$${Number(d.total_revenue||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      <div class="sub">${d.paid_orders} paid order${d.paid_orders!==1?'s':''}</div></div>
+    <div class="stat-card"><div class="label">Tracker Pushes</div>
+      <div class="value purple">${Object.values(d.tracker_data||{}).reduce((a,b)=>a+b,0)}</div>
+      <div class="sub">Across all platforms</div></div>
+  `;
+  const rows = Object.entries(d.tracker_data || {}).map(([p,c]) =>
+    `<tr><td>${p}</td><td>${c} data types live</td>
+     <td><span class="badge-status active">live</span></td></tr>`
+  ).join('') || '<tr><td colspan="3" style="color:var(--muted)">No tracker data yet</td></tr>';
+  document.getElementById('trackerTable').innerHTML =
+    `<table><thead><tr><th>Platform</th><th>Records</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ── Users ──
+async function loadUsers(reset) {
+  if (reset) userOffset = 0;
+  const search = document.getElementById('userSearch')?.value.trim() || '';
+  const qs = `?limit=${userLimit}&offset=${userOffset}` + (search ? `&search=${encodeURIComponent(search)}` : '');
+  const r = await fetch(`${API_BASE}/admin/users${qs}`, { headers: { 'Authorization': 'Bearer ' + getToken() } });
+  const d = await r.json();
+  userTotal = d.total || 0;
+  document.getElementById('pageInfo').textContent = `${userOffset+1}–${Math.min(userOffset+userLimit,userTotal)} of ${userTotal}`;
+  document.getElementById('prevBtn').disabled = userOffset === 0;
+  document.getElementById('nextBtn').disabled = userOffset + userLimit >= userTotal;
+  const tbody = document.getElementById('usersBody');
+  if (!d.users || !d.users.length) { tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:24px">No users found</td></tr>'; return; }
+  tbody.innerHTML = d.users.map(u => `
+    <tr>
+      <td>${u.email}</td>
+      <td style="color:var(--muted)">${u.full_name||'—'}</td>
+      <td><span class="badge-role ${u.role}">${u.role.toUpperCase()}</span></td>
+      <td>${u.active_platforms||0}/3</td>
+      <td style="color:${u.total_paid>0?'var(--green)':'var(--muted)'}">$${Number(u.total_paid||0).toFixed(2)}</td>
+      <td style="color:var(--muted);font-size:11px">${new Date(u.created_at).toLocaleDateString()}</td>
+      <td style="display:flex;gap:6px">
+        ${u.role==='user'
+          ? `<button class="action-btn" onclick="makeAdmin('${u.id}','${u.email}')">Make Admin</button>`
+          : `<button class="action-btn danger" onclick="removeAdmin('${u.id}','${u.email}')">Remove Admin</button>`}
+        <button class="action-btn" onclick="grantAccess('${u.id}','${u.email}')">Grant Access</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function searchUsers() { loadUsers(true); }
+function changePage(dir) { userOffset = Math.max(0, userOffset + dir * userLimit); loadUsers(); }
+
+async function makeAdmin(id, email) {
+  if (!confirm(`Make ${email} an admin?`)) return;
+  await fetch(`${API_BASE}/admin/users/${id}`, {
+    method: 'PUT', headers: { 'Authorization': 'Bearer '+getToken(), 'Content-Type':'application/json' },
+    body: JSON.stringify({ role: 'admin', max_free_bots: 999 })
+  });
+  loadUsers();
+}
+
+async function removeAdmin(id, email) {
+  if (!confirm(`Remove admin from ${email}?`)) return;
+  await fetch(`${API_BASE}/admin/users/${id}`, {
+    method: 'PUT', headers: { 'Authorization': 'Bearer '+getToken(), 'Content-Type':'application/json' },
+    body: JSON.stringify({ role: 'user', max_free_bots: 0 })
+  });
+  loadUsers();
+}
+
+async function grantAccess(id, email) {
+  const plat = prompt(`Grant ${email} access to which platform?\n(lvl13 / wallstbots / bitbot13)`, 'lvl13');
+  if (!plat) return;
+  const r = await fetch(`${API_BASE}/admin/users/${id}/grant-access?platform=${plat}`, {
+    method: 'POST', headers: { 'Authorization': 'Bearer '+getToken() }
+  });
+  const d = await r.json();
+  alert(d.message || (d.success ? 'Access granted!' : 'Failed'));
+  loadUsers();
+}
+
+// ── Payments ──
+async function loadPayments(reset) {
+  if (reset) payOffset = 0;
+  const r = await fetch(`${API_BASE}/admin/payments?limit=${payLimit}&offset=${payOffset}`, {
+    headers: { 'Authorization': 'Bearer ' + getToken() }
+  });
+  const d = await r.json();
+  payTotal = d.total || 0;
+  document.getElementById('payPageInfo').textContent = `${payOffset+1}–${Math.min(payOffset+payLimit,payTotal)} of ${payTotal}`;
+  document.getElementById('prevPayBtn').disabled = payOffset === 0;
+  document.getElementById('nextPayBtn').disabled = payOffset + payLimit >= payTotal;
+  const tbody = document.getElementById('paymentsBody');
+  if (!d.payments || !d.payments.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:24px">No payments yet</td></tr>'; return;
+  }
+  tbody.innerHTML = d.payments.map(p => `
+    <tr>
+      <td style="font-size:11px;color:var(--muted)">${new Date(p.date).toLocaleDateString()}</td>
+      <td>${p.email}</td>
+      <td style="color:var(--muted)">${p.name||'—'}</td>
+      <td>${p.bots}</td>
+      <td style="color:var(--green);font-weight:700">$${Number(p.amount||0).toFixed(2)}</td>
+      <td><span class="badge-status ${p.status}">${p.status}</span></td>
+      <td style="font-size:11px;color:var(--muted);font-family:monospace">${p.txn_id||'—'}</td>
+    </tr>
+  `).join('');
+}
+
+function changePayPage(dir) { payOffset = Math.max(0, payOffset + dir * payLimit); loadPayments(); }
+
+// ── Promo Codes ──
+async function loadPromos() {
+  const r = await fetch(`${API_BASE}/admin/promo-codes`, { headers: { 'Authorization': 'Bearer ' + getToken() } });
+  const d = await r.json();
+  const tbody = document.getElementById('promosBody');
+  if (!d.promo_codes || !d.promo_codes.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:24px">No promo codes</td></tr>'; return;
+  }
+  tbody.innerHTML = d.promo_codes.map(p => {
+    const disc = p.discount_amount ? '$'+Number(p.discount_amount).toFixed(0)+' off'
+               : p.discount_percentage ? p.discount_percentage+'% off' : 'Full price';
+    const uses = p.max_uses ? `${p.current_uses}/${p.max_uses}` : `${p.current_uses}/∞`;
+    return `<tr>
+      <td style="font-family:monospace;font-weight:700;color:var(--orange)">${p.code}</td>
+      <td style="color:var(--muted)">${p.code_type}</td>
+      <td>${disc}</td>
+      <td>${p.current_uses}</td>
+      <td>${p.max_uses||'Unlimited'}</td>
+      <td><span class="badge-status ${p.active?'active':'failed'}">${p.active?'Active':'Inactive'}</span></td>
+      <td style="color:var(--muted);font-size:11px">${p.expires_at?new Date(p.expires_at).toLocaleDateString():'Never'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Boot ──
+checkAdminAccess();
+</script>
+</body>
+</html>

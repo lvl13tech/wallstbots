@@ -654,7 +654,7 @@ async function applyRefCode() {
   if (!code) { msg.innerHTML = ''; return; }
   msg.innerHTML = '<span style="color:var(--muted)">Validating…</span>';
   try {
-    const r = await fetch('https://api.lvl13.tech/subscriptions/validate-referral?code='+encodeURIComponent(code));
+    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/subscriptions/validate-referral?code='+encodeURIComponent(code));
     const d = await r.json();
     if (d.valid) {
       GY_REF = d.code; GY_VALID = true;
@@ -756,7 +756,7 @@ async function loadReferralDashboard() {
   if (!dash) return;
   if (!token) { dash.innerHTML = '<p style="text-align:center;color:var(--muted)">Already a subscriber? <a href="#/login" style="color:var(--blue)">Log in</a> to see your referral code and earnings.</p>'; return; }
   try {
-    const r = await fetch('https://api.lvl13.tech/account/referral', { headers: { 'Authorization': 'Bearer '+token } });
+    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/account/referral', { headers: { 'Authorization': 'Bearer '+token } });
     if (!r.ok) throw new Error('not_authed');
     const d = await r.json();
     const link = d.share_links.bitbot13;
