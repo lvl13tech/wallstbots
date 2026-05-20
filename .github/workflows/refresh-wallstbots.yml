@@ -1,0 +1,50 @@
+name: Refresh wallstbots.tech
+
+on:
+  schedule:
+    - cron: '35 14 * * 1-5'
+    - cron: '5 16 * * 1-5'
+    - cron: '5 21 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-wallstbots-${{ hashFiles('**/refresh_wallstbots.py') }}
+          restore-keys: pip-wallstbots-
+
+      - name: Install dependencies
+        run: pip install yfinance requests
+
+      - name: Run wallstbots refresh
+        env:
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+        run: python Project/scripts/refresh_wallstbots.py
+
+      - name: Commit and push updated data
+        run: |
+          git config user.name  "WallStBots Bot"
+          git config user.email "bot@wallstbots.tech"
+          git add Frontends/wallstbots.tech/data/
+          git diff --staged --quiet || git commit -m "auto: wallstbots data refresh [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git push
