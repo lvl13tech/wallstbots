@@ -1,1 +1,514 @@
-{"data":{"recommendations":[],"summary":{"STRONG BUY":0,"BUY":0,"HOLD":0,"SELL":0,"STRONG SELL":0},"generated_at":null}}
+{
+  "data": {
+    "recommendations": [
+      {
+        "ticker": "FTM",
+        "signal": "STRONG SELL",
+        "confidence": 1.0,
+        "reason": "Down -16.58% in 24h \u2014 sharp decline.",
+        "price": 0.0384,
+        "change_pct": -16.58,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "PEPE",
+        "signal": "STRONG SELL",
+        "confidence": 0.77,
+        "reason": "Down -7.75% in 24h \u2014 sharp decline.",
+        "price": 3.69e-06,
+        "change_pct": -7.75,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "SHIB",
+        "signal": "SELL",
+        "confidence": 0.43,
+        "reason": "Down -4.33% in 24h \u2014 negative momentum.",
+        "price": 5.74e-06,
+        "change_pct": -4.33,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "UNI",
+        "signal": "BUY",
+        "confidence": 0.42,
+        "reason": "Up +4.20% in 24h \u2014 positive momentum.",
+        "price": 3.6,
+        "change_pct": 4.2,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "MANTA",
+        "signal": "BUY",
+        "confidence": 0.33,
+        "reason": "Up +3.32% in 24h \u2014 positive momentum.",
+        "price": 0.0783,
+        "change_pct": 3.32,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "INJ",
+        "signal": "BUY",
+        "confidence": 0.32,
+        "reason": "Up +3.17% in 24h \u2014 positive momentum.",
+        "price": 5.08,
+        "change_pct": 3.17,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "NEAR",
+        "signal": "BUY",
+        "confidence": 0.31,
+        "reason": "Up +3.05% in 24h \u2014 positive momentum.",
+        "price": 1.65,
+        "change_pct": 3.05,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "CRV",
+        "signal": "BUY",
+        "confidence": 0.23,
+        "reason": "Up +2.32% in 24h \u2014 positive momentum.",
+        "price": 0.2366,
+        "change_pct": 2.32,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "PENDLE",
+        "signal": "BUY",
+        "confidence": 0.22,
+        "reason": "Up +2.20% in 24h \u2014 positive momentum.",
+        "price": 1.76,
+        "change_pct": 2.2,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "TON",
+        "signal": "BUY",
+        "confidence": 0.21,
+        "reason": "Up +2.11% in 24h \u2014 positive momentum.",
+        "price": 0.00622892,
+        "change_pct": 2.11,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "SEI",
+        "signal": "BUY",
+        "confidence": 0.2,
+        "reason": "Up +2.01% in 24h \u2014 positive momentum.",
+        "price": 0.0608,
+        "change_pct": 2.01,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "ATOM",
+        "signal": "HOLD",
+        "confidence": 0.19,
+        "reason": "Flat -1.85% \u2014 no clear edge right now.",
+        "price": 2.0,
+        "change_pct": -1.85,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "FIL",
+        "signal": "HOLD",
+        "confidence": 0.18,
+        "reason": "Flat +1.81% \u2014 no clear edge right now.",
+        "price": 0.954,
+        "change_pct": 1.81,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "TAO",
+        "signal": "HOLD",
+        "confidence": 0.16,
+        "reason": "Flat +1.64% \u2014 no clear edge right now.",
+        "price": 263.54,
+        "change_pct": 1.64,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "KAS",
+        "signal": "HOLD",
+        "confidence": 0.16,
+        "reason": "Flat +1.56% \u2014 no clear edge right now.",
+        "price": 0.0342,
+        "change_pct": 1.56,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "ICP",
+        "signal": "HOLD",
+        "confidence": 0.15,
+        "reason": "Flat +1.48% \u2014 no clear edge right now.",
+        "price": 2.51,
+        "change_pct": 1.48,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "LINK",
+        "signal": "HOLD",
+        "confidence": 0.14,
+        "reason": "Flat +1.43% \u2014 no clear edge right now.",
+        "price": 9.59,
+        "change_pct": 1.43,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "ALGO",
+        "signal": "HOLD",
+        "confidence": 0.14,
+        "reason": "Flat +1.43% \u2014 no clear edge right now.",
+        "price": 0.1142,
+        "change_pct": 1.43,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "AVAX",
+        "signal": "HOLD",
+        "confidence": 0.13,
+        "reason": "Flat +1.33% \u2014 no clear edge right now.",
+        "price": 9.22,
+        "change_pct": 1.33,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "APT",
+        "signal": "HOLD",
+        "confidence": 0.13,
+        "reason": "Flat +1.29% \u2014 no clear edge right now.",
+        "price": 0.9416,
+        "change_pct": 1.29,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "EGLD",
+        "signal": "HOLD",
+        "confidence": 0.12,
+        "reason": "Flat +1.24% \u2014 no clear edge right now.",
+        "price": 3.9,
+        "change_pct": 1.24,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "IMX",
+        "signal": "HOLD",
+        "confidence": 0.11,
+        "reason": "Flat -1.15% \u2014 no clear edge right now.",
+        "price": 0.1655,
+        "change_pct": -1.15,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "DOT",
+        "signal": "HOLD",
+        "confidence": 0.11,
+        "reason": "Flat +1.12% \u2014 no clear edge right now.",
+        "price": 1.24,
+        "change_pct": 1.12,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "DOGE",
+        "signal": "HOLD",
+        "confidence": 0.09,
+        "reason": "Flat +0.95% \u2014 no clear edge right now.",
+        "price": 0.1039,
+        "change_pct": 0.95,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "BTC",
+        "signal": "HOLD",
+        "confidence": 0.09,
+        "reason": "Flat +0.89% \u2014 no clear edge right now.",
+        "price": 77431.29,
+        "change_pct": 0.89,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "ETH",
+        "signal": "HOLD",
+        "confidence": 0.09,
+        "reason": "Flat +0.88% \u2014 no clear edge right now.",
+        "price": 2128.58,
+        "change_pct": 0.88,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "STX",
+        "signal": "HOLD",
+        "confidence": 0.09,
+        "reason": "Flat +0.88% \u2014 no clear edge right now.",
+        "price": 0.2384,
+        "change_pct": 0.88,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "SOL",
+        "signal": "HOLD",
+        "confidence": 0.09,
+        "reason": "Flat +0.87% \u2014 no clear edge right now.",
+        "price": 84.94,
+        "change_pct": 0.87,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "SUI",
+        "signal": "HOLD",
+        "confidence": 0.09,
+        "reason": "Flat +0.86% \u2014 no clear edge right now.",
+        "price": 1.06,
+        "change_pct": 0.86,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "OP",
+        "signal": "HOLD",
+        "confidence": 0.09,
+        "reason": "Flat +0.86% \u2014 no clear edge right now.",
+        "price": 0.127,
+        "change_pct": 0.86,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "LTC",
+        "signal": "HOLD",
+        "confidence": 0.08,
+        "reason": "Flat -0.80% \u2014 no clear edge right now.",
+        "price": 53.95,
+        "change_pct": -0.8,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "VET",
+        "signal": "HOLD",
+        "confidence": 0.08,
+        "reason": "Flat +0.80% \u2014 no clear edge right now.",
+        "price": 0.00659,
+        "change_pct": 0.8,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "WLD",
+        "signal": "HOLD",
+        "confidence": 0.07,
+        "reason": "Flat +0.74% \u2014 no clear edge right now.",
+        "price": 0.2401,
+        "change_pct": 0.74,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "XRP",
+        "signal": "HOLD",
+        "confidence": 0.07,
+        "reason": "Flat +0.67% \u2014 no clear edge right now.",
+        "price": 1.37,
+        "change_pct": 0.67,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "FLOKI",
+        "signal": "HOLD",
+        "confidence": 0.07,
+        "reason": "Flat +0.67% \u2014 no clear edge right now.",
+        "price": 3.02e-05,
+        "change_pct": 0.67,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "BNB",
+        "signal": "HOLD",
+        "confidence": 0.06,
+        "reason": "Flat +0.63% \u2014 no clear edge right now.",
+        "price": 643.49,
+        "change_pct": 0.63,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "ADA",
+        "signal": "HOLD",
+        "confidence": 0.06,
+        "reason": "Flat +0.59% \u2014 no clear edge right now.",
+        "price": 0.2497,
+        "change_pct": 0.59,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "ETC",
+        "signal": "HOLD",
+        "confidence": 0.06,
+        "reason": "Flat +0.58% \u2014 no clear edge right now.",
+        "price": 9.01,
+        "change_pct": 0.58,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "TRX",
+        "signal": "HOLD",
+        "confidence": 0.06,
+        "reason": "Flat +0.55% \u2014 no clear edge right now.",
+        "price": 0.3579,
+        "change_pct": 0.55,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "HBAR",
+        "signal": "HOLD",
+        "confidence": 0.05,
+        "reason": "Flat +0.54% \u2014 no clear edge right now.",
+        "price": 0.089,
+        "change_pct": 0.54,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "BCH",
+        "signal": "HOLD",
+        "confidence": 0.05,
+        "reason": "Flat -0.49% \u2014 no clear edge right now.",
+        "price": 367.83,
+        "change_pct": -0.49,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "AAVE",
+        "signal": "HOLD",
+        "confidence": 0.05,
+        "reason": "Flat +0.48% \u2014 no clear edge right now.",
+        "price": 87.76,
+        "change_pct": 0.48,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "RUNE",
+        "signal": "HOLD",
+        "confidence": 0.05,
+        "reason": "Flat -0.48% \u2014 no clear edge right now.",
+        "price": 0.447,
+        "change_pct": -0.48,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "ARB",
+        "signal": "HOLD",
+        "confidence": 0.03,
+        "reason": "Flat -0.34% \u2014 no clear edge right now.",
+        "price": 0.1131,
+        "change_pct": -0.34,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "XLM",
+        "signal": "HOLD",
+        "confidence": 0.03,
+        "reason": "Flat -0.34% \u2014 no clear edge right now.",
+        "price": 0.143,
+        "change_pct": -0.34,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "MKR",
+        "signal": "HOLD",
+        "confidence": 0.03,
+        "reason": "Flat -0.25% \u2014 no clear edge right now.",
+        "price": 1728.6,
+        "change_pct": -0.25,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "QNT",
+        "signal": "HOLD",
+        "confidence": 0.02,
+        "reason": "Flat -0.21% \u2014 no clear edge right now.",
+        "price": 73.21,
+        "change_pct": -0.21,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "NOT",
+        "signal": "HOLD",
+        "confidence": 0.02,
+        "reason": "Flat -0.16% \u2014 no clear edge right now.",
+        "price": 0.00048722,
+        "change_pct": -0.16,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "THETA",
+        "signal": "HOLD",
+        "confidence": 0.01,
+        "reason": "Flat +0.13% \u2014 no clear edge right now.",
+        "price": 0.1985,
+        "change_pct": 0.13,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      },
+      {
+        "ticker": "GRT",
+        "signal": "HOLD",
+        "confidence": 0.01,
+        "reason": "Flat +0.05% \u2014 no clear edge right now.",
+        "price": 0.0249,
+        "change_pct": 0.05,
+        "sector": "CRYPTO",
+        "date": "2026-05-20"
+      }
+    ],
+    "summary": {
+      "STRONG BUY": 0,
+      "BUY": 8,
+      "HOLD": 39,
+      "SELL": 1,
+      "STRONG SELL": 2
+    },
+    "generated_at": "2026-05-20T11:13:35"
+  }
+}
