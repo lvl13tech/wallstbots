@@ -775,49 +775,81 @@ def generate_signals(prices, prev_closes, hist_data):
 
 
 # ── News ─────────────────────────────────────────────────────────────────────────
-def fetch_news(newsapi_key):
-    if not newsapi_key or _requests is None:
-        print("  [news] no API key or requests not installed — skipping")
+def fetch_news():
+    """Fetch financial news from free RSS feeds — no API key, works from GitHub Actions."""
+    import xml.etree.ElementTree as ET
+    import re
+    from email.utils import parsedate_to_datetime
+
+    if _requests is None:
+        print("  [news] requests not available — skipping")
         return []
-    queries = [
-        ("stock market investing earnings",     "MARKET"),
-        ("oil gas energy stocks",               "ENERGY"),
-        ("AI semiconductor technology stocks",  "IT"),
-        ("healthcare biotech pharma",           "HEALTH CARE"),
-        ("bank finance JPMorgan Goldman",       "FINANCIALS"),
-        ("retail consumer Amazon Tesla",        "CONSUMER DISCRETIONARY"),
-        ("REIT real estate property",           "REAL ESTATE"),
-        ("utilities electricity nuclear power", "UTILITIES"),
-        ("industrial defense aerospace",        "INDUSTRIALS"),
+
+    # Free RSS feeds: (url, sector_tag)
+    RSS_FEEDS = [
+        ("https://finance.yahoo.com/rss/topstories",                "MARKET"),
+        ("https://www.cnbc.com/id/100003114/device/rss/rss.html",   "MARKET"),
+        ("https://feeds.marketwatch.com/marketwatch/topstories/",   "MARKET"),
+        ("https://www.cnbc.com/id/100727362/device/rss/rss.html",   "IT"),
+        ("https://www.cnbc.com/id/10000664/device/rss/rss.html",    "FINANCIALS"),
+        ("https://www.cnbc.com/id/10001147/device/rss/rss.html",    "ENERGY"),
+        ("https://www.cnbc.com/id/15839135/device/rss/rss.html",    "HEALTH CARE"),
+        ("https://www.cnbc.com/id/10001054/device/rss/rss.html",    "CONSUMER DISCRETIONARY"),
     ]
+
+    HEADERS = {
+        "User-Agent": (
+            "Mozilla/5.0 (compatible; WallStBots/1.0; +https://wallstbots.tech)"
+        )
+    }
+
     items, seen = [], set()
-    for query, sector in queries:
+
+    for feed_url, sector in RSS_FEEDS:
         try:
-            r = _requests.get(
-                "https://newsapi.org/v2/everything",
-                params={"q": query, "language": "en", "sortBy": "publishedAt",
-                        "pageSize": 5, "apiKey": newsapi_key},
-                timeout=10,
-            )
+            r = _requests.get(feed_url, headers=HEADERS, timeout=15)
             if r.status_code != 200:
+                print(f"  [news] {sector} HTTP {r.status_code} — {feed_url}")
                 continue
-            for art in r.json().get("articles", []):
-                title = (art.get("title") or "").strip()
-                if not title or title in seen or title == "[Removed]":
+
+            root = ET.fromstring(r.content)
+            channel = root.find("channel")
+            feed_items = (
+                channel.findall("item") if channel is not None
+                else root.findall(".//item")
+            )
+
+            count = 0
+            for itm in feed_items[:6]:
+                title = (itm.findtext("title") or "").strip()
+                if not title or title in seen or "[Removed]" in title:
                     continue
+                desc = re.sub(r"<[^>]+>", "", (itm.findtext("description") or "")).strip()
+                url  = (itm.findtext("link") or "").strip()
+                pub  = (itm.findtext("pubDate") or "").strip()
+                src_el = itm.find("source")
+                source = src_el.text.strip() if src_el is not None else feed_url.split("/")[2]
+                try:
+                    pub_iso = parsedate_to_datetime(pub).isoformat()
+                except Exception:
+                    pub_iso = pub
                 seen.add(title)
                 items.append({
                     "title":        title,
-                    "description":  (art.get("description") or "").strip(),
-                    "url":          art.get("url") or "#",
-                    "source":       (art.get("source") or {}).get("name") or sector,
+                    "description":  desc[:250],
+                    "url":          url,
+                    "source":       source,
                     "sector":       sector,
-                    "published_at": art.get("publishedAt") or "",
+                    "published_at": pub_iso,
                 })
+                count += 1
+            print(f"  [news] {sector} from {feed_url.split('/')[2]}: {count} articles")
+
         except Exception as e:
-            print(f"  [news] {sector} error: {e}")
+            print(f"  [news] {sector} {feed_url.split('/')[2]}: {e}")
+
     items.sort(key=lambda it: it.get("published_at", ""), reverse=True)
-    print(f"  [news] fetched {len(items)} articles")
+    print(f"  [news] fetched {len(items)} total articles")
     return items
 
 
@@ -1098,7 +1130,7 @@ def main():
 
     # ── Write news.json ───────────────────────────────────────────────────────
     print("[wallstbots] fetching news...")
-    news_items = fetch_news(newsapi_key)
+    news_items = fetch_news()
     all_sectors = sorted({it["sector"] for it in news_items}) or [
         "ENERGY","MATERIALS","INDUSTRIALS","CONSUMER DISCRETIONARY",
         "CONSUMER STAPLES","HEALTH CARE","FINANCIALS","IT",
