@@ -34,12 +34,33 @@ jobs:
           restore-keys: pip-wallstbots-
 
       - name: Install dependencies
-        run: pip install yfinance requests
+        run: |
+          echo "=== Python version ==="
+          python --version
+          echo "=== pip version ==="
+          python -m pip --version
+          echo "=== Installing packages ==="
+          python -m pip install --upgrade pip
+          python -m pip install yfinance requests pandas
+          echo "=== Installed packages ==="
+          python -m pip list | grep -E "yfinance|requests|pandas|numpy"
+
+      - name: Verify script exists
+        run: |
+          echo "=== Repo contents ==="
+          ls -la
+          echo "=== Script check ==="
+          ls -la Project/scripts/refresh_wallstbots.py
+          echo "=== Data dir check ==="
+          ls -la Frontends/wallstbots.tech/data/
 
       - name: Run wallstbots refresh
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
-        run: python Project/scripts/refresh_wallstbots.py
+        run: |
+          echo "=== Running refresh script ==="
+          python Project/scripts/refresh_wallstbots.py
+          echo "=== Script exit code: $? ==="
 
       - name: Commit and push updated data
         run: |
