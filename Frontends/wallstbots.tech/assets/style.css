@@ -77,6 +77,16 @@ img, svg {
   margin-left: 8px; padding: 8px 16px;
 }
 .site-nav a.cta:hover { background: #00b8e0; color: var(--bg); }
+.site-nav a.nav-login {
+  border: 1px solid var(--border); color: var(--text); font-weight: 600;
+  margin-left: 4px; padding: 7px 14px;
+}
+.site-nav a.nav-login:hover { border-color: var(--green); color: var(--green); background: transparent; }
+.site-nav a.nav-dashboard {
+  background: var(--green); color: #000; font-weight: 700;
+  margin-left: 4px; padding: 8px 16px;
+}
+.site-nav a.nav-dashboard:hover { background: #4dcb60; color: #000; }
 
 .menu-toggle {
   display: none; background: transparent; border: none;
@@ -428,6 +438,12 @@ td.num, th.num { text-align: right; }
 }
 .footer-fine .dot { opacity: 0.5; }
 .footer-fine a { color: var(--blue); }
+.footer-network { width: 100%; padding-top: 14px; border-top: 1px solid var(--border); }
+.footer-network-label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.footer-network-links { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.footer-network-links a { font-size: 13px; font-weight: 600; color: var(--blue); text-decoration: none; transition: opacity 0.2s; }
+.footer-network-links a:hover { opacity: 0.75; }
+.footer-network-current { font-size: 13px; font-weight: 600; color: var(--muted); }
 
 /* ============ CHATBOT WIDGET ============ */
 .chatbot-toggle {
