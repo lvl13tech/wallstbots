@@ -994,7 +994,7 @@ function updateNavAuth() {
       a.textContent = 'My Tracker';
       a.style.color = 'var(--blue)';
       // Insert before the "Get Yours" CTA
-            const cta = nav.querySelector('.cta');
+      const cta = nav.querySelector('.cta');
       nav.insertBefore(a, cta || null);
       a.addEventListener('click', () => closeMenu());
     }
@@ -1015,8 +1015,8 @@ function updateNavAuthState() {
 
 function boot() {
   wireUI();
-  updateNavAuth();        // Existing logged-in "My Tracker" injector
-  updateNavAuthState();   // Toggles static navLoginBtn/navDashBtn from index.html
+  updateNavAuth();
+  updateNavAuthState();
   loadAll();
 }
 

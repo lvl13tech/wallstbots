@@ -770,17 +770,17 @@ def generate_signals(prices, prev_closes, hist_data):
 
         summary[signal] += 1
         recs.append({
-            "ticker":     sym,
-            "signal":     signal,
+            "symbol":     sym,
+            "action":     signal,
             "confidence": round(min(abs(pct) / 5.0, 1.0), 2),
             "reason":     reason,
             "price":      round(p, 2),
-            "change_pct": round(pct, 2),
+            "upside_pct": round(pct, 2),
             "sector":     SECTORS.get(sym, ""),
             "date":       today_iso,
         })
 
-    recs.sort(key=lambda r: -abs(r["change_pct"]))
+    recs.sort(key=lambda r: -abs(r["upside_pct"]))
     return {
         "recommendations": recs,
         "summary":         summary,
@@ -1176,47 +1176,4 @@ def main():
     all_lb.sort(key=lambda r: -r["all_pct"])
 
 
-    # ── Build state payload ───────────────────────────────────────────────────
-    state_data = {
-        "starting_capital": sc_global,
-        "last_refresh":     now_iso,
-        "snapshots":        snapshots,
-        "funds":            funds_out,
-        "leaderboards":     {"week": wk_lb, "all": all_lb},
-    }
-    # Write local file (backup) + push to backend API
-    STATE_FILE.write_text(json.dumps({"data": state_data}, indent=2))
-    print(f"[wallstbots] state — {len(funds_out)} funds, {len(snapshots)} snapshots")
-    push_to_api("state", state_data, secrets)
-
-    # ── Signals ───────────────────────────────────────────────────────────────
-    signals = generate_signals(prices, prev_closes, hist_data)
-    signals_data = signals
-    (DATA_DIR / "signals.json").write_text(json.dumps({"data": signals_data}, indent=2))
-    n_sig = len(signals["recommendations"])
-    print(f"[wallstbots] signals — {n_sig} signals")
-    push_to_api("signals", signals_data, secrets)
-
-    # ── News ──────────────────────────────────────────────────────────────────
-    print("[wallstbots] fetching news...")
-    news_items = fetch_news(newsapi_key)
-    news_data = {
-        "items":        news_items,
-        "sectors":      sorted({it["sector"] for it in news_items}) if news_items else [],
-        "generated_at": dt.datetime.utcnow().isoformat() + "Z",
-    }
-    print(f"[wallstbots] news — {len(news_items)} articles")
-    push_to_api("news", news_data, secrets)
-
-    # ── Reports (placeholder — keeps API consistent) ──────────────────────────
-    push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
-
-    # ── Git push (optional — static files as backup) ─────────────────────────
-    if args.push:
-        git_push("wallstbots.tech data refresh")
-
-    print("\n[wallstbots] ALL DONE")
-
-
-if __name__ == "__main__":
-    main()
+ 
