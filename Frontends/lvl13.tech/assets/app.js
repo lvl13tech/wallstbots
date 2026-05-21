@@ -10,8 +10,8 @@ let SIGNALS_FILTER = 'ALL';
 let SECTOR_FILTER = 'ALL';
 let PICKED_TICKERS = [];
 
-const fmt$  = n => '$' + (n||0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
-const fmt$0 = n => '$' + Math.round(n||0).toLocaleString();
+const fmt$  = n => { const v = n||0; return (v<0?'-$':'$') + Math.abs(v).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); };
+const fmt$0 = n => { const v = Math.round(n||0); return (v<0?'-$':'$') + Math.abs(v).toLocaleString(); };
 const fmtPct = n => (n>=0?'+':'') + (n||0).toFixed(2) + '%';
 const cls   = n => n>=0 ? 'pos' : 'neg';
 const $     = id => document.getElementById(id);
