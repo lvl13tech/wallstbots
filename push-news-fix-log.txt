@@ -1,0 +1,31 @@
+=== PUSH NEWS FIX LOG === 
+Wed 05/20/2026  1:32:10.31 
+ 
+[1] git add 
+warning: in the working copy of 'Project/scripts/refresh_wallstbots.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Project/scripts/refresh_bitbot13.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.github/workflows/refresh-wallstbots.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.github/workflows/refresh-bitbot13.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Frontends/wallstbots.tech/assets/app.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Frontends/bitbot13.tech/assets/app.js', LF will be replaced by CRLF the next time Git touches it
+ADD EXIT: 0 
+ 
+[2] git commit 
+[master 66004df] fix: wire wallstbots+bitbot13 news to backend API like lvl13 (NewsAPI + push to tracker DB)
+ 6 files changed, 259 insertions(+), 160 deletions(-)
+ create mode 100644 .github/workflows/refresh-bitbot13.yml
+COMMIT EXIT: 0 
+ 
+[3] git push 
+To https://github.com/lvl13tech/wallstbots.git
+   b87bf8a..66004df  master -> master
+PUSH EXIT: 0 
+ 
+[4] git log 
+66004df fix: wire wallstbots+bitbot13 news to backend API like lvl13 (NewsAPI + push to tracker DB)
+b87bf8a fix: replace NewsAPI with free RSS feeds for news (NewsAPI blocks server-side requests)
+379225b fix: add login/dashboard + auth nav to bitbot13.tech
+197db99 fix: add missing logo PNG files for cross-promo section
+b2abf0f fix: add login/signup nav buttons + auth-aware nav + fix broken #/login routes
+ 
+=== DONE === 

@@ -192,7 +192,11 @@ let payOffset  = 0, payTotal  = 0, payLimit  = 25;
 let currentTab = 'stats';
 
 // ── Auth ──
-function getToken() { return localStorage.getItem('wallstbots_jwt') || localStorage.getItem('auth_token'); }
+function getToken() {
+  // Try the site's own key first, then legacy keys for back-compat
+  return localStorage.getItem('wallstbots_jwt')
+      || localStorage.getItem('auth_token');
+}
 function doLogout() { localStorage.clear(); location.href = '/login'; }
 
 async function checkAdminAccess() {

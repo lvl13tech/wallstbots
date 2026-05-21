@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WallStBots — Fund Strategy Overview</title>
+<style>
+  :root {
+    --green:  #00d084;
+    --blue:   #1a73e8;
+    --gold:   #f5a623;
+    --purple: #7c3aed;
+    --teal:   #0891b2;
+    --gray-dk: #1c1c2e;
+    --gray-md: #2a2a3e;
+    --gray-lt: #3a3a52;
+    --text:   #e8e8f0;
+    --muted:  #9090a8;
+    --card-bg:#22223a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--gray-dk);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 40px 20px 60px;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .header .logo {
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .header h1 {
+    font-size: 36px;
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--green), var(--blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .header .subtitle {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* ── Section labels ── */
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--gray-lt);
+  }
+
+  /* ── Grid ── */
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto 48px;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    max-width: 740px;
+    margin: 0 auto 48px;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 28px 24px 24px;
+    border: 1px solid var(--gray-lt);
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent, var(--blue));
+  }
+
+  .card .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--accent, var(--blue)) 18%, transparent);
+    color: var(--accent, var(--blue));
+    margin-bottom: 14px;
+  }
+
+  .card h2 {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .card .tagline {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 18px;
+    font-style: italic;
+  }
+
+  .card .desc {
+    font-size: 14px;
+    line-height: 1.65;
+    color: #c0c0d8;
+    margin-bottom: 20px;
+  }
+
+  /* ── Stat rows ── */
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stat {
+    background: var(--gray-md);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .stat .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .stat .value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent, var(--blue));
+  }
+
+  /* ── Rules list ── */
+  .rules {
+    list-style: none;
+    padding: 0;
+  }
+  .rules li {
+    font-size: 13px;
+    color: #b0b0c8;
+    padding: 5px 0 5px 20px;
+    position: relative;
+    line-height: 1.5;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .rules li:last-child { border-bottom: none; }
+  .rules li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent, var(--blue));
+  }
+
+  /* ── Baseline section ── */
+  .baseline-note {
+    background: var(--gray-md);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 16px;
+    border-left: 3px solid var(--accent, var(--blue));
+    line-height: 1.5;
+  }
+
+  /* ── Comparison table ── */
+  .compare-wrap {
+    max-width: 1100px;
+    margin: 0 auto 48px;
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead th {
+    background: var(--gray-md);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    border-bottom: 2px solid var(--gray-lt);
+  }
+  tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: background 0.15s;
+  }
+  tbody tr:hover { background: rgba(255,255,255,0.03); }
+  tbody td {
+    padding: 12px 16px;
+    color: var(--text);
+    vertical-align: middle;
+  }
+  .bot-name {
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .pill-green { background: rgba(0,208,132,0.15); color: #00d084; }
+  .pill-yellow { background: rgba(245,166,35,0.15); color: #f5a623; }
+  .pill-gray  { background: rgba(144,144,168,0.15); color: #9090a8; }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+  .footer strong { color: var(--text); }
+
+  /* ── Accent colors ── */
+  .accent-green  { --accent: #00d084; }
+  .accent-blue   { --accent: #1a73e8; }
+  .accent-gold   { --accent: #f5a623; }
+  .accent-purple { --accent: #7c3aed; }
+  .accent-teal   { --accent: #0891b2; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════ HEADER ════════════════════════════════════ -->
+<div class="header">
+  <div class="logo">WallStBots · Fund Strategy Overview</div>
+  <h1>How the Bots Trade</h1>
+  <p class="subtitle">
+    Five disciplined strategies. One goal — outperform. Each bot runs fully automatically,
+    evaluated against two independent baselines that never make a discretionary call.
+  </p>
+</div>
+
+<!-- ════════════════════════════════════ ACTIVE STRATEGIES ════════════════════════ -->
+<div style="max-width:1100px;margin:0 auto 24px;">
+  <div class="section-label">Active Trading Strategies</div>
+</div>
+
+<div class="grid-3">
+
+  <!-- BOT13 -->
+  <div class="card accent-green">
+    <div class="badge">Intraday · Daily</div>
+    <h2>BOT13</h2>
+    <div class="tagline">Precision Intraday Momentum</div>
+    <p class="desc">
+      BOT13 hunts the market's strongest single-day movers and only acts when conditions
+      clearly favor a winning trade. Its core rule: be in positions or be in cash — never
+      be losing without a reason. Three times each trading day (open, midday, close) it
+      reassesses the universe, logs every decision, and either deploys capital or stands aside.
+    </p>
+    <div class="stats">
+      <div class="stat">
+        <div class="label">Entry Gate</div>
+        <div class="value">≥ 1.0% move</div>
+      </div>
+      <div class="stat">
+        <div class="label">Stop-Loss</div>
+        <div class="value">-1.5% hard</div>
+      </div>
+      <div class="stat">
+        <div class="label">Profit Target</div>
+        <div class="value">+3.0%</div>
+      </div>
+      <div class="stat">
+        <div class="label">Max Position</div>
+        <div class="value">Top 5 names</div>
+      </div>
+    </div>
+    <ul class="rules">
+      <li>Market breadth check: if &gt;33% of stocks are down &gt;2%, go to cash</li>
+      <li>Moves &gt;8% face an overextension penalty (reversal risk)</li>
+      <li>Signal-strength weighted allocation: bigger movers get more weight</li>
+      <li>Position weights clamped 12%–33% to prevent concentration risk</li>
+      <li>Session log records every trade decision with timestamp and rationale</li>
+      <li>Resets fully each morning — no stale overnight positions carried forward</li>
+    </ul>
+  </div>
+
+  <!-- ORACLE -->
+  <div class="card accent-blue">
+    <div class="badge">Weekly · Every Monday</div>
+    <h2>ORACLE</h2>
+    <div class="tagline">Adaptive Weekly Momentum</div>
+    <p class="desc">
+      Every Monday morning ORACLE scores the entire universe on four dimensions of momentum
+      and quality, then builds a concentrated portfolio of the five highest-conviction names.
+      Positions are held for the week — no intraday noise, no emotional overrides.
+      The model only enters names showing both recent and intermediate-term strength.
+    </p>
+    <div class="stats">
+      <div class="stat">
+        <div class="label">Rebalance</div>
+        <div class="value">Every Monday</div>
+      </div>
+      <div class="stat">
+        <div class="label">Holdings</div>
+        <div class="value">5 positions</div>
+      </div>
+      <div class="stat">
+        <div class="label">Quality Gate</div>
+        <div class="value">20d return &gt; 0</div>
+      </div>
+      <div class="stat">
+        <div class="label">Sector Cap</div>
+        <div class="value">Max 2 per sector</div>
+      </div>
+    </div>
+    <ul class="rules">
+      <li>Composite score: 5-day return (40%) + 20-day return (30%) + RSI quality (20%) + volume surge (10%)</li>
+      <li>RSI penalty applied: overbought names (&gt;75) score negatively</li>
+      <li>Sector diversification enforced — no sector dominates the portfolio</li>
+      <li>Score-proportional allocation with weights clamped 12%–35%</li>
+      <li>Carries positions mid-week unless a full Monday recompute runs</li>
+    </ul>
+  </div>
+
+  <!-- WIZARD -->
+  <div class="card accent-gold">
+    <div class="badge">Monthly · 1st Trading Day</div>
+    <h2>WIZARD</h2>
+    <div class="tagline">Quality Long-Horizon Momentum</div>
+    <p class="desc">
+      WIZARD thinks in months, not minutes. On the first trading day of each month it builds
+      a deliberate 8-name portfolio anchored on risk-adjusted returns and trend quality.
+      It rewards names that have moved well over 20 and 60 days, have strong Sharpe-proxy
+      scores, and are trading above their 50-day moving average. Sizing is quartile-tiered
+      so the strongest picks carry the most weight.
+    </p>
+    <div class="stats">
+      <div class="stat">
+        <div class="label">Rebalance</div>
+        <div class="value">Monthly</div>
+      </div>
+      <div class="stat">
+        <div class="label">Holdings</div>
+        <div class="value">8 positions</div>
+      </div>
+      <div class="stat">
+        <div class="label">Quality Gate</div>
+        <div class="value">60d return &gt; 0</div>
+      </div>
+      <div class="stat">
+        <div class="label">Sector Cap</div>
+        <div class="value">Max 3 per sector</div>
+      </div>
+    </div>
+    <ul class="rules">
+      <li>Score: 20-day return (35%) + 60-day return (35%) + Sharpe proxy (20%) + 50d MA distance (10%)</li>
+      <li>Quartile sizing: top 25% names get 3× weight, middle 1.8×, bottom 1.0×</li>
+      <li>60-day positive return required — no broken-trend names admitted</li>
+      <li>Intra-month monitoring: positions down &gt;12% flagged as stop-triggered</li>
+      <li>Sector diversification enforced — max 3 names per sector</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════ BASELINES ════════════════════════════════ -->
+<div style="max-width:1100px;margin:0 auto 24px;">
+  <div class="section-label">Passive Baselines — The Benchmarks to Beat</div>
+</div>
+
+<div class="grid-2">
+
+  <!-- EQUALIZER -->
+  <div class="card accent-purple">
+    <div class="badge">Passive · Equal Weight</div>
+    <h2>EQUALIZER</h2>
+    <div class="tagline">The Pure Market Proxy</div>
+    <p class="desc">
+      EQUALIZER allocates $1,000 to every stock in the universe — no selection, no timing,
+      no judgment. It represents what a purely diversified, opinion-free investor would earn.
+      If the active bots can't beat EQUALIZER consistently, the strategies need work.
+      It's the harshest baseline because it removes all skill assumptions.
+    </p>
+    <ul class="rules">
+      <li>Exactly $1,000 per position across all 55 stocks — zero discretion</li>
+      <li>Never rebalances — buy and hold the initial positions</li>
+      <li>Benchmark question: does active stock-picking add value over pure diversification?</li>
+    </ul>
+    <div class="baseline-note">
+      💡 EQUALIZER wins when the entire market rises uniformly.
+      Active bots should outperform it in trending or volatile markets where selection matters.
+    </div>
+  </div>
+
+  <!-- TITAN -->
+  <div class="card accent-teal">
+    <div class="badge">Passive · Cap Weighted</div>
+    <h2>TITAN</h2>
+    <div class="tagline">The Institutional Proxy</div>
+    <p class="desc">
+      TITAN mirrors how large institutional portfolios are constructed: half the capital
+      is concentrated in the top 10 highest-conviction "heavyweight" names ($2,750 each),
+      and the remaining half is spread equally across the rest of the universe.
+      It asks the question: does our active selection beat a simple size-tilted strategy?
+    </p>
+    <ul class="rules">
+      <li>50% of capital in top 10 heavyweights at $2,750 each</li>
+      <li>Remaining 50% split equally across all remaining names</li>
+      <li>Static from inception — no rebalancing, no tactical moves</li>
+      <li>Benchmark question: does precision selection beat a cap-weighted tilt?</li>
+    </ul>
+    <div class="baseline-note">
+      💡 TITAN wins when large-cap leaders dominate the market.
+      Active bots should outperform it when smaller or overlooked names lead the rally.
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════ COMPARISON TABLE ════════════════════════ -->
+<div style="max-width:1100px;margin:0 auto 24px;">
+  <div class="section-label">At a Glance — All Five Funds</div>
+</div>
+
+<div class="compare-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Fund</th>
+        <th>Strategy Type</th>
+        <th>Rebalance</th>
+        <th>Holdings</th>
+        <th>Edge</th>
+        <th>Risk Controls</th>
+        <th>Role</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="bot-name" style="color:#00d084">BOT13</span></td>
+        <td>Intraday Momentum</td>
+        <td>3× daily</td>
+        <td>Up to 5</td>
+        <td>Captures same-day explosive movers</td>
+        <td>-1.5% stop, breadth gate, overextension penalty, cash mode</td>
+        <td><span class="pill pill-green">Active</span></td>
+      </tr>
+      <tr>
+        <td><span class="bot-name" style="color:#1a73e8">ORACLE</span></td>
+        <td>Weekly Momentum</td>
+        <td>Every Monday</td>
+        <td>5</td>
+        <td>Multi-factor weekly leaders with sector balance</td>
+        <td>RSI cap, 20d quality gate, sector diversification</td>
+        <td><span class="pill pill-green">Active</span></td>
+      </tr>
+      <tr>
+        <td><span class="bot-name" style="color:#f5a623">WIZARD</span></td>
+        <td>Monthly Momentum</td>
+        <td>1st trading day</td>
+        <td>8</td>
+        <td>Risk-adjusted quality with quartile-weighted sizing</td>
+        <td>60d quality gate, 12% intra-month stop flag, sector cap</td>
+        <td><span class="pill pill-green">Active</span></td>
+      </tr>
+      <tr>
+        <td><span class="bot-name" style="color:#7c3aed">EQUALIZER</span></td>
+        <td>Equal Weight Passive</td>
+        <td>Never</td>
+        <td>55 (all)</td>
+        <td>Pure market beta — zero selection bias</td>
+        <td>None</td>
+        <td><span class="pill pill-gray">Baseline</span></td>
+      </tr>
+      <tr>
+        <td><span class="bot-name" style="color:#0891b2">TITAN</span></td>
+        <td>Cap-Weight Passive</td>
+        <td>Never</td>
+        <td>55 (all)</td>
+        <td>Institutional size tilt — heavy on market leaders</td>
+        <td>None</td>
+        <td><span class="pill pill-gray">Baseline</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ════════════════════════════════════ FOOTER ════════════════════════════════════ -->
+<div class="footer">
+  <p>
+    <strong>Starting Capital:</strong> $55,000 per fund &nbsp;·&nbsp;
+    <strong>Universe:</strong> 55 curated stocks &nbsp;·&nbsp;
+    <strong>Data:</strong> Live via GitHub Actions (market open · midday · close)
+  </p>
+  <p style="margin-top:8px;">
+    All strategies run fully automatically — no manual intervention. Performance is tracked
+    from inception and updated in real time so prospective customers see what the bots are
+    actually doing with real market prices, not simulations.
+  </p>
+  <p style="margin-top:16px; color: #5a5a72; font-size: 11px;">
+    WallStBots © 2026 &nbsp;·&nbsp; wallstbots.tech &nbsp;·&nbsp; bitbot13.tech &nbsp;·&nbsp; lvl13.tech
+  </p>
+</div>
+
+</body>
+</html>

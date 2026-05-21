@@ -789,16 +789,45 @@ def generate_signals(prices, prev_closes, hist_data):
 
 
 # ── News ─────────────────────────────────────────────────────────────────────────
+# wallstbots is STOCK-MARKET ONLY. We restrict to financial publications and
+# reject any article that mentions crypto, NFT, blockchain, or web3 — per spec.
+
+# Per-sector queries are focused on the names actually in our stock universe.
 SECTOR_QUERIES = {
-    "AI & Quantum": '("artificial intelligence" OR "quantum computing" OR "AI chip" OR "qubit" OR Nvidia OR Anthropic OR OpenAI OR IonQ OR Quantinuum OR Rigetti)',
-    "Biotech":      '(biotech OR mRNA OR CRISPR OR "gene therapy" OR "FDA approval" OR clinical OR Moderna OR BioNTech OR Vertex)',
-    "Energy":       '(oil OR LNG OR renewables OR solar OR "energy storage" OR Aramco OR Exxon OR Chevron OR "First Solar")',
-    "Defense":      '(defense OR Lockheed OR Raytheon OR "Northrop Grumman" OR BAE OR hypersonic OR "missile defense")',
-    "Finance":      '(JPMorgan OR Goldman OR "Bank of America" OR Visa OR Mastercard OR "Federal Reserve" OR earnings)',
+    "AI & Quantum": '("artificial intelligence" OR "AI chip" OR "quantum computing" OR Nvidia OR AMD OR Anthropic OR OpenAI OR Palantir OR IonQ OR Rigetti OR "AI stocks")',
+    "Biotech":      '(biotech OR mRNA OR CRISPR OR "gene therapy" OR "FDA approval" OR Moderna OR BioNTech OR Vertex OR Regeneron OR "drug trial")',
+    "Energy":       '("oil prices" OR LNG OR renewables OR "energy stocks" OR Exxon OR Chevron OR ConocoPhillips OR "First Solar" OR "Saudi Aramco")',
+    "Defense":      '(defense OR Lockheed OR Raytheon OR "Northrop Grumman" OR "L3Harris" OR "General Dynamics" OR "defense contractor" OR hypersonic)',
+    "Finance":      '(JPMorgan OR Goldman OR "Bank of America" OR Wells Fargo OR Visa OR Mastercard OR "Federal Reserve" OR "earnings report" OR "stock market")',
+    "Tech & Comms": '(Apple OR Microsoft OR Amazon OR Alphabet OR Meta OR "tech earnings" OR Tesla OR Netflix OR Salesforce)',
+    "Industrials":  '(Boeing OR Caterpillar OR "General Electric" OR "Honeywell" OR "Lockheed" OR Deere OR "industrial stocks")',
 }
 
+# Whitelist of trusted financial publications. NewsAPI accepts up to 20 comma-separated domains.
+WALLSTBOTS_DOMAINS = ",".join([
+    "reuters.com", "bloomberg.com", "wsj.com", "cnbc.com", "marketwatch.com",
+    "finance.yahoo.com", "seekingalpha.com", "barrons.com", "ft.com",
+    "investors.com", "fool.com", "thestreet.com", "businessinsider.com",
+    "forbes.com", "morningstar.com",
+])
+
+# Drop any article whose title contains a crypto term — these slip in even with
+# clean queries (e.g., "AI chip news ... bitcoin mining"). wallstbots is stocks-only.
+CRYPTO_BLOCK_TERMS = (
+    "bitcoin", "btc", "ethereum", "eth", "crypto", "cryptocurrenc",
+    "nft", "blockchain", "web3", "altcoin", "defi", "stablecoin",
+    "binance", "coinbase", "tether", "ripple", "solana", "dogecoin",
+)
+
+def _has_blocked_term(text, terms):
+    """Case-insensitive substring check for any blocked term."""
+    if not text:
+        return False
+    t = text.lower()
+    return any(term in t for term in terms)
+
 def fetch_news(api_key):
-    """Fetch financial news from NewsAPI.org — same pattern as lvl13.tech."""
+    """Fetch STOCK-MARKET-ONLY news from NewsAPI.org, filtered to trusted financial sources."""
     if _requests is None:
         print("  [news] requests not available — skipping")
         return []
@@ -815,18 +844,29 @@ def fetch_news(api_key):
             r = _requests.get(
                 "https://newsapi.org/v2/everything",
                 params={
-                    "q": query, "from": from_date, "language": "en",
-                    "sortBy": "publishedAt", "pageSize": 8, "apiKey": api_key,
+                    "q":         query,
+                    "from":      from_date,
+                    "language":  "en",
+                    "sortBy":    "publishedAt",
+                    "pageSize":  10,
+                    "domains":   WALLSTBOTS_DOMAINS,  # restrict to financial outlets
+                    "apiKey":    api_key,
                 },
                 timeout=15,
             )
             if r.status_code == 200:
                 data = r.json()
                 count = 0
+                skipped_crypto = 0
                 for a in data.get("articles", []):
-                    title = (a.get("title") or "").split(" - ")[0].strip()
-                    key   = title[:80].lower()
+                    title       = (a.get("title") or "").split(" - ")[0].strip()
+                    description = a.get("description") or ""
+                    key         = title[:80].lower()
                     if not title or key in seen or "[Removed]" in title:
+                        continue
+                    # Exclude crypto-tinged articles — wallstbots is stocks-only
+                    if _has_blocked_term(title, CRYPTO_BLOCK_TERMS) or _has_blocked_term(description, CRYPTO_BLOCK_TERMS):
+                        skipped_crypto += 1
                         continue
                     seen.add(key)
                     all_items.append({
@@ -837,7 +877,10 @@ def fetch_news(api_key):
                         "url":          a.get("url", "#"),
                     })
                     count += 1
-                print(f"  [news] {sector}: {count} articles")
+                msg = f"  [news] {sector}: {count} articles"
+                if skipped_crypto:
+                    msg += f" ({skipped_crypto} crypto-filtered)"
+                print(msg)
             else:
                 print(f"  [news] {sector} HTTP {r.status_code}: {r.text[:120]}")
         except Exception as e:
@@ -845,7 +888,7 @@ def fetch_news(api_key):
 
     all_items.sort(key=lambda x: x.get("published_at", ""), reverse=True)
     all_items = all_items[:30]
-    print(f"  [news] fetched {len(all_items)} total articles")
+    print(f"  [news] fetched {len(all_items)} total stock-market articles")
     return all_items
 
 

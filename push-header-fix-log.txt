@@ -1,0 +1,89 @@
+=== PUSH HEADER FIX LOG === 
+Wed 05/20/2026 16:44:52.93 
+ 
+[1] Current branch 
+* master
+ M Frontends/bitbot13.tech/data/signals.json
+ M Frontends/bitbot13.tech/data/state.json
+ M Frontends/wallstbots.tech/data/signals.json
+ M Frontends/wallstbots.tech/data/state.json
+ M Project/scripts/refresh_bitbot13.py
+ M Project/scripts/refresh_wallstbots.py
+?? Backend/referral_system_migration.sql
+?? Backend/user_tracker_migration.sql
+?? COMMIT-AND-PUSH-doubleclick-me.bat
+?? Context/BUSINESS_MODEL.md
+?? Context/WallStBots_Strategy_OnePager.html
+?? Context/WallStBots_Strategy_OnePager.pdf
+?? Context/WallStBots_Strategy_OnePager_v2.pdf
+?? DEPLOY_BACKEND.md
+?? FIX-WORKFLOW-doubleclick-me.bat
+?? FORCE-PUSH-doubleclick-me.bat
+?? Frontends/lvl13.tech/assets/
+?? PUSH-FORCE-PULL-REBASE.bat
+?? PUSH-auth-fixes.bat
+?? PUSH-bitbot13-auth.bat
+?? PUSH-doubleclick-me.bat
+?? PUSH-full-fix.bat
+?? PUSH-header-fix.bat
+?? PUSH-logos.bat
+?? PUSH-news-fix.bat
+?? PUSH-rss-news.bat
+?? Project/public_html/assets/logo.png
+?? Project/scripts/refresh_all_frontends.py
+?? Project/scripts/seed_tracker_db.py
+?? RUN-seed-all.bat
+?? RUN-seed-news.bat
+?? SETUP-github-secrets.bat
+?? commit-push-log.txt
+?? finish-deploy.sh
+?? fix_lvl13_dns.py
+?? push-auth-log.txt
+?? push-backend.ps1
+?? push-bitbot13-auth-log.txt
+?? push-cross-promo-and-automation.ps1
+?? push-cross-promo.ps1
+?? push-data-files.ps1
+?? push-frontend-fix.ps1
+?? push-full-fix-log.txt
+?? push-header-fix-log.txt
+?? push-logos-log.txt
+?? push-lvl13-frontend.ps1
+?? push-news-fix-log.txt
+?? push-rebase-log.txt
+?? push-referral-system.ps1
+?? push-refresh-script.ps1
+?? push-rss-news-log.txt
+?? push-strategy-update.ps1
+?? push-to-github.ps1
+?? push-workflow-fix.ps1
+?? push-workflow.ps1
+?? run_refresh.ps1
+ 
+[2] Pull latest (fast-forward only) 
+From https://github.com/lvl13tech/wallstbots
+ * branch            master     -> FETCH_HEAD
+Already up to date.
+PULL EXIT: 0 
+ 
+[3] Stage the two fixed scripts 
+STAGE EXIT: 0 
+ 
+[4] Commit 
+[master 8865680] fix: use x-internal-key header for backend API pushes
+ 2 files changed, 39 insertions(+), 48 deletions(-)
+COMMIT EXIT: 0 
+ 
+[5] Push 
+To https://github.com/lvl13tech/wallstbots.git
+   b952393..8865680  master -> master
+PUSH EXIT: 0 
+ 
+[6] Final log 
+8865680 fix: use x-internal-key header for backend API pushes
+b952393 fix: workflow simplified + traceback on crash + data files restored
+c35c7af auto: bitbot13 data refresh [2026-05-20 18:25 UTC]
+56158d0 auto: bitbot13 data refresh [2026-05-20 15:41 UTC]
+c42d95e auto: bitbot13 data refresh [2026-05-20 11:13 UTC]
+ 
+=== DONE === 

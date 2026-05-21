@@ -349,17 +349,44 @@ def generate_signals(prices, prev_closes):
     }
 
 # ── News ───────────────────────────────────────────────────────────────────────
+# bitbot13 is CRYPTOCURRENCY ONLY. We restrict to crypto-native publications and
+# require every accepted article to mention at least one crypto term — per spec.
+
 SECTOR_QUERIES = {
     "Bitcoin":    '(Bitcoin OR BTC OR "Bitcoin ETF" OR "Bitcoin halving" OR "Bitcoin price")',
-    "Ethereum":   '(Ethereum OR ETH OR "Ethereum upgrade" OR "smart contracts" OR Solidity)',
-    "Altcoins":   '(Solana OR Cardano OR XRP OR Avalanche OR Polkadot OR Chainlink OR altcoin)',
-    "DeFi":       '("decentralized finance" OR DeFi OR Uniswap OR Aave OR "yield farming" OR liquidity)',
-    "Regulation": '(crypto regulation OR SEC crypto OR CFTC OR "crypto law" OR stablecoin regulation)',
-    "Blockchain": '(blockchain OR Web3 OR NFT OR "crypto adoption" OR "crypto hack" OR exchange)',
+    "Ethereum":   '(Ethereum OR ETH OR "Ethereum upgrade" OR "smart contracts" OR Solidity OR "Ether price")',
+    "Altcoins":   '(Solana OR Cardano OR XRP OR Avalanche OR Polkadot OR Chainlink OR altcoin OR memecoin)',
+    "DeFi":       '("decentralized finance" OR DeFi OR Uniswap OR Aave OR "yield farming" OR "DEX volume")',
+    "Regulation": '("crypto regulation" OR "SEC crypto" OR "CFTC" OR "crypto law" OR "stablecoin regulation" OR "MiCA")',
+    "Blockchain": '(blockchain OR Web3 OR NFT OR "crypto adoption" OR "crypto exchange" OR "crypto hack")',
 }
 
+# Whitelist of crypto-native publications. NewsAPI allows up to 20 domains.
+BITBOT13_DOMAINS = ",".join([
+    "coindesk.com", "cointelegraph.com", "decrypt.co", "theblock.co",
+    "bitcoinmagazine.com", "u.today", "beincrypto.com", "cryptobriefing.com",
+    "cryptoslate.com", "cryptopotato.com", "cryptonews.com", "newsbtc.com",
+    "ambcrypto.com", "bitcoinist.com", "coingape.com",
+])
+
+# Positive crypto filter — every accepted article must mention at least one of these.
+# (Belt and suspenders since the domains list is already crypto-only.)
+CRYPTO_REQUIRED_TERMS = (
+    "bitcoin", "btc", "ethereum", "eth", "crypto", "blockchain", "altcoin",
+    "defi", "stablecoin", "nft", "web3", "token", "coin", "solana", "cardano",
+    "xrp", "avalanche", "polkadot", "chainlink", "memecoin", "binance", "coinbase",
+    "ripple", "polygon", "uniswap", "aave", "dogecoin", "shiba",
+)
+
+def _has_term(text, terms):
+    """Case-insensitive substring check for any term in the list."""
+    if not text:
+        return False
+    t = text.lower()
+    return any(term in t for term in terms)
+
 def fetch_news(api_key):
-    """Fetch crypto news from NewsAPI.org — same pattern as lvl13.tech."""
+    """Fetch CRYPTO-ONLY news from NewsAPI.org, restricted to crypto-native publications."""
     if _requests is None:
         print("  [news] requests not available — skipping")
         return []
@@ -376,18 +403,29 @@ def fetch_news(api_key):
             r = _requests.get(
                 "https://newsapi.org/v2/everything",
                 params={
-                    "q": query, "from": from_date, "language": "en",
-                    "sortBy": "publishedAt", "pageSize": 8, "apiKey": api_key,
+                    "q":         query,
+                    "from":      from_date,
+                    "language":  "en",
+                    "sortBy":    "publishedAt",
+                    "pageSize":  10,
+                    "domains":   BITBOT13_DOMAINS,  # restrict to crypto outlets
+                    "apiKey":    api_key,
                 },
                 timeout=15,
             )
             if r.status_code == 200:
                 data = r.json()
                 count = 0
+                skipped_offtopic = 0
                 for a in data.get("articles", []):
-                    title = (a.get("title") or "").split(" - ")[0].strip()
-                    key   = title[:80].lower()
+                    title       = (a.get("title") or "").split(" - ")[0].strip()
+                    description = a.get("description") or ""
+                    key         = title[:80].lower()
                     if not title or key in seen or "[Removed]" in title:
+                        continue
+                    # Require at least one crypto term in title/description
+                    if not (_has_term(title, CRYPTO_REQUIRED_TERMS) or _has_term(description, CRYPTO_REQUIRED_TERMS)):
+                        skipped_offtopic += 1
                         continue
                     seen.add(key)
                     all_items.append({
@@ -398,7 +436,10 @@ def fetch_news(api_key):
                         "url":          a.get("url", "#"),
                     })
                     count += 1
-                print(f"  [news] {sector}: {count} articles")
+                msg = f"  [news] {sector}: {count} articles"
+                if skipped_offtopic:
+                    msg += f" ({skipped_offtopic} off-topic filtered)"
+                print(msg)
             else:
                 print(f"  [news] {sector} HTTP {r.status_code}: {r.text[:120]}")
         except Exception as e:
@@ -406,7 +447,7 @@ def fetch_news(api_key):
 
     all_items.sort(key=lambda x: x.get("published_at", ""), reverse=True)
     all_items = all_items[:30]
-    print(f"  [news] fetched {len(all_items)} total articles")
+    print(f"  [news] fetched {len(all_items)} total crypto articles")
     return all_items
 
 

@@ -1,0 +1,27 @@
+=== PUSH RSS NEWS FIX LOG === 
+Wed 05/20/2026  0:57:27.73 
+ 
+[1] git add refresh scripts 
+warning: in the working copy of 'Project/scripts/refresh_wallstbots.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Project/scripts/refresh_bitbot13.py', LF will be replaced by CRLF the next time Git touches it
+ADD EXIT: 0 
+ 
+[2] git commit 
+[master b87bf8a] fix: replace NewsAPI with free RSS feeds for news (NewsAPI blocks server-side requests)
+ 2 files changed, 714 insertions(+), 30 deletions(-)
+ create mode 100644 Project/scripts/refresh_bitbot13.py
+COMMIT EXIT: 0 
+ 
+[3] git push 
+To https://github.com/lvl13tech/wallstbots.git
+   379225b..b87bf8a  master -> master
+PUSH EXIT: 0 
+ 
+[4] git log 
+b87bf8a fix: replace NewsAPI with free RSS feeds for news (NewsAPI blocks server-side requests)
+379225b fix: add login/dashboard + auth nav to bitbot13.tech
+197db99 fix: add missing logo PNG files for cross-promo section
+b2abf0f fix: add login/signup nav buttons + auth-aware nav + fix broken #/login routes
+9e95b91 feat: add refresh_wallstbots.py to repo
+ 
+=== DONE === 

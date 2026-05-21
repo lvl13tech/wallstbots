@@ -1,0 +1,33 @@
+=== PUSH BITBOT13 AUTH LOG === 
+Wed 05/20/2026  0:40:11.15 
+ 
+[1] git add bitbot13 files 
+warning: in the working copy of 'Frontends/bitbot13.tech/index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Frontends/bitbot13.tech/assets/style.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Frontends/bitbot13.tech/assets/app.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Frontends/bitbot13.tech/auth.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Frontends/bitbot13.tech/login.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Frontends/bitbot13.tech/dashboard.html', LF will be replaced by CRLF the next time Git touches it
+ADD EXIT: 0 
+ 
+[2] git commit 
+[master 379225b] fix: add login/dashboard + auth nav to bitbot13.tech
+ 6 files changed, 1612 insertions(+), 67 deletions(-)
+ create mode 100644 Frontends/bitbot13.tech/auth.js
+ create mode 100644 Frontends/bitbot13.tech/dashboard.html
+ create mode 100644 Frontends/bitbot13.tech/login.html
+COMMIT EXIT: 0 
+ 
+[3] git push 
+To https://github.com/lvl13tech/wallstbots.git
+   197db99..379225b  master -> master
+PUSH EXIT: 0 
+ 
+[4] git log 
+379225b fix: add login/dashboard + auth nav to bitbot13.tech
+197db99 fix: add missing logo PNG files for cross-promo section
+b2abf0f fix: add login/signup nav buttons + auth-aware nav + fix broken #/login routes
+9e95b91 feat: add refresh_wallstbots.py to repo
+868dd51 fix: use python -m pip install with pandas and debug steps
+ 
+=== DONE === 

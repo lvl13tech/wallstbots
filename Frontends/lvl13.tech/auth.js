@@ -1,14 +1,19 @@
 /**
- * Authentication Management for Wall St. Bots
+ * Authentication Management for Level XIII Tech
  * Handles login, signup, JWT token management, and session persistence
+ *
+ * NOTE on cross-site auth: all 3 Level 13 sites hit the same backend, so a JWT
+ * issued on any site validates on any other. But localStorage is per-origin,
+ * so each site must store its own token under a site-specific key. The user
+ * still needs to log in once per site.
  */
 
 class WallStBotsAuth {
   constructor(apiBaseUrl) {
     this.apiBaseUrl = apiBaseUrl;
-    this.tokenKey = "wallstbots_jwt";
-    this.userKey = "wallstbots_user";
-    this.refreshTokenKey = "wallstbots_refresh_token";
+    this.tokenKey = "lvl13_jwt";
+    this.userKey = "lvl13_user";
+    this.refreshTokenKey = "lvl13_refresh_token";
   }
 
   /**
@@ -197,7 +202,9 @@ class WallStBotsAuth {
 
       const data = await response.json();
       this.setToken(data.access_token);
-
+      if (data.refresh_token) {
+        this.setRefreshToken(data.refresh_token);
+      }
       return true;
     } catch (error) {
       console.error("Token refresh error:", error);

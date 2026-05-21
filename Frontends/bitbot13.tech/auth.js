@@ -1,14 +1,19 @@
 /**
- * Authentication Management for Wall St. Bots
+ * Authentication Management for BitBot13
  * Self-contained — no external dependencies
+ *
+ * NOTE on cross-site auth: all 3 Level 13 sites hit the same backend, so a JWT
+ * issued on any site validates on any other. But localStorage is per-origin,
+ * so each site must store its own token under a site-specific key. The user
+ * still needs to log in once per site.
  */
 
 class WallStBotsAuth {
   constructor(apiBaseUrl) {
     this.apiBaseUrl = apiBaseUrl;
-    this.tokenKey = "wallstbots_jwt";
-    this.userKey = "wallstbots_user";
-    this.refreshTokenKey = "wallstbots_refresh_token";
+    this.tokenKey = "bitbot13_jwt";
+    this.userKey = "bitbot13_user";
+    this.refreshTokenKey = "bitbot13_refresh_token";
   }
 
   async signup(email, password, fullName = null) {

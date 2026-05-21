@@ -1,0 +1,31 @@
+=== PUSH LOGOS LOG === 
+Wed 05/20/2026  0:19:29.80 
+ 
+[0] Removing stale lock files... 
+[1] git add logo PNGs for both sites 
+ADD EXIT: 0 
+ 
+[2] git commit 
+[master 197db99] fix: add missing logo PNG files for cross-promo section
+ 6 files changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 Frontends/bitbot13.tech/assets/logo-bitbot13.png
+ create mode 100644 Frontends/bitbot13.tech/assets/logo-lvl13.png
+ create mode 100644 Frontends/bitbot13.tech/assets/logo-wallstbots.png
+ create mode 100644 Frontends/wallstbots.tech/assets/logo-bitbot13.png
+ create mode 100644 Frontends/wallstbots.tech/assets/logo-lvl13.png
+ create mode 100644 Frontends/wallstbots.tech/assets/logo-wallstbots.png
+COMMIT EXIT: 0 
+ 
+[3] git push 
+To https://github.com/lvl13tech/wallstbots.git
+   b2abf0f..197db99  master -> master
+PUSH EXIT: 0 
+ 
+[4] git log 
+197db99 fix: add missing logo PNG files for cross-promo section
+b2abf0f fix: add login/signup nav buttons + auth-aware nav + fix broken #/login routes
+9e95b91 feat: add refresh_wallstbots.py to repo
+868dd51 fix: use python -m pip install with pandas and debug steps
+90ee046 Create refresh-wallstbots.yml
+ 
+=== DONE === 

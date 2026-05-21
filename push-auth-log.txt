@@ -1,0 +1,98 @@
+=== PUSH AUTH FIXES LOG === 
+Wed 05/20/2026  0:07:18.91 
+ 
+[0] Removing stale git lock files... 
+No HEAD.lock found 
+No index.lock found 
+ 
+[1] git status 
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   Backend/Dockerfile
+	modified:   Backend/deploy.bat
+	modified:   Backend/deploy.sh
+	modified:   Backend/main.py
+	modified:   Frontends/bitbot13.tech/assets/app.js
+	modified:   Frontends/bitbot13.tech/assets/style.css
+	modified:   Frontends/bitbot13.tech/index.html
+	modified:   Frontends/lvl13.tech/index.html
+	modified:   Frontends/wallstbots.tech/assets/app.js
+	modified:   Frontends/wallstbots.tech/assets/style.css
+	modified:   Frontends/wallstbots.tech/index.html
+	modified:   Project/public_html/assets/app.js
+	modified:   Project/scripts/refresh_data.py
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.github/workflows/refresh-bitbot13.yml
+	Backend/referral_system_migration.sql
+	Backend/user_tracker_migration.sql
+	COMMIT-AND-PUSH-doubleclick-me.bat
+	Context/BUSINESS_MODEL.md
+	Context/WallStBots_Strategy_OnePager.html
+	Context/WallStBots_Strategy_OnePager.pdf
+	Context/WallStBots_Strategy_OnePager_v2.pdf
+	DEPLOY_BACKEND.md
+	FIX-WORKFLOW-doubleclick-me.bat
+	FORCE-PUSH-doubleclick-me.bat
+	Frontends/bitbot13.tech/assets/logo-bitbot13.png
+	Frontends/bitbot13.tech/assets/logo-lvl13.png
+	Frontends/bitbot13.tech/assets/logo-wallstbots.png
+	Frontends/lvl13.tech/assets/
+	Frontends/wallstbots.tech/assets/logo-bitbot13.png
+	Frontends/wallstbots.tech/assets/logo-lvl13.png
+	Frontends/wallstbots.tech/assets/logo-wallstbots.png
+	PUSH-auth-fixes.bat
+	PUSH-doubleclick-me.bat
+	Project/public_html/assets/logo.png
+	Project/scripts/refresh_all_frontends.py
+	Project/scripts/refresh_bitbot13.py
+	Project/scripts/seed_tracker_db.py
+	commit-push-log.txt
+	finish-deploy.sh
+	fix_lvl13_dns.py
+	push-auth-log.txt
+	push-backend.ps1
+	push-cross-promo-and-automation.ps1
+	push-cross-promo.ps1
+	push-data-files.ps1
+	push-frontend-fix.ps1
+	push-lvl13-frontend.ps1
+	push-referral-system.ps1
+	push-refresh-script.ps1
+	push-strategy-update.ps1
+	push-to-github.ps1
+	push-workflow-fix.ps1
+	push-workflow.ps1
+	run_refresh.ps1
+
+no changes added to commit (use "git add" and/or "git commit -a")
+ 
+[2] git add frontend auth files 
+warning: in the working copy of 'Frontends/wallstbots.tech/index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Frontends/wallstbots.tech/assets/style.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Frontends/wallstbots.tech/assets/app.js', LF will be replaced by CRLF the next time Git touches it
+ADD EXIT: 0 
+ 
+[3] git commit 
+[master b2abf0f] fix: add login/signup nav buttons + auth-aware nav + fix broken #/login routes
+ 3 files changed, 438 insertions(+), 68 deletions(-)
+COMMIT EXIT: 0 
+ 
+[4] git push origin master 
+To https://github.com/lvl13tech/wallstbots.git
+   9e95b91..b2abf0f  master -> master
+PUSH EXIT: 0 
+ 
+[5] git log 
+b2abf0f fix: add login/signup nav buttons + auth-aware nav + fix broken #/login routes
+9e95b91 feat: add refresh_wallstbots.py to repo
+868dd51 fix: use python -m pip install with pandas and debug steps
+90ee046 Create refresh-wallstbots.yml
+6447ecf Add 'Also From Level XIII Tech' cross-promo section to home pages
+ 
+=== DONE === 

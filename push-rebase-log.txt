@@ -1,0 +1,155 @@
+=== PUSH REBASE LOG === 
+Wed 05/20/2026 16:40:28.88 
+ 
+[1] Current state 
+?? Backend/referral_system_migration.sql
+?? Backend/user_tracker_migration.sql
+?? COMMIT-AND-PUSH-doubleclick-me.bat
+?? Context/BUSINESS_MODEL.md
+?? Context/WallStBots_Strategy_OnePager.html
+?? Context/WallStBots_Strategy_OnePager.pdf
+?? Context/WallStBots_Strategy_OnePager_v2.pdf
+?? DEPLOY_BACKEND.md
+?? FIX-WORKFLOW-doubleclick-me.bat
+?? FORCE-PUSH-doubleclick-me.bat
+?? Frontends/lvl13.tech/assets/
+?? PUSH-FORCE-PULL-REBASE.bat
+?? PUSH-auth-fixes.bat
+?? PUSH-bitbot13-auth.bat
+?? PUSH-doubleclick-me.bat
+?? PUSH-full-fix.bat
+?? PUSH-logos.bat
+?? PUSH-news-fix.bat
+?? PUSH-rss-news.bat
+?? Project/public_html/assets/logo.png
+?? Project/scripts/refresh_all_frontends.py
+?? Project/scripts/seed_tracker_db.py
+?? RUN-seed-all.bat
+?? RUN-seed-news.bat
+?? SETUP-github-secrets.bat
+?? commit-push-log.txt
+?? finish-deploy.sh
+?? fix_lvl13_dns.py
+?? push-auth-log.txt
+?? push-backend.ps1
+?? push-bitbot13-auth-log.txt
+?? push-cross-promo-and-automation.ps1
+?? push-cross-promo.ps1
+?? push-data-files.ps1
+?? push-frontend-fix.ps1
+?? push-full-fix-log.txt
+?? push-logos-log.txt
+?? push-lvl13-frontend.ps1
+?? push-news-fix-log.txt
+?? push-rebase-log.txt
+?? push-referral-system.ps1
+?? push-refresh-script.ps1
+?? push-rss-news-log.txt
+?? push-strategy-update.ps1
+?? push-to-github.ps1
+?? push-workflow-fix.ps1
+?? push-workflow.ps1
+?? run_refresh.ps1
+* (no branch)
+  master
+ 
+[2] Get back onto master branch 
+Previous HEAD position was c35c7af auto: bitbot13 data refresh [2026-05-20 18:25 UTC]
+Switched to branch 'master'
+Your branch and 'origin/master' have diverged,
+and have 3 and 3 different commits each, respectively.
+  (use "git pull" if you want to integrate the remote branch with yours)
+CHECKOUT EXIT: 0 
+ 
+[3] Reset master to match remote exactly 
+HEAD is now at c35c7af auto: bitbot13 data refresh [2026-05-20 18:25 UTC]
+RESET EXIT: 0 
+ 
+[4] Apply stashed changes 
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   Frontends/bitbot13.tech/assets/app.js
+	modified:   Frontends/wallstbots.tech/assets/app.js
+	modified:   Project/scripts/refresh_bitbot13.py
+	modified:   Project/scripts/refresh_wallstbots.py
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	Backend/referral_system_migration.sql
+	Backend/user_tracker_migration.sql
+	COMMIT-AND-PUSH-doubleclick-me.bat
+	Context/BUSINESS_MODEL.md
+	Context/WallStBots_Strategy_OnePager.html
+	Context/WallStBots_Strategy_OnePager.pdf
+	Context/WallStBots_Strategy_OnePager_v2.pdf
+	DEPLOY_BACKEND.md
+	FIX-WORKFLOW-doubleclick-me.bat
+	FORCE-PUSH-doubleclick-me.bat
+	Frontends/lvl13.tech/assets/
+	PUSH-FORCE-PULL-REBASE.bat
+	PUSH-auth-fixes.bat
+	PUSH-bitbot13-auth.bat
+	PUSH-doubleclick-me.bat
+	PUSH-full-fix.bat
+	PUSH-logos.bat
+	PUSH-news-fix.bat
+	PUSH-rss-news.bat
+	Project/public_html/assets/logo.png
+	Project/scripts/refresh_all_frontends.py
+	Project/scripts/seed_tracker_db.py
+	RUN-seed-all.bat
+	RUN-seed-news.bat
+	SETUP-github-secrets.bat
+	commit-push-log.txt
+	finish-deploy.sh
+	fix_lvl13_dns.py
+	push-auth-log.txt
+	push-backend.ps1
+	push-bitbot13-auth-log.txt
+	push-cross-promo-and-automation.ps1
+	push-cross-promo.ps1
+	push-data-files.ps1
+	push-frontend-fix.ps1
+	push-full-fix-log.txt
+	push-logos-log.txt
+	push-lvl13-frontend.ps1
+	push-news-fix-log.txt
+	push-rebase-log.txt
+	push-referral-system.ps1
+	push-refresh-script.ps1
+	push-rss-news-log.txt
+	push-strategy-update.ps1
+	push-to-github.ps1
+	push-workflow-fix.ps1
+	push-workflow.ps1
+	run_refresh.ps1
+
+no changes added to commit (use "git add" and/or "git commit -a")
+Dropped refs/stash@{0} (7fc96ecfd59448ec4b02c0a91bdc933e369771d9)
+STASH POP EXIT: 0 
+ 
+[5] Stage our fix files 
+STAGE EXIT: 0 
+ 
+[6] Commit 
+[master b952393] fix: workflow simplified + traceback on crash + data files restored
+ 3 files changed, 45 insertions(+), 46 deletions(-)
+COMMIT EXIT: 0 
+ 
+[7] Push 
+To https://github.com/lvl13tech/wallstbots.git
+   c35c7af..b952393  master -> master
+PUSH EXIT: 0 
+ 
+[8] Final log 
+b952393 fix: workflow simplified + traceback on crash + data files restored
+c35c7af auto: bitbot13 data refresh [2026-05-20 18:25 UTC]
+56158d0 auto: bitbot13 data refresh [2026-05-20 15:41 UTC]
+c42d95e auto: bitbot13 data refresh [2026-05-20 11:13 UTC]
+66004df fix: wire wallstbots+bitbot13 news to backend API like lvl13 (NewsAPI + push to tracker DB)
+ 
+=== DONE === 

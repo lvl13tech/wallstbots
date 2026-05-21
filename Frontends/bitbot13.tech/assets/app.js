@@ -73,6 +73,9 @@ function route() {
   const path = (location.hash.replace(/^#/, '') || '/');
   setActiveNav(path); closeMenu();
   window.scrollTo({ top: 0, behavior: 'instant' });
+  // Auth route fall-throughs — match wallstbots behavior
+  if (path === '/login')  { window.location.href = '/login.html'; return; }
+  if (path === '/signup') { window.location.href = '/login.html#signup'; return; }
   if (path === '/' || path === '')           return renderHome();
   if (path === '/how')                       return renderHowItWorks();
   if (path === '/race')                      return renderRace();
@@ -676,8 +679,11 @@ function renderPaypalForm() {
   const annual = GY_CYCLE === 'annual', ref = GY_VALID ? GY_REF : '';
   const base = annual ? '799.00' : '79.99', unit = annual ? 'Y' : 'M';
   const firstAmt = annual ? '639.20' : '39.99';
+  // `custom` carries the origin platform (always) + referral code (if any),
+  // pipe-separated. The backend webhook parses this to set origin_platform.
+  const customField = 'bitbot13' + (ref ? '|ref=' + ref : '');
   const refFields = ref
-    ? '<input type="hidden" name="a1" value="'+firstAmt+'"><input type="hidden" name="p1" value="1"><input type="hidden" name="t1" value="'+unit+'"><input type="hidden" name="custom" value="'+escapeHtml(ref)+'">'
+    ? '<input type="hidden" name="a1" value="'+firstAmt+'"><input type="hidden" name="p1" value="1"><input type="hidden" name="t1" value="'+unit+'">'
     : '';
   const btnTxt = ref
     ? (annual ? 'Subscribe — $639.20 today, then $799/yr' : 'Subscribe — $39.99 today, then $79.99/mo')
@@ -855,7 +861,17 @@ function wireUI() {
   const cc = $('chatbotClose');
   if (cc) cc.addEventListener('click', chatbotClose);
   const cf = $('chatbotForm');
-  if (cf) cf.addEventListener('submit', (e) => { e.preventDefault(); handleChatbotInput(); });
+  if (cf) cf.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const inp = $('chatbotInput');
+    if (!inp || !inp.value.trim()) return;
+    const q = inp.value.trim();
+    chatbotAddMsg(q, 'user');
+    inp.value = '';
+    chatbotAddMsg(botAnswer(q) || "Email info@bitbot13.tech for help!", 'bot');
+  });
+  // Populate quick-reply chips (was defined but never called)
+  chatbotRenderQuick();
 }
 
 function updateNavAuthState() {

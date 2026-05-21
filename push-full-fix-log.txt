@@ -1,0 +1,34 @@
+=== PUSH FULL FIX LOG === 
+Wed 05/20/2026 13:45:28.07 
+ 
+[1] git add all changed files 
+warning: in the working copy of 'Project/scripts/refresh_wallstbots.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Project/scripts/refresh_bitbot13.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Frontends/wallstbots.tech/assets/app.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Frontends/bitbot13.tech/assets/app.js', LF will be replaced by CRLF the next time Git touches it
+ADD EXIT: 0 
+ 
+[2] git commit 
+[master c9488f1] fix: all data (state+signals+news+reports) now push to backend API like lvl13; frontends fetch from API not static files
+ 4 files changed, 82 insertions(+), 92 deletions(-)
+COMMIT EXIT: 0 
+ 
+[3] git push 
+To https://github.com/lvl13tech/wallstbots.git
+ ! [rejected]        master -> master (fetch first)
+error: failed to push some refs to 'https://github.com/lvl13tech/wallstbots.git'
+hint: Updates were rejected because the remote contains work that you do not
+hint: have locally. This is usually caused by another repository pushing to
+hint: the same ref. If you want to integrate the remote changes, use
+hint: 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+PUSH EXIT: 1 
+ 
+[4] git log 
+c9488f1 fix: all data (state+signals+news+reports) now push to backend API like lvl13; frontends fetch from API not static files
+66004df fix: wire wallstbots+bitbot13 news to backend API like lvl13 (NewsAPI + push to tracker DB)
+b87bf8a fix: replace NewsAPI with free RSS feeds for news (NewsAPI blocks server-side requests)
+379225b fix: add login/dashboard + auth nav to bitbot13.tech
+197db99 fix: add missing logo PNG files for cross-promo section
+ 
+=== DONE === 

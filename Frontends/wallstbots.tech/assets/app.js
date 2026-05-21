@@ -734,11 +734,13 @@ function renderPaypalForm() {
 
   // With referral: use trial pricing (a1/p1/t1 for first discounted payment)
   const firstAmt = annual ? '639.20' : '39.99';
+  // `custom` carries origin platform (always) + referral code (if any),
+  // pipe-separated. The backend webhook parses this to set origin_platform.
+  const customField = 'wallstbots' + (ref ? '|ref=' + ref : '');
   const refFields = ref
     ? '<input type="hidden" name="a1" value="'+firstAmt+'">'
     + '<input type="hidden" name="p1" value="1">'
     + '<input type="hidden" name="t1" value="'+unit+'">'
-    + '<input type="hidden" name="custom" value="'+escapeHtml(ref)+'">'
     : '';
   const refBtnTxt = ref
     ? (annual ? 'Subscribe — $639.20 today, then $799/yr' : 'Subscribe — $39.99 today, then $79.99/mo')
@@ -751,6 +753,7 @@ function renderPaypalForm() {
     + '<input type="hidden" name="lc" value="US">'
     + '<input type="hidden" name="item_name" value="wallstbots.tech Custom Tracker - '+label+'">'
     + '<input type="hidden" name="no_note" value="1"><input type="hidden" name="no_shipping" value="1">'
+    + '<input type="hidden" name="custom" value="'+escapeHtml(customField)+'">'
     + '<input type="hidden" name="src" value="1">'
     + refFields
     + '<input type="hidden" name="a3" value="'+base+'">'

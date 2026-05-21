@@ -1,373 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard - Level XIII Tech</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+<meta name="description" content="lvl13.tech — AI & Quantum Stock Trading Bot Tracker. Five trading strategies racing in real time on 43 hand-picked AI and Quantum stocks. Daily Buy/Sell/Hold signals. AI & Quantum news.">
+<meta name="theme-color" content="#06080d">
+<meta name="format-detection" content="telephone=no">
+<meta property="og:title" content="lvl13.tech — AI & Quantum Stock Trading Bot Tracker">
+<meta property="og:description" content="Five trading strategies. 43 AI & Quantum stocks. Watch them race.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://lvl13.tech">
+<meta property="og:image" content="https://lvl13.tech/assets/og-image.svg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="lvl13.tech — AI & Quantum Stock Trading Bot Tracker">
+<meta name="twitter:description" content="Five trading strategies. 43 AI & Quantum stocks. Watch them race.">
+<meta name="twitter:image" content="https://lvl13.tech/assets/og-image.svg">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://lvl13.tech/">
+<title>lvl13.tech — AI & Quantum Stock Trading Bot Tracker</title>
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+</head>
+<body>
 
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
-          Cantarell, sans-serif;
-        background: #f5f7fa;
-        color: #333;
-      }
+<header class="site-header">
+  <div class="brand">
+    <a href="#/" class="brand-link" aria-label="Level XIII Tech home">
+      <img src="assets/logo.svg" alt="Level XIII Tech" class="brand-logo">
+    </a>
+  </div>
+  <button class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <nav class="site-nav" id="siteNav" aria-label="Primary">
+    <a href="#/" data-route="/">News</a>
+    <a href="#/how" data-route="/how">How It Works</a>
+    <a href="#/race" data-route="/race">The Race</a>
+    <a href="#/fund/bot13" data-route="/fund/bot13">Bot13</a>
+    <a href="#/fund/oracle" data-route="/fund/oracle">Oracle</a>
+    <a href="#/fund/wizard" data-route="/fund/wizard">Wizard</a>
+    <a href="#/signals" data-route="/signals">Signals</a>
+    <a href="#/reports" data-route="/reports">Reports</a>
+    <a href="#/get-yours" data-route="/get-yours" class="cta">Get Yours</a>
+    <a href="/login.html" class="nav-login" id="navLoginBtn">Log In</a>
+    <a href="/dashboard.html" class="nav-dashboard" id="navDashBtn" style="display:none">Dashboard</a>
+  </nav>
+</header>
 
-      header {
-        background: white;
-        border-bottom: 1px solid #eee;
-        padding: 20px 0;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-      }
+<main id="app" class="app">
+  <div class="loading">Loading…</div>
+</main>
 
-      .header-content {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .logo {
-        font-size: 20px;
-        font-weight: 700;
-        color: #667eea;
-      }
-
-      .nav {
-        display: flex;
-        gap: 30px;
-        align-items: center;
-      }
-
-      .nav a {
-        text-decoration: none;
-        color: #666;
-        font-size: 14px;
-        transition: color 0.2s;
-      }
-
-      .nav a:hover {
-        color: #667eea;
-      }
-
-      .user-menu {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-      }
-
-      .user-info {
-        font-size: 13px;
-        color: #666;
-      }
-
-      .logout-btn {
-        padding: 8px 16px;
-        background: #f0f0f0;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 13px;
-        transition: background 0.2s;
-      }
-
-      .logout-btn:hover {
-        background: #e0e0e0;
-      }
-
-      .container {
-        max-width: 1200px;
-        margin: 40px auto;
-        padding: 0 20px;
-      }
-
-      h1 {
-        font-size: 28px;
-        margin-bottom: 30px;
-        color: #333;
-      }
-
-      .bots-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 20px;
-        margin-bottom: 40px;
-      }
-
-      .bot-card {
-        background: white;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s, box-shadow 0.2s;
-        cursor: pointer;
-      }
-
-      .bot-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-      }
-
-      .bot-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: start;
-        margin-bottom: 15px;
-      }
-
-      .bot-name {
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-      }
-
-      .bot-platform {
-        display: inline-block;
-        padding: 4px 12px;
-        background: #e8f0ff;
-        color: #667eea;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-      }
-
-      .bot-platform.bitbot13 {
-        background: #fff3e0;
-        color: #f57c00;
-      }
-
-      .bot-platform.wallstbots {
-        background: #e8f5e9;
-        color: #2e7d32;
-      }
-
-      .bot-stats {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid #eee;
-      }
-
-      .stat {
-        text-align: center;
-      }
-
-      .stat-label {
-        font-size: 12px;
-        color: #999;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 5px;
-      }
-
-      .stat-value {
-        font-size: 18px;
-        font-weight: 600;
-        color: #333;
-      }
-
-      .stat-value.positive {
-        color: #27ae60;
-      }
-
-      .stat-value.negative {
-        color: #e74c3c;
-      }
-
-      .create-bot-btn {
-        padding: 12px 24px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 4px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: transform 0.2s, box-shadow 0.2s;
-      }
-
-      .create-bot-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-      }
-
-      .loading {
-        text-align: center;
-        padding: 40px;
-        color: #999;
-      }
-
-      .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: #999;
-      }
-
-      .empty-state h2 {
-        font-size: 20px;
-        margin-bottom: 10px;
-        color: #666;
-      }
-    </style>
-  </head>
-
-  <body>
-    <header>
-      <div class="header-content">
-        <div class="logo">Level XIII Tech</div>
-        <nav class="nav">
-          <a href="/">Dashboard</a>
-          <a href="#faq">FAQ</a>
-          <a href="#support">Support</a>
-        </nav>
-        <div class="user-menu">
-          <div class="user-info" id="userEmail">Loading...</div>
-          <button class="logout-btn" id="logoutBtn">Log Out</button>
-        </div>
-      </div>
-    </header>
-
-    <div class="container">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h1>Your Bots</h1>
-        <button class="create-bot-btn" id="createBotBtn">+ Create New Bot</button>
-      </div>
-
-      <div id="botsContainer" class="bots-grid">
-        <div class="loading">Loading bots...</div>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img src="assets/favicon.svg" alt="" class="footer-robot">
+      <span>Level XIII Tech</span>
+    </div>
+    <div class="footer-links">
+      <a href="#/how">How It Works</a>
+      <a href="#/race">The Race</a>
+      <a href="#/signals">Signals</a>
+      <a href="#/reports">Reports</a>
+      <a href="mailto:info@lvl13.tech">info@lvl13.tech</a>
+      <a href="#/get-yours" class="cta-link">Get Yours</a>
+    </div>
+    <div class="footer-network">
+      <span class="footer-network-label">Also from Level 13</span>
+      <div class="footer-network-links">
+        <a href="https://wallstbots.tech" target="_blank" rel="noopener">Wall St. Bots</a>
+        <a href="https://bitbot13.tech" target="_blank" rel="noopener">BitBot13</a>
+        <span class="footer-network-current">lvl13.tech</span>
       </div>
     </div>
+    <div class="footer-fine">
+      <span>&copy; 2026 lvl13.tech</span><span class="dot">·</span>
+      <span>Not investment advice</span><span class="dot">·</span>
+      <a href="mailto:info@lvl13.tech">Contact</a>
+    </div>
+  </div>
+</footer>
 
-    <script src="auth.js"></script>
-    <script src="api.js"></script>
-    <script>
-      // Configuration
-      const API_BASE_URL = "https://wallstbots-backend-868128114349.us-east1.run.app";
+<button class="chatbot-toggle" id="chatbotToggle" aria-label="Open chat" aria-expanded="false">
+  <span class="chatbot-icon">?</span>
+  <span class="chatbot-label">Need help?</span>
+</button>
+<div class="chatbot-panel" id="chatbotPanel" role="dialog" aria-label="Chat with Level XIII Tech">
+  <div class="chatbot-head">
+    <span class="chatbot-title">Level XIII · FAQ Bot</span>
+    <button class="chatbot-close" id="chatbotClose" aria-label="Close chat">&times;</button>
+  </div>
+  <div class="chatbot-body" id="chatbotBody">
+    <div class="chatbot-msg bot">Hey! I'm the Level XIII FAQ bot. Ask me anything — pricing, the bots, how it works, your data, etc.</div>
+    <div class="chatbot-quick" id="chatbotQuick"></div>
+  </div>
+  <form class="chatbot-input" id="chatbotForm" autocomplete="off">
+    <input type="text" id="chatbotInput" placeholder="Type a question…" aria-label="Type a question">
+    <button type="submit" aria-label="Send">→</button>
+  </form>
+</div>
 
-      // Initialize auth and API
-      const auth = new WallStBotsAuth(API_BASE_URL);
-      const api = new WallStBotsAPI(API_BASE_URL, auth);
-
-      // Check authentication
-      if (!auth.isAuthenticated()) {
-        window.location.href = "/login.html";
-      }
-
-      // Load user profile
-      async function loadUserProfile() {
-        try {
-          const response = await api.getUserProfile();
-          document.getElementById("userEmail").textContent = response.email;
-        } catch (error) {
-          console.error("Failed to load profile:", error);
-          document.getElementById("userEmail").textContent = "User";
-        }
-      }
-
-      // Load and display bots
-      async function loadBots() {
-        try {
-          const response = await api.getBots();
-          const bots = response.bots || [];
-
-          const container = document.getElementById("botsContainer");
-
-          if (bots.length === 0) {
-            container.innerHTML = `
-              <div class="empty-state" style="grid-column: 1 / -1;">
-                <h2>No bots yet</h2>
-                <p>Click "Create New Bot" to get started with AI-powered trading</p>
-              </div>
-            `;
-            return;
-          }
-
-          container.innerHTML = bots
-            .map(
-              (bot) => `
-            <div class="bot-card" onclick="window.location.href='/bot-detail.html?id=${bot.id}'">
-              <div class="bot-header">
-                <div>
-                  <div class="bot-name">${bot.name}</div>
-                </div>
-                <span class="bot-platform ${bot.platform}">${bot.platform}</span>
-              </div>
-
-              <div class="bot-stats">
-                <div class="stat">
-                  <div class="stat-label">Portfolio Value</div>
-                  <div class="stat-value" id="value-${bot.id}">--</div>
-                </div>
-                <div class="stat">
-                  <div class="stat-label">Return</div>
-                  <div class="stat-value" id="return-${bot.id}">--</div>
-                </div>
-              </div>
-
-              <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; color: #999; font-size: 12px;">
-                Created ${new Date(bot.created_at).toLocaleDateString()}
-              </div>
-            </div>
-          `
-            )
-            .join("");
-
-          // Load performance data for each bot
-          for (const bot of bots) {
-            loadBotPerformance(bot.id);
-          }
-        } catch (error) {
-          console.error("Failed to load bots:", error);
-          document.getElementById("botsContainer").innerHTML =
-            '<div class="error">Failed to load bots. Please try again.</div>';
-        }
-      }
-
-      async function loadBotPerformance(botId) {
-        try {
-          const bot = await api.getBot(botId);
-
-          if (bot.bot.performance) {
-            const perf = bot.bot.performance;
-            document.getElementById(`value-${botId}`).textContent = `$${perf.total_value?.toFixed(2) || "0.00"}`;
-
-            const returnEl = document.getElementById(`return-${botId}`);
-            const returnValue = perf.gain_loss_pct || 0;
-            returnEl.textContent = `${returnValue >= 0 ? "+" : ""}${returnValue.toFixed(2)}%`;
-            returnEl.className = `stat-value ${returnValue >= 0 ? "positive" : "negative"}`;
-          }
-        } catch (error) {
-          console.error(`Failed to load performance for bot ${botId}:`, error);
-        }
-      }
-
-      // Handle logout
-      document.getElementById("logoutBtn").addEventListener("click", () => {
-        auth.logout();
-        window.location.href = "/login.html";
-      });
-
-      // Handle create bot button
-      document.getElementById("createBotBtn").addEventListener("click", () => {
-        // TODO: Show modal for creating new bot
-        alert("Create new bot modal coming soon");
-      });
-
-      // Initial load
-      loadUserProfile();
-      loadBots();
-
-      // Refresh bots every 30 seconds
-      setInterval(loadBots, 30000);
-    </script>
-  </body>
+<script src="assets/app.js" defer></script>
+</body>
 </html>
