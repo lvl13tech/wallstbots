@@ -237,18 +237,27 @@ function renderHome() {
     + '<div class="panel" style="margin-top:18px"><h3>Performance Trajectory — All 5 Strategies</h3>'
     + '<div class="chart-wrap"><canvas id="chartRace"></canvas></div></div>'
 
-    + '<div class="panel" style="margin-top:28px">'
-    + '<div style="color:var(--muted);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">Also From Level XIII Tech</div>'
-    + '<div class="grid grid-2">'
-    + '<a href="https://wallstbots.tech" class="card clickable" target="_blank" rel="noopener noreferrer" style="text-decoration:none">'
-    + '<div style="color:var(--blue);font-weight:700;font-size:15px;margin-bottom:4px">wallstbots.tech</div>'
-    + '<div style="color:var(--muted);font-size:13px;line-height:1.5">Sector Stock Tracker. Top 3 stocks per S&amp;P 500 sector + hottest IPOs since 2024. Same 5 strategies.</div>'
-    + '</a>'
-    + '<a href="https://bitbot13.tech" class="card clickable" target="_blank" rel="noopener noreferrer" style="text-decoration:none">'
-    + '<div style="color:var(--blue);font-weight:700;font-size:15px;margin-bottom:4px">bitbot13.tech</div>'
-    + '<div style="color:var(--muted);font-size:13px;line-height:1.5">Crypto Trading Bot Tracker. Top 50 coins by market cap. 24/7 markets. Same 5 strategies.</div>'
-    + '</a>'
-    + '</div></div>'
++ '<div class="section-head" style="margin-top:36px"><h3>Also from Level 13</h3></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">'
+
+    + '<div class="card" style="display:flex;flex-direction:column">'
+    + '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--blue);margin-bottom:12px;text-transform:uppercase">Our<br>Wall Street<br>Bots</div>'
+    + '<a href="https://wallstbots.tech" target="_blank" rel="noopener">'
+    + '<img src="assets/logo-wallstbots.png" alt="Wall St. Bots" style="width:100%;max-width:200px;height:auto;display:block;margin-bottom:14px;border-radius:8px"></a>'
+    + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 14px;flex:1">Five AI bots tracking top stocks across every sector — plus the hottest new IPOs. Daily signals, live leaderboards, and Sunday performance reports.</p>'
+    + '<a class="btn btn-secondary" href="https://wallstbots.tech" target="_blank" rel="noopener" style="font-size:12px;margin-top:auto">Visit wallstbots.tech →</a>'
+    + '</div>'
+
+    + '<div class="card" style="display:flex;flex-direction:column">'
+    + '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--blue);margin-bottom:12px;text-transform:uppercase">Our<br>Cryptocurrency<br>Bots</div>'
+    + '<a href="https://bitbot13.tech" target="_blank" rel="noopener">'
+    + '<img src="assets/logo-bitbot13.png" alt="BitBot13" style="width:100%;max-width:200px;height:auto;display:block;margin-bottom:14px;border-radius:8px"></a>'
+    + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 14px;flex:1">The same AI intelligence applied to Bitcoin and crypto markets. BitBot13 tracks the top 50 coins with daily Buy/Sell/Hold signals and strategy competition.</p>'
+    + '<a class="btn btn-secondary" href="https://bitbot13.tech" target="_blank" rel="noopener" style="font-size:12px;margin-top:auto">Visit bitbot13.tech →</a>'
+    + '</div>'
+
+    + '</div>'
+    + '<p style="text-align:center;color:var(--muted);font-size:13px;margin:0 0 36px;line-height:1.6">One login for stocks or cryptocurrencies. Your trading market research platform — Level 13.</p>'
 
     + getYoursHint('Run this exact dashboard on YOUR stocks. Custom bots, custom news.');
   drawTrajectory();

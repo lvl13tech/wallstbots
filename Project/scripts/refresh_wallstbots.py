@@ -239,7 +239,7 @@ def enrich_position(pos, prices, prev_closes):
     sym        = pos["symbol"]
     shares     = float(pos.get("shares") or 0)
     entry      = float(pos.get("entry_price") or 0)
-    cost_basis = float(pos.get("cost_basis") or (shares * entry))
+    cost_basis = shares * entry  # always recompute; stored cost_basis may be stale after inception reset
     price      = prices.get(sym, entry)
     prev       = prev_closes.get(sym, price)
     value      = shares * price
@@ -392,8 +392,12 @@ def run_bot13_decision(prices, prev_closes, starting_capital, today_iso, prev_st
         alloc  = starting_capital * w
         price  = prices.get(sym, 0)
         prev   = prev_closes.get(sym, price)
-        shares = alloc / price
-        day_pnl = shares * (price - prev)
+        # Use prev_close as entry so the full intraday move registers as P&L
+        entry  = prev if prev > 0 else price
+        shares = alloc / entry
+        pnl    = shares * price - alloc
+        pnl_pct = (price / entry - 1) * 100 if entry > 0 else 0
+        day_pnl = shares * (price - entry)
 
         if day_pct >= 5.0:
             intensity = "STRONG momentum"
@@ -405,12 +409,12 @@ def run_bot13_decision(prices, prev_closes, starting_capital, today_iso, prev_st
         positions.append({
             "symbol":      sym,
             "shares":      round(shares, 6),
-            "entry_price": round(price, 4),
+            "entry_price": round(entry, 4),
             "cost_basis":  round(alloc, 2),
             "price":       round(price, 4),
             "value":       round(shares * price, 2),
-            "pnl":         0.0,
-            "pnl_pct":     0.0,
+            "pnl":         round(pnl, 2),
+            "pnl_pct":     round(pnl_pct, 2),
             "day_pnl":     round(day_pnl, 2),
             "day_pct":     round(day_pct, 2),
             "stop_pct":    -1.5,
@@ -911,7 +915,7 @@ def push_to_api(data_type, data, secrets):
             timeout=20,
         )
         if r.status_code == 200:
-            print(f"  [push:{data_type}] ✓ pushed to backend API")
+            print(f"  [push:{data_type}] OK pushed to backend API")
         else:
             print(f"  [push:{data_type}] HTTP {r.status_code}: {r.text[:120]}")
     except Exception as e:
@@ -978,8 +982,10 @@ def main():
     # ── BOT13 decision ───────────────────────────────────────────────────────
     print(f"[wallstbots] running BOT13 decision (phase: {session_phase()})...")
     prev_b13_strategy = funds.get("bot13", {}).get("current_strategy")
+    # Use the fund's current running total so gains compound day-over-day
+    prev_b13_total = float(funds.get("bot13", {}).get("value", {}).get("total") or sc_global)
     b13_decision, b13_positions, b13_picks, b13_rationale, b13_log = run_bot13_decision(
-        prices, prev_closes, sc_global, today_iso, prev_b13_strategy
+        prices, prev_closes, prev_b13_total, today_iso, prev_b13_strategy
     )
     print(f"  BOT13: {b13_decision} ({len(b13_picks)} picks)")
 
@@ -1034,8 +1040,7 @@ def main():
             pnl     = total - sc
             pnl_pct = (total / sc - 1) * 100 if sc else 0
             day_pnl = sum(p.get("day_pnl", 0) for p in enriched)
-            n_pos   = len(enriched)
-            day_pct = sum(p.get("day_pct", 0) for p in enriched) / n_pos if n_pos else 0
+            day_pct = (day_pnl / (total - day_pnl)) * 100 if (total - day_pnl) else 0
 
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
@@ -1066,6 +1071,10 @@ def main():
                 strategy = fund.get("current_strategy")
 
             raw_pos  = fund.get("value", {}).get("positions", [])
+            # On inception day, reset entry prices to prev_close so pnl starts at 0
+            if fund.get("inception") == today_iso:
+                raw_pos = [{**p, "entry_price": prev_closes.get(p["symbol"], p.get("entry_price", 0))}
+                           if prev_closes.get(p["symbol"], 0) > 0 else p for p in raw_pos]
             enriched = [enrich_position(p, prices, prev_closes) for p in raw_pos]
             cash     = float(fund.get("value", {}).get("cash") or 0)
             pos_val  = sum(p["value"] for p in enriched)
@@ -1096,6 +1105,10 @@ def main():
                 strategy = fund.get("current_strategy")
 
             raw_pos  = fund.get("value", {}).get("positions", [])
+            # On inception day, reset entry prices to prev_close so pnl starts at 0
+            if fund.get("inception") == today_iso:
+                raw_pos = [{**p, "entry_price": prev_closes.get(p["symbol"], p.get("entry_price", 0))}
+                           if prev_closes.get(p["symbol"], 0) > 0 else p for p in raw_pos]
             enriched = []
             for p in raw_pos:
                 ep = enrich_position(p, prices, prev_closes)
@@ -1117,6 +1130,10 @@ def main():
         else:
             # Equalizer + Titan — mark-to-market only
             raw_pos  = fund.get("value", {}).get("positions", [])
+            # On inception day, reset entry prices to prev_close so pnl starts at 0
+            if fund.get("inception") == today_iso:
+                raw_pos = [{**p, "entry_price": prev_closes.get(p["symbol"], p.get("entry_price", 0))}
+                           if prev_closes.get(p["symbol"], 0) > 0 else p for p in raw_pos]
             enriched = [enrich_position(p, prices, prev_closes) for p in raw_pos]
             cash     = float(fund.get("value", {}).get("cash") or 0)
             pos_val  = sum(p["value"] for p in enriched)

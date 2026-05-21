@@ -19,3 +19,115 @@ From https://github.com/lvl13tech/wallstbots
 [E] take remote's version of auto-refresh data files... 
  
 [F] amend the existing local commit with the resolved data files... 
+warning: in the working copy of 'FINAL-PUSH.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'final-push-20260520232140.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'resolve-push-log.txt', LF will be replaced by CRLF the next time Git touches it
+[master f7ca799] feat: 3-site parity pass + crypto/stocks news filter + origin_platform tracking + lvl13 SPA restored
+ Date: Wed May 20 23:00:11 2026 -0400
+ 92 files changed, 10212 insertions(+), 1862 deletions(-)
+ create mode 100644 Backend/__pycache__/main.cpython-310.pyc
+ create mode 100644 Backend/origin_platform_migration.sql
+ create mode 100644 Backend/referral_system_migration.sql
+ create mode 100644 Backend/user_tracker_migration.sql
+ create mode 100644 COMMIT-AND-PUSH-doubleclick-me.bat
+ create mode 100644 Context/BUSINESS_MODEL.md
+ create mode 100644 Context/WallStBots_Strategy_OnePager.html
+ create mode 100644 Context/WallStBots_Strategy_OnePager.pdf
+ create mode 100644 Context/WallStBots_Strategy_OnePager_v2.pdf
+ create mode 100644 DEPLOY-ALL-CHANGES.bat
+ create mode 100644 DEPLOY-BACKEND-NOW.bat
+ create mode 100644 DEPLOY-VIA-WSL.bat
+ create mode 100644 DEPLOY-admin-system.bat
+ create mode 100644 DEPLOY_BACKEND.md
+ create mode 100644 FINAL-PUSH.bat
+ create mode 100644 FIX-WORKFLOW-doubleclick-me.bat
+ create mode 100644 FORCE-PUSH-doubleclick-me.bat
+ create mode 100644 Frontends/lvl13.tech/assets/app.js
+ create mode 100644 Frontends/lvl13.tech/assets/favicon.svg
+ create mode 100644 Frontends/lvl13.tech/assets/logo-bitbot13.png
+ create mode 100644 Frontends/lvl13.tech/assets/logo-lvl13.png
+ create mode 100644 Frontends/lvl13.tech/assets/logo-wallstbots.png
+ create mode 100644 Frontends/lvl13.tech/assets/logo.svg
+ create mode 100644 Frontends/lvl13.tech/assets/og-image.svg
+ create mode 100644 Frontends/lvl13.tech/assets/robot.svg
+ create mode 100644 Frontends/lvl13.tech/assets/style.css
+ create mode 100644 Frontends/lvl13.tech/dashboard.html
+ create mode 100644 PUSH-AND-DEPLOY-BACKEND.bat
+ create mode 100644 PUSH-FORCE-PULL-REBASE.bat
+ create mode 100644 PUSH-auth-fixes.bat
+ create mode 100644 PUSH-bitbot13-auth.bat
+ create mode 100644 PUSH-doubleclick-me.bat
+ create mode 100644 PUSH-full-fix.bat
+ create mode 100644 PUSH-header-fix.bat
+ create mode 100644 PUSH-logos.bat
+ create mode 100644 PUSH-news-fix.bat
+ create mode 100644 PUSH-price-fix.bat
+ create mode 100644 PUSH-rss-news.bat
+ create mode 100644 Project/public_html/assets/logo.png
+ create mode 100644 Project/scripts/__pycache__/refresh_bitbot13.cpython-310.pyc
+ create mode 100644 Project/scripts/__pycache__/refresh_wallstbots.cpython-310.pyc
+ create mode 100644 Project/scripts/refresh_all_frontends.py
+ create mode 100644 Project/scripts/seed_tracker_db.py
+ create mode 100644 RUN-seed-all.bat
+ create mode 100644 RUN-seed-news.bat
+ create mode 100644 SETUP-github-secrets.bat
+ create mode 100644 SITE_SPEC.md
+ create mode 100644 commit-push-log.txt
+ create mode 100644 deploy-all-log.txt
+ create mode 100644 final-push-20260520232140.txt
+ create mode 100644 finish-deploy.sh
+ create mode 100644 fix_lvl13_dns.py
+ create mode 100644 push-auth-log.txt
+ create mode 100644 push-backend.ps1
+ create mode 100644 push-bitbot13-auth-log.txt
+ create mode 100644 push-cross-promo-and-automation.ps1
+ create mode 100644 push-cross-promo.ps1
+ create mode 100644 push-data-files.ps1
+ create mode 100644 push-frontend-fix.ps1
+ create mode 100644 push-full-fix-log.txt
+ create mode 100644 push-header-fix-log.txt
+ create mode 100644 push-jwt-fix.ps1
+ create mode 100644 push-logos-log.txt
+ create mode 100644 push-lvl13-frontend.ps1
+ create mode 100644 push-news-fix-log.txt
+ create mode 100644 push-price-fix-log.txt
+ create mode 100644 push-rebase-log.txt
+ create mode 100644 push-referral-system.ps1
+ create mode 100644 push-refresh-script.ps1
+ create mode 100644 push-rss-news-log.txt
+ create mode 100644 push-strategy-update.ps1
+ create mode 100644 push-to-github.ps1
+ create mode 100644 push-workflow-fix.ps1
+ create mode 100644 push-workflow.ps1
+ create mode 100644 resolve-push-log.txt
+ create mode 100644 run_refresh.ps1
+AMEND EXIT: 0 
+ 
+[G] rebase onto origin/master (autostash any leftovers)... 
+From https://github.com/lvl13tech/wallstbots
+ * branch            master     -> FETCH_HEAD
+warning: in the working copy of 'final-push-20260520232140.txt', LF will be replaced by CRLF the next time Git touches it
+error: unable to unlink old 'final-push-20260520232140.txt': Invalid argument
+fatal: could not reset --hard
+Created autostash: 16fba62
+PULL EXIT: 128 
+ 
+[H] push origin master... 
+To https://github.com/lvl13tech/wallstbots.git
+ ! [rejected]        master -> master (non-fast-forward)
+error: failed to push some refs to 'https://github.com/lvl13tech/wallstbots.git'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. If you want to integrate the remote changes,
+hint: use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+PUSH EXIT: 1 
+ 
+[I] last 5 commits 
+f7ca799 feat: 3-site parity pass + crypto/stocks news filter + origin_platform tracking + lvl13 SPA restored
+75f7636 Fix ES256 JWT auth + admin.html getToken key mismatch
+faecdd7 feat: admin system, backend v2.0 (bug fixes + admin endpoints + admin.html)
+ca48226 fix: replace fast_info (broken) with yf.download bulk price fetch
+8865680 fix: use x-internal-key header for backend API pushes
+ 
+=== DONE === 
+Log written to: final-push-20260520232140.txt 

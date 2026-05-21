@@ -1,0 +1,98 @@
+=== REFRESH DATA NOW === 
+Thu 05/21/2026 18:08:02.66 
+ 
+Using python: python 
+ 
+[deps] checking yfinance + requests... 
+ 
+============================================================ 
+ Running refresh_bitbot13.py --push 
+============================================================ 
+$GRT-USD: possibly delisted; no price data found  (period=2d)
+$IMX-USD: possibly delisted; no price data found  (period=2d)
+$TAO-USD: possibly delisted; no price data found  (period=2d)
+$FTM-USD: possibly delisted; no price data found  (period=2d)
+$STX-USD: possibly delisted; no price data found  (period=2d)
+
+5 Failed downloads:
+['GRT-USD', 'IMX-USD', 'TAO-USD', 'FTM-USD', 'STX-USD']: possibly delisted; no price data found  (period=2d)
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_bitbot13.py:411: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  from_date = (dt.datetime.utcnow() - dt.timedelta(days=3)).strftime("%Y-%m-%d")
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_bitbot13.py:702: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+[master 9208cf6] auto: bitbot13.tech data refresh [2026-05-21 18:08]
+ 2 files changed, 1166 insertions(+), 1166 deletions(-)
+To https://github.com/lvl13tech/wallstbots.git
+   1d6faf1..9208cf6  master -> master
+[bitbot13] loading state.json...
+[bitbot13] fetching prices for 50 coins...
+  [yfinance] fetching 50 crypto tickers...
+  [coingecko] falling back for 5 missing coins...
+  [coingecko] filled 5 coins
+  [yfinance] got 50/50 prices
+[bitbot13] running BOT13 decision...
+  BOT13: TRADE (5 picks)
+[bitbot13] enriching positions...
+[bitbot13] state OK — 5 funds, 1 snapshots
+  [push:state] OK pushed to backend API
+[bitbot13] signals OK — 50 signals
+  [push:signals] OK pushed to backend API
+[bitbot13] fetching news...
+  [news] Bitcoin: 8 articles (2 off-topic filtered)
+  [news] Ethereum: 9 articles
+  [news] Altcoins: 5 articles
+  [news] DeFi: 4 articles
+  [news] Regulation: 7 articles (2 off-topic filtered)
+  [news] Blockchain: 5 articles
+  [news] fetched 30 total crypto articles
+[bitbot13] news OK — 30 articles
+  [push:news] OK pushed to backend API
+  [push:reports] OK pushed to backend API
+[bitbot13] pushing to GitHub...
+[git] pushed to GitHub OK
+BITBOT13 EXIT: 0 
+ 
+============================================================ 
+ Running refresh_wallstbots.py --push 
+============================================================ 
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_wallstbots.py:108: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now_utc = dt.datetime.utcnow()
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_wallstbots.py:842: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  from_date = (dt.datetime.utcnow() - dt.timedelta(days=3)).strftime("%Y-%m-%d")
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_wallstbots.py:1223: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+[master 5417af8] auto: wallstbots.tech data refresh [2026-05-21 18:08]
+ 2 files changed, 303 insertions(+), 307 deletions(-)
+To https://github.com/lvl13tech/wallstbots.git
+   9208cf6..5417af8  master -> master
+[wallstbots] loading state.json...
+[wallstbots] fetching prices for 55 symbols...
+  [yfinance] fetching 55 tickers (live prices)...
+  [yfinance] got 55/55 prices
+  [yfinance] fetching 90-day history for strategy scoring...
+  [yfinance] history loaded for 55/55 symbols
+[wallstbots] running BOT13 decision (phase: close)...
+  BOT13: TRADE (5 picks)
+[wallstbots] enriching positions...
+[wallstbots] state — 5 funds, 1 snapshots
+  [push:state] OK pushed to backend API
+[wallstbots] signals — 55 signals
+  [push:signals] OK pushed to backend API
+[wallstbots] fetching news...
+  [news] AI & Quantum: 10 articles
+  [news] Biotech: 6 articles
+  [news] Energy: 8 articles
+  [news] Defense: 10 articles
+  [news] Finance: 8 articles
+  [news] Tech & Comms: 5 articles
+  [news] Industrials: 6 articles
+  [news] fetched 30 total stock-market articles
+[wallstbots] news — 30 articles
+  [push:news] OK pushed to backend API
+  [push:reports] OK pushed to backend API
+[git] pushed to GitHub OK
+
+[wallstbots] ALL DONE
+WALLSTBOTS EXIT: 0 
+ 
+=== DONE === 

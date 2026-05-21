@@ -1,0 +1,37 @@
+=== UPLOAD lvl13 to HostGator === 
+Thu 05/21/2026 16:06:40.75 
+ 
+Using: python 
+ 
+[source] using: C:\Users\temps\OneDrive\Desktop\Claude\Websites\1. lvl13.tech\Project\public_html
+[sftp] failed: AuthenticationException: Authentication failed.
+[sftp] falling back to FTP/FTPS...
+[ftp] FTPS connected (sh00167.hostgator.com)
+[ftp] landing pwd: /
+[probe] /lvl13.tech/  — error_perm
+[probe] /public_html/lvl13.tech/  — error_perm
+[probe] /public_html/lvl13/  — error_perm
+[probe] /lvl13/  — error_perm
+[probe] /public_html/  — error_perm
+[probe] /./  items=14  index=True  assets=True
+[ftp] uploading into: /./
+
+  [up] index.html  (5029 bytes)
+  [up] dashboard.html  (10046 bytes)
+  [up] admin.html  (19172 bytes)
+  [up] login.html  (11345 bytes)
+  [up] signup.html  (7291 bytes)
+  [up] auth.js  (5085 bytes)
+  [up] api.js  (6376 bytes)
+  [up] assets/app.js  (59755 bytes)
+  [up] assets/style.css  (29114 bytes)
+  [up] assets/favicon.svg  (481 bytes)
+  [up] assets/logo.svg  (481 bytes)
+  [up] assets/robot.svg  (1571 bytes)
+  [up] assets/og-image.svg  (2569 bytes)
+  [up] assets/logo-bitbot13.png  (1783807 bytes)
+  [up] assets/logo-lvl13.png  (1641354 bytes)
+  [up] assets/logo-wallstbots.png  (2153405 bytes)
+
+[result] uploaded 16, failed/skipped 0, total 16
+[next] open https://lvl13.tech in a fresh tab (hard refresh: Ctrl+F5) to verify

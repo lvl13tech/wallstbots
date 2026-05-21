@@ -1,267 +1,41 @@
 === DEPLOY-ALL LOG === 
-Wed 05/20/2026 23:00:10.23 
+Thu 05/21/2026 18:26:43.42 
  
  
 [1] git branch + status 
 master
-MM Backend/main.py
- M Frontends/bitbot13.tech/admin.html
+ M .gitignore
+ M Context/Working_prefs.md.txt
  M Frontends/bitbot13.tech/assets/app.js
- M Frontends/bitbot13.tech/auth.js
- M Frontends/bitbot13.tech/data/signals.json
  M Frontends/bitbot13.tech/data/state.json
- M Frontends/lvl13.tech/admin.html
- M Frontends/lvl13.tech/auth.js
+ M Frontends/lvl13.tech/assets/app.js
+ M Frontends/lvl13.tech/assets/favicon.svg
+ M Frontends/lvl13.tech/assets/logo.svg
  M Frontends/lvl13.tech/index.html
-MM Frontends/wallstbots.tech/admin.html
+ M Frontends/lvl13.tech/login.html
  M Frontends/wallstbots.tech/assets/app.js
- M Frontends/wallstbots.tech/data/signals.json
  M Frontends/wallstbots.tech/data/state.json
+ M Frontends/wallstbots.tech/index.html
  M HANDOFF.md
+ M Project/config/secrets.json
+ M Project/scripts/__pycache__/refresh_bitbot13.cpython-310.pyc
+ M Project/scripts/__pycache__/refresh_wallstbots.cpython-310.pyc
  M Project/scripts/refresh_bitbot13.py
  M Project/scripts/refresh_wallstbots.py
-?? Backend/__pycache__/
-?? Backend/origin_platform_migration.sql
-?? Backend/referral_system_migration.sql
-?? Backend/user_tracker_migration.sql
-?? COMMIT-AND-PUSH-doubleclick-me.bat
-?? Context/BUSINESS_MODEL.md
-?? Context/WallStBots_Strategy_OnePager.html
-?? Context/WallStBots_Strategy_OnePager.pdf
-?? Context/WallStBots_Strategy_OnePager_v2.pdf
-?? DEPLOY-ALL-CHANGES.bat
-?? DEPLOY-BACKEND-NOW.bat
-?? DEPLOY-VIA-WSL.bat
-?? DEPLOY-admin-system.bat
-?? DEPLOY_BACKEND.md
-?? FIX-WORKFLOW-doubleclick-me.bat
-?? FORCE-PUSH-doubleclick-me.bat
-?? Frontends/lvl13.tech/assets/
-?? Frontends/lvl13.tech/dashboard.html
-?? PUSH-AND-DEPLOY-BACKEND.bat
-?? PUSH-FORCE-PULL-REBASE.bat
-?? PUSH-auth-fixes.bat
-?? PUSH-bitbot13-auth.bat
-?? PUSH-doubleclick-me.bat
-?? PUSH-full-fix.bat
-?? PUSH-header-fix.bat
-?? PUSH-logos.bat
-?? PUSH-news-fix.bat
-?? PUSH-price-fix.bat
-?? PUSH-rss-news.bat
-?? Project/public_html/assets/logo.png
-?? Project/scripts/__pycache__/refresh_bitbot13.cpython-310.pyc
-?? Project/scripts/__pycache__/refresh_wallstbots.cpython-310.pyc
-?? Project/scripts/refresh_all_frontends.py
-?? Project/scripts/seed_tracker_db.py
-?? RUN-seed-all.bat
-?? RUN-seed-news.bat
-?? SETUP-github-secrets.bat
-?? SITE_SPEC.md
-?? commit-push-log.txt
-?? deploy-all-log.txt
-?? finish-deploy.sh
-?? fix_lvl13_dns.py
-?? push-auth-log.txt
-?? push-backend.ps1
-?? push-bitbot13-auth-log.txt
-?? push-cross-promo-and-automation.ps1
-?? push-cross-promo.ps1
-?? push-data-files.ps1
-?? push-frontend-fix.ps1
-?? push-full-fix-log.txt
-?? push-header-fix-log.txt
-?? push-jwt-fix.ps1
-?? push-logos-log.txt
-?? push-lvl13-frontend.ps1
-?? push-news-fix-log.txt
-?? push-price-fix-log.txt
-?? push-rebase-log.txt
-?? push-referral-system.ps1
-?? push-refresh-script.ps1
-?? push-rss-news-log.txt
-?? push-strategy-update.ps1
-?? push-to-github.ps1
-?? push-workflow-fix.ps1
-?? push-workflow.ps1
-?? run_refresh.ps1
+ M commit-push-log.txt
+ M deploy-all-log.txt
+ M final-push-20260520232140.txt
+?? FINAL-PUSH-V2.bat
+?? PUSH-FINAL-FIXES.bat
+?? Project/scripts/reset_fund_data.py
+?? Project/scripts/upload_lvl13_full.py
+?? REFRESH-DATA-NOW.bat
+?? UPLOAD-LVL13-TO-HOSTGATOR.bat
+?? final-push-v2-result.txt
+?? lvl13-tech-deploy-2026-05-20.zip
+?? push-final-fixes-result.txt
+?? refresh-data-result.txt
+?? upload-lvl13-result.txt
+?? ziDLQPLI
  
 [2] git add -A 
-warning: in the working copy of 'Backend/main.py', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Frontends/bitbot13.tech/admin.html', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Frontends/bitbot13.tech/assets/app.js', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Frontends/bitbot13.tech/auth.js', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Frontends/lvl13.tech/admin.html', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Frontends/lvl13.tech/auth.js', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Frontends/lvl13.tech/index.html', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Frontends/wallstbots.tech/admin.html', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Frontends/wallstbots.tech/assets/app.js', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'HANDOFF.md', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Backend/origin_platform_migration.sql', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Backend/referral_system_migration.sql', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Backend/user_tracker_migration.sql', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'COMMIT-AND-PUSH-doubleclick-me.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Context/BUSINESS_MODEL.md', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Context/WallStBots_Strategy_OnePager.html', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Context/WallStBots_Strategy_OnePager.pdf', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Context/WallStBots_Strategy_OnePager_v2.pdf', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'DEPLOY-ALL-CHANGES.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'DEPLOY-BACKEND-NOW.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'DEPLOY-VIA-WSL.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'DEPLOY-admin-system.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'DEPLOY_BACKEND.md', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'FIX-WORKFLOW-doubleclick-me.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'FORCE-PUSH-doubleclick-me.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Frontends/lvl13.tech/assets/app.js', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Frontends/lvl13.tech/assets/favicon.svg', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Frontends/lvl13.tech/assets/logo.svg', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Frontends/lvl13.tech/assets/og-image.svg', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Frontends/lvl13.tech/assets/robot.svg', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Frontends/lvl13.tech/assets/style.css', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'PUSH-AND-DEPLOY-BACKEND.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'PUSH-FORCE-PULL-REBASE.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'PUSH-auth-fixes.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'PUSH-bitbot13-auth.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'PUSH-doubleclick-me.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'PUSH-full-fix.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'PUSH-header-fix.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'PUSH-logos.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'PUSH-news-fix.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'PUSH-price-fix.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'PUSH-rss-news.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Project/scripts/refresh_all_frontends.py', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'Project/scripts/seed_tracker_db.py', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'RUN-seed-all.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'RUN-seed-news.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'SETUP-github-secrets.bat', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'SITE_SPEC.md', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'commit-push-log.txt', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'deploy-all-log.txt', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'finish-deploy.sh', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'fix_lvl13_dns.py', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-auth-log.txt', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-backend.ps1', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-bitbot13-auth-log.txt', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-cross-promo-and-automation.ps1', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-cross-promo.ps1', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-data-files.ps1', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-frontend-fix.ps1', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-full-fix-log.txt', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-header-fix-log.txt', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-jwt-fix.ps1', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-logos-log.txt', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-lvl13-frontend.ps1', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-news-fix-log.txt', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-price-fix-log.txt', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-rebase-log.txt', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-referral-system.ps1', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-refresh-script.ps1', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-rss-news-log.txt', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-strategy-update.ps1', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-to-github.ps1', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-workflow-fix.ps1', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'push-workflow.ps1', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'run_refresh.ps1', LF will be replaced by CRLF the next time Git touches it
-ADD EXIT: 0 
- 
-[3] git commit 
-[master 6987d11] feat: 3-site parity pass + crypto/stocks news filter + origin_platform tracking + lvl13 SPA restored
- 89 files changed, 9865 insertions(+), 1795 deletions(-)
- create mode 100644 Backend/__pycache__/main.cpython-310.pyc
- create mode 100644 Backend/origin_platform_migration.sql
- create mode 100644 Backend/referral_system_migration.sql
- create mode 100644 Backend/user_tracker_migration.sql
- create mode 100644 COMMIT-AND-PUSH-doubleclick-me.bat
- create mode 100644 Context/BUSINESS_MODEL.md
- create mode 100644 Context/WallStBots_Strategy_OnePager.html
- create mode 100644 Context/WallStBots_Strategy_OnePager.pdf
- create mode 100644 Context/WallStBots_Strategy_OnePager_v2.pdf
- create mode 100644 DEPLOY-ALL-CHANGES.bat
- create mode 100644 DEPLOY-BACKEND-NOW.bat
- create mode 100644 DEPLOY-VIA-WSL.bat
- create mode 100644 DEPLOY-admin-system.bat
- create mode 100644 DEPLOY_BACKEND.md
- create mode 100644 FIX-WORKFLOW-doubleclick-me.bat
- create mode 100644 FORCE-PUSH-doubleclick-me.bat
- create mode 100644 Frontends/lvl13.tech/assets/app.js
- create mode 100644 Frontends/lvl13.tech/assets/favicon.svg
- create mode 100644 Frontends/lvl13.tech/assets/logo-bitbot13.png
- create mode 100644 Frontends/lvl13.tech/assets/logo-lvl13.png
- create mode 100644 Frontends/lvl13.tech/assets/logo-wallstbots.png
- create mode 100644 Frontends/lvl13.tech/assets/logo.svg
- create mode 100644 Frontends/lvl13.tech/assets/og-image.svg
- create mode 100644 Frontends/lvl13.tech/assets/robot.svg
- create mode 100644 Frontends/lvl13.tech/assets/style.css
- create mode 100644 Frontends/lvl13.tech/dashboard.html
- create mode 100644 PUSH-AND-DEPLOY-BACKEND.bat
- create mode 100644 PUSH-FORCE-PULL-REBASE.bat
- create mode 100644 PUSH-auth-fixes.bat
- create mode 100644 PUSH-bitbot13-auth.bat
- create mode 100644 PUSH-doubleclick-me.bat
- create mode 100644 PUSH-full-fix.bat
- create mode 100644 PUSH-header-fix.bat
- create mode 100644 PUSH-logos.bat
- create mode 100644 PUSH-news-fix.bat
- create mode 100644 PUSH-price-fix.bat
- create mode 100644 PUSH-rss-news.bat
- create mode 100644 Project/public_html/assets/logo.png
- create mode 100644 Project/scripts/__pycache__/refresh_bitbot13.cpython-310.pyc
- create mode 100644 Project/scripts/__pycache__/refresh_wallstbots.cpython-310.pyc
- create mode 100644 Project/scripts/refresh_all_frontends.py
- create mode 100644 Project/scripts/seed_tracker_db.py
- create mode 100644 RUN-seed-all.bat
- create mode 100644 RUN-seed-news.bat
- create mode 100644 SETUP-github-secrets.bat
- create mode 100644 SITE_SPEC.md
- create mode 100644 commit-push-log.txt
- create mode 100644 deploy-all-log.txt
- create mode 100644 finish-deploy.sh
- create mode 100644 fix_lvl13_dns.py
- create mode 100644 push-auth-log.txt
- create mode 100644 push-backend.ps1
- create mode 100644 push-bitbot13-auth-log.txt
- create mode 100644 push-cross-promo-and-automation.ps1
- create mode 100644 push-cross-promo.ps1
- create mode 100644 push-data-files.ps1
- create mode 100644 push-frontend-fix.ps1
- create mode 100644 push-full-fix-log.txt
- create mode 100644 push-header-fix-log.txt
- create mode 100644 push-jwt-fix.ps1
- create mode 100644 push-logos-log.txt
- create mode 100644 push-lvl13-frontend.ps1
- create mode 100644 push-news-fix-log.txt
- create mode 100644 push-price-fix-log.txt
- create mode 100644 push-rebase-log.txt
- create mode 100644 push-referral-system.ps1
- create mode 100644 push-refresh-script.ps1
- create mode 100644 push-rss-news-log.txt
- create mode 100644 push-strategy-update.ps1
- create mode 100644 push-to-github.ps1
- create mode 100644 push-workflow-fix.ps1
- create mode 100644 push-workflow.ps1
- create mode 100644 run_refresh.ps1
-COMMIT EXIT: 0 
- 
-[4] git push origin master 
-To https://github.com/lvl13tech/wallstbots.git
- ! [rejected]        master -> master (fetch first)
-error: failed to push some refs to 'https://github.com/lvl13tech/wallstbots.git'
-hint: Updates were rejected because the remote contains work that you do not
-hint: have locally. This is usually caused by another repository pushing to
-hint: the same ref. If you want to integrate the remote changes, use
-hint: 'git pull' before pushing again.
-hint: See the 'Note about fast-forwards' in 'git push --help' for details.
-PUSH EXIT: 1 
- 
-[5] last 5 commits 
-6987d11 feat: 3-site parity pass + crypto/stocks news filter + origin_platform tracking + lvl13 SPA restored
-75f7636 Fix ES256 JWT auth + admin.html getToken key mismatch
-faecdd7 feat: admin system, backend v2.0 (bug fixes + admin endpoints + admin.html)
-ca48226 fix: replace fast_info (broken) with yf.download bulk price fetch
-8865680 fix: use x-internal-key header for backend API pushes
- 
-=== DONE === 
-Cloudflare Pages will rebuild bitbot13.tech + wallstbots.tech within ~60-90 sec. 
-lvl13.tech needs separate HostGator upload (use FTP script). 
-Backend: run DEPLOY-BACKEND-NOW.bat for Cloud Run. 
-Supabase: paste Backend\origin_platform_migration.sql into SQL Editor. 

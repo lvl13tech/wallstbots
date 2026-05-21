@@ -1,236 +1,378 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - Level XIII Tech</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — Level XIII Tech</title>
+  <style>
+    :root {
+      --bg: #06080d;
+      --panel: #0d1117;
+      --panel2: #141b27;
+      --border: #1e2633;
+      --text: #e6edf3;
+      --muted: #7d8590;
+      --green: #00d4ff;
+      --green-dim: #003d47;
+      --red: #f85149;
+      --radius: 10px;
+    }
 
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
-          Cantarell, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-      .login-container {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        width: 100%;
-        max-width: 420px;
-        padding: 40px;
-      }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
 
-      .logo {
-        text-align: center;
-        margin-bottom: 30px;
-      }
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--green);
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
 
-      .logo h1 {
-        font-size: 28px;
-        color: #333;
-        margin-bottom: 5px;
-      }
+    .logo span { color: var(--text); }
 
-      .logo p {
-        color: #999;
-        font-size: 14px;
-      }
+    .tagline {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
 
-      .form-group {
-        margin-bottom: 20px;
-      }
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
 
-      label {
-        display: block;
-        margin-bottom: 8px;
-        color: #333;
-        font-weight: 500;
-        font-size: 14px;
-      }
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+    }
 
-      input {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 14px;
-        transition: border-color 0.3s;
-      }
+    .tab {
+      padding: 16px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
 
-      input:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-      }
+    .tab.active {
+      color: var(--green);
+      border-bottom-color: var(--green);
+      background: var(--panel2);
+    }
 
-      .submit-btn {
-        width: 100%;
-        padding: 12px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 4px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: transform 0.2s, box-shadow 0.2s;
-        margin-top: 10px;
-      }
+    .form-body { padding: 32px; }
 
-      .submit-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-      }
+    .form-group { margin-bottom: 18px; }
 
-      .submit-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-      }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
 
-      .error {
-        color: #e74c3c;
-        font-size: 13px;
-        margin-top: 5px;
-        display: none;
-      }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
 
-      .error.show {
-        display: block;
-      }
+    input:focus { border-color: var(--green); }
+    input::placeholder { color: var(--muted); }
 
-      .signup-link {
-        text-align: center;
-        margin-top: 20px;
-        color: #999;
-        font-size: 13px;
-      }
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: var(--green);
+      color: #000;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 6px;
+    }
 
-      .signup-link a {
-        color: #667eea;
-        text-decoration: none;
-        font-weight: 600;
-      }
+    .btn-submit:hover {
+      background: #00b8e0;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(63,185,80,0.3);
+    }
 
-      .signup-link a:hover {
-        text-decoration: underline;
-      }
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
 
-      .loading {
-        display: inline-block;
-        width: 16px;
-        height: 16px;
-        border: 2px solid #f3f3f3;
-        border-top: 2px solid #667eea;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-right: 8px;
-        vertical-align: middle;
-      }
+    .error-msg {
+      background: rgba(248,81,73,0.1);
+      border: 1px solid rgba(248,81,73,0.3);
+      color: var(--red);
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: none;
+    }
 
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-    </style>
-  </head>
+    .success-msg {
+      background: var(--green-dim);
+      border: 1px solid rgba(63,185,80,0.3);
+      color: var(--green);
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: none;
+    }
 
-  <body>
-    <div class="login-container">
-      <div class="logo">
-        <h1>Level XIII Tech</h1>
-        <p>AI & Quantum Trading</p>
-      </div>
+    .promo-note {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
 
-      <form id="loginForm">
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" name="email" required placeholder="you@example.com" />
-          <div class="error" id="emailError"></div>
-        </div>
+    .promo-note strong { color: var(--green); }
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            required
-            placeholder="••••••••"
-          />
-          <div class="error" id="passwordError"></div>
-        </div>
+    .back-link {
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--muted);
+    }
 
-        <button type="submit" class="submit-btn" id="submitBtn">Log In</button>
+    .back-link a { color: var(--green); text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
 
-        <div class="error show" id="generalError" style="text-align: center; margin-top: 15px;"></div>
-      </form>
+    .form-panel { display: none; }
+    .form-panel.active { display: block; }
 
-      <div class="signup-link">
-        Don't have an account? <a href="/signup.html">Sign up here</a>
-      </div>
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(0,0,0,0.3);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .cross-platform {
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      max-width: 340px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="logo">Level XIII <span>Tech</span></div>
+  <div class="tagline">Track the market like a pro.</div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" id="tabLogin" onclick="switchTab('login')">Log In</button>
+      <button class="tab" id="tabSignup" onclick="switchTab('signup')">Sign Up</button>
     </div>
 
-    <script src="auth.js"></script>
-    <script>
-      // Configuration
-      const API_BASE_URL = "https://wallstbots-backend-868128114349.us-east1.run.app";
+    <div class="form-body">
+      <div id="errorMsg" class="error-msg"></div>
+      <div id="successMsg" class="success-msg"></div>
 
-      // Initialize auth
-      const auth = new WallStBotsAuth(API_BASE_URL);
+      <!-- LOGIN FORM -->
+      <div class="form-panel active" id="loginPanel">
+        <div class="form-group">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password" />
+        </div>
+        <button class="btn-submit" id="loginBtn" onclick="handleLogin()">Log In</button>
+        <div class="promo-note">
+          Don't have an account? <a href="#" onclick="switchTab('signup');return false;" style="color:var(--green)">Sign up free →</a>
+        </div>
+      </div>
 
-      // If already logged in, redirect to dashboard
-      if (auth.isAuthenticated()) {
-        window.location.href = "/index.html";
+      <!-- SIGNUP FORM -->
+      <div class="form-panel" id="signupPanel">
+        <div class="form-group">
+          <label for="signupName">Full Name</label>
+          <input type="text" id="signupName" placeholder="Your name" autocomplete="name" />
+        </div>
+        <div class="form-group">
+          <label for="signupEmail">Email</label>
+          <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label for="signupPassword">Password</label>
+          <input type="password" id="signupPassword" placeholder="Min. 8 characters" autocomplete="new-password" />
+        </div>
+        <div class="form-group">
+          <label for="signupPromo">Promo Code <span style="color:var(--muted);font-weight:400;text-transform:none">(optional)</span></label>
+          <input type="text" id="signupPromo" placeholder="e.g. levelUp13" autocomplete="off" />
+        </div>
+        <button class="btn-submit" id="signupBtn" onclick="handleSignup()">Create Account</button>
+        <div class="promo-note">
+          Use code <strong>levelUp13</strong> to get started free. <br/>
+          Already have an account? <a href="#" onclick="switchTab('login');return false;" style="color:var(--green)">Log in →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cross-platform">
+    🔗 One account works across Wall St. Bots, BitBot13, and Level XIII Tech.
+  </div>
+
+  <div class="back-link"><a href="/">← Back to home</a></div>
+
+  <script src="/auth.js"></script>
+  <script>
+    const API_BASE = "https://wallstbots-backend-868128114349.us-east1.run.app";
+    const auth = new WallStBotsAuth(API_BASE);
+
+    // If already logged in, go straight to dashboard
+    if (auth.isAuthenticated() && !auth.isTokenExpired()) {
+      window.location.href = "/dashboard.html";
+    }
+
+    // Check hash for tab
+    if (window.location.hash === "#signup") switchTab("signup");
+
+    function switchTab(tab) {
+      document.getElementById("loginPanel").classList.toggle("active", tab === "login");
+      document.getElementById("signupPanel").classList.toggle("active", tab === "signup");
+      document.getElementById("tabLogin").classList.toggle("active", tab === "login");
+      document.getElementById("tabSignup").classList.toggle("active", tab === "signup");
+      clearMessages();
+    }
+
+    function showError(msg) {
+      const el = document.getElementById("errorMsg");
+      el.textContent = msg;
+      el.style.display = "block";
+      document.getElementById("successMsg").style.display = "none";
+    }
+
+    function showSuccess(msg) {
+      const el = document.getElementById("successMsg");
+      el.textContent = msg;
+      el.style.display = "block";
+      document.getElementById("errorMsg").style.display = "none";
+    }
+
+    function clearMessages() {
+      document.getElementById("errorMsg").style.display = "none";
+      document.getElementById("successMsg").style.display = "none";
+    }
+
+    function setLoading(btnId, loading, text) {
+      const btn = document.getElementById(btnId);
+      btn.disabled = loading;
+      btn.innerHTML = loading
+        ? `<span class="spinner"></span> ${text}`
+        : text;
+    }
+
+    // Allow Enter key to submit
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      if (document.getElementById("loginPanel").classList.contains("active")) {
+        handleLogin();
+      } else {
+        handleSignup();
       }
+    });
 
-      // Handle login form
-      document.getElementById("loginForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
+    async function handleLogin() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
 
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
-        const submitBtn = document.getElementById("submitBtn");
-        const generalError = document.getElementById("generalError");
+      if (!email || !password) { showError("Please enter your email and password."); return; }
 
-        // Clear previous errors
-        document.querySelectorAll(".error").forEach((el) => (el.textContent = ""));
+      setLoading("loginBtn", true, "Logging in…");
+      clearMessages();
 
-        // Validate
-        if (!email || !password) {
-          generalError.textContent = "Please fill in all fields";
-          return;
+      try {
+        await auth.login(email, password);
+        const redirect = new URLSearchParams(window.location.search).get("redirect");
+        window.location.href = redirect || "/dashboard.html";
+      } catch (err) {
+        showError(err.message || "Login failed. Check your credentials and try again.");
+        setLoading("loginBtn", false, "Log In");
+      }
+    }
+
+    async function handleSignup() {
+      const name = document.getElementById("signupName").value.trim();
+      const email = document.getElementById("signupEmail").value.trim();
+      const password = document.getElementById("signupPassword").value;
+
+      if (!email || !password) { showError("Email and password are required."); return; }
+      if (password.length < 8) { showError("Password must be at least 8 characters."); return; }
+
+      setLoading("signupBtn", true, "Creating account…");
+      clearMessages();
+
+      try {
+        const result = await auth.signup(email, password, name || null);
+        showSuccess(result.message || "Account created! Check your email to confirm, then log in.");
+        setLoading("signupBtn", false, "Create Account");
+
+        // If token was returned (auto-login), go to dashboard
+        if (auth.isAuthenticated()) {
+          setTimeout(() => { window.location.href = "/dashboard.html"; }, 1500);
         }
-
-        // Disable submit button
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="loading"></span>Logging in...';
-
-        try {
-          await auth.login(email, password);
-
-          // Redirect to dashboard
-          window.location.href = "/index.html";
-        } catch (error) {
-          generalError.textContent = error.message || "Login failed. Please try again.";
-          submitBtn.disabled = false;
-          submitBtn.textContent = "Log In";
-        }
-      });
-    </script>
-  </body>
+      } catch (err) {
+        showError(err.message || "Signup failed. This email may already be registered.");
+        setLoading("signupBtn", false, "Create Account");
+      }
+    }
+  </script>
+</body>
 </html>

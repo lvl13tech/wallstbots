@@ -226,7 +226,7 @@ def enrich_position(pos, prices, prev_closes):
     sym        = pos["symbol"]
     shares     = float(pos.get("shares") or 0)
     entry      = float(pos.get("entry_price") or 0)
-    cost_basis = float(pos.get("cost_basis") or (shares * entry))
+    cost_basis = shares * entry  # always recompute; stored cost_basis may be stale after inception reset
     price      = prices.get(sym, entry)
     prev       = prev_closes.get(sym, price)
     value      = shares * price
@@ -280,18 +280,22 @@ def run_bot13_decision(prices, prev_closes, starting_capital):
         prev  = prev_closes.get(sym, price)
         if price <= 0:
             continue
-        shares  = per / price
-        day_pnl = shares * (price - prev)
+        # Use prev_close as entry so the full 24h move registers as P&L
+        entry   = prev if prev > 0 else price
+        shares  = per / entry
+        pnl     = shares * price - per
+        pnl_pct = (price / entry - 1) * 100 if entry > 0 else 0
+        day_pnl = shares * (price - entry)
         price_dp = 8 if price < 0.01 else (4 if price < 1 else 2)
         positions.append({
             "symbol":      sym,
             "shares":      round(shares, 6),
-            "entry_price": round(price, price_dp),
+            "entry_price": round(entry, price_dp),
             "cost_basis":  round(per, 2),
             "price":       round(price, price_dp),
             "value":       round(shares * price, 2),
-            "pnl":         0.0,
-            "pnl_pct":     0.0,
+            "pnl":         round(pnl, 2),
+            "pnl_pct":     round(pnl_pct, 2),
             "day_pnl":     round(day_pnl, 2),
             "day_pct":     round(pct, 2),
         })
@@ -480,7 +484,7 @@ def push_to_api(data_type, data, secrets):
             timeout=20,
         )
         if r.status_code == 200:
-            print(f"  [push:{data_type}] ✓ pushed to backend API")
+            print(f"  [push:{data_type}] OK pushed to backend API")
         else:
             print(f"  [push:{data_type}] HTTP {r.status_code}: {r.text[:120]}")
     except Exception as e:
@@ -496,7 +500,7 @@ def git_push(msg):
                         "-m", f"auto: {msg} [{dt.datetime.now().strftime('%Y-%m-%d %H:%M')}]"],
                        check=True)
         subprocess.run(["git", "-C", str(git_root), "push"], check=True)
-        print("[git] pushed to GitHub ✓")
+        print("[git] pushed to GitHub OK")
     except subprocess.CalledProcessError as e:
         print(f"[git] push failed: {e}")
 
@@ -539,7 +543,9 @@ def main():
 
     # ── 3. BOT13 daily decision ─────────────────────────────────────────────────
     print("[bitbot13] running BOT13 decision...")
-    b13_decision, b13_positions, b13_picks = run_bot13_decision(prices, prev_closes, sc_global)
+    # Use fund's current running total so gains compound day-over-day
+    prev_b13_total = float(funds.get("bot13", {}).get("value", {}).get("total") or sc_global)
+    b13_decision, b13_positions, b13_picks = run_bot13_decision(prices, prev_closes, prev_b13_total)
     print(f"  BOT13: {b13_decision} ({len(b13_picks)} picks)")
 
     # ── 4. Enrich all fund positions ────────────────────────────────────────────
@@ -565,8 +571,7 @@ def main():
             pnl     = total - sc
             pnl_pct = (total / sc - 1) * 100 if sc else 0
             day_pnl = sum(p.get("day_pnl", 0) for p in enriched)
-            n_pos   = len(enriched)
-            day_pct = sum(p.get("day_pct", 0) for p in enriched) / n_pos if n_pos else 0
+            day_pct = (day_pnl / (total - day_pnl)) * 100 if (total - day_pnl) else 0
 
             value = {
                 "total":     round(total, 2),
@@ -589,6 +594,10 @@ def main():
 
         else:
             raw_pos  = fund.get("value", {}).get("positions", [])
+            # On inception day, reset entry prices to prev_close so pnl starts at 0
+            if fund.get("inception") == today_iso:
+                raw_pos = [{**p, "entry_price": prev_closes.get(p["symbol"], p.get("entry_price", 0))}
+                           if prev_closes.get(p["symbol"], 0) > 0 else p for p in raw_pos]
             enriched = [enrich_position(p, prices, prev_closes) for p in raw_pos]
             cash     = float(fund.get("value", {}).get("cash") or 0)
             pos_val  = sum(p["value"] for p in enriched)
@@ -674,14 +683,14 @@ def main():
         "leaderboards":     {"week": wk_lb, "all": all_lb},
     }
     STATE_FILE.write_text(json.dumps({"data": state_data}, indent=2))
-    print(f"[bitbot13] ✓ state — {len(funds_out)} funds, {len(snapshots)} snapshots")
+    print(f"[bitbot13] state OK — {len(funds_out)} funds, {len(snapshots)} snapshots")
     push_to_api("state", state_data, secrets)
 
     # ── 8. Signals → write local + push to backend API ─────────────────────────
     signals = generate_signals(prices, prev_closes)
     (DATA_DIR / "signals.json").write_text(json.dumps({"data": signals}, indent=2))
     n_sig = len(signals["recommendations"])
-    print(f"[bitbot13] ✓ signals — {n_sig} signals")
+    print(f"[bitbot13] signals OK — {n_sig} signals")
     push_to_api("signals", signals, secrets)
 
     # ── 9. News → fetch + push to backend API ──────────────────────────────────
@@ -692,7 +701,7 @@ def main():
         "sectors":      sorted({it["sector"] for it in news_items}) if news_items else [],
         "generated_at": dt.datetime.utcnow().isoformat() + "Z",
     }
-    print(f"[bitbot13] ✓ news — {len(news_items)} articles")
+    print(f"[bitbot13] news OK — {len(news_items)} articles")
     push_to_api("news", news_data, secrets)
 
     # ── Reports placeholder ─────────────────────────────────────────────────────
@@ -701,4 +710,8 @@ def main():
     # ── 10. Git push (optional — static files as backup) ───────────────────────
     if args.push:
         print("[bitbot13] pushing to GitHub...")
-        git_push("bitbot13.tech data
+        git_push("bitbot13.tech data refresh")
+
+
+if __name__ == "__main__":
+    main()

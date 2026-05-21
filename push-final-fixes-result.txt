@@ -1,0 +1,44 @@
+=== PUSH FINAL FIXES === 
+Thu 05/21/2026  0:38:28.44 
+ 
+[1] git add the only files we want to commit (avoid noise) 
+ 
+[2] commit 
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   Frontends/lvl13.tech/index.html
+	modified:   Project/scripts/__pycache__/refresh_bitbot13.cpython-310.pyc
+	modified:   Project/scripts/__pycache__/refresh_wallstbots.cpython-310.pyc
+	modified:   final-push-20260520232140.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	FINAL-PUSH-V2.bat
+	PUSH-FINAL-FIXES.bat
+	REFRESH-DATA-NOW.bat
+	final-push-v2-result.txt
+	lvl13-tech-deploy-2026-05-20.zip
+	push-final-fixes-result.txt
+	ziDLQPLI
+
+no changes added to commit (use "git add" and/or "git commit -a")
+ 
+[3] pull --rebase --strategy-option=theirs (auto-resolve data files) 
+From https://github.com/lvl13tech/wallstbots
+ * branch            master     -> FETCH_HEAD
+Already up to date.
+ 
+[4] push 
+Everything up-to-date
+PUSH EXIT: 0 
+ 
+[5] last 5 commits 
+a0603c8 fix: signals emit canonical shape (symbol/action/upside_pct) + restore truncated app.js
+c0ac87d feat: 3-site parity pass + crypto/stocks news filter + origin_platform tracking + lvl13 SPA restored
+a7cd6dc Fix ES256 JWT auth + admin.html getToken key mismatch
+fb9c18b auto: wallstbots data refresh [2026-05-20 22:26 UTC]
+810484b auto: bitbot13 data refresh [2026-05-20 22:01 UTC]

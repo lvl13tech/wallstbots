@@ -1,0 +1,41 @@
+=== FINAL PUSH V2 LOG === 
+Wed 05/20/2026 23:23:16.35 
+ 
+[A] killing stale git processes... 
+ERROR: The process "git.exe" not found.
+ERROR: The process "git-remote-https.exe" not found.
+ 
+[B] cleaning lock + rebase state... 
+ 
+[C] current local HEAD: 
+f7ca799 feat: 3-site parity pass + crypto/stocks news filter + origin_platform tracking + lvl13 SPA restored
+ 
+[D] fetch origin... 
+From https://github.com/lvl13tech/wallstbots
+ * branch            master     -> FETCH_HEAD
+ 
+[E] remote HEAD: 
+fb9c18b auto: wallstbots data refresh [2026-05-20 22:26 UTC]
+ 
+[F] git pull --rebase --strategy-option=theirs --autostash origin master 
+From https://github.com/lvl13tech/wallstbots
+ * branch            master     -> FETCH_HEAD
+warning: in the working copy of 'final-push-20260520232140.txt', LF will be replaced by CRLF the next time Git touches it
+Created autostash: 60bf685
+Rebasing (1/2)Rebasing (2/2)Applied autostash.
+Successfully rebased and updated refs/heads/master.
+PULL EXIT: 0 
+ 
+[G] push origin master 
+To https://github.com/lvl13tech/wallstbots.git
+   fb9c18b..c0ac87d  master -> master
+PUSH EXIT: 0 
+ 
+[H] last 5 commits 
+c0ac87d feat: 3-site parity pass + crypto/stocks news filter + origin_platform tracking + lvl13 SPA restored
+a7cd6dc Fix ES256 JWT auth + admin.html getToken key mismatch
+fb9c18b auto: wallstbots data refresh [2026-05-20 22:26 UTC]
+810484b auto: bitbot13 data refresh [2026-05-20 22:01 UTC]
+faecdd7 feat: admin system, backend v2.0 (bug fixes + admin endpoints + admin.html)
+ 
+=== DONE === 
