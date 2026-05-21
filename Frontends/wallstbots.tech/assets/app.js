@@ -412,7 +412,7 @@ function renderFund(fid) {
     + '<div class="tbl-wrap"><table>'
     + '<thead><tr><th>Symbol</th><th class="num">Shares</th><th class="num">Entry</th>'
     + '<th class="num">Price</th><th class="num">Value</th><th class="num">Today</th>'
-    + '<th class="num">P&amp;L</th><th class="num">%</th></tr></thead>'
+    + '<th class="num">Total P&amp;L</th><th class="num">%</th></tr></thead>'
     + '<tbody>'+positionRows+'</tbody></table></div></div>'
     + getYoursHint('Want a '+meta.name.toLowerCase()+'-style bot on YOUR stock list?');
 }
