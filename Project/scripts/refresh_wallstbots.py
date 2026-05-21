@@ -1023,7 +1023,7 @@ def main():
 
         if fid == "bot13":
             if b13_decision == "TRADE":
-                enriched = b13_positions
+                enriched = [enrich_position(p, prices, prev_closes) for p in b13_positions]
                 cash     = 0.0
             else:
                 enriched = []
@@ -1215,8 +1215,4 @@ def main():
     if args.push:
         git_push("wallstbots.tech data refresh")
 
-    print("\n[wallstbots] ALL DONE")
-
-
-if __name__ == "__main__":
-    main()
+    print("\n[wallstbots] 

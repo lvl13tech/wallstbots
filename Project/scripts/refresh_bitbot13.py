@@ -330,8 +330,8 @@ def generate_signals(prices, prev_closes):
 
         summary[signal] += 1
         price_dp = 8 if p < 0.01 else (4 if p < 1 else 2)
-        # Emit canonical shape matching lvl13: symbol/action/upside_pct/target/score/risk/rationale/indicators
-        score   = round(pct * 5, 1)  # rough composite score
+        # Canonical shape matching lvl13: symbol/action/upside_pct/target/score/risk/rationale/indicators
+        score   = round(pct * 5, 1)
         target  = round(p * (1 + pct/100), 8 if p < 0.01 else (4 if p < 1 else 2))
         upside  = round(pct, 2)
         conf_word = "High" if abs(pct) >= 5 else ("Medium" if abs(pct) >= 2 else "Low")
@@ -348,11 +348,7 @@ def generate_signals(prices, prev_closes):
             "risk":       risk_word,
             "sector":     "CRYPTO",
             "date":       today_iso,
-            "indicators": {
-                "mom_1d":  upside,
-                "rsi_14":  None,
-                "macd_pct": None,
-            },
+            "indicators": {"mom_1d": upside, "rsi_14": None, "macd_pct": None},
         })
 
     recs.sort(key=lambda r: -abs(r["upside_pct"]))
@@ -558,7 +554,7 @@ def main():
 
         if fid == "bot13":
             if b13_decision == "TRADE":
-                enriched = b13_positions
+                enriched = [enrich_position(p, prices, prev_closes) for p in b13_positions]
                 cash     = 0.0
             else:
                 enriched = []
@@ -669,4 +665,40 @@ def main():
     wk_lb.sort(key=lambda r: -r["week_pct"])
     all_lb.sort(key=lambda r: -r["all_pct"])
 
-    # ── 7. State → write local + push to backend API ─────────────
+    # ── 7. State → write local + push to backend API ──────────────────────────
+    state_data = {
+        "starting_capital": sc_global,
+        "last_refresh":     now_iso,
+        "snapshots":        snapshots,
+        "funds":            funds_out,
+        "leaderboards":     {"week": wk_lb, "all": all_lb},
+    }
+    STATE_FILE.write_text(json.dumps({"data": state_data}, indent=2))
+    print(f"[bitbot13] ✓ state — {len(funds_out)} funds, {len(snapshots)} snapshots")
+    push_to_api("state", state_data, secrets)
+
+    # ── 8. Signals → write local + push to backend API ─────────────────────────
+    signals = generate_signals(prices, prev_closes)
+    (DATA_DIR / "signals.json").write_text(json.dumps({"data": signals}, indent=2))
+    n_sig = len(signals["recommendations"])
+    print(f"[bitbot13] ✓ signals — {n_sig} signals")
+    push_to_api("signals", signals, secrets)
+
+    # ── 9. News → fetch + push to backend API ──────────────────────────────────
+    print("[bitbot13] fetching news...")
+    news_items = fetch_news(newsapi_key)
+    news_data = {
+        "items":        news_items,
+        "sectors":      sorted({it["sector"] for it in news_items}) if news_items else [],
+        "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+    }
+    print(f"[bitbot13] ✓ news — {len(news_items)} articles")
+    push_to_api("news", news_data, secrets)
+
+    # ── Reports placeholder ─────────────────────────────────────────────────────
+    push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
+
+    # ── 10. Git push (optional — static files as backup) ───────────────────────
+    if args.push:
+        print("[bitbot13] pushing to GitHub...")
+        git_push("bitbot13.tech data
