@@ -1215,4 +1215,8 @@ def main():
     if args.push:
         git_push("wallstbots.tech data refresh")
 
-    print("\n[wallstbots] 
+    print("\n[wallstbots] ALL DONE")
+
+
+if __name__ == "__main__":
+    main()
