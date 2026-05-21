@@ -1,11 +1,11 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-05-21T17:43:18",
+    "last_refresh": "2026-05-21T17:55:31",
     "snapshots": [
       {
         "date": "2026-05-21",
-        "bot13": 54999.99,
+        "bot13": 62547.75,
         "oracle": 66663.45,
         "wizard": 48343.69,
         "equalizer": 64126.71,
@@ -22,80 +22,80 @@
         "inception": "2026-05-21",
         "starting_capital": 55000.0,
         "value": {
-          "total": 54999.99,
+          "total": 62547.75,
           "cash": 0.0,
-          "pos_val": 54999.99,
-          "pnl": -0.01,
-          "pnl_pct": -0.0,
-          "day_pnl": 6517.75,
+          "pos_val": 62547.75,
+          "pnl": 7547.75,
+          "pnl_pct": 13.72,
+          "day_pnl": 7547.77,
           "day_pct": 11.71,
           "positions": [
             {
               "symbol": "BIRK",
-              "shares": 415.029758,
-              "entry_price": 39.67,
+              "shares": 495.761141,
+              "entry_price": 33.21,
               "cost_basis": 16464.23,
               "price": 39.67,
-              "value": 16464.23,
-              "pnl": 0.0,
-              "pnl_pct": 0.0,
-              "day_pnl": 2681.09,
+              "value": 19666.84,
+              "pnl": 3202.61,
+              "pnl_pct": 19.45,
+              "day_pnl": 3202.62,
               "day_pct": 19.45,
               "stop_pct": -1.5,
               "target_pct": 3.0
             },
             {
               "symbol": "ARM",
-              "shares": 45.87731,
-              "entry_price": 298.23,
+              "shares": 53.293295,
+              "entry_price": 256.73,
               "cost_basis": 13681.99,
               "price": 298.23,
-              "value": 13681.99,
-              "pnl": 0.0,
-              "pnl_pct": 0.0,
-              "day_pnl": 1903.91,
+              "value": 15893.66,
+              "pnl": 2211.67,
+              "pnl_pct": 16.16,
+              "day_pnl": 2211.67,
               "day_pct": 16.16,
               "stop_pct": -1.5,
               "target_pct": 3.0
             },
             {
               "symbol": "SPOT",
-              "shares": 22.569824,
-              "entry_price": 489.93,
+              "shares": 25.518398,
+              "entry_price": 433.32,
               "cost_basis": 11057.63,
               "price": 489.93,
-              "value": 11057.63,
-              "pnl": 0.0,
-              "pnl_pct": 0.0,
-              "day_pnl": 1277.68,
+              "value": 12502.23,
+              "pnl": 1444.6,
+              "pnl_pct": 13.06,
+              "day_pnl": 1444.6,
               "day_pct": 13.06,
               "stop_pct": -1.5,
               "target_pct": 3.0
             },
             {
               "symbol": "ACHR",
-              "shares": 1183.326932,
-              "entry_price": 6.12,
+              "shares": 1252.934171,
+              "entry_price": 5.78,
               "cost_basis": 7241.96,
               "price": 6.12,
-              "value": 7241.96,
-              "pnl": 0.0,
-              "pnl_pct": 0.0,
-              "day_pnl": 402.33,
+              "value": 7667.96,
+              "pnl": 426.0,
+              "pnl_pct": 5.88,
+              "day_pnl": 426.0,
               "day_pct": 5.88,
               "stop_pct": -1.5,
               "target_pct": 3.0
             },
             {
               "symbol": "OKLO",
-              "shares": 100.694185,
-              "entry_price": 65.09,
+              "shares": 104.732875,
+              "entry_price": 62.58,
               "cost_basis": 6554.18,
               "price": 65.09,
-              "value": 6554.18,
-              "pnl": 0.0,
-              "pnl_pct": 0.0,
-              "day_pnl": 252.74,
+              "value": 6817.06,
+              "pnl": 262.88,
+              "pnl_pct": 4.01,
+              "day_pnl": 262.88,
               "day_pct": 4.01,
               "stop_pct": -1.5,
               "target_pct": 3.0
@@ -146,10 +146,10 @@
               "detail": "Current positions: BIRK +18.13%, SPOT +16.31%, ARM +11.74%, ACHR +3.46%, RDDT +3.44%. Breadth: 16/55 green. Monitoring for stop/target triggers. Any position through -1.5% would be exited immediately."
             },
             {
-              "time": "17:43 PM",
+              "time": "17:55 PM",
               "phase": "CLOSE",
               "action": "CLOSE \u2014 session complete",
-              "detail": "Final session positions: BIRK +19.45%, ARM +16.16%, SPOT +13.06%, ACHR +5.88%, OKLO +4.01%. Day P&L: $+6,518. Breadth: 27/55 green. All positions conceptually closed at 3:50 PM."
+              "detail": "Final session positions: BIRK +19.45%, ARM +16.16%, SPOT +13.06%, ACHR +5.88%, OKLO +4.01%. Day P&L: $+7,548. Breadth: 27/55 green. All positions conceptually closed at 3:50 PM."
             }
           ]
         },
@@ -1850,16 +1850,16 @@
           "week_grade": "A+"
         },
         {
+          "fund": "bot13",
+          "week_pnl": 7547.75,
+          "week_pct": 13.72,
+          "week_grade": "A+"
+        },
+        {
           "fund": "titan",
           "week_pnl": 4621.65,
           "week_pct": 8.4,
           "week_grade": "A+"
-        },
-        {
-          "fund": "bot13",
-          "week_pnl": -0.01,
-          "week_pct": -0.0,
-          "week_grade": "D"
         },
         {
           "fund": "wizard",
@@ -1882,16 +1882,16 @@
           "overall_grade": "A+"
         },
         {
+          "fund": "bot13",
+          "all_pnl": 7547.75,
+          "all_pct": 13.72,
+          "overall_grade": "A+"
+        },
+        {
           "fund": "titan",
           "all_pnl": 4621.65,
           "all_pct": 8.4,
           "overall_grade": "A+"
-        },
-        {
-          "fund": "bot13",
-          "all_pnl": -0.01,
-          "all_pct": -0.0,
-          "overall_grade": "C"
         },
         {
           "fund": "wizard",
