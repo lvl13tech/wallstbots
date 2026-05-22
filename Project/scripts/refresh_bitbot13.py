@@ -20,6 +20,7 @@ Dependencies:
 import argparse
 import datetime as dt
 import json
+import statistics
 import subprocess
 import sys
 from pathlib import Path
@@ -99,6 +100,24 @@ UNIVERSE_MAP = {
 
 UNIVERSE   = list(UNIVERSE_MAP.keys())
 YF_REVERSE = {v: k for k, v in UNIVERSE_MAP.items()}  # yf_sym → state_sym
+
+# ── Crypto sectors (for oracle/wizard sector-cap logic) ────────────────────────
+SECTORS = {
+    "BTC":"LAYER1",  "ETH":"LAYER1",  "BNB":"LAYER1",  "SOL":"LAYER1",
+    "XRP":"LAYER1",  "ADA":"LAYER1",  "TON":"LAYER1",  "AVAX":"LAYER1",
+    "TRX":"LAYER1",  "DOT":"LAYER1",  "NEAR":"LAYER1", "ATOM":"LAYER1",
+    "ALGO":"LAYER1", "ETC":"LAYER1",  "XLM":"LAYER1",  "EGLD":"LAYER1",
+    "FTM":"LAYER1",  "APT":"LAYER1",  "SUI":"LAYER1",  "BCH":"LAYER1",
+    "LTC":"LAYER1",  "KAS":"LAYER1",  "SEI":"LAYER1",
+    "DOGE":"MEME",   "SHIB":"MEME",   "PEPE":"MEME",   "FLOKI":"MEME",  "NOT":"MEME",
+    "UNI":"DEFI",    "AAVE":"DEFI",   "MKR":"DEFI",    "CRV":"DEFI",
+    "RUNE":"DEFI",   "INJ":"DEFI",    "PENDLE":"DEFI",
+    "ARB":"LAYER2",  "OP":"LAYER2",   "IMX":"LAYER2",  "MANTA":"LAYER2",
+    "LINK":"INFRASTRUCTURE", "GRT":"INFRASTRUCTURE",  "FIL":"INFRASTRUCTURE",
+    "ICP":"INFRASTRUCTURE",  "HBAR":"INFRASTRUCTURE", "QNT":"INFRASTRUCTURE",
+    "THETA":"INFRASTRUCTURE","VET":"INFRASTRUCTURE",
+    "TAO":"AI CRYPTO", "WLD":"AI CRYPTO", "STX":"WEB3",
+}
 
 FUND_ORDER = ["bot13", "oracle", "wizard", "equalizer", "titan"]
 
@@ -249,6 +268,274 @@ def enrich_position(pos, prices, prev_closes):
         "day_pnl":     round(day_pnl, 2),
         "day_pct":     round(day_pct, 2),
     }
+
+# ── RSI + history ─────────────────────────────────────────────────────────────
+def compute_rsi(closes, period=14):
+    """Compute RSI from a list of closes. Returns float 0-100."""
+    if len(closes) < period + 1:
+        return 50.0
+    gains, losses = [], []
+    for i in range(1, len(closes)):
+        d = closes[i] - closes[i - 1]
+        gains.append(max(d, 0))
+        losses.append(max(-d, 0))
+    avg_g = sum(gains[-period:]) / period
+    avg_l = sum(losses[-period:]) / period
+    if avg_l == 0:
+        return 100.0
+    rs = avg_g / avg_l
+    return round(100 - (100 / (1 + rs)), 1)
+
+
+def get_hist_data(state_symbols):
+    """
+    Fetch 90-day daily OHLCV history for oracle/wizard scoring.
+    Uses UNIVERSE_MAP to convert state symbols to yfinance tickers.
+    """
+    if yf is None:
+        return {}
+    print("  [yfinance] fetching 90-day history for strategy scoring...")
+    import pandas as pd
+    yf_syms = [UNIVERSE_MAP.get(s, f"{s}-USD") for s in state_symbols]
+    sym_map = {UNIVERSE_MAP.get(s, f"{s}-USD"): s for s in state_symbols}
+    hist    = {}
+    try:
+        raw = yf.download(yf_syms, period="90d", auto_adjust=True, progress=False)
+        if raw.empty:
+            return {}
+        for yf_sym in yf_syms:
+            state_sym = sym_map.get(yf_sym, yf_sym)
+            try:
+                if isinstance(raw.columns, pd.MultiIndex):
+                    closes  = [float(x) for x in raw["Close"][yf_sym].dropna().tolist()]
+                    volumes = [float(x) for x in raw["Volume"][yf_sym].dropna().tolist()]
+                else:
+                    closes  = [float(x) for x in raw["Close"].dropna().tolist()]
+                    volumes = [float(x) for x in raw["Volume"].dropna().tolist()]
+                if len(closes) >= 20:
+                    hist[state_sym] = {"closes": closes, "volumes": volumes}
+            except Exception:
+                pass
+    except Exception as e:
+        print(f"  [hist] download error: {e}")
+    print(f"  [yfinance] history loaded for {len(hist)}/{len(state_symbols)} symbols")
+    return hist
+
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ORACLE — Adaptive Weekly Momentum (Crypto)                                   ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_str):
+    """Score + select Oracle's weekly top-5 picks."""
+    scored = []
+    for sym in UNIVERSE:
+        p_now = prices.get(sym, 0)
+        if p_now <= 0:
+            continue
+        info    = hist_data.get(sym, {})
+        closes  = info.get("closes", [])
+        volumes = info.get("volumes", [])
+        if len(closes) < 21:
+            continue
+
+        p5  = closes[-5]  if len(closes) >= 5  else closes[0]
+        p20 = closes[-20] if len(closes) >= 20 else closes[0]
+
+        ret5  = (p_now / p5  - 1) * 100 if p5  > 0 else 0
+        ret20 = (p_now / p20 - 1) * 100 if p20 > 0 else 0
+
+        # Quality gate: 20d trend must be positive
+        if ret20 < 0:
+            continue
+
+        rsi = compute_rsi(closes[-15:] + [p_now])
+        if rsi > 75:
+            rsi_score = -0.5 * (rsi - 75) / 25
+        else:
+            rsi_score = (rsi - 50) / 25
+
+        if len(volumes) >= 20:
+            avg5  = sum(volumes[-5:]) / 5
+            avg20 = sum(volumes[-20:]) / 20
+            vol_r = avg5 / avg20 if avg20 > 0 else 1.0
+        else:
+            vol_r = 1.0
+
+        composite = (
+            ret5        * 0.40 +
+            ret20       * 0.30 +
+            rsi_score   * 10.0 * 0.20 +
+            (vol_r - 1) * 10.0 * 0.10
+        )
+        scored.append((sym, composite, ret5, ret20, rsi, vol_r))
+
+    if not scored:
+        return None, None, None
+
+    scored.sort(key=lambda x: -x[1])
+
+    # Select top 5 with sector cap (max 2 from same sector)
+    picks_raw    = []
+    sector_count = {}
+    for sym, score, ret5, ret20, rsi, vol_r in scored:
+        sec = SECTORS.get(sym, "OTHER")
+        if sector_count.get(sec, 0) >= 2:
+            continue
+        picks_raw.append((sym, score, ret5, ret20, rsi, vol_r))
+        sector_count[sec] = sector_count.get(sec, 0) + 1
+        if len(picks_raw) >= 5:
+            break
+
+    if not picks_raw:
+        return None, None, None
+
+    total_score = sum(s for _, s, *_ in picks_raw)
+    raw_w       = [max(0.12, min(0.35, s / total_score)) for _, s, *_ in picks_raw]
+    total_rw    = sum(raw_w)
+    weights     = [w / total_rw for w in raw_w]
+
+    positions, picks = [], []
+    for i, (sym, score, ret5, ret20, rsi, vol_r) in enumerate(picks_raw):
+        w      = weights[i]
+        alloc  = starting_capital * w
+        price  = prices.get(sym, 0)
+        shares = alloc / price if price > 0 else 0
+        price_dp = 8 if price < 0.01 else (4 if price < 1 else 2)
+        positions.append({
+            "symbol":      sym,
+            "shares":      round(shares, 6),
+            "entry_price": round(price, price_dp),
+            "cost_basis":  round(alloc, 2),
+        })
+        picks.append({
+            "symbol":    sym,
+            "weight":    round(w, 4),
+            "score":     round(score, 1),
+            "rationale": (f"{sym}: 5d {ret5:+.1f}% | 20d {ret20:+.1f}% | "
+                          f"RSI {rsi:.0f} | Vol x{vol_r:.2f}. "
+                          f"Allocated {w*100:.0f}%."),
+        })
+
+    rationale = (
+        f"Top {len(picks)} coins by composite momentum. "
+        f"Score-weighted (not equal weight). "
+        f"Sector cap enforced (max 2 per category). "
+        f"Quality gate: 20d momentum positive required."
+    )
+    return positions, picks, rationale
+
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  WIZARD — Quality Monthly Momentum (Crypto)                                   ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_str):
+    """Score + select Wizard's monthly 8-coin quality portfolio."""
+    scored = []
+    for sym in UNIVERSE:
+        p_now = prices.get(sym, 0)
+        if p_now <= 0:
+            continue
+        info   = hist_data.get(sym, {})
+        closes = info.get("closes", [])
+        if len(closes) < 61:
+            continue
+
+        p20  = closes[-20] if len(closes) >= 20 else closes[0]
+        p60  = closes[-60] if len(closes) >= 60 else closes[0]
+        ma50 = sum(closes[-50:]) / 50 if len(closes) >= 50 else p_now
+
+        ret20 = (p_now / p20 - 1) * 100 if p20 > 0 else 0
+        ret60 = (p_now / p60 - 1) * 100 if p60 > 0 else 0
+
+        # Quality gate: 60d trend must be positive
+        if ret60 < 0:
+            continue
+
+        daily_rets = [
+            (closes[i] / closes[i - 1] - 1)
+            for i in range(max(1, len(closes) - 60), len(closes))
+        ]
+        if len(daily_rets) >= 10:
+            std_daily    = statistics.stdev(daily_rets) * 100
+            mean_daily   = (sum(daily_rets) / len(daily_rets)) * 100
+            sharpe_proxy = mean_daily / std_daily if std_daily > 0 else 0
+        else:
+            sharpe_proxy = 0
+
+        dist_ma50 = (p_now / ma50 - 1) * 100 if ma50 > 0 else 0
+
+        score = (
+            ret20        * 0.35 +
+            ret60        * 0.35 +
+            sharpe_proxy * 20   * 0.20 +
+            dist_ma50           * 0.10
+        )
+        scored.append((sym, score, ret20, ret60, sharpe_proxy, dist_ma50))
+
+    if not scored:
+        return None, None, None
+
+    scored.sort(key=lambda x: -x[1])
+
+    picks_raw    = []
+    sector_count = {}
+    for sym, score, ret20, ret60, sharpe, dist in scored:
+        sec = SECTORS.get(sym, "OTHER")
+        if sector_count.get(sec, 0) >= 3:
+            continue
+        picks_raw.append((sym, score, ret20, ret60, sharpe, dist))
+        sector_count[sec] = sector_count.get(sec, 0) + 1
+        if len(picks_raw) >= 8:
+            break
+
+    if not picks_raw:
+        return None, None, None
+
+    n      = len(picks_raw)
+    q1_cut = max(1, round(n * 0.25))
+    q3_cut = max(q1_cut + 1, round(n * 0.75))
+
+    raw_w = []
+    for i in range(n):
+        if i < q1_cut:   raw_w.append(3.0)
+        elif i < q3_cut: raw_w.append(1.8)
+        else:            raw_w.append(1.0)
+
+    total_rw = sum(raw_w)
+    weights  = [w / total_rw for w in raw_w]
+
+    positions, picks = [], []
+    for i, (sym, score, ret20, ret60, sharpe, dist) in enumerate(picks_raw):
+        w      = weights[i]
+        alloc  = starting_capital * w
+        price  = prices.get(sym, 0)
+        shares = alloc / price if price > 0 else 0
+        price_dp = 8 if price < 0.01 else (4 if price < 1 else 2)
+        positions.append({
+            "symbol":      sym,
+            "shares":      round(shares, 6),
+            "entry_price": round(price, price_dp),
+            "cost_basis":  round(alloc, 2),
+        })
+        picks.append({
+            "symbol":    sym,
+            "weight":    round(w, 4),
+            "score":     round(score, 1),
+            "rationale": (f"{sym}: 20d {ret20:+.1f}% | 60d {ret60:+.1f}% | "
+                          f"Sharpe {sharpe:.2f} | {dist:+.1f}% vs 50d MA. "
+                          f"Allocated {w*100:.0f}%."),
+        })
+
+    rationale = (
+        f"Top {len(picks)} quality coins for the month. "
+        f"Quartile-weighted (top coins get largest allocation). "
+        f"60d quality filter applied — no negative long-term trends. "
+        f"Sector cap enforced. Stop flag at -12% intra-month."
+    )
+    return positions, picks, rationale
+
 
 # ── BOT13 crypto daily decision ────────────────────────────────────────────────
 def run_bot13_decision(prices, prev_closes, starting_capital):
@@ -500,22 +787,19 @@ def git_push(msg):
                         "-m", f"auto: {msg} [{dt.datetime.now().strftime('%Y-%m-%d %H:%M')}]"],
                        check=True)
         subprocess.run(["git", "-C", str(git_root), "push"], check=True)
-        print("[git] pushed to GitHub OK")
+        print(f"[git] pushed: {msg}")
     except subprocess.CalledProcessError as e:
         print(f"[git] push failed: {e}")
 
-# ── Main ───────────────────────────────────────────────────────────────────────
+
 def main():
-    parser = argparse.ArgumentParser(description="Refresh bitbot13.tech static data files")
-    parser.add_argument("--push", action="store_true",
-                        help="Git commit + push after writing (triggers Cloudflare Pages redeploy)")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--push", action="store_true")
     args = parser.parse_args()
 
     secrets     = load_secrets()
-    # GitHub Actions passes NEWSAPI_KEY as an env var; secrets.json is for local runs
     newsapi_key = secrets.get("newsapi_key") or os.environ.get("NEWSAPI_KEY", "")
 
-    # ── 1. Load seed state ──────────────────────────────────────────────────────
     print("[bitbot13] loading state.json...")
     raw        = json.loads(STATE_FILE.read_text())
     state_data = raw.get("data", raw)
@@ -523,7 +807,16 @@ def main():
     snapshots  = list(state_data.get("snapshots", []))
     sc_global  = float(state_data.get("starting_capital") or 50000)
 
-    # ── 2. Fetch live prices ────────────────────────────────────────────────────
+    today      = dt.date.today()
+    today_iso  = today.isoformat()
+    now_iso    = dt.datetime.now().isoformat(timespec="seconds")
+    week_str   = today.isocalendar()[0:2].__str__()
+    month_str  = today.strftime("%Y-%m")
+
+    is_monday      = today.weekday() == 0
+    is_month_start = today.day <= 3
+
+    # -- Fetch live prices -------------------------------------------------------
     need_syms = set(UNIVERSE)
     for fid, fund in funds.items():
         for pos in fund.get("value", {}).get("positions", []):
@@ -531,33 +824,60 @@ def main():
             if s:
                 need_syms.add(s)
 
-    print(f"[bitbot13] fetching prices for {len(need_syms)} coins...")
+    print(f"[bitbot13] fetching prices for {len(need_syms)} symbols...")
     prices, prev_closes = get_live_prices(sorted(need_syms))
-
     if not prices:
-        print("[bitbot13] WARNING: zero prices returned — positions will not update but continuing.")
+        print("[bitbot13] WARNING: zero prices returned -- positions will not update but continuing.")
 
-    today_iso = dt.date.today().isoformat()
-    now_iso   = dt.datetime.now().isoformat(timespec="seconds")
-    today     = dt.date.today()
+    # -- Fetch historical data for oracle/wizard scoring -------------------------
+    hist_data = get_hist_data(sorted(need_syms))
 
-    # ── 3. BOT13 daily decision ─────────────────────────────────────────────────
+    # -- BOT13 decision ----------------------------------------------------------
     print("[bitbot13] running BOT13 decision...")
-    # Use fund's current running total so gains compound day-over-day
     prev_b13_total = float(funds.get("bot13", {}).get("value", {}).get("total") or sc_global)
-    # Respect inception date: do not trade before bot13's inception day
-    b13_inception = funds.get("bot13", {}).get("inception", today_iso)
+    b13_inception  = funds.get("bot13", {}).get("inception", today_iso)
     if b13_inception > today_iso:
         b13_decision, b13_positions, b13_picks = "HOLD", [], []
-        prev_b13_total = sc_global  # reset to SC so tomorrow starts clean
+        prev_b13_total = sc_global
         print(f"  BOT13: HOLD (pre-inception, starts {b13_inception})")
     else:
-        b13_decision, b13_positions, b13_picks = run_bot13_decision(prices, prev_closes, prev_b13_total)
+        b13_decision, b13_positions, b13_picks = run_bot13_decision(
+            prices, prev_closes, prev_b13_total
+        )
         print(f"  BOT13: {b13_decision} ({len(b13_picks)} picks)")
 
-    # ── 4. Enrich all fund positions ────────────────────────────────────────────
+    # -- ORACLE decision (Monday only) -------------------------------------------
+    oracle_new_positions = None
+    oracle_new_picks     = None
+    oracle_new_rationale = None
+    if is_monday and hist_data:
+        print("[bitbot13] Monday -- running ORACLE recompute...")
+        oracle_new_positions, oracle_new_picks, oracle_new_rationale = run_oracle_decision(
+            prices, prev_closes, hist_data, sc_global, week_str
+        )
+        if oracle_new_picks:
+            print(f"  ORACLE: {len(oracle_new_picks)} new picks")
+        else:
+            print("  ORACLE: scoring returned no picks -- keeping existing")
+
+    # -- WIZARD decision (month start only) --------------------------------------
+    wizard_new_positions = None
+    wizard_new_picks     = None
+    wizard_new_rationale = None
+    if is_month_start and hist_data:
+        print(f"[bitbot13] Month start ({today_iso}) -- running WIZARD recompute...")
+        wizard_new_positions, wizard_new_picks, wizard_new_rationale = run_wizard_decision(
+            prices, prev_closes, hist_data, sc_global, month_str
+        )
+        if wizard_new_picks:
+            print(f"  WIZARD: {len(wizard_new_picks)} new picks")
+        else:
+            print("  WIZARD: scoring returned no picks -- keeping existing")
+
+    # -- Enrich all fund positions -----------------------------------------------
     print("[bitbot13] enriching positions...")
-    funds_out = {}
+    FUND_ORDER = ["bot13", "oracle", "wizard", "equalizer", "titan"]
+    funds_out  = {}
 
     for fid in FUND_ORDER:
         fund = funds.get(fid)
@@ -577,58 +897,107 @@ def main():
                 enriched  = []
                 pnl       = 0.0
                 pos_val   = 0.0
-                sum_cost  = sc
-                total     = sc
-                cash      = sc
+                sum_cost  = prev_b13_total
+                total     = prev_b13_total
+                cash      = prev_b13_total
 
             pnl_pct = (pnl / sum_cost * 100) if sum_cost else 0
             day_pnl = pnl
             day_pct = pnl_pct
 
-            value = {
-                "total":     round(total, 2),
-                "cash":      round(cash, 2),
-                "pos_val":   round(pos_val, 2),
-                "pnl":       round(pnl, 2),
-                "pnl_pct":   round(pnl_pct, 2),
-                "day_pnl":   round(day_pnl, 2),
-                "day_pct":   round(day_pct, 2),
-                "positions": enriched,
-            }
+            value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
+                        "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
+                        "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2), "positions": enriched}
             strategy = {
-                "day":       today_iso,
-                "decision":  b13_decision,
-                "rationale": ("Going all-in on today's top 24h momentum names."
-                              if b13_decision == "TRADE"
-                              else "No positive momentum detected — sitting in cash."),
-                "picks": b13_picks,
+                "day":      today_iso,
+                "decision": b13_decision,
+                "picks":    b13_picks,
             }
 
-        else:
-            raw_pos  = fund.get("value", {}).get("positions", [])
-            # On inception day, reset entry prices to prev_close so pnl starts at 0
+        elif fid == "oracle":
+            if oracle_new_positions:
+                fund_copy = dict(fund)
+                fund_copy["value"] = dict(fund.get("value", {}))
+                fund_copy["value"]["positions"] = oracle_new_positions
+                fund = fund_copy
+                strategy = {
+                    "week":      today_iso,
+                    "decision":  "TRADE",
+                    "rationale": oracle_new_rationale,
+                    "picks":     oracle_new_picks,
+                }
+            else:
+                strategy = fund.get("current_strategy")
+
+            raw_pos = fund.get("value", {}).get("positions", [])
             if fund.get("inception") == today_iso:
                 raw_pos = [{**p, "entry_price": prev_closes.get(p["symbol"], p.get("entry_price", 0))}
                            if prev_closes.get(p["symbol"], 0) > 0 else p for p in raw_pos]
             enriched = [enrich_position(p, prices, prev_closes) for p in raw_pos]
             pos_val  = sum(p["value"]   for p in enriched)
-            pnl      = sum(p["pnl"]     for p in enriched)   # always matches table sum
-            total    = sc + pnl                               # true economic value
-            cash     = max(0.0, total - pos_val)              # undeployed capital, never negative
+            pnl      = sum(p["pnl"]     for p in enriched)
+            total    = sc + pnl
+            cash     = max(0.0, total - pos_val)
             pnl_pct  = (pnl / sc * 100) if sc else 0
             day_pnl  = sum(p["day_pnl"] for p in enriched)
             day_pct  = (day_pnl / (total - day_pnl)) * 100 if (total - day_pnl) else 0
+            value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
+                        "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
+                        "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2), "positions": enriched}
 
-            value = {
-                "total":     round(total, 2),
-                "cash":      round(cash, 2),
-                "pos_val":   round(pos_val, 2),
-                "pnl":       round(pnl, 2),
-                "pnl_pct":   round(pnl_pct, 2),
-                "day_pnl":   round(day_pnl, 2),
-                "day_pct":   round(day_pct, 2),
-                "positions": enriched,
-            }
+        elif fid == "wizard":
+            if wizard_new_positions:
+                fund_copy = dict(fund)
+                fund_copy["value"] = dict(fund.get("value", {}))
+                fund_copy["value"]["positions"] = wizard_new_positions
+                fund = fund_copy
+                strategy = {
+                    "month":     month_str,
+                    "decision":  "TRADE",
+                    "rationale": wizard_new_rationale,
+                    "picks":     wizard_new_picks,
+                }
+            else:
+                strategy = fund.get("current_strategy")
+
+            raw_pos = fund.get("value", {}).get("positions", [])
+            if fund.get("inception") == today_iso:
+                raw_pos = [{**p, "entry_price": prev_closes.get(p["symbol"], p.get("entry_price", 0))}
+                           if prev_closes.get(p["symbol"], 0) > 0 else p for p in raw_pos]
+            enriched = []
+            for p in raw_pos:
+                ep = enrich_position(p, prices, prev_closes)
+                if ep["pnl_pct"] < -12.0:
+                    ep["stop_triggered"] = True
+                enriched.append(ep)
+            pos_val  = sum(p["value"]   for p in enriched)
+            pnl      = sum(p["pnl"]     for p in enriched)
+            total    = sc + pnl
+            cash     = max(0.0, total - pos_val)
+            pnl_pct  = (pnl / sc * 100) if sc else 0
+            day_pnl  = sum(p["day_pnl"] for p in enriched)
+            day_pct  = (day_pnl / (total - day_pnl)) * 100 if (total - day_pnl) else 0
+            value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
+                        "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
+                        "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2), "positions": enriched}
+
+        else:
+            # Equalizer + Titan -- mark-to-market only
+            raw_pos = fund.get("value", {}).get("positions", [])
+            if fund.get("inception") == today_iso:
+                raw_pos = [{**p, "entry_price": prev_closes.get(p["symbol"], p.get("entry_price", 0))}
+                           if prev_closes.get(p["symbol"], 0) > 0 else p for p in raw_pos]
+            enriched = [enrich_position(p, prices, prev_closes) for p in raw_pos]
+            pos_val  = sum(p["value"]   for p in enriched)
+            pnl      = sum(p["pnl"]     for p in enriched)
+            total    = sc + pnl
+            cash     = max(0.0, total - pos_val)
+            pnl_pct  = (pnl / sc * 100) if sc else 0
+            day_pnl  = sum(p["day_pnl"] for p in enriched)
+            day_pct  = (day_pnl / (total - day_pnl)) * 100 if (total - day_pnl) else 0
+            value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
+                        "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
+                        "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2), "positions": enriched}
             strategy = fund.get("current_strategy")
 
         funds_out[fid] = {
@@ -646,7 +1015,7 @@ def main():
             "per_rest_dollars": fund.get("per_rest_dollars"),
         }
 
-    # ── 5. Snapshots ────────────────────────────────────────────────────────────
+    # -- Snapshots ---------------------------------------------------------------
     today_snap = {"date": today_iso}
     for fid in FUND_ORDER:
         if fid in funds_out:
@@ -656,7 +1025,7 @@ def main():
     snapshots.sort(key=lambda s: s.get("date", ""))
     snapshots = snapshots[-90:]
 
-    # ── 6. Leaderboards ─────────────────────────────────────────────────────────
+    # -- Leaderboards ------------------------------------------------------------
     week_start = today - dt.timedelta(days=today.weekday())
     week_cands = [s for s in snapshots if s.get("date", "") <= week_start.isoformat()]
     week_snap  = week_cands[-1] if week_cands else None
@@ -670,23 +1039,13 @@ def main():
         sv  = (week_snap or {}).get(fid, sc)
         wp  = v["total"] - sv
         wpc = (v["total"] / sv - 1) * 100 if sv else 0
-        wk_lb.append({
-            "fund":       fid,
-            "week_pnl":   round(wp, 2),
-            "week_pct":   round(wpc, 2),
-            "week_grade": grade(wpc),
-        })
-        all_lb.append({
-            "fund":          fid,
-            "all_pnl":       v["pnl"],
-            "all_pct":       v["pnl_pct"],
-            "overall_grade": grade_overall(v["pnl_pct"],
-                                           funds_out[fid].get("inception", today_iso), today),
-        })
+        wk_lb.append({"fund": fid, "week_pnl": round(wp,2), "week_pct": round(wpc,2), "week_grade": grade(wpc)})
+        all_lb.append({"fund": fid, "all_pnl": v["pnl"], "all_pct": v["pnl_pct"],
+                        "overall_grade": grade_overall(v["pnl_pct"], funds_out[fid].get("inception", today_iso), today)})
     wk_lb.sort(key=lambda r: -r["week_pct"])
     all_lb.sort(key=lambda r: -r["all_pct"])
 
-    # ── 7. State → write local + push to backend API ──────────────────────────
+    # -- Build and write state.json ----------------------------------------------
     state_data = {
         "starting_capital": sc_global,
         "last_refresh":     now_iso,
@@ -695,34 +1054,35 @@ def main():
         "leaderboards":     {"week": wk_lb, "all": all_lb},
     }
     STATE_FILE.write_text(json.dumps({"data": state_data}, indent=2))
-    print(f"[bitbot13] state OK — {len(funds_out)} funds, {len(snapshots)} snapshots")
+    print(f"[bitbot13] state -- {len(funds_out)} funds, {len(snapshots)} snapshots")
     push_to_api("state", state_data, secrets)
 
-    # ── 8. Signals → write local + push to backend API ─────────────────────────
-    signals = generate_signals(prices, prev_closes)
-    (DATA_DIR / "signals.json").write_text(json.dumps({"data": signals}, indent=2))
-    n_sig = len(signals["recommendations"])
-    print(f"[bitbot13] signals OK — {n_sig} signals")
-    push_to_api("signals", signals, secrets)
+    # -- Signals -----------------------------------------------------------------
+    signals      = generate_signals(prices, prev_closes)
+    signals_data = signals
+    (DATA_DIR / "signals.json").write_text(json.dumps({"data": signals_data}, indent=2))
+    print(f"[bitbot13] signals -- {len(signals['recommendations'])} signals")
+    push_to_api("signals", signals_data, secrets)
 
-    # ── 9. News → fetch + push to backend API ──────────────────────────────────
+    # -- News --------------------------------------------------------------------
     print("[bitbot13] fetching news...")
     news_items = fetch_news(newsapi_key)
-    news_data = {
+    news_data  = {
         "items":        news_items,
         "sectors":      sorted({it["sector"] for it in news_items}) if news_items else [],
         "generated_at": dt.datetime.utcnow().isoformat() + "Z",
     }
-    print(f"[bitbot13] news OK — {len(news_items)} articles")
+    print(f"[bitbot13] news -- {len(news_items)} articles")
     push_to_api("news", news_data, secrets)
 
-    # ── Reports placeholder ─────────────────────────────────────────────────────
+    # -- Reports -----------------------------------------------------------------
     push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
 
-    # ── 10. Git push (optional — static files as backup) ───────────────────────
+    # -- Git push (optional) -----------------------------------------------------
     if args.push:
-        print("[bitbot13] pushing to GitHub...")
         git_push("bitbot13.tech data refresh")
+
+    print("\n[bitbot13] ALL DONE")
 
 
 if __name__ == "__main__":
