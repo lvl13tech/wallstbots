@@ -1,0 +1,51 @@
+=== REFRESH WALLSTBOTS === 
+Fri 05/22/2026 18:05:16.19 
+ 
+[1] running refresh_wallstbots.py ... 
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_wallstbots.py:109: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now_utc = dt.datetime.utcnow()
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_wallstbots.py:843: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  from_date = (dt.datetime.utcnow() - dt.timedelta(days=3)).strftime("%Y-%m-%d")
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_wallstbots.py:1271: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+[wallstbots] loading state.json...
+[wallstbots] fetching prices for 55 symbols...
+  [yfinance] fetching 55 tickers (live prices)...
+  [yfinance] got 55/55 prices
+  [yfinance] fetching 90-day history for strategy scoring...
+  [yfinance] history loaded for 55/55 symbols
+[wallstbots] running BOT13 decision (phase: close)...
+  BOT13: TRADE (5 picks)
+[wallstbots] enriching positions...
+[wallstbots] state — 5 funds, 1 snapshots
+  [push:state] OK pushed to backend API
+[wallstbots] signals — 55 signals
+  [push:signals] OK pushed to backend API
+[wallstbots] fetching news...
+  [news] AI & Quantum: 10 articles
+  [news] Biotech: 4 articles
+  [news] Energy: 8 articles (1 crypto-filtered)
+  [news] Defense: 10 articles
+  [news] Finance: 4 articles
+  [news] Tech & Comms: 5 articles
+  [news] Industrials: 8 articles
+  [news] fetched 30 total stock-market articles
+[wallstbots] news — 30 articles
+  [push:news] OK pushed to backend API
+  [push:reports] OK pushed to backend API
+
+[wallstbots] ALL DONE
+    exit: 0 
+ 
+[2] committing and pushing to GitHub ... 
+[master 38215be] wallstbots refresh Î“Ã‡Ã¶ fix bot13 inception 2026-05-22
+ 2 files changed, 224 insertions(+), 115 deletions(-)
+From https://github.com/lvl13tech/wallstbots
+ * branch            master     -> FETCH_HEAD
+Already up to date.
+To https://github.com/lvl13tech/wallstbots.git
+   f2c1056..38215be  master -> master
+    push OK 
+ 
+=== DONE === 
+Fri 05/22/2026 18:05:28.20 

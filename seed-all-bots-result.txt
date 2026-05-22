@@ -1,0 +1,108 @@
+=== SEED ALL BOTS === 
+Fri 05/22/2026 18:02:01.38 
+Seeds ORACLE/WIZARD/EQUALIZER/TITAN on first run 
+ 
+[1] refreshing wallstbots (seeds ORACLE/WIZARD/EQUALIZER/TITAN) ... 
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_wallstbots.py:109: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now_utc = dt.datetime.utcnow()
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_wallstbots.py:843: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  from_date = (dt.datetime.utcnow() - dt.timedelta(days=3)).strftime("%Y-%m-%d")
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_wallstbots.py:1271: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+[wallstbots] loading state.json...
+[wallstbots] fetching prices for 55 symbols...
+  [yfinance] fetching 55 tickers (live prices)...
+  [yfinance] got 55/55 prices
+  [yfinance] fetching 90-day history for strategy scoring...
+  [yfinance] history loaded for 55/55 symbols
+[wallstbots] running BOT13 decision (phase: close)...
+  BOT13: HOLD (pre-inception, starts 2026-05-23)
+[wallstbots] first run — running ORACLE recompute...
+  ORACLE: 5 new picks
+[wallstbots] first run (2026-05-22) — running WIZARD recompute...
+  WIZARD: 8 new picks
+[wallstbots] enriching positions...
+  EQUALIZER: seeded 55 positions at $1000/stock
+  TITAN: seeded 55 positions (top10 $2750 / rest $611)
+[wallstbots] state — 5 funds, 1 snapshots
+  [push:state] OK pushed to backend API
+[wallstbots] signals — 55 signals
+  [push:signals] OK pushed to backend API
+[wallstbots] fetching news...
+  [news] AI & Quantum: 10 articles
+  [news] Biotech: 4 articles
+  [news] Energy: 8 articles (1 crypto-filtered)
+  [news] Defense: 10 articles
+  [news] Finance: 4 articles
+  [news] Tech & Comms: 5 articles
+  [news] Industrials: 8 articles
+  [news] fetched 30 total stock-market articles
+[wallstbots] news — 30 articles
+  [push:news] OK pushed to backend API
+  [push:reports] OK pushed to backend API
+
+[wallstbots] ALL DONE
+    wallstbots exit: 0 
+ 
+[2] refreshing bitbot13 (seeds ORACLE/WIZARD/EQUALIZER/TITAN) ... 
+$MATIC-USD: possibly delisted; no price data found  (period=2d)
+
+1 Failed download:
+['MATIC-USD']: possibly delisted; no price data found  (period=2d)
+$MATIC-USD: possibly delisted; no price data found  (period=90d)
+
+1 Failed download:
+['MATIC-USD']: possibly delisted; no price data found  (period=90d)
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_bitbot13.py:701: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  from_date = (dt.datetime.utcnow() - dt.timedelta(days=3)).strftime("%Y-%m-%d")
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_bitbot13.py:1114: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+[bitbot13] loading state.json...
+[bitbot13] fetching prices for 50 symbols...
+  [yfinance] fetching 50 crypto tickers...
+  [coingecko] falling back for 1 missing coins...
+  [coingecko] filled 0 coins
+  [yfinance] got 49/50 prices
+  [yfinance] fetching 90-day history for strategy scoring...
+  [yfinance] history loaded for 49/50 symbols
+[bitbot13] running BOT13 decision...
+  BOT13: TRADE (5 picks)
+[bitbot13] first run -- running ORACLE recompute...
+  ORACLE: 5 new picks
+[bitbot13] first run (2026-05-22) -- running WIZARD recompute...
+  WIZARD: 8 new picks
+[bitbot13] enriching positions...
+  EQUALIZER: seeded 49 positions at $1000/coin
+  TITAN: seeded 49 positions (top10 $2500 / rest $625)
+[bitbot13] state -- 5 funds, 1 snapshots
+  [push:state] OK pushed to backend API
+[bitbot13] signals -- 49 signals
+  [push:signals] OK pushed to backend API
+[bitbot13] fetching news...
+  [news] Bitcoin: 8 articles (2 off-topic filtered)
+  [news] Ethereum: 9 articles (1 off-topic filtered)
+  [news] Altcoins: 7 articles
+  [news] DeFi: 3 articles (1 off-topic filtered)
+  [news] Regulation: 6 articles (2 off-topic filtered)
+  [news] Blockchain: 4 articles
+  [news] fetched 30 total crypto articles
+[bitbot13] news -- 30 articles
+  [push:news] OK pushed to backend API
+  [push:reports] OK pushed to backend API
+
+[bitbot13] ALL DONE
+    bitbot13 exit: 0 
+ 
+[3] committing and pushing to GitHub ... 
+warning: in the working copy of 'Project/scripts/refresh_wallstbots.py', LF will be replaced by CRLF the next time Git touches it
+[master f2c1056] seed all bots: ORACLE/WIZARD/EQUALIZER/TITAN first-run logic + header count fix
+ 8 files changed, 3833 insertions(+), 956 deletions(-)
+From https://github.com/lvl13tech/wallstbots
+ * branch            master     -> FETCH_HEAD
+Already up to date.
+To https://github.com/lvl13tech/wallstbots.git
+   3480db1..f2c1056  master -> master
+    push OK 
+ 
+=== DONE === 
+Fri 05/22/2026 18:02:23.57 

@@ -1,0 +1,115 @@
+=== FIX INCEPTION DATES === 
+Fri 05/22/2026 17:35:50.48 
+ 
+[1] patching inception dates 2026-05-23 â†’ 2026-05-22 ... 
+
+=== wallstbots ===
+  bot13: 2026-05-23 -> 2026-05-22
+  titan: 2026-05-23 -> 2026-05-22
+  oracle: 2026-05-23 -> 2026-05-22
+  wizard: 2026-05-23 -> 2026-05-22
+  equalizer: 2026-05-23 -> 2026-05-22
+  pushed at 2026-05-22 21:35:50.034090+00:00 — OK
+
+=== bitbot13 ===
+  bot13: 2026-05-23 -> 2026-05-22
+  titan: 2026-05-23 -> 2026-05-22
+  oracle: 2026-05-23 -> 2026-05-22
+  wizard: 2026-05-23 -> 2026-05-22
+  equalizer: 2026-05-23 -> 2026-05-22
+  pushed at 2026-05-22 21:35:50.355025+00:00 — OK
+
+=== DONE ===
+Inception dates updated to 2026-05-22 on all platforms. Run refresh next.
+Run the refresh script next to re-process today's signals with the corrected dates.
+    patch done 
+ 
+[2] refreshing wallstbots data ... 
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_wallstbots.py:109: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now_utc = dt.datetime.utcnow()
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_wallstbots.py:843: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  from_date = (dt.datetime.utcnow() - dt.timedelta(days=3)).strftime("%Y-%m-%d")
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_wallstbots.py:1236: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+[wallstbots] loading state.json...
+[wallstbots] fetching prices for 55 symbols...
+  [yfinance] fetching 55 tickers (live prices)...
+  [yfinance] got 55/55 prices
+  [yfinance] fetching 90-day history for strategy scoring...
+  [yfinance] history loaded for 55/55 symbols
+[wallstbots] running BOT13 decision (phase: close)...
+  BOT13: TRADE (5 picks)
+[wallstbots] enriching positions...
+[wallstbots] state — 5 funds, 1 snapshots
+  [push:state] OK pushed to backend API
+[wallstbots] signals — 55 signals
+  [push:signals] OK pushed to backend API
+[wallstbots] fetching news...
+  [news] AI & Quantum: 10 articles
+  [news] Biotech: 4 articles
+  [news] Energy: 8 articles (1 crypto-filtered)
+  [news] Defense: 10 articles
+  [news] Finance: 4 articles
+  [news] Tech & Comms: 5 articles
+  [news] Industrials: 8 articles
+  [news] fetched 30 total stock-market articles
+[wallstbots] news — 30 articles
+  [push:news] OK pushed to backend API
+  [push:reports] OK pushed to backend API
+
+[wallstbots] ALL DONE
+    wallstbots refresh exit: 0 
+ 
+[3] refreshing bitbot13 data ... 
+$TAO-USD: possibly delisted; no price data found  (period=2d)
+$STX-USD: possibly delisted; no price data found  (period=2d)
+$FTM-USD: possibly delisted; no price data found  (period=2d)
+$GRT-USD: possibly delisted; no price data found  (period=2d)
+$IMX-USD: possibly delisted; no price data found  (period=2d)
+
+5 Failed downloads:
+['TAO-USD', 'STX-USD', 'FTM-USD', 'GRT-USD', 'IMX-USD']: possibly delisted; no price data found  (period=2d)
+$TAO-USD: possibly delisted; no price data found  (period=90d)
+$STX-USD: possibly delisted; no price data found  (period=90d)
+$FTM-USD: possibly delisted; no price data found  (period=90d)
+$GRT-USD: possibly delisted; no price data found  (period=90d)
+$IMX-USD: possibly delisted; no price data found  (period=90d)
+
+5 Failed downloads:
+['TAO-USD', 'STX-USD', 'FTM-USD', 'GRT-USD', 'IMX-USD']: possibly delisted; no price data found  (period=90d)
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_bitbot13.py:698: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  from_date = (dt.datetime.utcnow() - dt.timedelta(days=3)).strftime("%Y-%m-%d")
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Project\scripts\refresh_bitbot13.py:1073: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+[bitbot13] loading state.json...
+[bitbot13] fetching prices for 50 symbols...
+  [yfinance] fetching 50 crypto tickers...
+  [coingecko] falling back for 5 missing coins...
+  [coingecko] filled 5 coins
+  [yfinance] got 50/50 prices
+  [yfinance] fetching 90-day history for strategy scoring...
+  [yfinance] history loaded for 45/50 symbols
+[bitbot13] running BOT13 decision...
+  BOT13: TRADE (5 picks)
+[bitbot13] enriching positions...
+[bitbot13] state -- 5 funds, 1 snapshots
+  [push:state] OK pushed to backend API
+[bitbot13] signals -- 50 signals
+  [push:signals] OK pushed to backend API
+[bitbot13] fetching news...
+  [news] Bitcoin: 7 articles (3 off-topic filtered)
+  [news] Ethereum: 9 articles (1 off-topic filtered)
+  [news] Altcoins: 6 articles
+  [news] DeFi: 3 articles (1 off-topic filtered)
+  [news] Regulation: 6 articles (2 off-topic filtered)
+  [news] Blockchain: 2 articles
+  [news] fetched 30 total crypto articles
+[bitbot13] news -- 30 articles
+  [push:news] OK pushed to backend API
+  [push:reports] OK pushed to backend API
+
+[bitbot13] ALL DONE
+    bitbot13 refresh exit: 0 
+ 
+=== DONE === 
+Fri 05/22/2026 17:36:09.94 

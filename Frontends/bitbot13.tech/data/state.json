@@ -13,7 +13,7 @@
       },
       {
         "date": "2026-05-22",
-        "bot13": 85137.3,
+        "bot13": 50000.0,
         "oracle": 51990.06,
         "wizard": 50254.15,
         "equalizer": 49192.53,
@@ -30,76 +30,15 @@
         "inception": "2026-05-22",
         "starting_capital": 50000.0,
         "value": {
-          "total": 85137.3,
-          "cash": 0.0,
-          "pos_val": 85137.29,
-          "pnl": 35137.3,
-          "pnl_pct": 70.27,
-          "day_pnl": 35137.3,
-          "day_pct": 70.27,
+          "total": 50000.0,
+          "cash": 50000.0,
+          "pos_val": 0.0,
+          "pnl": 0.0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0.0,
+          "day_pct": 0.0,
           "day_open": 50000.0,
-          "positions": [
-            {
-              "symbol": "NEAR",
-              "shares": 8401.232123,
-              "entry_price": 1.92,
-              "cost_basis": 16130.37,
-              "price": 2.09,
-              "value": 17592.18,
-              "pnl": 1461.82,
-              "pnl_pct": 9.06,
-              "day_pnl": 1440.06,
-              "day_pct": 8.92
-            },
-            {
-              "symbol": "QNT",
-              "shares": 219.69032,
-              "entry_price": 73.52,
-              "cost_basis": 16151.63,
-              "price": 78.2,
-              "value": 17179.78,
-              "pnl": 1028.15,
-              "pnl_pct": 6.37,
-              "day_pnl": 1027.67,
-              "day_pct": 6.36
-            },
-            {
-              "symbol": "WLD",
-              "shares": 60176.132979,
-              "entry_price": 0.2684,
-              "cost_basis": 16151.27,
-              "price": 0.282,
-              "value": 16969.67,
-              "pnl": 818.4,
-              "pnl_pct": 5.07,
-              "day_pnl": 817.55,
-              "day_pct": 5.06
-            },
-            {
-              "symbol": "FET",
-              "shares": 83471.73974,
-              "entry_price": 0.1935,
-              "cost_basis": 16151.78,
-              "price": 0.2017,
-              "value": 16836.25,
-              "pnl": 684.47,
-              "pnl_pct": 4.24,
-              "day_pnl": 684.13,
-              "day_pct": 4.24
-            },
-            {
-              "symbol": "INJ",
-              "shares": 3074.528488,
-              "entry_price": 5.25,
-              "cost_basis": 16141.27,
-              "price": 5.39,
-              "value": 16559.41,
-              "pnl": 418.14,
-              "pnl_pct": 2.59,
-              "day_pnl": 407.29,
-              "day_pct": 2.52
-            }
-          ]
+          "positions": []
         },
         "current_strategy": {
           "day": "2026-05-22",

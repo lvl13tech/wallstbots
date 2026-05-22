@@ -997,13 +997,27 @@ def main():
     )
     # Respect inception date: do not trade before bot13's inception day
     b13_inception = funds.get("bot13", {}).get("inception", today_iso)
+    # Guard: if positions already exist for today, just re-price — don't create new ones
+    same_day_trade = (
+        (prev_b13_strategy or {}).get("day") == today_iso
+        and (prev_b13_strategy or {}).get("decision") == "TRADE"
+        and bool(funds.get("bot13", {}).get("value", {}).get("positions"))
+    )
     if b13_inception > today_iso:
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log = "HOLD", [], [], "Pre-inception hold", []
         prev_b13_total = sc_global  # reset to SC so tomorrow starts clean
         print(f"  BOT13: HOLD (pre-inception, starts {b13_inception})")
+    elif same_day_trade:
+        # Re-use existing positions — only re-price, don't resize
+        b13_positions = funds.get("bot13", {}).get("value", {}).get("positions", [])
+        b13_decision  = "TRADE"
+        b13_picks     = (prev_b13_strategy or {}).get("picks", [])
+        b13_rationale = (prev_b13_strategy or {}).get("rationale", "")
+        b13_log       = (prev_b13_strategy or {}).get("session_log", [])
+        print(f"  BOT13: same-day re-price ({len(b13_positions)} existing positions)")
     else:
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log = run_bot13_decision(
-            prices, prev_closes, prev_b13_total, today_iso, prev_b13_strategy
+            prices, prev_closes, b13_day_open, today_iso, prev_b13_strategy
         )
         print(f"  BOT13: {b13_decision} ({len(b13_picks)} picks)")
 
@@ -1048,18 +1062,15 @@ def main():
         if fid == "bot13":
             if b13_decision == "TRADE":
                 enriched  = [enrich_position(p, prices, prev_closes) for p in b13_positions]
-                sum_cost  = sum(p["cost_basis"] for p in enriched)  # compounded capital deployed
-                day_pnl   = sum(p["pnl"]        for p in enriched)  # today session P&L
-                pos_val   = sum(p["value"]       for p in enriched)
-                total     = sum_cost + day_pnl                      # preserves compounding
+                sum_pnl   = sum(p["pnl"]   for p in enriched)  # receipts: sum of position P&L
+                pos_val   = sum(p["value"] for p in enriched)
+                total     = b13_day_open + sum_pnl              # day_open + receipts = true total
                 cash      = 0.0
             else:
                 enriched  = []
-                day_pnl   = 0.0
                 pos_val   = 0.0
-                sum_cost  = sc
-                total     = sc
-                cash      = sc
+                total     = b13_day_open
+                cash      = b13_day_open
 
             pnl           = total - sc                              # total gain since inception
             pnl_pct       = (pnl / sc * 100) if sc else 0
