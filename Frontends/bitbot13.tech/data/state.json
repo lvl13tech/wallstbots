@@ -1,11 +1,11 @@
 {
   "data": {
     "starting_capital": 50000.0,
-    "last_refresh": "2026-05-22T17:45:49",
+    "last_refresh": "2026-05-22T17:48:53",
     "snapshots": [
       {
         "date": "2026-05-22",
-        "bot13": 59130.02,
+        "bot13": 62403.87,
         "oracle": 50000.0,
         "wizard": 50000.0,
         "equalizer": 50000.0,
@@ -22,73 +22,73 @@
         "inception": "2026-05-22",
         "starting_capital": 50000.0,
         "value": {
-          "total": 59130.02,
+          "total": 62403.87,
           "cash": 0.0,
-          "pos_val": 59130.01,
-          "pnl": 3176.97,
-          "pnl_pct": 5.68,
-          "day_pnl": 3176.97,
-          "day_pct": 5.68,
+          "pos_val": 62403.87,
+          "pnl": 3284.48,
+          "pnl_pct": 5.56,
+          "day_pnl": 3284.48,
+          "day_pct": 5.56,
           "positions": [
             {
               "symbol": "NEAR",
-              "shares": 5821.640675,
+              "shares": 6151.08291,
               "entry_price": 1.92,
-              "cost_basis": 11177.55,
-              "price": 2.11,
-              "value": 12266.2,
-              "pnl": 1088.65,
-              "pnl_pct": 9.74,
-              "day_pnl": 1073.58,
-              "day_pct": 9.59
+              "cost_basis": 11810.08,
+              "price": 2.1,
+              "value": 12886.52,
+              "pnl": 1076.44,
+              "pnl_pct": 9.11,
+              "day_pnl": 1060.51,
+              "day_pct": 8.97
             },
             {
               "symbol": "QNT",
-              "shares": 152.234587,
+              "shares": 160.849427,
               "entry_price": 73.52,
-              "cost_basis": 11192.29,
-              "price": 77.85,
-              "value": 11851.46,
-              "pnl": 659.18,
-              "pnl_pct": 5.89,
-              "day_pnl": 658.84,
-              "day_pct": 5.89
+              "cost_basis": 11825.65,
+              "price": 77.77,
+              "value": 12509.26,
+              "pnl": 683.61,
+              "pnl_pct": 5.78,
+              "day_pnl": 683.26,
+              "day_pct": 5.78
             },
             {
               "symbol": "WLD",
-              "shares": 41699.100592,
+              "shares": 44058.821105,
               "entry_price": 0.2684,
-              "cost_basis": 11192.04,
-              "price": 0.2814,
-              "value": 11734.13,
-              "pnl": 542.09,
-              "pnl_pct": 4.84,
-              "day_pnl": 541.5,
-              "day_pct": 4.84
+              "cost_basis": 11825.39,
+              "price": 0.2819,
+              "value": 12420.18,
+              "pnl": 594.79,
+              "pnl_pct": 5.03,
+              "day_pnl": 594.18,
+              "day_pct": 5.02
             },
             {
               "symbol": "FET",
-              "shares": 57841.810361,
+              "shares": 61115.034591,
               "entry_price": 0.1935,
-              "cost_basis": 11192.39,
-              "price": 0.2021,
-              "value": 11689.83,
-              "pnl": 497.44,
-              "pnl_pct": 4.44,
-              "day_pnl": 497.21,
-              "day_pct": 4.44
+              "cost_basis": 11825.76,
+              "price": 0.202,
+              "value": 12345.24,
+              "pnl": 519.48,
+              "pnl_pct": 4.39,
+              "day_pnl": 519.23,
+              "day_pct": 4.39
             },
             {
               "symbol": "MANTA",
-              "shares": 146580.872992,
+              "shares": 154875.773552,
               "entry_price": 0.0764,
-              "cost_basis": 11198.78,
-              "price": 0.0791,
-              "value": 11588.39,
-              "pnl": 389.61,
-              "pnl_pct": 3.48,
-              "day_pnl": 395.77,
-              "day_pct": 3.54
+              "cost_basis": 11832.51,
+              "price": 0.079,
+              "value": 12242.67,
+              "pnl": 410.16,
+              "pnl_pct": 3.47,
+              "day_pnl": 416.66,
+              "day_pct": 3.52
             }
           ]
         },
@@ -99,32 +99,32 @@
             {
               "symbol": "NEAR",
               "weight": 0.2,
-              "score": 95.9,
-              "rationale": "NEAR: up +9.59% in 24h \u2014 positive momentum signal."
+              "score": 89.7,
+              "rationale": "NEAR: up +8.97% in 24h \u2014 positive momentum signal."
             },
             {
               "symbol": "QNT",
               "weight": 0.2,
-              "score": 58.9,
-              "rationale": "QNT: up +5.89% in 24h \u2014 positive momentum signal."
+              "score": 57.8,
+              "rationale": "QNT: up +5.78% in 24h \u2014 positive momentum signal."
             },
             {
               "symbol": "WLD",
               "weight": 0.2,
-              "score": 48.4,
-              "rationale": "WLD: up +4.84% in 24h \u2014 positive momentum signal."
+              "score": 50.2,
+              "rationale": "WLD: up +5.02% in 24h \u2014 positive momentum signal."
             },
             {
               "symbol": "FET",
               "weight": 0.2,
-              "score": 44.4,
-              "rationale": "FET: up +4.44% in 24h \u2014 positive momentum signal."
+              "score": 43.9,
+              "rationale": "FET: up +4.39% in 24h \u2014 positive momentum signal."
             },
             {
               "symbol": "MANTA",
               "weight": 0.2,
-              "score": 35.4,
-              "rationale": "MANTA: up +3.54% in 24h \u2014 positive momentum signal."
+              "score": 35.2,
+              "rationale": "MANTA: up +3.52% in 24h \u2014 positive momentum signal."
             }
           ]
         },
@@ -330,8 +330,8 @@
       "week": [
         {
           "fund": "bot13",
-          "week_pnl": 9130.02,
-          "week_pct": 18.26,
+          "week_pnl": 12403.87,
+          "week_pct": 24.81,
           "week_grade": "A+"
         },
         {
@@ -362,8 +362,8 @@
       "all": [
         {
           "fund": "bot13",
-          "all_pnl": 3176.97,
-          "all_pct": 5.68,
+          "all_pnl": 3284.48,
+          "all_pct": 5.56,
           "overall_grade": "A+"
         },
         {
