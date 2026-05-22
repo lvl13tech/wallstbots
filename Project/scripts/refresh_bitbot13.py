@@ -78,7 +78,7 @@ UNIVERSE_MAP = {
     "XLM":    "XLM-USD",
     "HBAR":   "HBAR-USD",
     "MKR":    "MKR-USD",
-    "POL":    "MATIC-USD",          # Polygon/POL — yfinance still uses MATIC-USD ticker
+    "JUP":    "JUP-USD",              # Jupiter (Solana DEX) — Coinbase + Binance
     "RENDER": "RENDER-USD",        # Render Network — AI/GPU, Coinbase + Binance
     "FET":    "FET-USD",           # Fetch.ai/ASI Alliance — AI crypto, Coinbase + Binance
     "ONDO":   "ONDO-USD",          # Ondo Finance — RWA/DeFi, Coinbase + Binance
@@ -113,7 +113,7 @@ SECTORS = {
     "WIF":"MEME",
     "UNI":"DEFI",    "AAVE":"DEFI",   "MKR":"DEFI",    "CRV":"DEFI",
     "RUNE":"DEFI",   "INJ":"DEFI",    "PENDLE":"DEFI",  "ONDO":"DEFI",
-    "ARB":"LAYER2",  "OP":"LAYER2",   "MANTA":"LAYER2", "POL":"LAYER2",
+    "ARB":"LAYER2",  "OP":"LAYER2",   "MANTA":"LAYER2", "JUP":"DEFI",
     "LINK":"INFRASTRUCTURE", "FIL":"INFRASTRUCTURE",
     "ICP":"INFRASTRUCTURE",  "HBAR":"INFRASTRUCTURE", "QNT":"INFRASTRUCTURE",
     "THETA":"INFRASTRUCTURE","VET":"INFRASTRUCTURE",
@@ -208,7 +208,7 @@ def _fetch_coingecko(symbols, prices, prev_closes):
         "FIL":"filecoin","ARB":"arbitrum","AAVE":"aave","OP":"optimism","ETC":"ethereum-classic",
         "VET":"vechain","INJ":"injective-protocol","ALGO":"algorand",
         "XLM":"stellar","HBAR":"hedera-hashgraph","MKR":"maker",
-        "POL":"matic-network","RENDER":"render-token","FET":"fetch-ai",
+        "JUP":"jupiter-exchange-solana","ATOM":"cosmos","RENDER":"render-token","FET":"fetch-ai",
         "ONDO":"ondo-finance","WIF":"dogwifcoin",
         "RUNE":"thorchain","QNT":"quant-network","KAS":"kaspa",
         "THETA":"theta-token","WLD":"worldcoin-wld","SEI":"sei-network",
@@ -648,6 +648,7 @@ def generate_signals(prices, prev_closes):
     recs.sort(key=lambda r: -abs(r["upside_pct"]))
     return {
         "recommendations": recs,
+        "universe_size":   len(UNIVERSE),
         "summary":         summary,
         "generated_at":    dt.datetime.now().isoformat(timespec="seconds"),
     }
@@ -896,21 +897,21 @@ def main():
             if b13_decision == "TRADE":
                 enriched  = [enrich_position(p, prices, prev_closes) for p in b13_positions]
                 sum_cost  = sum(p["cost_basis"] for p in enriched)
-                pnl       = sum(p["pnl"]        for p in enriched)
+                day_pnl   = sum(p["pnl"]        for p in enriched)
                 pos_val   = sum(p["value"]       for p in enriched)
-                total     = sum_cost + pnl
+                total     = sum_cost + day_pnl
                 cash      = 0.0
             else:
                 enriched  = []
-                pnl       = 0.0
+                day_pnl   = 0.0
                 pos_val   = 0.0
                 sum_cost  = prev_b13_total
                 total     = prev_b13_total
                 cash      = prev_b13_total
 
-            pnl_pct = (pnl / sum_cost * 100) if sum_cost else 0
-            day_pnl = pnl
-            day_pct = pnl_pct
+            pnl     = total - sc                                        # total gain since inception
+            pnl_pct = (pnl / sc * 100) if sc else 0
+            day_pct = (day_pnl / prev_b13_total * 100) if prev_b13_total else 0
 
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),

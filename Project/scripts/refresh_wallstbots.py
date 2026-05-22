@@ -1043,21 +1043,21 @@ def main():
             if b13_decision == "TRADE":
                 enriched  = [enrich_position(p, prices, prev_closes) for p in b13_positions]
                 sum_cost  = sum(p["cost_basis"] for p in enriched)  # compounded capital deployed
-                pnl       = sum(p["pnl"]        for p in enriched)  # today session P&L = table sum
+                day_pnl   = sum(p["pnl"]        for p in enriched)  # today session P&L
                 pos_val   = sum(p["value"]       for p in enriched)
-                total     = sum_cost + pnl                          # preserves compounding
+                total     = sum_cost + day_pnl                      # preserves compounding
                 cash      = 0.0
             else:
                 enriched  = []
-                pnl       = 0.0
+                day_pnl   = 0.0
                 pos_val   = 0.0
                 sum_cost  = sc
                 total     = sc
                 cash      = sc
 
-            pnl_pct = (pnl / sum_cost * 100) if sum_cost else 0
-            day_pnl = pnl
-            day_pct = pnl_pct
+            pnl     = total - sc                                    # total gain since inception
+            pnl_pct = (pnl / sc * 100) if sc else 0
+            day_pct = (day_pnl / sum_cost * 100) if sum_cost else 0
 
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
