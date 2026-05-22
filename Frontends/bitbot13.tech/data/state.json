@@ -1,11 +1,11 @@
 {
   "data": {
     "starting_capital": 50000.0,
-    "last_refresh": "2026-05-22T14:52:19",
+    "last_refresh": "2026-05-22T17:44:25",
     "snapshots": [
       {
         "date": "2026-05-22",
-        "bot13": 50000.0,
+        "bot13": 55963.11,
         "oracle": 50000.0,
         "wizard": 50000.0,
         "equalizer": 50000.0,
@@ -19,22 +19,114 @@
         "color": "#ec4899",
         "icon": "13",
         "tagline": "Daily intraday bot. Buys at open, sells before close. Skips the session if no edge.",
-        "inception": "2026-05-23",
+        "inception": "2026-05-22",
         "starting_capital": 50000.0,
         "value": {
-          "total": 50000.0,
-          "cash": 50000.0,
-          "pos_val": 0.0,
-          "pnl": 0.0,
-          "pnl_pct": 0.0,
-          "day_pnl": 0.0,
-          "day_pct": 0.0,
-          "positions": []
+          "total": 55963.11,
+          "cash": 0.0,
+          "pos_val": 55963.11,
+          "pnl": 3045.16,
+          "pnl_pct": 5.75,
+          "day_pnl": 3045.16,
+          "day_pct": 5.75,
+          "positions": [
+            {
+              "symbol": "NEAR",
+              "shares": 5505.853984,
+              "entry_price": 1.92,
+              "cost_basis": 10571.24,
+              "price": 2.12,
+              "value": 11644.88,
+              "pnl": 1073.64,
+              "pnl_pct": 10.16,
+              "day_pnl": 1059.39,
+              "day_pct": 10.01
+            },
+            {
+              "symbol": "QNT",
+              "shares": 143.976837,
+              "entry_price": 73.52,
+              "cost_basis": 10585.18,
+              "price": 77.85,
+              "value": 11208.6,
+              "pnl": 623.42,
+              "pnl_pct": 5.89,
+              "day_pnl": 623.1,
+              "day_pct": 5.89
+            },
+            {
+              "symbol": "WLD",
+              "shares": 39437.191672,
+              "entry_price": 0.2684,
+              "cost_basis": 10584.94,
+              "price": 0.2812,
+              "value": 11089.74,
+              "pnl": 504.8,
+              "pnl_pct": 4.77,
+              "day_pnl": 504.24,
+              "day_pct": 4.76
+            },
+            {
+              "symbol": "FET",
+              "shares": 54704.262908,
+              "entry_price": 0.1935,
+              "cost_basis": 10585.27,
+              "price": 0.2021,
+              "value": 11055.73,
+              "pnl": 470.46,
+              "pnl_pct": 4.44,
+              "day_pnl": 470.24,
+              "day_pct": 4.44
+            },
+            {
+              "symbol": "MANTA",
+              "shares": 138629.8002,
+              "entry_price": 0.0764,
+              "cost_basis": 10591.32,
+              "price": 0.0791,
+              "value": 10964.16,
+              "pnl": 372.84,
+              "pnl_pct": 3.52,
+              "day_pnl": 378.66,
+              "day_pct": 3.58
+            }
+          ]
         },
         "current_strategy": {
           "day": "2026-05-22",
-          "decision": "HOLD",
-          "picks": []
+          "decision": "TRADE",
+          "picks": [
+            {
+              "symbol": "NEAR",
+              "weight": 0.2,
+              "score": 100.1,
+              "rationale": "NEAR: up +10.01% in 24h \u2014 positive momentum signal."
+            },
+            {
+              "symbol": "QNT",
+              "weight": 0.2,
+              "score": 58.9,
+              "rationale": "QNT: up +5.89% in 24h \u2014 positive momentum signal."
+            },
+            {
+              "symbol": "WLD",
+              "weight": 0.2,
+              "score": 47.6,
+              "rationale": "WLD: up +4.76% in 24h \u2014 positive momentum signal."
+            },
+            {
+              "symbol": "FET",
+              "weight": 0.2,
+              "score": 44.4,
+              "rationale": "FET: up +4.44% in 24h \u2014 positive momentum signal."
+            },
+            {
+              "symbol": "MANTA",
+              "weight": 0.2,
+              "score": 35.8,
+              "rationale": "MANTA: up +3.58% in 24h \u2014 positive momentum signal."
+            }
+          ]
         },
         "top10": null,
         "per_top_dollars": null,
@@ -46,7 +138,7 @@
         "color": "#a855f7",
         "icon": "OR",
         "tagline": "Weekly bot. Trades every Monday. All-in on the week's best bets.",
-        "inception": "2026-05-23",
+        "inception": "2026-05-22",
         "starting_capital": 50000.0,
         "value": {
           "total": 50000.0,
@@ -105,7 +197,7 @@
         "color": "#10b981",
         "icon": "WZ",
         "tagline": "Monthly hold bot. Buys the 1st of month, sells the last. Slow and patient.",
-        "inception": "2026-05-23",
+        "inception": "2026-05-22",
         "starting_capital": 50000.0,
         "value": {
           "total": 50000.0,
@@ -182,7 +274,7 @@
         "color": "#00d4ff",
         "icon": "EQ",
         "tagline": "Equal weight. No favorites. $1,000 in every coin.",
-        "inception": "2026-05-23",
+        "inception": "2026-05-22",
         "starting_capital": 50000.0,
         "value": {
           "total": 50000.0,
@@ -205,7 +297,7 @@
         "color": "#ff8c00",
         "icon": "TT",
         "tagline": "Half on the heavyweights. Half on the rest. Concentration meets coverage.",
-        "inception": "2026-05-23",
+        "inception": "2026-05-22",
         "starting_capital": 50000.0,
         "value": {
           "total": 50000.0,
@@ -238,9 +330,9 @@
       "week": [
         {
           "fund": "bot13",
-          "week_pnl": 0.0,
-          "week_pct": 0.0,
-          "week_grade": "C"
+          "week_pnl": 5963.11,
+          "week_pct": 11.93,
+          "week_grade": "A+"
         },
         {
           "fund": "oracle",
@@ -270,9 +362,9 @@
       "all": [
         {
           "fund": "bot13",
-          "all_pnl": 0.0,
-          "all_pct": 0.0,
-          "overall_grade": "C"
+          "all_pnl": 3045.16,
+          "all_pct": 5.75,
+          "overall_grade": "A+"
         },
         {
           "fund": "oracle",

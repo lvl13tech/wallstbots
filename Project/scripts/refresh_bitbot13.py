@@ -74,23 +74,23 @@ UNIVERSE_MAP = {
     "ETC":    "ETC-USD",
     "VET":    "VET-USD",
     "INJ":    "INJ-USD",
-    "GRT":    "GRT-USD",
     "ALGO":   "ALGO-USD",
     "XLM":    "XLM-USD",
     "HBAR":   "HBAR-USD",
     "MKR":    "MKR-USD",
-    "TAO":    "TAO-USD",
-    "STX":    "STX-USD",
+    "POL":    "POL-USD",           # Polygon (formerly MATIC) — top 20, Coinbase/Binance/Robinhood
+    "RENDER": "RENDER-USD",        # Render Network — AI/GPU, Coinbase + Binance
+    "FET":    "FET-USD",           # Fetch.ai/ASI Alliance — AI crypto, Coinbase + Binance
+    "ONDO":   "ONDO-USD",          # Ondo Finance — RWA/DeFi, Coinbase + Binance
+    "WIF":    "WIF-USD",           # dogwifhat — meme, Coinbase + Binance
     "RUNE":   "RUNE-USD",
     "QNT":    "QNT-USD",
     "KAS":    "KAS-USD",
-    "IMX":    "IMX-USD",
     "THETA":  "THETA-USD",
     "WLD":    "WLD-USD",
     "SEI":    "SEI-USD",
     "EGLD":   "EGLD-USD",
     "CRV":    "CRV-USD",
-    "FTM":    "FTM-USD",
     "MANTA":  "MANTA-USD",
     "PEPE":   "PEPE24478-USD", # yfinance uses PEPE24478-USD
     "FLOKI":  "FLOKI-USD",
@@ -107,16 +107,17 @@ SECTORS = {
     "XRP":"LAYER1",  "ADA":"LAYER1",  "TON":"LAYER1",  "AVAX":"LAYER1",
     "TRX":"LAYER1",  "DOT":"LAYER1",  "NEAR":"LAYER1", "ATOM":"LAYER1",
     "ALGO":"LAYER1", "ETC":"LAYER1",  "XLM":"LAYER1",  "EGLD":"LAYER1",
-    "FTM":"LAYER1",  "APT":"LAYER1",  "SUI":"LAYER1",  "BCH":"LAYER1",
+    "APT":"LAYER1",  "SUI":"LAYER1",  "BCH":"LAYER1",
     "LTC":"LAYER1",  "KAS":"LAYER1",  "SEI":"LAYER1",
     "DOGE":"MEME",   "SHIB":"MEME",   "PEPE":"MEME",   "FLOKI":"MEME",  "NOT":"MEME",
+    "WIF":"MEME",
     "UNI":"DEFI",    "AAVE":"DEFI",   "MKR":"DEFI",    "CRV":"DEFI",
-    "RUNE":"DEFI",   "INJ":"DEFI",    "PENDLE":"DEFI",
-    "ARB":"LAYER2",  "OP":"LAYER2",   "IMX":"LAYER2",  "MANTA":"LAYER2",
-    "LINK":"INFRASTRUCTURE", "GRT":"INFRASTRUCTURE",  "FIL":"INFRASTRUCTURE",
+    "RUNE":"DEFI",   "INJ":"DEFI",    "PENDLE":"DEFI",  "ONDO":"DEFI",
+    "ARB":"LAYER2",  "OP":"LAYER2",   "MANTA":"LAYER2", "POL":"LAYER2",
+    "LINK":"INFRASTRUCTURE", "FIL":"INFRASTRUCTURE",
     "ICP":"INFRASTRUCTURE",  "HBAR":"INFRASTRUCTURE", "QNT":"INFRASTRUCTURE",
     "THETA":"INFRASTRUCTURE","VET":"INFRASTRUCTURE",
-    "TAO":"AI CRYPTO", "WLD":"AI CRYPTO", "STX":"WEB3",
+    "FET":"AI CRYPTO", "RENDER":"AI CRYPTO", "WLD":"AI CRYPTO",
 }
 
 FUND_ORDER = ["bot13", "oracle", "wizard", "equalizer", "titan"]
@@ -205,11 +206,13 @@ def _fetch_coingecko(symbols, prices, prev_closes):
         "SHIB":"shiba-inu","BCH":"bitcoin-cash","NEAR":"near","UNI":"uniswap",
         "LTC":"litecoin","APT":"aptos","SUI":"sui","ATOM":"cosmos","ICP":"internet-computer",
         "FIL":"filecoin","ARB":"arbitrum","AAVE":"aave","OP":"optimism","ETC":"ethereum-classic",
-        "VET":"vechain","INJ":"injective-protocol","GRT":"the-graph","ALGO":"algorand",
-        "XLM":"stellar","HBAR":"hedera-hashgraph","MKR":"maker","TAO":"bittensor",
-        "STX":"blockstack","RUNE":"thorchain","QNT":"quant-network","KAS":"kaspa",
-        "IMX":"immutable-x","THETA":"theta-token","WLD":"worldcoin-wld","SEI":"sei-network",
-        "EGLD":"elrond-erd-2","CRV":"curve-dao-token","FTM":"fantom","MANTA":"manta-network",
+        "VET":"vechain","INJ":"injective-protocol","ALGO":"algorand",
+        "XLM":"stellar","HBAR":"hedera-hashgraph","MKR":"maker",
+        "POL":"matic-network","RENDER":"render-token","FET":"fetch-ai",
+        "ONDO":"ondo-finance","WIF":"dogwifcoin",
+        "RUNE":"thorchain","QNT":"quant-network","KAS":"kaspa",
+        "THETA":"theta-token","WLD":"worldcoin-wld","SEI":"sei-network",
+        "EGLD":"elrond-erd-2","CRV":"curve-dao-token","MANTA":"manta-network",
         "PEPE":"pepe","FLOKI":"floki","PENDLE":"pendle","NOT":"notcoin",
     }
     need = {s: CG_IDS[s] for s in symbols if s in CG_IDS}
