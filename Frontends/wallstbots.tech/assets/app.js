@@ -191,10 +191,7 @@ function renderHome() {
     fundCard(fid, STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null)).join('');
 
   const cap = (STATE.funds && STATE.funds.starting_capital) || 55000;
-  const stockCount = (() => {
-    const eq = STATE.funds && STATE.funds.funds && STATE.funds.funds.equalizer;
-    return eq && eq.value && eq.value.positions ? eq.value.positions.length : 55;
-  })();
+  const stockCount = (STATE.signals && STATE.signals.recommendations && STATE.signals.recommendations.length) || 55;
 
   $('app').innerHTML =
     '<section class="hero"><img src="assets/robot.svg" alt="" class="hero-robot">'
@@ -318,10 +315,7 @@ function renderHowItWorks() {
 // ============ PAGE: THE RACE ============
 function renderRace() {
   const cap = (STATE.funds && STATE.funds.starting_capital) || 55000;
-  const stockCount = (() => {
-    const eq = STATE.funds && STATE.funds.funds && STATE.funds.funds.equalizer;
-    return eq && eq.value && eq.value.positions ? eq.value.positions.length : 55;
-  })();
+  const stockCount = (STATE.signals && STATE.signals.recommendations && STATE.signals.recommendations.length) || 55;
   const cards = FUND_ORDER.map(fid =>
     fundCard(fid, STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null)).join('');
   $('app').innerHTML = '<h1>The Race</h1>'

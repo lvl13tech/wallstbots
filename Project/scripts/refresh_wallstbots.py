@@ -964,6 +964,10 @@ def main():
     is_monday       = today.weekday() == 0
     is_month_start  = today.day <= 3   # 1st-3rd trading day = month boundary
 
+    # Force scoring on first run — no positions means never deployed yet
+    oracle_needs_seed = not funds.get("oracle", {}).get("value", {}).get("positions")
+    wizard_needs_seed = not funds.get("wizard", {}).get("value", {}).get("positions")
+
     # ── Fetch live prices ────────────────────────────────────────────────────
     need_syms = set(UNIVERSE)
     for fid, fund in funds.items():
@@ -1001,8 +1005,8 @@ def main():
     oracle_new_positions = None
     oracle_new_picks     = None
     oracle_new_rationale = None
-    if is_monday and hist_data:
-        print("[wallstbots] Monday — running ORACLE recompute...")
+    if (is_monday or oracle_needs_seed) and hist_data:
+        print(f"[wallstbots] {'Monday' if is_monday else 'first run'} — running ORACLE recompute...")
         oracle_new_positions, oracle_new_picks, oracle_new_rationale = run_oracle_decision(
             prices, prev_closes, hist_data, sc_global, week_str
         )
@@ -1015,8 +1019,8 @@ def main():
     wizard_new_positions = None
     wizard_new_picks     = None
     wizard_new_rationale = None
-    if is_month_start and hist_data:
-        print(f"[wallstbots] Month start ({today_iso}) — running WIZARD recompute...")
+    if (is_month_start or wizard_needs_seed) and hist_data:
+        print(f"[wallstbots] {'Month start' if is_month_start else 'first run'} ({today_iso}) — running WIZARD recompute...")
         wizard_new_positions, wizard_new_picks, wizard_new_rationale = run_wizard_decision(
             prices, prev_closes, hist_data, sc_global, month_str
         )
@@ -1141,8 +1145,39 @@ def main():
                         "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2), "positions": enriched}
 
         else:
-            # Equalizer + Titan — mark-to-market only
+            # Equalizer + Titan — mark-to-market; auto-seed on first run
             raw_pos  = fund.get("value", {}).get("positions", [])
+
+            if not raw_pos and fid == "equalizer" and prices:
+                per_stock = sc / len(UNIVERSE)
+                for sym in UNIVERSE:
+                    price = prev_closes.get(sym) or prices.get(sym, 0)
+                    if price > 0:
+                        raw_pos.append({
+                            "symbol":      sym,
+                            "shares":      round(per_stock / price, 6),
+                            "entry_price": round(price, 4),
+                            "cost_basis":  round(per_stock, 2),
+                        })
+                print(f"  EQUALIZER: seeded {len(raw_pos)} positions at ${per_stock:.0f}/stock")
+
+            elif not raw_pos and fid == "titan" and prices:
+                top10    = fund.get("top10") or []
+                per_top  = float(fund.get("per_top_dollars") or 0)
+                per_rest = float(fund.get("per_rest_dollars") or 0)
+                rest     = [s for s in UNIVERSE if s not in top10]
+                for sym in top10:
+                    price = prev_closes.get(sym) or prices.get(sym, 0)
+                    if price > 0 and per_top > 0:
+                        raw_pos.append({"symbol": sym, "shares": round(per_top / price, 6),
+                                        "entry_price": round(price, 4), "cost_basis": round(per_top, 2)})
+                for sym in rest:
+                    price = prev_closes.get(sym) or prices.get(sym, 0)
+                    if price > 0 and per_rest > 0:
+                        raw_pos.append({"symbol": sym, "shares": round(per_rest / price, 6),
+                                        "entry_price": round(price, 4), "cost_basis": round(per_rest, 2)})
+                print(f"  TITAN: seeded {len(raw_pos)} positions (top10 ${per_top:.0f} / rest ${per_rest:.0f})")
+
             # On inception day, reset entry prices to prev_close so pnl starts at 0
             if fund.get("inception") == today_iso:
                 raw_pos = [{**p, "entry_price": prev_closes.get(p["symbol"], p.get("entry_price", 0))}
