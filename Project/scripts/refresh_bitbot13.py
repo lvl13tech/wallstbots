@@ -560,18 +560,23 @@ def main():
 
         if fid == "bot13":
             if b13_decision == "TRADE":
-                enriched = [enrich_position(p, prices, prev_closes) for p in b13_positions]
-                cash     = 0.0
+                enriched  = [enrich_position(p, prices, prev_closes) for p in b13_positions]
+                sum_cost  = sum(p["cost_basis"] for p in enriched)
+                pnl       = sum(p["pnl"]        for p in enriched)
+                pos_val   = sum(p["value"]       for p in enriched)
+                total     = sum_cost + pnl
+                cash      = 0.0
             else:
-                enriched = []
-                cash     = sc
+                enriched  = []
+                pnl       = 0.0
+                pos_val   = 0.0
+                sum_cost  = sc
+                total     = sc
+                cash      = sc
 
-            pos_val = sum(p["value"] for p in enriched)
-            total   = pos_val + cash
-            pnl     = total - sc
-            pnl_pct = (total / sc - 1) * 100 if sc else 0
-            day_pnl = sum(p.get("day_pnl", 0) for p in enriched)
-            day_pct = (day_pnl / (total - day_pnl)) * 100 if (total - day_pnl) else 0
+            pnl_pct = (pnl / sum_cost * 100) if sum_cost else 0
+            day_pnl = pnl
+            day_pct = pnl_pct
 
             value = {
                 "total":     round(total, 2),
@@ -599,11 +604,11 @@ def main():
                 raw_pos = [{**p, "entry_price": prev_closes.get(p["symbol"], p.get("entry_price", 0))}
                            if prev_closes.get(p["symbol"], 0) > 0 else p for p in raw_pos]
             enriched = [enrich_position(p, prices, prev_closes) for p in raw_pos]
-            cash     = float(fund.get("value", {}).get("cash") or 0)
-            pos_val  = sum(p["value"] for p in enriched)
-            total    = pos_val + cash
-            pnl      = total - sc
-            pnl_pct  = (total / sc - 1) * 100 if sc else 0
+            pos_val  = sum(p["value"]   for p in enriched)
+            pnl      = sum(p["pnl"]     for p in enriched)   # always matches table sum
+            total    = sc + pnl                               # true economic value
+            cash     = max(0.0, total - pos_val)              # undeployed capital, never negative
+            pnl_pct  = (pnl / sc * 100) if sc else 0
             day_pnl  = sum(p["day_pnl"] for p in enriched)
             day_pct  = (day_pnl / (total - day_pnl)) * 100 if (total - day_pnl) else 0
 

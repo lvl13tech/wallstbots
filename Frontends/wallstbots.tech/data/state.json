@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-05-21T23:55:05",
+    "last_refresh": "2026-05-22T00:35:31",
     "snapshots": [
       {
         "date": "2026-05-21",
@@ -10,6 +10,14 @@
         "wizard": 48343.69,
         "equalizer": 64126.71,
         "titan": 59621.65
+      },
+      {
+        "date": "2026-05-22",
+        "bot13": 80892.79,
+        "oracle": 53855.99,
+        "wizard": 55087.65,
+        "equalizer": 55686.98,
+        "titan": 55490.92
       }
     ],
     "funds": {
@@ -22,80 +30,80 @@
         "inception": "2026-05-21",
         "starting_capital": 55000.0,
         "value": {
-          "total": 62547.75,
+          "total": 80892.79,
           "cash": 0.0,
-          "pos_val": 62547.75,
-          "pnl": 7547.75,
+          "pos_val": 80892.81,
+          "pnl": 9761.49,
           "pnl_pct": 13.72,
-          "day_pnl": 7547.77,
+          "day_pnl": 9761.49,
           "day_pct": 13.72,
           "positions": [
             {
               "symbol": "BIRK",
-              "shares": 495.761141,
+              "shares": 641.166288,
               "entry_price": 33.21,
-              "cost_basis": 16464.23,
+              "cost_basis": 21293.13,
               "price": 39.67,
-              "value": 19666.84,
-              "pnl": 3202.62,
+              "value": 25435.07,
+              "pnl": 4141.93,
               "pnl_pct": 19.45,
-              "day_pnl": 3202.62,
+              "day_pnl": 4141.93,
               "day_pct": 19.45,
               "stop_pct": -1.5,
               "target_pct": 3.0
             },
             {
               "symbol": "ARM",
-              "shares": 53.293295,
+              "shares": 68.924047,
               "entry_price": 256.73,
-              "cost_basis": 13681.99,
+              "cost_basis": 17694.87,
               "price": 298.23,
-              "value": 15893.66,
-              "pnl": 2211.67,
+              "value": 20555.22,
+              "pnl": 2860.35,
               "pnl_pct": 16.16,
-              "day_pnl": 2211.67,
+              "day_pnl": 2860.35,
               "day_pct": 16.16,
               "stop_pct": -1.5,
               "target_pct": 3.0
             },
             {
               "symbol": "SPOT",
-              "shares": 25.518398,
+              "shares": 33.002862,
               "entry_price": 433.32,
-              "cost_basis": 11057.63,
+              "cost_basis": 14300.8,
               "price": 489.93,
-              "value": 12502.23,
-              "pnl": 1444.6,
+              "value": 16169.09,
+              "pnl": 1868.29,
               "pnl_pct": 13.06,
-              "day_pnl": 1444.6,
+              "day_pnl": 1868.29,
               "day_pct": 13.06,
               "stop_pct": -1.5,
               "target_pct": 3.0
             },
             {
               "symbol": "ACHR",
-              "shares": 1252.934171,
+              "shares": 1620.415729,
               "entry_price": 5.78,
-              "cost_basis": 7241.96,
+              "cost_basis": 9366.0,
               "price": 6.12,
-              "value": 7667.96,
-              "pnl": 426.0,
+              "value": 9916.94,
+              "pnl": 550.94,
               "pnl_pct": 5.88,
-              "day_pnl": 426.0,
+              "day_pnl": 550.94,
               "day_pct": 5.88,
               "stop_pct": -1.5,
               "target_pct": 3.0
             },
             {
               "symbol": "OKLO",
-              "shares": 104.732875,
+              "shares": 135.45069,
               "entry_price": 62.58,
-              "cost_basis": 6554.18,
+              "cost_basis": 8476.5,
               "price": 65.09,
-              "value": 6817.06,
-              "pnl": 262.88,
+              "value": 8816.49,
+              "pnl": 339.98,
               "pnl_pct": 4.01,
-              "day_pnl": 262.88,
+              "day_pnl": 339.98,
               "day_pct": 4.01,
               "stop_pct": -1.5,
               "target_pct": 3.0
@@ -103,7 +111,7 @@
           ]
         },
         "current_strategy": {
-          "day": "2026-05-21",
+          "day": "2026-05-22",
           "decision": "TRADE",
           "rationale": "Deployed into 5 high-conviction names (BIRK +19.45%, ARM +16.16%, SPOT +13.06%, ACHR +5.88%, OKLO +4.01%). Market breadth: 27/55 green. Weighted by signal strength. Stop -1.5% | Target +3.0%.",
           "picks": [
@@ -111,45 +119,39 @@
               "symbol": "BIRK",
               "weight": 0.2993,
               "score": 107.0,
-              "rationale": "BIRK: STRONG momentum +19.45% \u2014 30% allocation ($16,464). Stop: -1.5% | Target: +3.0%."
+              "rationale": "BIRK: STRONG momentum +19.45% \u2014 30% allocation ($21,293). Stop: -1.5% | Target: +3.0%."
             },
             {
               "symbol": "ARM",
               "weight": 0.2488,
               "score": 88.9,
-              "rationale": "ARM: STRONG momentum +16.16% \u2014 25% allocation ($13,682). Stop: -1.5% | Target: +3.0%."
+              "rationale": "ARM: STRONG momentum +16.16% \u2014 25% allocation ($17,695). Stop: -1.5% | Target: +3.0%."
             },
             {
               "symbol": "SPOT",
               "weight": 0.201,
               "score": 71.9,
-              "rationale": "SPOT: STRONG momentum +13.06% \u2014 20% allocation ($11,058). Stop: -1.5% | Target: +3.0%."
+              "rationale": "SPOT: STRONG momentum +13.06% \u2014 20% allocation ($14,301). Stop: -1.5% | Target: +3.0%."
             },
             {
               "symbol": "ACHR",
               "weight": 0.1317,
               "score": 47.1,
-              "rationale": "ACHR: STRONG momentum +5.88% \u2014 13% allocation ($7,242). Stop: -1.5% | Target: +3.0%."
+              "rationale": "ACHR: STRONG momentum +5.88% \u2014 13% allocation ($9,366). Stop: -1.5% | Target: +3.0%."
             },
             {
               "symbol": "OKLO",
               "weight": 0.1192,
               "score": 40.1,
-              "rationale": "OKLO: solid momentum +4.01% \u2014 12% allocation ($6,554). Stop: -1.5% | Target: +3.0%."
+              "rationale": "OKLO: solid momentum +4.01% \u2014 12% allocation ($8,477). Stop: -1.5% | Target: +3.0%."
             }
           ],
           "session_log": [
             {
-              "time": "12:19 PM",
-              "phase": "MIDDAY",
-              "action": "MIDDAY CHECK \u2014 positions reviewed",
-              "detail": "Current positions: BIRK +18.13%, SPOT +16.31%, ARM +11.74%, ACHR +3.46%, RDDT +3.44%. Breadth: 16/55 green. Monitoring for stop/target triggers. Any position through -1.5% would be exited immediately."
-            },
-            {
-              "time": "19:55 PM",
+              "time": "20:35 PM",
               "phase": "CLOSE",
               "action": "CLOSE \u2014 session complete",
-              "detail": "Final session positions: BIRK +19.45%, ARM +16.16%, SPOT +13.06%, ACHR +5.88%, OKLO +4.01%. Day P&L: $+7,548. Breadth: 27/55 green. All positions conceptually closed at 3:50 PM."
+              "detail": "Final session positions: BIRK +19.45%, ARM +16.16%, SPOT +13.06%, ACHR +5.88%, OKLO +4.01%. Day P&L: $+9,761. Breadth: 27/55 green. All positions conceptually closed at 3:50 PM."
             }
           ]
         },
@@ -166,13 +168,13 @@
         "inception": "2026-05-21",
         "starting_capital": 55000.0,
         "value": {
-          "total": 66663.45,
+          "total": 53855.99,
           "cash": 0.0,
           "pos_val": 66663.45,
-          "pnl": 11663.45,
-          "pnl_pct": 21.21,
+          "pnl": -1144.01,
+          "pnl_pct": -2.08,
           "day_pnl": -1144.01,
-          "day_pct": -1.69,
+          "day_pct": -2.08,
           "positions": [
             {
               "symbol": "WMT",
@@ -286,13 +288,13 @@
         "inception": "2026-05-21",
         "starting_capital": 55000.0,
         "value": {
-          "total": 48343.69,
-          "cash": 0.0,
+          "total": 55087.65,
+          "cash": 6743.96,
           "pos_val": 48343.69,
-          "pnl": -6656.31,
-          "pnl_pct": -12.1,
+          "pnl": 87.65,
+          "pnl_pct": 0.16,
           "day_pnl": 87.65,
-          "day_pct": 0.18,
+          "day_pct": 0.16,
           "positions": [
             {
               "symbol": "META",
@@ -460,13 +462,13 @@
         "inception": "2026-05-21",
         "starting_capital": 55000.0,
         "value": {
-          "total": 64126.71,
+          "total": 55686.98,
           "cash": 0.0,
           "pos_val": 64126.71,
-          "pnl": 9126.71,
-          "pnl_pct": 16.59,
+          "pnl": 686.98,
+          "pnl_pct": 1.25,
           "day_pnl": 686.98,
-          "day_pct": 1.08,
+          "day_pct": 1.25,
           "positions": [
             {
               "symbol": "XOM",
@@ -1144,13 +1146,13 @@
         "inception": "2026-05-21",
         "starting_capital": 55000.0,
         "value": {
-          "total": 59621.65,
+          "total": 55490.92,
           "cash": 0.0,
           "pos_val": 59621.65,
-          "pnl": 4621.65,
-          "pnl_pct": 8.4,
+          "pnl": 490.92,
+          "pnl_pct": 0.89,
           "day_pnl": 490.92,
-          "day_pct": 0.83,
+          "day_pct": 0.89,
           "positions": [
             {
               "symbol": "XOM",
@@ -1834,65 +1836,65 @@
     "leaderboards": {
       "week": [
         {
-          "fund": "oracle",
-          "week_pnl": 11663.45,
-          "week_pct": 21.21,
+          "fund": "bot13",
+          "week_pnl": 25892.79,
+          "week_pct": 47.08,
           "week_grade": "A+"
         },
         {
           "fund": "equalizer",
-          "week_pnl": 9126.71,
-          "week_pct": 16.59,
-          "week_grade": "A+"
-        },
-        {
-          "fund": "bot13",
-          "week_pnl": 7547.75,
-          "week_pct": 13.72,
-          "week_grade": "A+"
+          "week_pnl": 686.98,
+          "week_pct": 1.25,
+          "week_grade": "C"
         },
         {
           "fund": "titan",
-          "week_pnl": 4621.65,
-          "week_pct": 8.4,
-          "week_grade": "A+"
+          "week_pnl": 490.92,
+          "week_pct": 0.89,
+          "week_grade": "C"
         },
         {
           "fund": "wizard",
-          "week_pnl": -6656.31,
-          "week_pct": -12.1,
+          "week_pnl": 87.65,
+          "week_pct": 0.16,
+          "week_grade": "C"
+        },
+        {
+          "fund": "oracle",
+          "week_pnl": -1144.01,
+          "week_pct": -2.08,
           "week_grade": "F"
         }
       ],
       "all": [
         {
-          "fund": "oracle",
-          "all_pnl": 11663.45,
-          "all_pct": 21.21,
-          "overall_grade": "A+"
-        },
-        {
-          "fund": "equalizer",
-          "all_pnl": 9126.71,
-          "all_pct": 16.59,
-          "overall_grade": "A+"
-        },
-        {
           "fund": "bot13",
-          "all_pnl": 7547.75,
+          "all_pnl": 9761.49,
           "all_pct": 13.72,
           "overall_grade": "A+"
         },
         {
+          "fund": "equalizer",
+          "all_pnl": 686.98,
+          "all_pct": 1.25,
+          "overall_grade": "C"
+        },
+        {
           "fund": "titan",
-          "all_pnl": 4621.65,
-          "all_pct": 8.4,
-          "overall_grade": "A+"
+          "all_pnl": 490.92,
+          "all_pct": 0.89,
+          "overall_grade": "C"
         },
         {
           "fund": "wizard",
-          "all_pnl": -6656.31,
-          "all_pct": -12.1,
+          "all_pnl": 87.65,
+          "all_pct": 0.16,
+          "overall_grade": "C"
+        },
+        {
+          "fund": "oracle",
+          "all_pnl": -1144.01,
+          "all_pct": -2.08,
           "overall_grade": "F"
         }
       ]
