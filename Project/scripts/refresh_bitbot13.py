@@ -545,8 +545,15 @@ def main():
     print("[bitbot13] running BOT13 decision...")
     # Use fund's current running total so gains compound day-over-day
     prev_b13_total = float(funds.get("bot13", {}).get("value", {}).get("total") or sc_global)
-    b13_decision, b13_positions, b13_picks = run_bot13_decision(prices, prev_closes, prev_b13_total)
-    print(f"  BOT13: {b13_decision} ({len(b13_picks)} picks)")
+    # Respect inception date: do not trade before bot13's inception day
+    b13_inception = funds.get("bot13", {}).get("inception", today_iso)
+    if b13_inception > today_iso:
+        b13_decision, b13_positions, b13_picks = "HOLD", [], []
+        prev_b13_total = sc_global  # reset to SC so tomorrow starts clean
+        print(f"  BOT13: HOLD (pre-inception, starts {b13_inception})")
+    else:
+        b13_decision, b13_positions, b13_picks = run_bot13_decision(prices, prev_closes, prev_b13_total)
+        print(f"  BOT13: {b13_decision} ({len(b13_picks)} picks)")
 
     # ── 4. Enrich all fund positions ────────────────────────────────────────────
     print("[bitbot13] enriching positions...")

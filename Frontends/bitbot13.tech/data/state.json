@@ -1,1 +1,305 @@
-{"data":{"starting_capital":50000.0,"last_refresh":"2026-05-22T01:00:59","snapshots":[{"date":"2026-05-22","bot13":50000.0,"oracle":50000.0,"wizard":50000.0,"equalizer":50000.0,"titan":50000.0}],"funds":{"bot13":{"id":"bot13","name":"BOT13","color":"#ec4899","icon":"13","tagline":"Daily intraday bot. Buys at open, sells before close. Skips the session if no edge.","inception":"2026-05-22","starting_capital":50000.0,"value":{"total":50000.0,"cash":0.0,"pos_val":50783.96,"pnl":0.0,"pnl_pct":0.0,"day_pnl":785.47,"day_pct":1.57,"positions":[{"symbol":"STX","shares":102452.209972,"entry_price":0.2495,"cost_basis":25561.8264,"price":0.2495,"value":25559.57,"pnl":0.0,"pnl_pct":0.0,"day_pnl":559.57,"day_pct":2.24},{"symbol":"TAO","shares":91.154938,"entry_price":276.72,"cost_basis":25224.3944,"price":276.72,"value":25224.39,"pnl":0.0,"pnl_pct":0.0,"day_pnl":224.39,"day_pct":0.9}]},"current_strategy":{"day":"2026-05-22","decision":"TRADE","rationale":"Going all-in on today's top 24h momentum names.","picks":[{"symbol":"STX","weight":0.5,"score":22.4,"rationale":"STX: up +2.24% in 24h \u2014 positive momentum signal."},{"symbol":"TAO","weight":0.5,"score":9.0,"rationale":"TAO: up +0.90% in 24h \u2014 positive momentum signal."}]},"top10":null,"per_top_dollars":null,"per_rest_dollars":null},"oracle":{"id":"oracle","name":"ORACLE","color":"#a855f7","icon":"OR","tagline":"Weekly bot. Trades every Monday. All-in on the week's best bets.","inception":"2026-05-22","starting_capital":50000.0,"value":{"total":50000.0,"cash":14563.19,"pos_val":35436.81,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0,"positions":[{"symbol":"BTC","shares":0.104822,"entry_price":77278.29,"cost_basis":8100.4649,"price":77278.29,"value":8100.46,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"ETH","shares":3.04878,"entry_price":2126.15,"cost_basis":6482.1636,"price":2126.15,"value":6482.16,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"BNB","shares":16.129032,"entry_price":655.99,"cost_basis":10580.4837,"price":655.99,"value":10580.48,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"SOL","shares":54.945055,"entry_price":86.72,"cost_basis":4764.8352,"price":86.72,"value":4764.84,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"XRP","shares":4032.258065,"entry_price":1.37,"cost_basis":5524.1935,"price":1.37,"value":5508.87,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0}]},"current_strategy":{"week":"2026-05-18","decision":"TRADE","rationale":"Concentrating capital in top 5 crypto by composite momentum. 7d/30d price action, volume, RSI.","picks":[{"symbol":"BTC","weight":0.2,"score":150,"rationale":"BTC: strong weekly momentum and volume confirmation."},{"symbol":"ETH","weight":0.2,"score":142,"rationale":"ETH: strong weekly momentum and volume confirmation."},{"symbol":"BNB","weight":0.2,"score":134,"rationale":"BNB: strong weekly momentum and volume confirmation."},{"symbol":"SOL","weight":0.2,"score":126,"rationale":"SOL: strong weekly momentum and volume confirmation."},{"symbol":"XRP","weight":0.2,"score":118,"rationale":"XRP: strong weekly momentum and volume confirmation."}]},"top10":null,"per_top_dollars":null,"per_rest_dollars":null},"wizard":{"id":"wizard","name":"WIZARD","color":"#10b981","icon":"WZ","tagline":"Monthly hold bot. Buys the 1st of month, sells the last. Slow and patient.","inception":"2026-05-22","starting_capital":50000.0,"value":{"total":50000.0,"cash":22938.33,"pos_val":27061.67,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0,"positions":[{"symbol":"BTC","shares":0.077096,"entry_price":77278.29,"cost_basis":5957.847,"price":77278.29,"value":5957.85,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"ETH","shares":2.146341,"entry_price":2126.15,"cost_basis":4563.4429,"price":2126.15,"value":4563.44,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"BNB","shares":10.846774,"entry_price":655.99,"cost_basis":7115.3753,"price":655.99,"value":7115.38,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"SOL","shares":35.21978,"entry_price":86.72,"cost_basis":3054.2593,"price":86.72,"value":3054.26,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"XRP","shares":2455.645161,"entry_price":1.37,"cost_basis":3364.2339,"price":1.37,"value":3354.9,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"ADA","shares":7042.682927,"entry_price":0.2489,"cost_basis":1752.9238,"price":0.2489,"value":1752.92,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"TON","shares":975.0,"entry_price":0.00630367,"cost_basis":6.1461,"price":0.00630367,"value":6.15,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"AVAX","shares":133.984375,"entry_price":9.38,"cost_basis":1256.7734,"price":9.38,"value":1256.77,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0}]},"current_strategy":{"month":"2026-05","decision":"TRADE","rationale":"Spreading across top 8 coins for the month. Long-horizon signals: 30d/90d momentum, RSI, market dominance.","picks":[{"symbol":"BTC","weight":0.1471,"score":420,"rationale":"BTC: strong 20d/60d trend with favorable risk-adjusted return."},{"symbol":"ETH","weight":0.1408,"score":402,"rationale":"ETH: strong 20d/60d trend with favorable risk-adjusted return."},{"symbol":"BNB","weight":0.1345,"score":384,"rationale":"BNB: strong 20d/60d trend with favorable risk-adjusted return."},{"symbol":"SOL","weight":0.1282,"score":366,"rationale":"SOL: strong 20d/60d trend with favorable risk-adjusted return."},{"symbol":"XRP","weight":0.1218,"score":348,"rationale":"XRP: strong 20d/60d trend with favorable risk-adjusted return."},{"symbol":"ADA","weight":0.1155,"score":330,"rationale":"ADA: strong 20d/60d trend with favorable risk-adjusted return."},{"symbol":"TON","weight":0.1092,"score":312,"rationale":"TON: strong 20d/60d trend with favorable risk-adjusted return."},{"symbol":"AVAX","weight":0.1029,"score":294,"rationale":"AVAX: strong 20d/60d trend with favorable risk-adjusted return."}]},"top10":null,"per_top_dollars":null,"per_rest_dollars":null},"equalizer":{"id":"equalizer","name":"EQUALIZER","color":"#00d4ff","icon":"EQ","tagline":"Equal weight. No favorites. $1,000 in every coin.","inception":"2026-05-22","starting_capital":50000.0,"value":{"total":50000.0,"cash":30585.31,"pos_val":19414.69,"pnl":0.0,"pnl_pct":0.0,"day_pnl":7.26,"day_pct":0.01,"positions":[{"symbol":"BTC","shares":0.010482,"entry_price":77278.29,"cost_basis":810.031,"price":77278.29,"value":810.03,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"ETH","shares":0.304878,"entry_price":2126.15,"cost_basis":648.2164,"price":2126.15,"value":648.22,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"BNB","shares":1.612903,"entry_price":655.99,"cost_basis":1058.0482,"price":655.99,"value":1058.05,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"SOL","shares":5.494505,"entry_price":86.72,"cost_basis":476.4835,"price":86.72,"value":476.48,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"XRP","shares":403.225806,"entry_price":1.37,"cost_basis":552.4194,"price":1.37,"value":550.89,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"ADA","shares":1219.512195,"entry_price":0.2489,"cost_basis":303.5366,"price":0.2489,"value":303.54,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"TON","shares":178.571429,"entry_price":0.00630367,"cost_basis":1.1257,"price":0.00630367,"value":1.13,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"AVAX","shares":26.041667,"entry_price":9.38,"cost_basis":244.2708,"price":9.38,"value":244.27,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"DOGE","shares":3846.153846,"entry_price":0.105,"cost_basis":403.8462,"price":0.105,"value":403.77,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"TRX","shares":6578.947368,"entry_price":0.3654,"cost_basis":2403.9474,"price":0.3654,"value":2404.25,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"LINK","shares":48.076923,"entry_price":9.71,"cost_basis":466.8269,"price":9.71,"value":466.63,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"DOT","shares":106.382979,"entry_price":1.28,"cost_basis":136.1702,"price":1.28,"value":136.6,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"SHIB","shares":40322580.645161,"entry_price":5.82e-06,"cost_basis":234.6774,"price":5.82e-06,"value":234.68,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"BCH","shares":2.427184,"entry_price":377.91,"cost_basis":917.2571,"price":377.91,"value":917.26,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"NEAR","shares":169.491525,"entry_price":1.98,"cost_basis":335.5932,"price":1.98,"value":334.92,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"UNI","shares":96.153846,"entry_price":3.58,"cost_basis":344.2308,"price":3.58,"value":344.13,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"LTC","shares":9.208103,"entry_price":54.14,"cost_basis":498.5267,"price":54.14,"value":498.53,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"APT","shares":81.967213,"entry_price":0.9628,"cost_basis":78.918,"price":0.9628,"value":78.92,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"SUI","shares":458.715596,"entry_price":1.1,"cost_basis":504.5872,"price":1.1,"value":503.49,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"ATOM","shares":119.047619,"entry_price":2.04,"cost_basis":242.8571,"price":2.04,"value":243.21,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"ICP","shares":79.365079,"entry_price":2.54,"cost_basis":201.5873,"price":2.54,"value":201.75,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"FIL","shares":161.290323,"entry_price":0.994,"cost_basis":160.3226,"price":0.994,"value":160.32,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"ARB","shares":925.925926,"entry_price":0.1117,"cost_basis":103.4259,"price":0.1117,"value":103.43,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"AAVE","shares":4.032258,"entry_price":87.45,"cost_basis":352.621,"price":87.45,"value":352.62,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"OP","shares":467.28972,"entry_price":0.131,"cost_basis":61.215,"price":0.131,"value":61.21,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"ETC","shares":39.370079,"entry_price":8.97,"cost_basis":353.1496,"price":8.97,"value":353.15,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"VET","shares":23809.52381,"entry_price":0.00667,"cost_basis":158.8095,"price":0.00667,"value":158.81,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"INJ","shares":39.0625,"entry_price":5.11,"cost_basis":199.6094,"price":5.11,"value":199.61,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"GRT","shares":3816.793893,"entry_price":0.0252,"cost_basis":96.1832,"price":0.0252,"value":96.28,"pnl":0.0,"pnl_pct":0.0,"day_pnl":-0.59,"day_pct":-0.61},{"symbol":"ALGO","shares":4716.981132,"entry_price":0.1143,"cost_basis":539.1509,"price":0.1143,"value":539.15,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"XLM","shares":6756.756757,"entry_price":0.146,"cost_basis":986.4865,"price":0.146,"value":986.53,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"HBAR","shares":8474.576271,"entry_price":0.089,"cost_basis":754.2373,"price":0.089,"value":754.32,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"MKR","shares":0.675676,"entry_price":1698.61,"cost_basis":1147.71,"price":1698.61,"value":1147.71,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"TAO","shares":2.232143,"entry_price":276.72,"cost_basis":617.6786,"price":276.72,"value":617.68,"pnl":0.0,"pnl_pct":0.0,"day_pnl":5.49,"day_pct":0.9},{"symbol":"STX","shares":657.894737,"entry_price":0.2495,"cost_basis":164.1447,"price":0.2495,"value":164.13,"pnl":0.0,"pnl_pct":0.0,"day_pnl":3.59,"day_pct":2.24},{"symbol":"RUNE","shares":192.307692,"entry_price":0.4285,"cost_basis":82.4038,"price":0.4285,"value":82.41,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"QNT","shares":9.803922,"entry_price":72.99,"cost_basis":715.5883,"price":72.99,"value":715.59,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"KAS","shares":6756.756757,"entry_price":0.035,"cost_basis":236.4865,"price":0.035,"value":236.37,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"IMX","shares":549.450549,"entry_price":0.1731,"cost_basis":95.1099,"price":0.1731,"value":95.08,"pnl":0.0,"pnl_pct":0.0,"day_pnl":-0.46,"day_pct":-0.48},{"symbol":"THETA","shares":467.28972,"entry_price":0.2049,"cost_basis":95.7477,"price":0.2049,"value":95.77,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"WLD","shares":261.780105,"entry_price":0.2705,"cost_basis":70.8115,"price":0.2705,"value":70.81,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"SEI","shares":1953.125,"entry_price":0.0627,"cost_basis":122.4609,"price":0.0627,"value":122.56,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"EGLD","shares":27.472527,"entry_price":4.0,"cost_basis":109.8901,"price":4.0,"value":109.89,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"CRV","shares":1278.772379,"entry_price":0.2377,"cost_basis":303.9642,"price":0.2377,"value":303.96,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"FTM","shares":1187.648456,"entry_price":0.0464,"cost_basis":55.1069,"price":0.0464,"value":55.15,"pnl":0.0,"pnl_pct":0.0,"day_pnl":-0.77,"day_pct":-1.38},{"symbol":"MANTA","shares":704.225352,"entry_price":0.0757,"cost_basis":53.3099,"price":0.0757,"value":53.3,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"PEPE","shares":67567567.567568,"entry_price":3.77e-06,"cost_basis":254.7297,"price":3.77e-06,"value":254.73,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"FLOKI","shares":5494505.494505,"entry_price":3.06e-05,"cost_basis":168.1319,"price":3.06e-05,"value":168.13,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"PENDLE","shares":233.64486,"entry_price":1.89,"cost_basis":441.5888,"price":1.89,"value":440.89,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"NOT","shares":113636.363636,"entry_price":0.00047824,"cost_basis":54.3455,"price":0.00047824,"value":54.35,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0}]},"current_strategy":null,"top10":null,"per_top_dollars":null,"per_rest_dollars":null},"titan":{"id":"titan","name":"TITAN","color":"#ff8c00","icon":"TT","tagline":"Half on the heavyweights. Half on the rest. Concentration meets coverage.","inception":"2026-05-22","starting_capital":50000.0,"value":{"total":50000.0,"cash":24927.17,"pos_val":25072.83,"pnl":0.0,"pnl_pct":0.0,"day_pnl":4.54,"day_pct":0.01,"positions":[{"symbol":"BTC","shares":0.026205,"entry_price":77278.29,"cost_basis":2025.0776,"price":77278.29,"value":2025.08,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"ETH","shares":0.762195,"entry_price":2126.15,"cost_basis":1620.5409,"price":2126.15,"value":1620.54,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"BNB","shares":4.032258,"entry_price":655.99,"cost_basis":2645.1209,"price":655.99,"value":2645.12,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"SOL","shares":13.736264,"entry_price":86.72,"cost_basis":1191.2088,"price":86.72,"value":1191.21,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"XRP","shares":1008.064516,"entry_price":1.37,"cost_basis":1381.0484,"price":1.37,"value":1377.22,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"ADA","shares":3048.780488,"entry_price":0.2489,"cost_basis":758.8415,"price":0.2489,"value":758.84,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"TON","shares":446.428571,"entry_price":0.00630367,"cost_basis":2.8141,"price":0.00630367,"value":2.81,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"AVAX","shares":65.104167,"entry_price":9.38,"cost_basis":610.6771,"price":9.38,"value":610.68,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"DOGE","shares":9615.384615,"entry_price":0.105,"cost_basis":1009.6154,"price":0.105,"value":1009.42,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"TRX","shares":16447.368421,"entry_price":0.3654,"cost_basis":6009.8684,"price":0.3654,"value":6010.62,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"LINK","shares":30.048077,"entry_price":9.71,"cost_basis":291.7668,"price":9.71,"value":291.65,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"DOT","shares":66.489362,"entry_price":1.28,"cost_basis":85.1064,"price":1.28,"value":85.37,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"SHIB","shares":25201612.903226,"entry_price":5.82e-06,"cost_basis":146.6734,"price":5.82e-06,"value":146.67,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"BCH","shares":1.51699,"entry_price":377.91,"cost_basis":573.2857,"price":377.91,"value":573.29,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"NEAR","shares":105.932203,"entry_price":1.98,"cost_basis":209.7458,"price":1.98,"value":209.32,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"UNI","shares":60.096154,"entry_price":3.58,"cost_basis":215.1442,"price":3.58,"value":215.08,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"LTC","shares":5.755064,"entry_price":54.14,"cost_basis":311.5792,"price":54.14,"value":311.58,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"APT","shares":51.229508,"entry_price":0.9628,"cost_basis":49.3238,"price":0.9628,"value":49.32,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"SUI","shares":286.697248,"entry_price":1.1,"cost_basis":315.367,"price":1.1,"value":314.68,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"ATOM","shares":74.404762,"entry_price":2.04,"cost_basis":151.7857,"price":2.04,"value":152.01,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"ICP","shares":49.603175,"entry_price":2.54,"cost_basis":125.9921,"price":2.54,"value":126.09,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"FIL","shares":100.806452,"entry_price":0.994,"cost_basis":100.2016,"price":0.994,"value":100.2,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"ARB","shares":578.703704,"entry_price":0.1117,"cost_basis":64.6412,"price":0.1117,"value":64.64,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"AAVE","shares":2.520161,"entry_price":87.45,"cost_basis":220.3881,"price":87.45,"value":220.39,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"OP","shares":292.056075,"entry_price":0.131,"cost_basis":38.2593,"price":0.131,"value":38.26,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"ETC","shares":24.606299,"entry_price":8.97,"cost_basis":220.7185,"price":8.97,"value":220.72,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"VET","shares":14880.952381,"entry_price":0.00667,"cost_basis":99.256,"price":0.00667,"value":99.26,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"INJ","shares":24.414062,"entry_price":5.11,"cost_basis":124.7559,"price":5.11,"value":124.76,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"GRT","shares":2385.496183,"entry_price":0.0252,"cost_basis":60.1145,"price":0.0252,"value":60.17,"pnl":0.0,"pnl_pct":0.0,"day_pnl":-0.37,"day_pct":-0.61},{"symbol":"ALGO","shares":2948.113208,"entry_price":0.1143,"cost_basis":336.9693,"price":0.1143,"value":336.97,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"XLM","shares":4222.972973,"entry_price":0.146,"cost_basis":616.5541,"price":0.146,"value":616.58,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"HBAR","shares":5296.610169,"entry_price":0.089,"cost_basis":471.3983,"price":0.089,"value":471.45,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"MKR","shares":0.422297,"entry_price":1698.61,"cost_basis":717.3179,"price":1698.61,"value":717.32,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"TAO","shares":1.395089,"entry_price":276.72,"cost_basis":386.049,"price":276.72,"value":386.05,"pnl":0.0,"pnl_pct":0.0,"day_pnl":3.43,"day_pct":0.9},{"symbol":"STX","shares":411.184211,"entry_price":0.2495,"cost_basis":102.5905,"price":0.2495,"value":102.58,"pnl":0.0,"pnl_pct":0.0,"day_pnl":2.25,"day_pct":2.24},{"symbol":"RUNE","shares":120.192308,"entry_price":0.4285,"cost_basis":51.5024,"price":0.4285,"value":51.51,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"QNT","shares":6.127451,"entry_price":72.99,"cost_basis":447.2426,"price":72.99,"value":447.24,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"KAS","shares":4222.972973,"entry_price":0.035,"cost_basis":147.8041,"price":0.035,"value":147.73,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"IMX","shares":343.406593,"entry_price":0.1731,"cost_basis":59.4437,"price":0.1731,"value":59.43,"pnl":0.0,"pnl_pct":0.0,"day_pnl":-0.29,"day_pct":-0.48},{"symbol":"THETA","shares":292.056075,"entry_price":0.2049,"cost_basis":59.8423,"price":0.2049,"value":59.86,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"WLD","shares":163.612565,"entry_price":0.2705,"cost_basis":44.2572,"price":0.2705,"value":44.26,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"SEI","shares":1220.703125,"entry_price":0.0627,"cost_basis":76.5381,"price":0.0627,"value":76.6,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"EGLD","shares":17.17033,"entry_price":4.0,"cost_basis":68.6813,"price":4.0,"value":68.68,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"CRV","shares":799.232737,"entry_price":0.2377,"cost_basis":189.9776,"price":0.2377,"value":189.98,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"FTM","shares":742.280285,"entry_price":0.0464,"cost_basis":34.4418,"price":0.0464,"value":34.47,"pnl":0.0,"pnl_pct":0.0,"day_pnl":-0.48,"day_pct":-1.38},{"symbol":"MANTA","shares":440.140845,"entry_price":0.0757,"cost_basis":33.3187,"price":0.0757,"value":33.31,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"PEPE","shares":42229729.72973,"entry_price":3.77e-06,"cost_basis":159.2061,"price":3.77e-06,"value":159.21,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"FLOKI","shares":3434065.934066,"entry_price":3.06e-05,"cost_basis":105.0824,"price":3.06e-05,"value":105.08,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"PENDLE","shares":146.028037,"entry_price":1.89,"cost_basis":275.993,"price":1.89,"value":275.55,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0},{"symbol":"NOT","shares":71022.727273,"entry_price":0.00047824,"cost_basis":33.9659,"price":0.00047824,"value":33.97,"pnl":0.0,"pnl_pct":0.0,"day_pnl":0.0,"day_pct":0.0}]},"current_strategy":null,"top10":["BTC","ETH","BNB","SOL","XRP","ADA","TON","AVAX","DOGE","TRX"],"per_top_dollars":2500.0,"per_rest_dollars":625.0}},"leaderboards":{"week":[{"fund":"bot13","week_pnl":783.96,"week_pct":1.57,"week_grade":"B"},{"fund":"equalizer","week_pnl":7.26,"week_pct":0.01,"week_grade":"C"},{"fund":"titan","week_pnl":4.54,"week_pct":0.01,"week_grade":"C"},{"fund":"oracle","week_pnl":0.0,"week_pct":0.0,"week_grade":"C"},{"fund":"wizard","week_pnl":0.0,"week_pct":0.0,"week_grade":"C"}],"all":[{"fund":"bot13","all_pnl":785.47,"all_pct":1.57,"overall_grade":"B"},{"fund":"equalizer","all_pnl":7.26,"all_pct":0.01,"overall_grade":"C"},{"fund":"titan","all_pnl":4.54,"all_pct":0.01,"overall_grade":"C"},{"fund":"oracle","all_pnl":0.0,"all_pct":0.0,"overall_grade":"C"},{"fund":"wizard","all_pnl":0.0,"all_pct":0.0,"overall_grade":"C"}]}}}
+{
+  "data": {
+    "starting_capital": 50000.0,
+    "last_refresh": "2026-05-22T01:26:17",
+    "snapshots": [
+      {
+        "date": "2026-05-22",
+        "bot13": 50000.0,
+        "oracle": 50000.0,
+        "wizard": 50000.0,
+        "equalizer": 50000.0,
+        "titan": 50000.0
+      }
+    ],
+    "funds": {
+      "bot13": {
+        "id": "bot13",
+        "name": "BOT13",
+        "color": "#ec4899",
+        "icon": "13",
+        "tagline": "Daily intraday bot. Buys at open, sells before close. Skips the session if no edge.",
+        "inception": "2026-05-23",
+        "starting_capital": 50000.0,
+        "value": {
+          "total": 50000.0,
+          "cash": 50000.0,
+          "pos_val": 0.0,
+          "pnl": 0.0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0.0,
+          "day_pct": 0.0,
+          "positions": []
+        },
+        "current_strategy": {
+          "day": "2026-05-22",
+          "decision": "HOLD",
+          "rationale": "No positive momentum detected \u2014 sitting in cash.",
+          "picks": []
+        },
+        "top10": null,
+        "per_top_dollars": null,
+        "per_rest_dollars": null
+      },
+      "oracle": {
+        "id": "oracle",
+        "name": "ORACLE",
+        "color": "#a855f7",
+        "icon": "OR",
+        "tagline": "Weekly bot. Trades every Monday. All-in on the week's best bets.",
+        "inception": "2026-05-23",
+        "starting_capital": 50000.0,
+        "value": {
+          "total": 50000.0,
+          "cash": 50000.0,
+          "pos_val": 0,
+          "pnl": 0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0,
+          "day_pct": 0.0,
+          "positions": []
+        },
+        "current_strategy": {
+          "week": "2026-05-18",
+          "decision": "TRADE",
+          "rationale": "Concentrating capital in top 5 crypto by composite momentum. 7d/30d price action, volume, RSI.",
+          "picks": [
+            {
+              "symbol": "BTC",
+              "weight": 0.2,
+              "score": 150,
+              "rationale": "BTC: strong weekly momentum and volume confirmation."
+            },
+            {
+              "symbol": "ETH",
+              "weight": 0.2,
+              "score": 142,
+              "rationale": "ETH: strong weekly momentum and volume confirmation."
+            },
+            {
+              "symbol": "BNB",
+              "weight": 0.2,
+              "score": 134,
+              "rationale": "BNB: strong weekly momentum and volume confirmation."
+            },
+            {
+              "symbol": "SOL",
+              "weight": 0.2,
+              "score": 126,
+              "rationale": "SOL: strong weekly momentum and volume confirmation."
+            },
+            {
+              "symbol": "XRP",
+              "weight": 0.2,
+              "score": 118,
+              "rationale": "XRP: strong weekly momentum and volume confirmation."
+            }
+          ]
+        },
+        "top10": null,
+        "per_top_dollars": null,
+        "per_rest_dollars": null
+      },
+      "wizard": {
+        "id": "wizard",
+        "name": "WIZARD",
+        "color": "#10b981",
+        "icon": "WZ",
+        "tagline": "Monthly hold bot. Buys the 1st of month, sells the last. Slow and patient.",
+        "inception": "2026-05-23",
+        "starting_capital": 50000.0,
+        "value": {
+          "total": 50000.0,
+          "cash": 50000.0,
+          "pos_val": 0,
+          "pnl": 0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0,
+          "day_pct": 0.0,
+          "positions": []
+        },
+        "current_strategy": {
+          "month": "2026-05",
+          "decision": "TRADE",
+          "rationale": "Spreading across top 8 coins for the month. Long-horizon signals: 30d/90d momentum, RSI, market dominance.",
+          "picks": [
+            {
+              "symbol": "BTC",
+              "weight": 0.1471,
+              "score": 420,
+              "rationale": "BTC: strong 20d/60d trend with favorable risk-adjusted return."
+            },
+            {
+              "symbol": "ETH",
+              "weight": 0.1408,
+              "score": 402,
+              "rationale": "ETH: strong 20d/60d trend with favorable risk-adjusted return."
+            },
+            {
+              "symbol": "BNB",
+              "weight": 0.1345,
+              "score": 384,
+              "rationale": "BNB: strong 20d/60d trend with favorable risk-adjusted return."
+            },
+            {
+              "symbol": "SOL",
+              "weight": 0.1282,
+              "score": 366,
+              "rationale": "SOL: strong 20d/60d trend with favorable risk-adjusted return."
+            },
+            {
+              "symbol": "XRP",
+              "weight": 0.1218,
+              "score": 348,
+              "rationale": "XRP: strong 20d/60d trend with favorable risk-adjusted return."
+            },
+            {
+              "symbol": "ADA",
+              "weight": 0.1155,
+              "score": 330,
+              "rationale": "ADA: strong 20d/60d trend with favorable risk-adjusted return."
+            },
+            {
+              "symbol": "TON",
+              "weight": 0.1092,
+              "score": 312,
+              "rationale": "TON: strong 20d/60d trend with favorable risk-adjusted return."
+            },
+            {
+              "symbol": "AVAX",
+              "weight": 0.1029,
+              "score": 294,
+              "rationale": "AVAX: strong 20d/60d trend with favorable risk-adjusted return."
+            }
+          ]
+        },
+        "top10": null,
+        "per_top_dollars": null,
+        "per_rest_dollars": null
+      },
+      "equalizer": {
+        "id": "equalizer",
+        "name": "EQUALIZER",
+        "color": "#00d4ff",
+        "icon": "EQ",
+        "tagline": "Equal weight. No favorites. $1,000 in every coin.",
+        "inception": "2026-05-23",
+        "starting_capital": 50000.0,
+        "value": {
+          "total": 50000.0,
+          "cash": 50000.0,
+          "pos_val": 0,
+          "pnl": 0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0,
+          "day_pct": 0.0,
+          "positions": []
+        },
+        "current_strategy": null,
+        "top10": null,
+        "per_top_dollars": null,
+        "per_rest_dollars": null
+      },
+      "titan": {
+        "id": "titan",
+        "name": "TITAN",
+        "color": "#ff8c00",
+        "icon": "TT",
+        "tagline": "Half on the heavyweights. Half on the rest. Concentration meets coverage.",
+        "inception": "2026-05-23",
+        "starting_capital": 50000.0,
+        "value": {
+          "total": 50000.0,
+          "cash": 50000.0,
+          "pos_val": 0,
+          "pnl": 0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0,
+          "day_pct": 0.0,
+          "positions": []
+        },
+        "current_strategy": null,
+        "top10": [
+          "BTC",
+          "ETH",
+          "BNB",
+          "SOL",
+          "XRP",
+          "ADA",
+          "TON",
+          "AVAX",
+          "DOGE",
+          "TRX"
+        ],
+        "per_top_dollars": 2500.0,
+        "per_rest_dollars": 625.0
+      }
+    },
+    "leaderboards": {
+      "week": [
+        {
+          "fund": "bot13",
+          "week_pnl": 0.0,
+          "week_pct": 0.0,
+          "week_grade": "C"
+        },
+        {
+          "fund": "oracle",
+          "week_pnl": 0.0,
+          "week_pct": 0.0,
+          "week_grade": "C"
+        },
+        {
+          "fund": "wizard",
+          "week_pnl": 0.0,
+          "week_pct": 0.0,
+          "week_grade": "C"
+        },
+        {
+          "fund": "equalizer",
+          "week_pnl": 0.0,
+          "week_pct": 0.0,
+          "week_grade": "C"
+        },
+        {
+          "fund": "titan",
+          "week_pnl": 0.0,
+          "week_pct": 0.0,
+          "week_grade": "C"
+        }
+      ],
+      "all": [
+        {
+          "fund": "bot13",
+          "all_pnl": 0.0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
+        },
+        {
+          "fund": "oracle",
+          "all_pnl": 0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
+        },
+        {
+          "fund": "wizard",
+          "all_pnl": 0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
+        },
+        {
+          "fund": "equalizer",
+          "all_pnl": 0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
+        },
+        {
+          "fund": "titan",
+          "all_pnl": 0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
+        }
+      ]
+    }
+  }
+}
