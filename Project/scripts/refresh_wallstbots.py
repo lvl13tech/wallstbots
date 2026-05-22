@@ -989,6 +989,12 @@ def main():
     prev_b13_strategy = funds.get("bot13", {}).get("current_strategy")
     # Use the fund's current running total so gains compound day-over-day
     prev_b13_total = float(funds.get("bot13", {}).get("value", {}).get("total") or sc_global)
+    # day_open = value at start of today; persists across intraday refreshes so day_pnl is cumulative
+    b13_day_open = (
+        float(funds.get("bot13", {}).get("value", {}).get("day_open") or prev_b13_total)
+        if (prev_b13_strategy or {}).get("day") == today_iso
+        else prev_b13_total   # new day: yesterday's close becomes today's open
+    )
     # Respect inception date: do not trade before bot13's inception day
     b13_inception = funds.get("bot13", {}).get("inception", today_iso)
     if b13_inception > today_iso:
@@ -1055,13 +1061,15 @@ def main():
                 total     = sc
                 cash      = sc
 
-            pnl     = total - sc                                    # total gain since inception
-            pnl_pct = (pnl / sc * 100) if sc else 0
-            day_pct = (day_pnl / sum_cost * 100) if sum_cost else 0
+            pnl           = total - sc                              # total gain since inception
+            pnl_pct       = (pnl / sc * 100) if sc else 0
+            day_pnl_total = total - b13_day_open                   # full day's accumulated gain
+            day_pct       = (day_pnl_total / b13_day_open * 100) if b13_day_open else 0
 
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
-                        "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2), "positions": enriched}
+                        "day_pnl": round(day_pnl_total,2), "day_pct": round(day_pct,2),
+                        "day_open": round(b13_day_open,2), "positions": enriched}
             strategy = {
                 "day":         today_iso,
                 "decision":    b13_decision,

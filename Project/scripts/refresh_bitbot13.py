@@ -842,7 +842,14 @@ def main():
 
     # -- BOT13 decision ----------------------------------------------------------
     print("[bitbot13] running BOT13 decision...")
-    prev_b13_total = float(funds.get("bot13", {}).get("value", {}).get("total") or sc_global)
+    prev_b13_total   = float(funds.get("bot13", {}).get("value", {}).get("total") or sc_global)
+    b13_prev_strategy = funds.get("bot13", {}).get("current_strategy", {})
+    # day_open = value at start of today's session; persists across intraday refreshes
+    b13_day_open = (
+        float(funds.get("bot13", {}).get("value", {}).get("day_open") or prev_b13_total)
+        if b13_prev_strategy.get("day") == today_iso
+        else prev_b13_total   # new day: yesterday's close becomes today's open
+    )
     b13_inception  = funds.get("bot13", {}).get("inception", today_iso)
     if b13_inception > today_iso:
         b13_decision, b13_positions, b13_picks = "HOLD", [], []
@@ -909,13 +916,15 @@ def main():
                 total     = prev_b13_total
                 cash      = prev_b13_total
 
-            pnl     = total - sc                                        # total gain since inception
-            pnl_pct = (pnl / sc * 100) if sc else 0
-            day_pct = (day_pnl / prev_b13_total * 100) if prev_b13_total else 0
+            pnl          = total - sc                                    # total gain since inception
+            pnl_pct      = (pnl / sc * 100) if sc else 0
+            day_pnl_total = total - b13_day_open                        # full day's accumulated gain
+            day_pct      = (day_pnl_total / b13_day_open * 100) if b13_day_open else 0
 
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
-                        "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2), "positions": enriched}
+                        "day_pnl": round(day_pnl_total,2), "day_pct": round(day_pct,2),
+                        "day_open": round(b13_day_open,2), "positions": enriched}
             strategy = {
                 "day":      today_iso,
                 "decision": b13_decision,
