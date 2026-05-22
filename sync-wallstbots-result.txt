@@ -1,0 +1,42 @@
+=== SYNC wallstbots app.js === 
+Fri 05/22/2026 13:49:01.80 
+ 
+[1] copy updated app.js from Frontends to Project/public_html 
+        1 file(s) copied.
+exit: 0 
+ 
+[2] verify SYNDICATE is in the copied file 
+  syndicate: { label:'SYNDICATE', color:'#ff8c00', popular:true,
+  { q: ['price','cost','how much','pricing','member','insider','syndicate'], a: "MEMBER: $49.99/mo or $499/yr (1 portfolio). INSIDER: $69.99/mo or $699/yr (3 portfolios). SYNDICATE: $99.99/mo or $899/yr (up to 10 portfolios, all 3 platforms). FREE tier available — daily signals by email at no cost." },
+findstr exit: 0 
+ 
+[3] git add 
+ 
+[4] git status 
+M  Project/public_html/assets/app.js
+?? PUSH-PRICING-LOGGED.bat
+?? SYNC-WALLSTBOTS-APPJS.bat
+?? push-pricing-result.txt
+?? sync-wallstbots-result.txt
+ 
+[5] git commit 
+[master 2a99892] fix: sync Project/public_html/assets/app.js with 4-tier pricing
+ 1 file changed, 556 insertions(+), 120 deletions(-)
+ 
+[6] fetch origin 
+ 
+[7] rebase onto origin/master 
+Current branch master is up to date.
+rebase exit: 0 
+[8] push 
+To https://github.com/lvl13tech/wallstbots.git
+   435fc26..2a99892  master -> master
+push exit: 0 
+ 
+[9] final git log 
+2a99892 fix: sync Project/public_html/assets/app.js with 4-tier pricing
+435fc26 feat: 4-tier pricing (FREE/MEMBER/INSIDER/SYNDICATE) on all 3 sites
+3e97e8c auto: wallstbots data refresh [2026-05-22 16:41 UTC]
+a80e04b auto: bitbot13 data refresh [2026-05-22 14:52 UTC]
+ 
+=== SUCCESS - wallstbots.tech will deploy from Cloudflare === 

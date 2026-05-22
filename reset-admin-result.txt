@@ -1,0 +1,16 @@
+=== RESET ADMIN PASSWORD === 
+Fri 05/22/2026 14:02:32.21 
+ 
+[1] looking up lvl13cs@gmail.com...
+    status: 200
+    found user_id: 12865ae2-4907-4083-be90-1d6e37f0fd6d
+    email_confirmed: 2026-05-21
+[2] updating password...
+    status: 200
+    SUCCESS - password updated
+[3] psycopg2 not installed - skipping DB role check (password still reset OK)
+
+=== DONE ===
+  Login: https://wallstbots.tech/#/login
+  Email: lvl13cs@gmail.com
+  Password: set successfully

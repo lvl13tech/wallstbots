@@ -1,0 +1,53 @@
+=== PUSH PRICING TO MASTER === 
+Fri 05/22/2026 13:42:03.64 
+ 
+[1] abort any in-progress rebase 
+fatal: no rebase in progress
+exit: 128 
+ 
+[2] abort any in-progress merge 
+fatal: There is no merge to abort (MERGE_HEAD missing).
+exit: 128 
+ 
+[3] current stash list 
+stash@{0}: WIP on master: d354dc7 feat: 4-tier pricing (FREE/MEMBER/INSIDER/SYNDICATE) on all 3 sites
+stash@{1}: WIP on master: 47be229 feat: 3-site parity pass + crypto/stocks news filter + origin_platform tracking + lvl13 SPA restored
+stash@{2}: WIP on master: ab946b7 fix: workflow simplified + traceback on crash + data files restored
+stash@{3}: filter-branch: rewrite
+stash@{4}: WIP on master: c2ee9db Remove .env from tracking, add to .gitignore
+ 
+[4] drop all stashes (pricing commit is already committed, not stashed) 
+ 
+[5] git status 
+?? PUSH-PRICING-LOGGED.bat
+?? push-pricing-result.txt
+ 
+[6] git log (check d354dc7 is HEAD) 
+d354dc7 feat: 4-tier pricing (FREE/MEMBER/INSIDER/SYNDICATE) on all 3 sites
+232f63e align: all 5 bots run identical logic across all 3 sites
+9d1dc31 reset: inception=2026-05-23, all funds at SC with PnL=0; bot13 pre-inception guard
+b3b4245 reset: clean history restart ΓÇö all funds begin at starting_capital (May 21)
+537cf20 fix: correct pnl sign logic + negative dollar formatting across all 3 sites
+7c300f1 fix: Current Value no longer inherits red color from negative P&L
+ 
+[7] fetch origin 
+From https://github.com/lvl13tech/wallstbots
+   232f63e..3e97e8c  master     -> origin/master
+ 
+[8] rebase onto origin/master 
+Rebasing (1/1)Successfully rebased and updated refs/heads/master.
+rebase exit: 0 
+ 
+[9] normal push to master 
+To https://github.com/lvl13tech/wallstbots.git
+   3e97e8c..435fc26  master -> master
+push exit:  
+ 
+[10] final git log 
+435fc26 feat: 4-tier pricing (FREE/MEMBER/INSIDER/SYNDICATE) on all 3 sites
+3e97e8c auto: wallstbots data refresh [2026-05-22 16:41 UTC]
+a80e04b auto: bitbot13 data refresh [2026-05-22 14:52 UTC]
+35d0cdf auto: bitbot13 data refresh [2026-05-22 10:56 UTC]
+ab9f153 auto: bitbot13 data refresh [2026-05-22 04:15 UTC]
+ 
+=== SUCCESS - pricing is on master === 

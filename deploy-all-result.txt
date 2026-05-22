@@ -1,0 +1,41 @@
+=== DEPLOY ALL SITES === 
+Fri 05/22/2026 14:40:32.03 
+ 
+[1] sync Frontends/wallstbots.tech → Project/public_html 
+        1 file(s) copied.
+        1 file(s) copied.
+        1 file(s) copied.
+        1 file(s) copied.
+        1 file(s) copied.
+        1 file(s) copied.
+The system cannot find the file specified.
+        1 file(s) copied.
+        1 file(s) copied.
+sync done 
+ 
+[2] git status 
+ M Backend/main.py
+ M Frontends/bitbot13.tech/assets/app.js
+ M Frontends/lvl13.tech/assets/app.js
+ M Frontends/wallstbots.tech/assets/app.js
+ M Project/public_html/assets/app.js
+ M Project/public_html/assets/style.css
+ M Project/public_html/index.html
+?? DEPLOY-ALL.bat
+?? DEPLOY-BACKEND.bat
+?? PUSH-PRICING-LOGGED.bat
+?? Project/public_html/admin.html
+?? Project/public_html/api.js
+?? Project/public_html/auth.js
+?? Project/public_html/dashboard.html
+?? Project/public_html/login.html
+?? RESET-ADMIN-PASSWORD.bat
+?? SYNC-WALLSTBOTS-APPJS.bat
+?? deploy-all-result.txt
+?? deploy-backend-result.txt
+?? push-pricing-result.txt
+?? reset-admin-result.txt
+?? reset_admin.py
+?? sync-wallstbots-result.txt
+ 
+[3] git add all 

@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-<meta name="description" content="lvl13.tech — AI & Quantum Stock Tracker. Five trading strategies racing in real time. Daily Buy/Sell/Hold signals. Sector-filtered news.">
+<meta name="description" content="wallstbots.tech — Sector Stock Trading Bot Tracker. Five trading strategies racing in real time. Daily Buy/Sell/Hold signals. Sector-filtered news.">
 <meta name="theme-color" content="#06080d">
 <meta name="format-detection" content="telephone=no">
-<meta property="og:title" content="lvl13.tech — AI & Quantum Stock Tracker">
-<meta property="og:description" content="Five trading strategies. One universe. Watch them race.">
+<meta property="og:title" content="wallstbots.tech — Sector Stock Trading Bot Tracker">
+<meta property="og:description" content="Five trading strategies. 55 stocks. Watch them race.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://lvl13.tech">
-<meta property="og:image" content="https://lvl13.tech/assets/og-image.svg">
+<meta property="og:url" content="https://wallstbots.tech">
+<meta property="og:image" content="https://wallstbots.tech/assets/og-image.svg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="lvl13.tech — AI & Quantum Stock Tracker">
-<meta name="twitter:description" content="Five trading strategies. One universe. Watch them race.">
-<meta name="twitter:image" content="https://lvl13.tech/assets/og-image.svg">
+<meta name="twitter:title" content="wallstbots.tech — Sector Stock Trading Bot Tracker">
+<meta name="twitter:description" content="Five trading strategies. 55 stocks. Watch them race.">
+<meta name="twitter:image" content="https://wallstbots.tech/assets/og-image.svg">
 <meta name="robots" content="index,follow">
-<link rel="canonical" href="https://lvl13.tech/">
-<title>lvl13.tech — AI & Quantum Stock Tracker</title>
+<link rel="canonical" href="https://wallstbots.tech/">
+<title>wallstbots.tech — Sector Stock Trading Bot Tracker</title>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="stylesheet" href="assets/style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
@@ -26,8 +26,8 @@
 
 <header class="site-header">
   <div class="brand">
-    <a href="#/" class="brand-link" aria-label="Level XIII Tech home">
-      <img src="assets/logo.svg" alt="Level XIII Tech" class="brand-logo">
+    <a href="#/" class="brand-link" aria-label="Wall St. Bots home">
+      <img src="assets/logo.svg" alt="Wall St. Bots" class="brand-logo">
     </a>
   </div>
   <button class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false">
@@ -43,6 +43,8 @@
     <a href="#/signals" data-route="/signals">Signals</a>
     <a href="#/reports" data-route="/reports">Reports</a>
     <a href="#/get-yours" data-route="/get-yours" class="cta">Get Yours</a>
+    <a href="/login.html" class="nav-login" id="navLoginBtn">Log In</a>
+    <a href="/dashboard.html" class="nav-dashboard" id="navDashBtn" style="display:none">Dashboard</a>
   </nav>
 </header>
 
@@ -54,20 +56,28 @@
   <div class="footer-inner">
     <div class="footer-brand">
       <img src="assets/favicon.svg" alt="" class="footer-robot">
-      <span>Level XIII Tech</span>
+      <span>Wall St. Bots</span>
     </div>
     <div class="footer-links">
       <a href="#/how">How It Works</a>
       <a href="#/race">The Race</a>
       <a href="#/signals">Signals</a>
       <a href="#/reports">Reports</a>
-      <a href="mailto:info@lvl13.tech">info@lvl13.tech</a>
+      <a href="mailto:info@wallstbots.tech">info@wallstbots.tech</a>
       <a href="#/get-yours" class="cta-link">Get Yours</a>
     </div>
+    <div class="footer-network">
+      <span class="footer-network-label">Also from Level 13</span>
+      <div class="footer-network-links">
+        <a href="https://lvl13.tech" target="_blank" rel="noopener">lvl13.tech</a>
+        <a href="https://bitbot13.tech" target="_blank" rel="noopener">bitbot13.tech</a>
+        <span class="footer-network-current">wallstbots.tech</span>
+      </div>
+    </div>
     <div class="footer-fine">
-      <span>&copy; 2026 lvl13.tech</span><span class="dot">·</span>
+      <span>&copy; 2026 wallstbots.tech</span><span class="dot">·</span>
       <span>Not investment advice</span><span class="dot">·</span>
-      <a href="mailto:info@lvl13.tech">Contact</a>
+      <a href="mailto:info@wallstbots.tech">Contact</a>
     </div>
   </div>
 </footer>
@@ -76,13 +86,13 @@
   <span class="chatbot-icon">?</span>
   <span class="chatbot-label">Need help?</span>
 </button>
-<div class="chatbot-panel" id="chatbotPanel" role="dialog" aria-label="Chat with Level XIII">
+<div class="chatbot-panel" id="chatbotPanel" role="dialog" aria-label="Chat with Wall St. Bots">
   <div class="chatbot-head">
-    <span class="chatbot-title">Level XIII · FAQ Bot</span>
+    <span class="chatbot-title">Wall St. Bots · FAQ Bot</span>
     <button class="chatbot-close" id="chatbotClose" aria-label="Close chat">&times;</button>
   </div>
   <div class="chatbot-body" id="chatbotBody">
-    <div class="chatbot-msg bot">Hey! I'm the Level XIII FAQ bot. Ask me anything — pricing, the bots, how it works, your data, etc.</div>
+    <div class="chatbot-msg bot">Hey! I'm the Wall St. Bots FAQ bot. Ask me anything — pricing, the bots, how it works, your data, etc.</div>
     <div class="chatbot-quick" id="chatbotQuick"></div>
   </div>
   <form class="chatbot-input" id="chatbotForm" autocomplete="off">

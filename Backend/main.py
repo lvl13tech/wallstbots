@@ -44,6 +44,9 @@ POLYGON_API_KEY          = os.getenv("POLYGON_API_KEY", "")
 # Internal key used by GitHub Actions to push tracker data — never exposed publicly
 INTERNAL_API_KEY         = os.getenv("INTERNAL_API_KEY", "")
 
+# Admin codes: grant free lifetime INSIDER access — case-insensitive
+ADMIN_CODES = {'admin13'}
+
 PAYPAL_API_BASE = (
     "https://api.paypal.com" if PAYPAL_MODE == "live"
     else "https://api.sandbox.paypal.com"
@@ -171,6 +174,12 @@ class SaveStocksRequest(BaseModel):
 class AdminUserUpdate(BaseModel):
     role: Optional[str] = None          # 'user' | 'admin'
     max_free_bots: Optional[int] = None
+
+class AdminCodeClaimRequest(BaseModel):
+    code: str
+    email: EmailStr
+    password: str
+    full_name: Optional[str] = None
 
 # ============================================================================
 # AUTH HELPERS
@@ -356,6 +365,164 @@ async def login(request: LoginRequest):
 @app.post("/auth/logout")
 async def logout(current_user: dict = Depends(get_current_user)):
     return {"success": True, "message": "Logged out"}
+
+
+@app.on_event("startup")
+async def startup_migration():
+    """Add subscription tier columns to users table if they don't exist yet."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name='users' AND column_name='subscription_tier'
+                ) THEN
+                    ALTER TABLE users ADD COLUMN subscription_tier VARCHAR(20) DEFAULT 'free';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name='users' AND column_name='tier_expires_at'
+                ) THEN
+                    ALTER TABLE users
+                    ADD COLUMN tier_expires_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name='users' AND column_name='admin_code_used'
+                ) THEN
+                    ALTER TABLE users ADD COLUMN admin_code_used BOOLEAN DEFAULT FALSE;
+                END IF;
+            END $$;
+        """)
+        conn.commit()
+        print("[startup] subscription_tier migration OK")
+    except Exception as e:
+        print(f"[startup] migration warning (non-fatal): {e}")
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.post("/auth/signup-with-admin-code")
+async def signup_with_admin_code(request: AdminCodeClaimRequest):
+    """
+    Sign up a new user using an admin code.
+    Grants free lifetime INSIDER access — no PayPal required.
+    Returns an access token so the user is immediately logged in.
+    """
+    if request.code.lower() not in ADMIN_CODES:
+        raise HTTPException(status_code=400, detail="Invalid admin code")
+
+    # Enforce 7-account cap on admin code signups
+    ADMIN_CODE_MAX = 7
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM users WHERE admin_code_used = TRUE")
+        used_count = cursor.fetchone()[0]
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+    if used_count >= ADMIN_CODE_MAX:
+        raise HTTPException(
+            status_code=403,
+            detail="This code has reached its maximum number of uses. Contact the admin."
+        )
+
+    # Create Supabase auth user
+    try:
+        auth_response = call_supabase_auth("POST", "/signup", {
+            "email": request.email,
+            "password": request.password,
+            "user_metadata": {"full_name": request.full_name or ""}
+        })
+    except HTTPException as e:
+        raise HTTPException(status_code=400, detail=f"Signup failed: {e.detail}")
+
+    user_obj = auth_response.get("user") or auth_response
+    user_id  = user_obj.get("id")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Could not create account — email may already be registered")
+
+    # Create user row with INSIDER tier (lifetime)
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("""
+            INSERT INTO users (id, email, full_name, subscription_tier, tier_expires_at, admin_code_used)
+            VALUES (%s, %s, %s, 'insider', NULL, TRUE)
+            ON CONFLICT (id) DO UPDATE SET
+                email             = EXCLUDED.email,
+                full_name         = EXCLUDED.full_name,
+                subscription_tier = 'insider',
+                tier_expires_at   = NULL,
+                admin_code_used   = TRUE
+            RETURNING id, email, referral_code
+        """, (user_id, request.email, request.full_name or ""))
+        user = cursor.fetchone()
+        conn.commit()
+
+        # Backfill referral_codes (non-fatal)
+        if user and user.get("referral_code"):
+            try:
+                cursor.execute("""
+                    INSERT INTO referral_codes (code, created_by_user_id)
+                    VALUES (%s, %s) ON CONFLICT (code) DO NOTHING
+                """, (user["referral_code"], user_id))
+                conn.commit()
+            except Exception:
+                pass
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+    # Log the user in to get a JWT
+    try:
+        login_resp = call_supabase_auth("POST", "/token?grant_type=password", {
+            "email":    request.email,
+            "password": request.password,
+        })
+        access_token = login_resp.get("access_token")
+    except Exception:
+        access_token = None  # account created but email confirmation may be required
+
+    return {
+        "success":      True,
+        "access_token": access_token,
+        "tier":         "insider",
+        "message":      "Welcome! You have free lifetime INSIDER access.",
+        "needs_confirm": access_token is None,
+    }
+
+
+@app.post("/auth/claim-admin-access")
+async def claim_admin_access(
+    code: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Activate an admin code on an existing logged-in account.
+    Sets subscription_tier = 'insider' with no expiry.
+    """
+    if code.lower() not in ADMIN_CODES:
+        raise HTTPException(status_code=400, detail="Invalid admin code")
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE users
+            SET subscription_tier = 'insider', tier_expires_at = NULL
+            WHERE id = %s
+        """, (current_user["user_id"],))
+        conn.commit()
+        return {"success": True, "tier": "insider", "message": "INSIDER access activated!"}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
 
 # ============================================================================
 # USER ENDPOINTS
@@ -602,6 +769,16 @@ async def validate_referral_code(code: str = Query(..., description="Referral co
     """
     if not code or len(code) < 4:
         return {"valid": False, "code": code, "message": "Invalid code format"}
+
+    # Admin codes bypass the DB — grant free lifetime INSIDER access
+    if code.lower() in ADMIN_CODES:
+        return {
+            "valid":   True,
+            "code":    code,
+            "type":    "admin_lifetime",
+            "tier":    "insider",
+            "message": "Admin code — free lifetime INSIDER access! Enter your details below to claim.",
+        }
 
     conn = get_db_connection()
     try:

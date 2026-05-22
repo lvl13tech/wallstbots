@@ -83,6 +83,7 @@ function route() {
   if (path.startsWith('/report/'))           return renderReport(path.split('/')[2]);
   if (path === '/get-yours')                 return renderGetYours();
   if (path === '/thanks')                    return renderThanks();
+  if (path === '/thanks-admin')              return renderThanksAdmin();
   if (path === '/referral')                  return renderReferral();
   if (path === '/login')  { window.location.href = '/login.html'; return; }
   if (path === '/signup') { window.location.href = '/login.html#signup'; return; }
@@ -547,10 +548,11 @@ const TIER_META = {
   syndicate: { label:'SYNDICATE', color:'#ff8c00', popular:true,
                features:['Up to 10 portfolios','All 5 bots active','All 3 platforms','Max signal coverage','First access to features'] },
 };
-let GY_CYCLE = 'annual';
-let GY_TIER  = 'member';
-let GY_REF   = '';
-let GY_VALID = false;
+let GY_CYCLE      = 'monthly';
+let GY_TIER       = 'member';
+let GY_REF        = '';
+let GY_VALID      = false;
+let GY_ADMIN_CODE = '';   // set when an admin lifetime code is applied
 
 function renderGetYours() {
   const urlRef = new URLSearchParams(location.search).get('ref')
@@ -571,13 +573,13 @@ function renderGetYours() {
 
     // ── FREE tier ──
     + '<div class="panel" style="margin-bottom:16px;border:1px solid var(--border)">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">'
-    + '<div>'
+    + '<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px">'
+    + '<div style="flex:1 1 240px">'
     + '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">FREE</div>'
     + '<div style="font-size:26px;font-weight:800;color:var(--fg)">$0</div>'
-    + '<div style="font-size:13px;color:var(--muted);margin-top:4px;max-width:380px">Follow a real AI trading bot for free. Get daily Buy/Hold/Sell signals straight to your inbox and see exactly how Bot13 trades every market day.</div>'
+    + '<div style="font-size:13px;color:var(--muted);margin-top:4px">Follow a real AI trading bot for free. Get daily Buy/Hold/Sell signals straight to your inbox and see exactly how Bot13 trades every market day.</div>'
     + '</div>'
-    + '<div style="min-width:260px">'
+    + '<div style="flex:1 1 240px;min-width:0">'
     + '<input id="freeEmail" type="email" placeholder="Enter your email" '
     + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:8px">'
     + '<button onclick="gyFreeSignup()" style="width:100%;background:var(--surface2);color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:10px 0;font-weight:700;cursor:pointer;font-size:14px">Get Free Signals →</button>'
@@ -585,7 +587,7 @@ function renderGetYours() {
     + '</div></div></div>'
 
     // ── Paid tier cards ──
-    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">'
+    + '<div class="grid grid-3" style="gap:16px;margin-bottom:24px">'
     + Object.entries(TIER_META).map(([tier, meta]) =>
         '<div id="tierCard_'+tier+'" onclick="setGyTier(\''+tier+'\')" '
         + 'style="border:2px solid '+(meta.popular ? meta.color : 'var(--border)')+';border-radius:12px;padding:20px;cursor:pointer;transition:all 0.15s;position:relative;background:var(--surface)">'
@@ -644,10 +646,11 @@ function renderGetYours() {
     + '</div>';
 
   // Initialize state
-  GY_CYCLE = 'annual';
+  GY_CYCLE = 'monthly';
   GY_TIER  = 'member';
-  GY_REF   = '';
-  GY_VALID = false;
+  GY_REF        = '';
+  GY_VALID      = false;
+  GY_ADMIN_CODE = '';
   updateGyPricing();
 
   // Auto-apply ref from URL
@@ -770,20 +773,30 @@ async function applyRefCode() {
   try {
     const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/subscriptions/validate-referral?code=' + encodeURIComponent(code));
     const d = await r.json();
-    if (d.valid) {
-      GY_REF   = d.code;
-      GY_VALID = true;
+    if (d.valid && d.type === 'admin_lifetime') {
+      // Admin code — free lifetime INSIDER, no PayPal
+      GY_ADMIN_CODE = code;
+      GY_REF        = '';
+      GY_VALID      = false;
+      msg.innerHTML = '<span style="color:#ff8c00;font-weight:700">🎉 Admin code verified — free lifetime INSIDER access! Enter your details below to claim.</span>';
+      renderPaypalForm();
+    } else if (d.valid) {
+      GY_ADMIN_CODE = '';
+      GY_REF        = d.code;
+      GY_VALID      = true;
       msg.innerHTML = '<span style="color:#10b981;font-weight:700">✓ Referral code applied! '
         + (GY_CYCLE === 'annual' ? '$100 off your annual plan.' : '50% off your first month.')
         + '</span>';
     } else {
-      GY_REF   = '';
-      GY_VALID = false;
+      GY_ADMIN_CODE = '';
+      GY_REF        = '';
+      GY_VALID      = false;
       msg.innerHTML = '<span style="color:var(--red)">✗ ' + (d.message || 'Invalid code.') + '</span>';
     }
   } catch (_) {
-    GY_REF   = '';
-    GY_VALID = false;
+    GY_ADMIN_CODE = '';
+    GY_REF        = '';
+    GY_VALID      = false;
     msg.innerHTML = '<span style="color:var(--muted)">Could not validate — check your connection.</span>';
   }
   updateGyPricing();
@@ -792,6 +805,21 @@ async function applyRefCode() {
 function renderPaypalForm() {
   const wrap = $('paypalFormWrap');
   if (!wrap) return;
+
+  // Admin code flow — show signup form instead of PayPal
+  if (GY_ADMIN_CODE) {
+    wrap.innerHTML =
+      '<input id="adminEmail" type="email" placeholder="Your email" autocomplete="email" '
+      + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:8px">'
+      + '<input id="adminPw" type="password" placeholder="Create a password (min 6 chars)" autocomplete="new-password" '
+      + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:10px">'
+      + '<button onclick="claimAdminAccess()" '
+      + 'style="width:100%;background:#ff8c00;color:#000;border:none;border-radius:8px;padding:12px 0;font-weight:800;cursor:pointer;font-size:15px">🎉 Claim Free INSIDER Access</button>'
+      + '<div id="adminClaimMsg" style="font-size:12px;margin-top:8px;min-height:16px"></div>'
+      + '<div style="font-size:11px;margin-top:8px;color:var(--muted);text-align:center">Free forever. Want SYNDICATE? Upgrade for just $30/mo anytime.</div>';
+    return;
+  }
+
   const paypal     = STATE.meta.paypalEmail;
   const annual     = GY_CYCLE === 'annual';
   const ref        = GY_VALID ? GY_REF : '';
@@ -836,6 +864,55 @@ function renderPaypalForm() {
       ? 'Referral discount applied to first payment. Renews at $'+base+(annual?'/yr':'/mo')+' afterwards.'
       : '$'+base+' today, renews every '+(annual?'year':'month'))
     + '</div>';
+}
+
+async function claimAdminAccess() {
+  const email = ($('adminEmail') || {}).value || '';
+  const pw    = ($('adminPw')    || {}).value || '';
+  const msg   = $('adminClaimMsg');
+  if (!email || !email.includes('@')) {
+    if (msg) msg.innerHTML = '<span style="color:var(--red)">Please enter a valid email.</span>';
+    return;
+  }
+  if (pw.length < 6) {
+    if (msg) msg.innerHTML = '<span style="color:var(--red)">Password must be at least 6 characters.</span>';
+    return;
+  }
+  if (msg) msg.innerHTML = '<span style="color:var(--muted)">Creating your account…</span>';
+  try {
+    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/auth/signup-with-admin-code', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ code: GY_ADMIN_CODE, email, password: pw })
+    });
+    const d = await r.json();
+    if (r.ok && d.success) {
+      if (d.access_token) localStorage.setItem('access_token', d.access_token);
+      localStorage.setItem('subscription_tier', 'insider');
+      location.hash = '#/thanks-admin';
+    } else {
+      if (msg) msg.innerHTML = '<span style="color:var(--red)">✗ ' + (d.detail || d.message || 'Error creating account.') + '</span>';
+    }
+  } catch (_) {
+    if (msg) msg.innerHTML = '<span style="color:var(--muted)">Could not connect — please try again.</span>';
+  }
+}
+
+function renderThanksAdmin() {
+  $('app').innerHTML =
+    '<section class="hero"><div class="hero-content">'
+    + '<h1>You\'re in. 🎉</h1>'
+    + '<p style="color:var(--muted);font-size:16px">Welcome to <strong style="color:var(--fg)">Wall St. Bots</strong> — your account is live.</p>'
+    + '<div style="background:var(--surface2);border:2px solid #ff8c00;border-radius:12px;padding:24px;margin:24px 0;max-width:420px">'
+    + '<div style="font-size:11px;letter-spacing:1.5px;color:#ff8c00;font-weight:700;margin-bottom:6px;text-transform:uppercase">Your Tier</div>'
+    + '<div style="font-size:28px;font-weight:800;color:var(--fg)">INSIDER <span style="color:#10b981;font-size:15px;font-weight:600">FREE · LIFETIME</span></div>'
+    + '<div style="font-size:13px;color:var(--muted);margin-top:10px;line-height:1.6">3 portfolios · Priority signals · Analytics dashboard<br>Want SYNDICATE? Upgrade for just <strong style="color:var(--fg)">$30/mo</strong> anytime.</div>'
+    + '</div>'
+    + '<p style="color:var(--muted);font-size:13px">Check your email — confirm your address to activate your account, then log in.</p>'
+    + '<div class="hero-ctas">'
+    + '<a class="btn btn-primary" href="/login.html">Log In →</a>'
+    + '<a class="btn" href="#/">Back to Dashboard</a>'
+    + '</div></div></section>';
 }
 
 function renderThanks() {
