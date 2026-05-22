@@ -1,6 +1,6 @@
 /* ================================================================
-   lvl13.tech — single-page app  v3
-   Router + page renderers + data fetching + chatbot
+   wallstbots.tech — single-page app  v1
+   Identical engine to lvl13.tech — sector stocks universe
    ================================================================ */
 
 const STATE = { funds: null, news: null, signals: null, reports: null,
@@ -10,8 +10,8 @@ let SIGNALS_FILTER = 'ALL';
 let SECTOR_FILTER = 'ALL';
 let PICKED_TICKERS = [];
 
-const fmt$  = n => '$' + (n||0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
-const fmt$0 = n => '$' + Math.round(n||0).toLocaleString();
+const fmt$  = n => { const v = n||0; return (v<0?'-$':'$') + Math.abs(v).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); };
+const fmt$0 = n => { const v = Math.round(n||0); return (v<0?'-$':'$') + Math.abs(v).toLocaleString(); };
 const fmtPct = n => (n>=0?'+':'') + (n||0).toFixed(2) + '%';
 const cls   = n => n>=0 ? 'pos' : 'neg';
 const $     = id => document.getElementById(id);
@@ -30,17 +30,23 @@ const FUND_META = {
 };
 const FUND_ORDER = ['bot13','oracle','wizard','equalizer','titan'];
 
-// ============ DATA LOADING ============
 const TRACKER_API = 'https://wallstbots-backend-868128114349.us-east1.run.app/public/tracker';
 
+function fetchWithTimeout(url, opts = {}, ms = 8000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(t));
+}
+
+// ============ DATA LOADING — backend API ============
 async function loadAll() {
   if (location.protocol === 'file:') { showFileProtocolWarning(); return; }
   try {
     const r = await Promise.allSettled([
-      fetch(`${TRACKER_API}/state`,   { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
-      fetch(`${TRACKER_API}/news`,    { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
-      fetch(`${TRACKER_API}/signals`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
-      fetch(`${TRACKER_API}/reports`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/state?platform=wallstbots`,   { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/news?platform=wallstbots`,    { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/signals?platform=wallstbots`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/reports?platform=wallstbots`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
     ]);
     STATE.funds   = r[0].status === 'fulfilled' ? r[0].value : null;
     STATE.news    = r[1].status === 'fulfilled' ? r[1].value : { items: [] };
@@ -56,7 +62,7 @@ async function loadAll() {
 }
 
 function showFileProtocolWarning() {
-  $('app').innerHTML = '<div class="hero" style="border-color:var(--orange)"><h1 style="color:var(--orange)">Open this site over HTTP, not file://</h1><p>Double-click <code>PREVIEW_SITE.bat</code> in the project folder.</p></div>';
+  $('app').innerHTML = '<div class="hero" style="border-color:var(--orange)"><h1 style="color:var(--orange)">Open this site over HTTP, not file://</h1><p>Serve via a local web server or deploy to Cloudflare Pages.</p></div>';
 }
 function showDataLoadError(detail) {
   $('app').innerHTML = '<div class="hero" style="border-color:var(--red)"><h1 style="color:var(--red)">Couldn\'t load site data</h1>'+(detail?'<p style="color:var(--muted);font-family:monospace">'+escapeHtml(detail)+'</p>':'')+'<p>Try a hard refresh (Ctrl+F5).</p></div>';
@@ -76,8 +82,10 @@ function route() {
   if (path === '/reports')                   return renderReports();
   if (path.startsWith('/report/'))           return renderReport(path.split('/')[2]);
   if (path === '/get-yours')                 return renderGetYours();
-  if (path === '/customize')                 return renderCustomize();
   if (path === '/thanks')                    return renderThanks();
+  if (path === '/referral')                  return renderReferral();
+  if (path === '/login')  { window.location.href = '/login.html'; return; }
+  if (path === '/signup') { window.location.href = '/login.html#signup'; return; }
   renderHome();
 }
 function setActiveNav(path) {
@@ -105,30 +113,32 @@ function relTime(iso) {
 function sectorClass(s) {
   if (!s) return 'other';
   const v = s.toLowerCase();
-  if (v.includes('ai') || v.includes('quantum')) return 'aiq';
-  if (v.includes('bio') || v.includes('health')) return 'bio';
-  if (v.includes('energy') || v.includes('oil')) return 'energy';
-  if (v.includes('defense') || v.includes('military')) return 'defense';
-  if (v.includes('finance') || v.includes('bank')) return 'finance';
-  if (v.includes('tech')) return 'tech';
+  if (v.includes('energy'))                          return 'energy';
+  if (v.includes('material'))                        return 'other';
+  if (v.includes('industrial'))                      return 'tech';
+  if (v.includes('consumer disc'))                   return 'other';
+  if (v.includes('consumer stap'))                   return 'other';
+  if (v.includes('health') || v.includes('bio'))     return 'bio';
+  if (v.includes('financ') || v.includes('bank'))    return 'finance';
+  if (v.includes('tech') || v.includes(' it'))       return 'tech';
+  if (v.includes('communic'))                        return 'tech';
+  if (v.includes('util'))                            return 'energy';
+  if (v.includes('real estate'))                     return 'finance';
   return 'other';
 }
-function isAIQ(item) {
-  const s = (item.sector || '').toLowerCase();
-  return s.includes('ai') || s.includes('quantum');
-}
 function getYoursHint(msg) {
-  msg = msg || 'Like what you see? Build this on YOUR stocks.';
+  msg = msg || 'Want this tracker running on YOUR stocks?';
   return '<a class="get-yours-hint" href="#/get-yours" style="text-decoration:none"><span class="arrow">→</span><span class="msg">'+msg+'</span><span class="pill">GET YOURS</span></a>';
 }
 function fundCard(fid, data) {
   const meta = FUND_META[fid];
-  const v = data && data.value ? data.value : { total: 43000, pnl: 0, pnl_pct: 0, day_pnl: 0, day_pct: 0 };
+  const cap = (STATE.funds && STATE.funds.starting_capital) || 55000;
+  const v = data && data.value ? data.value : { total: cap, pnl: 0, pnl_pct: 0, day_pnl: 0, day_pct: 0 };
   return '<a class="card clickable fund-card" href="#/fund/'+fid+'">'
     + '<div class="fund-head"><span class="fund-icon '+fid+'">'+meta.icon+'</span>'
     + '<div style="min-width:0"><div class="fund-name">'+meta.name+'</div><div class="fund-kind" style="color:'+meta.color+'">'+meta.kind+'</div></div></div>'
     + '<div class="fund-tag">'+meta.tagline+'</div>'
-    + '<div class="fund-value '+cls(v.pnl)+'">'+fmt$0(v.total)+'</div>'
+    + '<div class="fund-value">'+fmt$0(v.total)+'</div>'
     + '<div class="fund-pnl '+cls(v.pnl)+'">'+fmt$0(v.pnl)+' ('+fmtPct(v.pnl_pct)+') since inception</div>'
     + '<div class="stat-row"><span class="stat-label">Today</span>'
     + '<span class="stat-val '+cls(v.day_pnl)+'">'+fmtPct(v.day_pct)+'</span></div></a>';
@@ -146,7 +156,6 @@ function newsCard(it) {
 
 // ============ PAGE: HOMEPAGE ============
 function renderHome() {
-  // Live leaderboard strip — 5 funds
   const strip = FUND_ORDER.map(fid => {
     const data = STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null;
     const v = data && data.value ? data.value : { day_pct: 0, day_pnl: 0 };
@@ -157,7 +166,6 @@ function renderHome() {
       + '<div class="lb-pct '+cls(v.day_pnl)+'">'+fmtPct(v.day_pct)+'</div></a>';
   }).join('');
 
-  // SIGNALS — TODAY: top picks per category
   const signals = (STATE.signals && STATE.signals.recommendations) || [];
   const summary = (STATE.signals && STATE.signals.summary) || {};
   const topByAction = (action, n) => signals.filter(r => r.action === action).slice(0, n);
@@ -173,21 +181,25 @@ function renderHome() {
       + '<div class="signals-today-list">'+rows+'</div></div>';
   };
 
-  // NEWS — TODAY: 5 AI/Quantum stories only
   const news = STATE.news || { items: [] };
-  const aiqItems = (news.items || []).filter(isAIQ).slice(0, 5);
-  const newsCards = aiqItems.length ? aiqItems.map(newsCard).join('')
-    : '<p class="sub">No AI &amp; Quantum headlines yet — the fetcher runs nightly.</p>';
+  const newsItems = (news.items || []).slice(0, 5);
+  const newsCards = newsItems.length ? newsItems.map(newsCard).join('')
+    : '<p class="sub">No headlines yet — the fetcher runs nightly.</p>';
 
-  // RACE — 5 fund cards
   const raceCards = FUND_ORDER.map(fid =>
     fundCard(fid, STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null)).join('');
 
+  const cap = (STATE.funds && STATE.funds.starting_capital) || 55000;
+  const stockCount = (() => {
+    const eq = STATE.funds && STATE.funds.funds && STATE.funds.funds.equalizer;
+    return eq && eq.value && eq.value.positions ? eq.value.positions.length : 55;
+  })();
+
   $('app').innerHTML =
     '<section class="hero"><img src="assets/robot.svg" alt="" class="hero-robot">'
-    + '<div class="hero-content"><span class="hero-eyebrow">AI &amp; Quantum Stock Tracker</span>'
-    + '<h1>5 AI strategies. One universe. Watch them race.</h1>'
-    + '<p>Three Claude-built bots — daily, weekly, monthly — trading head-to-head against two passive strategies on the same 43 AI/Quantum stocks. Daily Buy/Sell/Hold signals on every name. AI &amp; Quantum news, filtered to what matters. <strong>Welcome to Level 13.</strong></p>'
+    + '<div class="hero-content"><span class="hero-eyebrow">Sector Stock Tracker</span>'
+    + '<h1>5 strategies. '+stockCount+' stocks. Watch them race.</h1>'
+    + '<p>Three bots — daily, weekly, monthly — trading head-to-head against two passive strategies on the top 3 stocks per S&amp;P 500 sector plus the hottest IPOs since 2024. '+fmt$0(cap)+' starting capital. Daily Buy/Sell/Hold signals on every name. Sector news, filtered to what matters. <strong>Welcome to Wall St. Bots.</strong></p>'
     + '<div class="hero-ctas"><a class="btn btn-primary" href="#/race">See The Race</a>'
     + '<a class="btn btn-secondary" href="#/how">How It Works</a></div></div></section>'
 
@@ -214,14 +226,36 @@ function renderHome() {
     + '<div class="panel" style="margin-top:18px"><h3>Performance Trajectory — All 5 Strategies</h3>'
     + '<div class="chart-wrap"><canvas id="chartRace"></canvas></div></div>'
 
+    + '<div class="section-head" style="margin-top:36px"><h3>Also from Level 13</h3></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">'
+
+    + '<div class="card" style="display:flex;flex-direction:column">'
+    + '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--blue);margin-bottom:12px;text-transform:uppercase">Our<br>AI &amp; Quantum<br>Bots</div>'
+    + '<a href="https://lvl13.tech" target="_blank" rel="noopener">'
+    + '<img src="assets/logo-lvl13.png" alt="lvl13.tech" style="width:100%;max-width:200px;height:auto;display:block;margin-bottom:14px;border-radius:8px"></a>'
+    + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 14px;flex:1">The same 5 bots racing on 43 hand-picked AI &amp; Quantum stocks. Daily signals, live leaderboards, and weekly performance reports.</p>'
+    + '<a class="btn btn-secondary" href="https://lvl13.tech" target="_blank" rel="noopener" style="font-size:12px;margin-top:auto">Visit lvl13.tech →</a>'
+    + '</div>'
+
+    + '<div class="card" style="display:flex;flex-direction:column">'
+    + '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--blue);margin-bottom:12px;text-transform:uppercase">Our Cryptocurrency Bots</div>'
+    + '<a href="https://bitbot13.tech" target="_blank" rel="noopener">'
+    + '<img src="assets/logo-bitbot13.png" alt="BitBot13" style="width:100%;max-width:200px;height:auto;display:block;margin-bottom:14px;border-radius:8px"></a>'
+    + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 14px;flex:1">The same AI intelligence applied to Bitcoin and crypto markets. BitBot13 tracks the top 50 coins with daily Buy/Sell/Hold signals and strategy competition.</p>'
+    + '<a class="btn btn-secondary" href="https://bitbot13.tech" target="_blank" rel="noopener" style="font-size:12px;margin-top:auto">Visit bitbot13.tech →</a>'
+    + '</div>'
+
+    + '</div>'
+    + '<p style="text-align:center;color:var(--muted);font-size:13px;margin:0 0 36px;line-height:1.6">One login for stocks or cryptocurrencies. Your trading market research platform — Level 13.</p>'
+
     + getYoursHint('Run this exact dashboard on YOUR stocks. Custom bots, custom news.');
   drawTrajectory();
 }
 
-// ============ PAGE: NEWS-ALL (standalone) ============
+// ============ PAGE: NEWS-ALL ============
 function renderNewsAll() {
   const news = STATE.news || { items: [] };
-  const sectors = news.sectors || ['AI & QUANTUM','BIOTECH','ENERGY','DEFENSE','FINANCE'];
+  const sectors = news.sectors || ['ENERGY','MATERIALS','INDUSTRIALS','CONSUMER DISCRETIONARY','CONSUMER STAPLES','HEALTH CARE','FINANCIALS','IT','COMMUNICATION SERVICES','UTILITIES','REAL ESTATE'];
   const items = (news.items || []).filter(i =>
     SECTOR_FILTER === 'ALL' || (i.sector || '').toUpperCase() === SECTOR_FILTER);
   const chips = ['ALL', ...sectors].map(s =>
@@ -234,15 +268,12 @@ function renderNewsAll() {
     + '<p class="sub">Filtered headlines from the sectors that matter. Updated nightly. Click any card to read at the source.</p>'
     + '<div class="sector-bar"><span class="sector-bar-label">Filter:</span>'+chips+'</div>'
     + '<div class="news-grid">'+cards+'</div>'
-
-    // Sales push at the bottom of /news-all
     + '<div class="sales-strip" style="margin-top:36px">'
     + '<div><h3>Want news for YOUR sectors?</h3>'
     + '<p>Pick the sectors you care about. We curate, dedupe, deliver — straight to your private dashboard.</p></div>'
     + '<a href="#/get-yours" class="btn btn-primary" style="margin-left:auto">Get Yours →</a></div>'
-
     + '<div class="grid grid-3" style="margin-top:18px">'
-    + [['Custom news feed','Pick AI, Quantum, Biotech, Defense, Energy — any combination.'],
+    + [['Custom news feed','Pick Energy, Tech, Health Care, Financials — any combination.'],
        ['Daily refresh','Headlines pulled fresh every night.'],
        ['Source-direct','Every card links straight to the original article.']].map(p =>
          '<div class="card"><h3 style="color:var(--blue)">✓ '+p[0]+'</h3>'
@@ -269,7 +300,7 @@ function renderHowItWorks() {
   const features = [
     ['Daily Buy / Sell / Hold','Composite analysis on every stock — every day. Score combines momentum, RSI, MACD, volume, volatility into a Strong Buy → Strong Sell call with target price.'],
     ['Auto Reports, Every Sunday','Weekly grades A–F per strategy. Pros, cons, narrative for what worked. Trade-by-trade review for every bot.'],
-    ['AI &amp; Quantum News, Filtered','Headlines pulled from the sectors that matter. AI, Quantum, Biotech, Defense — pick what you follow.'],
+    ['Sector News, Filtered','Headlines pulled from all 11 GICS sectors. Energy, Tech, Health Care, Financials — pick what you follow.'],
   ];
   const featureCards = features.map(f =>
     '<div class="card"><h3 style="color:var(--blue)">✓ '+f[0]+'</h3>'
@@ -279,16 +310,21 @@ function renderHowItWorks() {
     + '<h3>The 5 Strategies</h3><div class="bot-strip">'+stripCards+'</div>'
     + '<h3>What You Get</h3><div class="grid grid-3">'+featureCards+'</div>'
     + '<div class="sales-strip" style="margin-top:24px"><div><h3>The Challenge.</h3>'
-    + '<p>Can three Claude-built bots beat two passive strategies on the same universe with the same money?</p></div></div>'
+    + '<p>Can three bots beat two passive strategies on the same 55-stock universe with the same money?</p></div></div>'
     + getYoursHint('Want this on YOUR stocks, with YOUR sectors?');
 }
 
 // ============ PAGE: THE RACE ============
 function renderRace() {
+  const cap = (STATE.funds && STATE.funds.starting_capital) || 55000;
+  const stockCount = (() => {
+    const eq = STATE.funds && STATE.funds.funds && STATE.funds.funds.equalizer;
+    return eq && eq.value && eq.value.positions ? eq.value.positions.length : 55;
+  })();
   const cards = FUND_ORDER.map(fid =>
     fundCard(fid, STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null)).join('');
   $('app').innerHTML = '<h1>The Race</h1>'
-    + '<p class="sub">Five strategies. '+fmt$0((STATE.funds&&STATE.funds.starting_capital)||43000)+' each. Same 43-stock universe. Refreshed live.</p>'
+    + '<p class="sub">Five strategies. '+fmt$0(cap)+' each. Same '+stockCount+'-stock universe. Refreshed daily.</p>'
     + '<div class="grid grid-5">'+cards+'</div>'
     + '<div class="panel" style="margin-top:24px"><h3>Performance Trajectory — All 5 Strategies</h3>'
     + '<div class="chart-wrap"><canvas id="chartRace"></canvas></div></div>'
@@ -326,18 +362,18 @@ function renderFund(fid) {
   const data = STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null;
   const meta = FUND_META[fid];
   if (!meta) { $('app').innerHTML = '<p>Unknown fund</p>'; return; }
-  const v = data && data.value ? data.value : { total:43000, pnl:0, pnl_pct:0, day_pnl:0, day_pct:0, positions:[] };
-  const startCap = (data && data.starting_capital) || 43000;
+  const cap = (STATE.funds && STATE.funds.starting_capital) || 55000;
+  const v = data && data.value ? data.value : { total:cap, pnl:0, pnl_pct:0, day_pnl:0, day_pct:0, positions:[] };
+  const startCap = (data && data.starting_capital) || cap;
   let strategyHTML = '';
   if (['bot13','oracle','wizard'].includes(fid) && data && data.current_strategy) {
     strategyHTML = renderStrategyPanel(fid, data.current_strategy);
   }
 
-  // Holdings table — graceful fallback for missing price/value
   const positionRows = (v.positions || []).length
     ? v.positions.map(p => {
         const entry  = p.entry_price || p.entry || 0;
-        const price  = p.price || entry;  // fall back to entry if live price missing
+        const price  = p.price || entry;
         const shares = p.shares || 0;
         const value  = p.value || (shares * price);
         const pnl    = p.pnl != null ? p.pnl : (value - (p.cost_basis || (shares * entry)));
@@ -363,10 +399,10 @@ function renderFund(fid) {
     + '<div class="fund-tag">'+meta.tagline+'</div></div></div>'
     + '<div class="grid grid-3" style="margin-bottom:18px">'
     + '<div class="card"><h3>Current Value</h3>'
-    + '<div class="fund-value '+cls(v.pnl)+'">'+fmt$0(v.total)+'</div>'
+    + '<div class="fund-value">'+fmt$0(v.total)+'</div>'
     + '<div style="color:var(--muted);font-size:11px;margin-top:6px">Started at '+fmt$0(startCap)+'</div></div>'
     + '<div class="card"><h3>Total P&amp;L</h3>'
-    + '<div class="fund-value '+cls(v.pnl)+'">'+fmt$0(v.pnl)+'</div>'
+    + '<div class="fund-value '+cls(Math.round(v.pnl))+'">'+fmt$0(v.pnl)+'</div>'
     + '<div class="fund-pnl '+cls(v.pnl_pct)+'">'+fmtPct(v.pnl_pct)+' all-time</div></div>'
     + '<div class="card"><h3>Today\'s Change</h3>'
     + '<div class="fund-value '+cls(v.day_pnl)+'">'+fmt$0(v.day_pnl)+'</div>'
@@ -376,9 +412,9 @@ function renderFund(fid) {
     + '<div class="tbl-wrap"><table>'
     + '<thead><tr><th>Symbol</th><th class="num">Shares</th><th class="num">Entry</th>'
     + '<th class="num">Price</th><th class="num">Value</th><th class="num">Today</th>'
-    + '<th class="num">P&amp;L</th><th class="num">%</th></tr></thead>'
+    + '<th class="num">Total P&amp;L</th><th class="num">%</th></tr></thead>'
     + '<tbody>'+positionRows+'</tbody></table></div></div>'
-    + getYoursHint('Want a '+meta.name.toLowerCase()+'-style bot picking from YOUR stock list?');
+    + getYoursHint('Want a '+meta.name.toLowerCase()+'-style bot on YOUR stock list?');
 }
 
 function renderStrategyPanel(fid, strat) {
@@ -498,65 +534,472 @@ function renderReport(weekEnd) {
 }
 
 // ============ PAGE: GET YOURS ============
+const PRICING = {
+  member:    { monthly: 49.99, annual: 499.00 },
+  insider:   { monthly: 69.99, annual: 699.00 },
+  syndicate: { monthly: 99.99, annual: 899.00 },
+};
+const TIER_META = {
+  member:    { label:'MEMBER',    color:'#00d4ff', popular:false,
+               features:['1 portfolio','Stocks or crypto','Full bot signal history','Daily alerts'] },
+  insider:   { label:'INSIDER',   color:'#a855f7', popular:false,
+               features:['3 portfolios','Mix stocks &amp; crypto','Priority signals','Analytics dashboard'] },
+  syndicate: { label:'SYNDICATE', color:'#ff8c00', popular:true,
+               features:['Up to 10 portfolios','All 5 bots active','All 3 platforms','Max signal coverage','First access to features'] },
+};
+let GY_CYCLE = 'annual';
+let GY_TIER  = 'member';
+let GY_REF   = '';
+let GY_VALID = false;
+
 function renderGetYours() {
-  const paypal = STATE.meta.paypalEmail;
+  const urlRef = new URLSearchParams(location.search).get('ref')
+              || new URLSearchParams(location.hash.split('?')[1] || '').get('ref') || '';
+
   $('app').innerHTML =
     '<section class="hero" style="margin-bottom:24px"><img src="assets/robot.svg" alt="" class="hero-robot">'
     + '<div class="hero-content"><span class="hero-eyebrow">Master the Market — Without the Risk</span>'
     + '<h1>You\'ve seen what it does. Now make it yours.</h1>'
-    + '<p>Build, test, and refine your portfolio with a market research tool built for the modern trader. Whether you\'re leveraging AI trading bots or manual strategies, you can track 50 stocks simultaneously with daily technical analysis that includes Buy/Sell/Hold signals analyzed by AI. Plus, never miss a beat with personalized news updates delivered straight to your dashboard. Our <strong style="color:var(--blue)">Level XIII</strong> platform is a game changer that lets you master the market without the risk.</p></div></section>'
+    + '<p>Up to 50 stocks. 5 AI-powered strategies. Daily signals, custom news feed, Sunday auto-reports. <strong style="color:var(--blue)">Wall St. Bots</strong> runs the research so you can make the call.</p></div></section>'
+
+    // ── Billing toggle ──
+    + '<div style="display:flex;justify-content:center;margin-bottom:28px">'
+    + '<div style="display:flex;background:var(--surface2);border-radius:8px;padding:3px">'
+    + '<button id="cycleMonthly" onclick="setGyCycle(\'monthly\')" style="border:none;cursor:pointer;padding:8px 22px;border-radius:6px;font-weight:600;font-size:13px;transition:all 0.15s">Monthly</button>'
+    + '<button id="cycleAnnual"  onclick="setGyCycle(\'annual\')"  style="border:none;cursor:pointer;padding:8px 22px;border-radius:6px;font-weight:600;font-size:13px;transition:all 0.15s">Annual <span style="font-size:11px;color:#10b981">SAVE 17%</span></button>'
+    + '</div></div>'
+
+    // ── FREE tier ──
+    + '<div class="panel" style="margin-bottom:16px;border:1px solid var(--border)">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">'
+    + '<div>'
+    + '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">FREE</div>'
+    + '<div style="font-size:26px;font-weight:800;color:var(--fg)">$0</div>'
+    + '<div style="font-size:13px;color:var(--muted);margin-top:4px;max-width:380px">Follow a real AI trading bot for free. Get daily Buy/Hold/Sell signals straight to your inbox and see exactly how Bot13 trades every market day.</div>'
+    + '</div>'
+    + '<div style="min-width:260px">'
+    + '<input id="freeEmail" type="email" placeholder="Enter your email" '
+    + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:8px">'
+    + '<button onclick="gyFreeSignup()" style="width:100%;background:var(--surface2);color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:10px 0;font-weight:700;cursor:pointer;font-size:14px">Get Free Signals →</button>'
+    + '<div id="freeMsg" style="font-size:12px;margin-top:6px;min-height:16px"></div>'
+    + '</div></div></div>'
+
+    // ── Paid tier cards ──
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">'
+    + Object.entries(TIER_META).map(([tier, meta]) =>
+        '<div id="tierCard_'+tier+'" onclick="setGyTier(\''+tier+'\')" '
+        + 'style="border:2px solid '+(meta.popular ? meta.color : 'var(--border)')+';border-radius:12px;padding:20px;cursor:pointer;transition:all 0.15s;position:relative;background:var(--surface)">'
+        + (meta.popular ? '<div style="position:absolute;top:-1px;right:16px;background:'+meta.color+';color:#000;font-size:10px;font-weight:800;letter-spacing:1px;padding:2px 10px;border-radius:0 0 6px 6px;text-transform:uppercase">POPULAR</div>' : '')
+        + '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:'+meta.color+';margin-bottom:10px;text-transform:uppercase">'+meta.label+'</div>'
+        + '<div id="tierPrice_'+tier+'" style="font-size:26px;font-weight:800;color:var(--fg);margin-bottom:4px"></div>'
+        + '<div id="tierSub_'+tier+'" style="font-size:12px;color:var(--muted);margin-bottom:14px"></div>'
+        + '<ul style="margin:0;padding-left:16px;font-size:13px;color:var(--muted);line-height:1.8">'
+        + meta.features.map(f => '<li>'+f+'</li>').join('')
+        + '</ul>'
+        + '<div id="tierSelect_'+tier+'" style="margin-top:14px;padding:7px 0;border-radius:6px;font-size:13px;font-weight:700;text-align:center;border:2px solid '+meta.color+';color:'+meta.color+'">Select Plan</div>'
+        + '</div>'
+      ).join('')
+    + '</div>'
+
+    // ── Referral code ──
+    + '<div class="panel" style="margin-bottom:24px">'
+    + '<h3 style="margin-bottom:12px">Have a Referral Code?</h3>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+    + '<input id="refInput" type="text" placeholder="WSB-XXXXXXXX" maxlength="20" '
+    + 'style="flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;font-family:monospace;text-transform:uppercase" '
+    + 'value="'+escapeHtml(urlRef)+'" oninput="this.value=this.value.toUpperCase()">'
+    + '<button onclick="applyRefCode()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer;white-space:nowrap">Apply Code</button>'
+    + '</div>'
+    + '<div id="refMsg" style="margin-top:10px;font-size:13px"></div>'
+    + '</div>'
+
+    // ── Subscribe box ──
     + '<div class="sales-hero"><div class="sales-hero-left">'
     + '<h2 style="font-size:28px;letter-spacing:-0.5px">BUILD YOUR OWN</h2>'
-    + '<p style="color:var(--muted);font-size:15px">Pick up to 50 stocks from ANY sector. Three custom AI bots. Custom news feed. Sunday auto-reports.</p>'
-    + '<p style="color:var(--blue);font-weight:700;font-size:15px">$799/year &nbsp;·&nbsp; auto-renews &nbsp;·&nbsp; cancel anytime</p>'
-    + '</div><div class="sales-hero-right"><h3>Subscribe with PayPal</h3>'
-    + '<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="margin:0">'
-    + '<input type="hidden" name="cmd" value="_xclick-subscriptions">'
-    + '<input type="hidden" name="business" value="'+paypal+'">'
-    + '<input type="hidden" name="lc" value="US">'
-    + '<input type="hidden" name="item_name" value="lvl13.tech Custom Tracker - Annual">'
-    + '<input type="hidden" name="no_note" value="1"><input type="hidden" name="no_shipping" value="1">'
-    + '<input type="hidden" name="src" value="1"><input type="hidden" name="a3" value="799.00">'
-    + '<input type="hidden" name="p3" value="1"><input type="hidden" name="t3" value="Y">'
-    + '<input type="hidden" name="currency_code" value="USD">'
-    + '<input type="hidden" name="return" value="https://lvl13.tech/#/thanks">'
-    + '<input type="hidden" name="cancel_return" value="https://lvl13.tech/#/get-yours">'
-    + '<button type="submit" class="paypal-btn">Subscribe — $799/yr</button></form>'
-    + '<div style="font-size:12px;margin-top:6px;opacity:0.85">$799 today, $799 every 365 days</div>'
-    + '<div class="powered">POWERED BY PAYPAL BUSINESS</div></div></div>'
+    + '<p style="color:var(--muted);font-size:15px">Pick up to 50 stocks from ANY sector. Daily, weekly, and monthly AI bots. Custom news feed. Sunday auto-reports.</p>'
+    + '<div id="activePriceLabel" style="color:var(--blue);font-weight:700;font-size:15px"></div>'
+    + '</div><div class="sales-hero-right">'
+    + '<h3>Subscribe with PayPal</h3>'
+    + '<div id="paypalFormWrap"></div>'
+    + '<div class="powered">POWERED BY PAYPAL BUSINESS</div>'
+    + '</div></div>'
+
+    // ── Feature grid ──
     + '<div class="sales-strip"><div><h3>Any Sector. Any Stocks. Any News.</h3>'
     + '<p>Tech, biotech, energy, finance, defense, REITs — pick the sectors that matter; we pull the news.</p></div>'
-    + '<span class="signal signal-buy" style="font-size:11px;padding:6px 14px">15+ SECTORS</span></div>'
+    + '<span class="signal signal-buy" style="font-size:11px;padding:6px 14px">11 GICS SECTORS</span></div>'
     + '<h3>What\'s Included</h3><div class="grid grid-3">'
     + [['Up to 50 stocks','Any sector, any exchange. NYSE, NASDAQ, plus custom tickers.'],
-       ['3 AI bots','Daily, weekly, monthly — all yours.'],
-       ['2 baselines','Equal-weight + market-cap weighted benchmarks.'],
+       ['5 AI bots','Daily, weekly, monthly — plus two market-cap benchmarks.'],
        ['Daily Buy/Sell/Hold','Composite signals on every stock you picked.'],
        ['Custom news feed','Pick the sectors. We curate, dedupe, deliver.'],
-       ['Sunday auto-reports','Weekly grades, pros/cons, trade-by-trade review.']].map(p =>
+       ['Sunday auto-reports','Weekly grades, pros/cons, trade-by-trade review.'],
+       ['One login, all sites','Syndicate plan includes all 3 platforms.']].map(p =>
          '<div class="card"><h3 style="color:var(--blue);margin-bottom:8px">✓ '+p[0]+'</h3>'
          + '<p style="color:var(--muted);font-size:13px;margin:0">'+p[1]+'</p></div>').join('')
     + '</div>'
-    + '<div class="panel" style="margin-top:24px;text-align:center">'
-    + '<p style="color:var(--muted);font-size:13px;font-style:italic;margin:0">Built by an operator who runs the same system on his own portfolio. Cancel anytime from your PayPal account. Questions? <a href="mailto:info@lvl13.tech" style="color:var(--blue)">info@lvl13.tech</a></p></div>';
+    + '<div class="panel" style="margin-top:24px">'
+    + '<p style="color:var(--muted);font-size:13px;margin:0 0 8px 0">Built by an operator who runs the same system on his own portfolio. Cancel anytime from your PayPal account. Questions? <a href="mailto:info@wallstbots.tech" style="color:var(--blue)">info@wallstbots.tech</a></p>'
+    + '<p style="font-size:13px;margin:0">Refer a friend → they get <strong style="color:var(--blue)">50% off their first month</strong> or <strong style="color:var(--blue)">$100 off annual</strong> and you earn a <strong style="color:var(--blue)">$35 bill credit</strong>. <a href="#/referral" style="color:var(--blue)">Learn more →</a></p>'
+    + '</div>';
+
+  // Initialize state
+  GY_CYCLE = 'annual';
+  GY_TIER  = 'member';
+  GY_REF   = '';
+  GY_VALID = false;
+  updateGyPricing();
+
+  // Auto-apply ref from URL
+  if (urlRef) {
+    const inp = $('refInput');
+    if (inp) inp.value = urlRef.toUpperCase();
+    applyRefCode();
+  }
 }
 
+async function gyFreeSignup() {
+  const inp = $('freeEmail');
+  const msg = $('freeMsg');
+  if (!inp || !msg) return;
+  const email = inp.value.trim();
+  if (!email || !email.includes('@')) {
+    msg.innerHTML = '<span style="color:var(--red)">Please enter a valid email.</span>';
+    return;
+  }
+  msg.innerHTML = '<span style="color:var(--muted)">Signing you up…</span>';
+  try {
+    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/subscriptions/free-signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, platform: 'wallstbots' })
+    });
+    if (r.ok) {
+      msg.innerHTML = '<span style="color:#10b981;font-weight:700">✓ You\'re in! Check your inbox for your first signal.</span>';
+      inp.value = '';
+    } else {
+      msg.innerHTML = '<span style="color:var(--muted)">Something went wrong — try again or email info@wallstbots.tech</span>';
+    }
+  } catch (_) {
+    msg.innerHTML = '<span style="color:var(--muted)">Could not connect — check your connection.</span>';
+  }
+}
+
+function setGyTier(tier) {
+  GY_TIER = tier;
+  updateGyPricing();
+}
+
+function setGyCycle(cycle) {
+  GY_CYCLE = cycle;
+  updateGyPricing();
+}
+
+function updateGyPricing() {
+  const annual = GY_CYCLE === 'annual';
+  const hasRef = GY_VALID;
+  const suffix = annual ? '/yr' : '/mo';
+
+  // Cycle buttons
+  ['cycleMonthly','cycleAnnual'].forEach(id => {
+    const el = $(id);
+    if (!el) return;
+    const active = (id === 'cycleAnnual') === annual;
+    el.style.background = active ? 'var(--blue)' : 'transparent';
+    el.style.color       = active ? '#fff'        : 'var(--muted)';
+  });
+
+  // Update each tier card
+  Object.entries(PRICING).forEach(([tier, prices]) => {
+    const price    = annual ? prices.annual  : prices.monthly;
+    const refPrice = annual ? (price - 100).toFixed(2) : (price * 0.5).toFixed(2);
+    const isSelected = tier === GY_TIER;
+    const meta = TIER_META[tier];
+    const card  = $('tierCard_'+tier);
+    const prEl  = $('tierPrice_'+tier);
+    const subEl = $('tierSub_'+tier);
+    const selEl = $('tierSelect_'+tier);
+    if (!card) return;
+
+    // Card border / background
+    card.style.borderColor = isSelected ? meta.color : (meta.popular ? meta.color : 'var(--border)');
+    card.style.background  = isSelected ? 'rgba(0,0,0,0.15)' : 'var(--surface)';
+
+    // Price display
+    if (prEl) {
+      if (hasRef) {
+        prEl.innerHTML = '<span style="text-decoration:line-through;color:var(--muted);font-size:18px">$'+price.toFixed(2)+'</span> $'+refPrice;
+        prEl.style.color = '#10b981';
+      } else {
+        prEl.textContent = '$' + price.toFixed(2);
+        prEl.style.color = '';
+      }
+    }
+    if (subEl) subEl.textContent = hasRef
+      ? (annual ? '$100 off — then $'+price.toFixed(2)+suffix : '50% off first month — then $'+price.toFixed(2)+suffix)
+      : suffix + ' · cancel anytime';
+    if (selEl) {
+      selEl.textContent      = isSelected ? '✓ Selected' : 'Select Plan';
+      selEl.style.background = isSelected ? meta.color : 'transparent';
+      selEl.style.color      = isSelected ? '#000'     : meta.color;
+    }
+  });
+
+  // Active price label
+  const tierPrices = PRICING[GY_TIER];
+  const price  = annual ? tierPrices.annual  : tierPrices.monthly;
+  const refPrice = annual ? (price - 100).toFixed(2) : (price * 0.5).toFixed(2);
+  const lbl = $('activePriceLabel');
+  if (lbl) {
+    lbl.textContent = hasRef
+      ? '$' + refPrice + suffix + ' today — ' + TIER_META[GY_TIER].label + ' plan (referral applied!)'
+      : '$' + price.toFixed(2) + suffix + ' — ' + TIER_META[GY_TIER].label + ' plan · cancel anytime';
+  }
+
+  renderPaypalForm();
+}
+
+async function applyRefCode() {
+  const inp = $('refInput');
+  const msg = $('refMsg');
+  if (!inp || !msg) return;
+  const code = inp.value.trim().toUpperCase();
+  if (!code) { msg.innerHTML = ''; return; }
+
+  msg.innerHTML = '<span style="color:var(--muted)">Validating…</span>';
+  try {
+    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/subscriptions/validate-referral?code=' + encodeURIComponent(code));
+    const d = await r.json();
+    if (d.valid) {
+      GY_REF   = d.code;
+      GY_VALID = true;
+      msg.innerHTML = '<span style="color:#10b981;font-weight:700">✓ Referral code applied! '
+        + (GY_CYCLE === 'annual' ? '$100 off your annual plan.' : '50% off your first month.')
+        + '</span>';
+    } else {
+      GY_REF   = '';
+      GY_VALID = false;
+      msg.innerHTML = '<span style="color:var(--red)">✗ ' + (d.message || 'Invalid code.') + '</span>';
+    }
+  } catch (_) {
+    GY_REF   = '';
+    GY_VALID = false;
+    msg.innerHTML = '<span style="color:var(--muted)">Could not validate — check your connection.</span>';
+  }
+  updateGyPricing();
+}
+
+function renderPaypalForm() {
+  const wrap = $('paypalFormWrap');
+  if (!wrap) return;
+  const paypal     = STATE.meta.paypalEmail;
+  const annual     = GY_CYCLE === 'annual';
+  const ref        = GY_VALID ? GY_REF : '';
+  const tierPrices = PRICING[GY_TIER];
+  const tierLabel  = TIER_META[GY_TIER].label;
+  const price      = annual ? tierPrices.annual  : tierPrices.monthly;
+  const base       = price.toFixed(2);
+  const unit       = annual ? 'Y' : 'M';
+  const label      = annual ? 'Annual' : 'Monthly';
+  const refPrice   = annual ? (price - 100).toFixed(2) : (price * 0.5).toFixed(2);
+  const btnTxt     = 'Subscribe — $' + base + (annual ? '/yr' : '/mo');
+  // custom field carries platform + optional referral code for backend webhook
+  const customField = 'wallstbots' + (ref ? '|ref=' + ref : '');
+  const refFields = ref
+    ? '<input type="hidden" name="a1" value="'+refPrice+'">'
+    + '<input type="hidden" name="p1" value="1">'
+    + '<input type="hidden" name="t1" value="'+unit+'">'
+    : '';
+  const refBtnTxt = ref
+    ? 'Subscribe — $' + refPrice + ' today, then $' + base + (annual ? '/yr' : '/mo')
+    : btnTxt;
+
+  wrap.innerHTML =
+    '<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="margin:0">'
+    + '<input type="hidden" name="cmd" value="_xclick-subscriptions">'
+    + '<input type="hidden" name="business" value="'+paypal+'">'
+    + '<input type="hidden" name="lc" value="US">'
+    + '<input type="hidden" name="item_name" value="wallstbots.tech '+tierLabel+' - '+label+'">'
+    + '<input type="hidden" name="no_note" value="1"><input type="hidden" name="no_shipping" value="1">'
+    + '<input type="hidden" name="custom" value="'+escapeHtml(customField)+'">'
+    + '<input type="hidden" name="src" value="1">'
+    + refFields
+    + '<input type="hidden" name="a3" value="'+base+'">'
+    + '<input type="hidden" name="p3" value="1"><input type="hidden" name="t3" value="'+unit+'">'
+    + '<input type="hidden" name="currency_code" value="USD">'
+    + '<input type="hidden" name="return" value="https://wallstbots.tech/#/thanks">'
+    + '<input type="hidden" name="cancel_return" value="https://wallstbots.tech/#/get-yours">'
+    + '<button type="submit" class="paypal-btn">'+refBtnTxt+'</button>'
+    + '</form>'
+    + '<div style="font-size:12px;margin-top:6px;opacity:0.85">'
+    + (ref
+      ? 'Referral discount applied to first payment. Renews at $'+base+(annual?'/yr':'/mo')+' afterwards.'
+      : '$'+base+' today, renews every '+(annual?'year':'month'))
+    + '</div>';
+}
+
+function renderThanks() {
+  // Extract referral code from localStorage (set during signup) or just show generic
+  const refCode = localStorage.getItem('myReferralCode') || '';
+  const siteBase = 'https://wallstbots.tech/#/get-yours';
+  const refLink  = refCode ? siteBase + '?ref=' + refCode : '';
+
+  $('app').innerHTML = '<section class="hero"><div class="hero-content">'
+    + '<h1>You\'re in. 🎉</h1>'
+    + '<p>Your Wall St. Bots tracker will be live within 24 hours. Check your email for your setup link.</p>'
+    + '<div class="hero-ctas"><a class="btn btn-primary" href="#/">Back to Dashboard</a></div>'
+    + '</div></section>'
+    + '<div class="panel" style="margin-top:24px;border:2px solid var(--blue)">'
+    + '<h3 style="color:var(--blue);margin-bottom:8px">Earn $35 per referral</h3>'
+    + '<p style="color:var(--muted);margin-bottom:16px">Share your referral link. Your friend gets <strong style="color:var(--fg)">50% off their first month</strong> (or $100 off annual). You earn <strong style="color:var(--fg)">$35 credit</strong> applied to your next bill — automatically.</p>'
+    + (refCode
+      ? '<div style="background:var(--surface2);border-radius:8px;padding:12px 16px;font-family:monospace;font-size:14px;color:var(--blue);word-break:break-all;margin-bottom:12px">'
+        + escapeHtml(refLink) + '</div>'
+        + '<button onclick="navigator.clipboard.writeText(\''+escapeHtml(refLink)+'\').then(()=>{this.textContent=\'Copied!\';setTimeout(()=>this.textContent=\'Copy Link\',2000)})" '
+        + 'style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer">Copy Link</button>'
+      : '<p style="color:var(--muted);font-size:13px">Your referral code will be in your welcome email. <a href="#/referral" style="color:var(--blue)">Learn more about the referral program →</a></p>')
+    + '</div>';
+}
+
+// ============ PAGE: REFERRAL PROGRAM ============
+function renderReferral() {
+  $('app').innerHTML =
+    '<section class="hero" style="margin-bottom:24px"><div class="hero-content">'
+    + '<span class="hero-eyebrow">Referral Program</span>'
+    + '<h1>Share the edge. Get paid.</h1>'
+    + '<p>Every time a friend subscribes using your referral link, you earn <strong style="color:var(--blue)">$35 credit</strong> applied to your next bill automatically. They get <strong style="color:var(--blue)">50% off their first month</strong> — or <strong style="color:var(--blue)">$100 off an annual plan</strong>. Everyone wins.</p>'
+    + '</div></section>'
+
+    // How it works
+    + '<h3>How It Works</h3>'
+    + '<div class="grid grid-3" style="margin-bottom:32px">'
+    + [['1. Share Your Link','Copy your personal referral link and send it to anyone who trades or invests. Works across all three Level 13 sites.'],
+       ['2. They Subscribe','Your friend clicks your link, sees their discount pre-applied, and subscribes with PayPal. No extra steps.'],
+       ['3. You Both Win','They save on day one. You automatically get $35 credited to your account — reduces your next auto-bill.']].map(p =>
+         '<div class="card"><h3 style="color:var(--blue);margin-bottom:8px">'+p[0]+'</h3>'
+         + '<p style="color:var(--muted);font-size:13px;margin:0">'+p[1]+'</p></div>').join('')
+    + '</div>'
+
+    // Discount details
+    + '<div class="panel" style="margin-bottom:24px">'
+    + '<h3 style="margin-bottom:16px">Referral Discounts</h3>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'
+    + '<div style="background:var(--surface2);border-radius:10px;padding:16px">'
+    + '<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--blue);margin-bottom:8px;text-transform:uppercase">Monthly Plan</div>'
+    + '<div style="font-size:22px;font-weight:800;margin-bottom:4px;color:#10b981">50% off</div>'
+    + '<div style="font-size:13px;color:var(--muted)">First month only — applies to any tier (Member, Insider, or Syndicate)</div>'
+    + '</div>'
+    + '<div style="background:var(--surface2);border-radius:10px;padding:16px">'
+    + '<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--blue);margin-bottom:8px;text-transform:uppercase">Annual Plan</div>'
+    + '<div style="font-size:22px;font-weight:800;margin-bottom:4px;color:#10b981">$100 off</div>'
+    + '<div style="font-size:13px;color:var(--muted)">Flat $100 discount on any annual plan — then renews at standard rate</div>'
+    + '</div></div>'
+    + '<p style="margin:16px 0 0 0;font-size:13px;color:var(--muted)">Referral discounts apply to the subscriber\'s first payment on any paid tier. Choose the plan that fits, discount applies automatically at checkout.</p>'
+    + '</div>'
+
+    // Referrer credit info
+    + '<div class="panel" style="margin-bottom:24px;border:1px solid var(--blue)">'
+    + '<h3 style="margin-bottom:8px;color:var(--blue)">Your $35 Credit</h3>'
+    + '<p style="color:var(--muted);margin:0">Each time someone redeems your referral code, $35 is added to your account credit balance. On your next billing date, your autobill is automatically reduced by your full credit balance. No action required — it happens on its own.</p>'
+    + '<p style="font-size:13px;color:var(--muted);margin-top:8px">There\'s no cap on referrals. Refer 10 people → $350 credit. Refer enough and your tracker pays for itself.</p>'
+    + '</div>'
+
+    // My dashboard (requires login)
+    + '<div class="panel" id="referralDashboard"><p style="color:var(--muted);text-align:center">Loading your referral stats…</p></div>'
+
+    + '<div class="panel" style="margin-top:24px;text-align:center">'
+    + '<a class="btn btn-primary" href="#/get-yours">Get Your Tracker →</a>'
+    + '</div>';
+
+  // Attempt to load referral stats from backend
+  loadReferralDashboard();
+}
+
+async function loadReferralDashboard() {
+  const token = localStorage.getItem('auth_token');
+  const dash  = $('referralDashboard');
+  if (!dash) return;
+
+  if (!token) {
+    dash.innerHTML = '<p style="text-align:center;color:var(--muted)">Already a subscriber? '
+      + '<a href="/login.html" style="color:var(--blue)">Log in</a> to see your referral code and earnings.</p>';
+    return;
+  }
+
+  try {
+    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/account/referral', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!r.ok) throw new Error('not_authed');
+    const d = await r.json();
+
+    const link = d.share_links.wallstbots;
+    const txRows = (d.transactions || []).map(t =>
+      '<tr><td style="color:'+(t.amount>0?'#10b981':'var(--red)')+'">'+
+      (t.amount>0?'+':'')+t.amount.toFixed(2)+'</td>'
+      + '<td>'+t.description+'</td>'
+      + '<td style="color:var(--muted)">'+t.date+'</td></tr>'
+    ).join('');
+
+    dash.innerHTML =
+      '<h3 style="margin-bottom:16px">Your Referral Dashboard</h3>'
+      // Stats row
+      + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">'
+      + '<div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center">'
+      + '<div style="font-size:24px;font-weight:800;color:var(--blue)">'+d.total_redemptions+'</div>'
+      + '<div style="font-size:12px;color:var(--muted)">Referrals Redeemed</div></div>'
+      + '<div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center">'
+      + '<div style="font-size:24px;font-weight:800;color:#10b981">$'+d.credit_balance.toFixed(2)+'</div>'
+      + '<div style="font-size:12px;color:var(--muted)">Current Credit Balance</div></div>'
+      + '<div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center">'
+      + '<div style="font-size:24px;font-weight:800;color:var(--fg)">$'+d.total_credits_earned.toFixed(2)+'</div>'
+      + '<div style="font-size:12px;color:var(--muted)">Total Credits Earned</div></div>'
+      + '</div>'
+      // Referral code
+      + '<div style="margin-bottom:16px">'
+      + '<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">Your Referral Code</div>'
+      + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '<div style="background:var(--surface2);border-radius:8px;padding:10px 16px;font-family:monospace;font-size:18px;font-weight:700;color:var(--blue);letter-spacing:2px">'+d.referral_code+'</div>'
+      + '<button onclick="navigator.clipboard.writeText(\''+escapeHtml(d.referral_code)+'\').then(()=>{this.textContent=\'Copied!\';setTimeout(()=>this.textContent=\'Copy Code\',2000)})" '
+      + 'style="background:var(--surface2);color:var(--blue);border:1px solid var(--blue);border-radius:8px;padding:10px 16px;font-weight:700;cursor:pointer">Copy Code</button>'
+      + '</div></div>'
+      // Share link
+      + '<div style="margin-bottom:20px">'
+      + '<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">Your Referral Link</div>'
+      + '<div style="background:var(--surface2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--fg);word-break:break-all;margin-bottom:8px">'+escapeHtml(link)+'</div>'
+      + '<button onclick="navigator.clipboard.writeText(\''+escapeHtml(link)+'\').then(()=>{this.textContent=\'Copied!\';setTimeout(()=>this.textContent=\'Copy Link\',2000)})" '
+      + 'style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer">Copy Link</button>'
+      + '</div>'
+      // Transaction history
+      + (txRows
+        ? '<h3 style="margin-bottom:10px">Credit History</h3>'
+          + '<div class="tbl-wrap"><table><thead><tr>'
+          + '<th>Amount</th><th>Description</th><th>Date</th>'
+          + '</tr></thead><tbody>'+txRows+'</tbody></table></div>'
+        : '<p style="color:var(--muted);font-size:13px">No referral activity yet. Share your link to start earning!</p>');
+
+  } catch (_) {
+    dash.innerHTML = '<p style="text-align:center;color:var(--muted)">Could not load referral stats. '
+      + '<a href="/login.html" style="color:var(--blue)">Log in</a> if you haven\'t already.</p>';
+  }
+}
 
 // ================================================================
 // CHATBOT — FAQ engine
 // ================================================================
 const FAQS = [
-  { q: ['price','cost','how much','pricing','799'], a: "Custom Tracker is $799/year (auto-renews, cancel anytime from your PayPal account). One flat price, all 5 strategies, your stocks, your news." },
-  { q: ['cancel','refund','stop'], a: "Cancel anytime from your PayPal account → Settings → Automatic Payments. No refund for the partial year, but no further charges." },
+  { q: ['price','cost','how much','pricing','member','insider','syndicate'], a: "MEMBER: $49.99/mo or $499/yr (1 portfolio). INSIDER: $69.99/mo or $699/yr (3 portfolios). SYNDICATE: $99.99/mo or $899/yr (up to 10 portfolios, all 3 platforms). FREE tier available — daily signals by email at no cost." },
+  { q: ['referral','refer','code','discount'], a: "Share your referral code and earn $35 credit per friend who subscribes — automatically deducted from your next bill. Your friend gets 50% off their first month or $100 off an annual plan. No cap on referrals." },
+  { q: ['cancel','refund','stop'], a: "Cancel anytime from your PayPal account → Settings → Automatic Payments. No further charges after cancellation." },
   { q: ['stocks','tickers','how many'], a: "Up to 50 stocks from any sector (NYSE, NASDAQ, plus most listed tickers). You pick them after checkout." },
-  { q: ['sector','sectors','industries'], a: "Any sector — tech, biotech, energy, finance, defense, REITs, you name it. We fetch news for the sectors you choose." },
-  { q: ['news','articles','sources'], a: "We pull from 80+ sources via NewsAPI, dedupe, and filter to the sectors you picked. Updated every 30 min during market hours." },
+  { q: ['sector','sectors','industries'], a: "Any of the 11 GICS sectors — tech, biotech, energy, financials, industrials, real estate, you name it. We fetch news for the sectors you choose." },
+  { q: ['news','articles','sources'], a: "We pull from 80+ sources via NewsAPI, dedupe, and filter to the sectors you picked. Updated every night." },
   { q: ['bot','bots','strategy','strategies'], a: "5 strategies race on the SAME stock list: BOT13 (daily intraday), ORACLE (weekly Monday rebalance), WIZARD (monthly hold), EQUALIZER (equal-weight baseline), TITAN (cap-weighted baseline)." },
   { q: ['signals','buy','sell','hold'], a: "Every trading day we score every stock on your list — momentum, RSI, MACD, volume, volatility — and label it Strong Buy / Buy / Hold / Sell / Strong Sell." },
   { q: ['report','reports','sunday','weekly'], a: "Every Sunday you get an auto-generated report: each fund's grade, what they bought/sold, why, and what's coming up." },
   { q: ['real money','live trade','execute','broker'], a: "Nope — these are paper portfolios for research and signals. We don't touch a brokerage account. You see what the bots WOULD do, then decide for yourself." },
-  { q: ['data','privacy','share','sell my'], a: "Your data stays yours. We don't share or sell. Your tracker runs on a private endpoint — only you and the people you share the link with see it." },
-  { q: ['contact','support','help','email'], a: "Email info@lvl13.tech anytime. Built and supported directly by the operator." },
+  { q: ['data','privacy','share','sell my'], a: "Your data stays yours. We don't share or sell. Your tracker runs on a private endpoint — only you see it." },
+  { q: ['contact','support','help','email'], a: "Email info@wallstbots.tech anytime. Built and supported directly by the operator." },
   { q: ['how long','setup','time','when'], a: "Tracker is live within 24 hours of checkout. You'll get an email with your private dashboard link." },
 ];
 function botAnswer(input) {
@@ -565,7 +1008,7 @@ function botAnswer(input) {
   for (const item of FAQS) {
     if (item.q.some(k => q.includes(k))) return item.a;
   }
-  return "I don't have an answer for that yet — but the operator does. Email info@lvl13.tech and you'll get a real reply, fast.";
+  return "I don't have an answer for that yet — but the operator does. Email info@wallstbots.tech and you'll get a real reply, fast.";
 }
 function chatbotAddMsg(text, who) {
   const body = $('chatbotBody'); if (!body) return;
@@ -591,64 +1034,57 @@ function chatbotOpen()  { const p=$('chatbotPanel'); if(p) p.classList.add('open
 function chatbotClose() { const p=$('chatbotPanel'); if(p) p.classList.remove('open'); const t=$('chatbotToggle'); if(t) t.setAttribute('aria-expanded','false'); }
 
 // ================================================================
-// BOOTSTRAP — wires up everything once the DOM is ready
+// AUTH-AWARE NAV — show Dashboard if logged in, Log In if not
+// ================================================================
+function updateNavAuthState() {
+  const loginBtn = document.getElementById('navLoginBtn');
+  const dashBtn  = document.getElementById('navDashBtn');
+  if (!loginBtn || !dashBtn) return;
+  const loggedIn = !!localStorage.getItem('auth_token');
+  loginBtn.style.display = loggedIn ? 'none' : '';
+  dashBtn.style.display  = loggedIn ? ''     : 'none';
+}
+
+// ================================================================
+// BOOTSTRAP
 // ================================================================
 function wireUI() {
-  const mt = $('menuToggle');
+  const mt = document.getElementById('menuToggle');
   if (mt) mt.addEventListener('click', (e) => {
     e.stopPropagation();
     toggleMenu();
-    const open = $('siteNav') && $('siteNav').classList.contains('open');
+    const open = document.getElementById('siteNav') && document.getElementById('siteNav').classList.contains('open');
     mt.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
-
   document.querySelectorAll('.site-nav a').forEach(a => {
     a.addEventListener('click', () => closeMenu());
   });
-
   document.addEventListener('click', (e) => {
-    const nav = $('siteNav');
-    const tog = $('menuToggle');
-    if (!nav || !tog) return;
-    if (nav.classList.contains('open') && !nav.contains(e.target) && !tog.contains(e.target)) {
-      closeMenu();
-    }
+    const nav = document.getElementById('siteNav');
+    const toggle = document.getElementById('menuToggle');
+    if (nav && toggle && !nav.contains(e.target) && !toggle.contains(e.target)) closeMenu();
   });
-
-  const ct = $('chatbotToggle');
+  // chatbot
+  const ct = document.getElementById('chatbotToggle');
   if (ct) ct.addEventListener('click', chatbotOpen);
-  const cc = $('chatbotClose');
+  const cc = document.getElementById('chatbotClose');
   if (cc) cc.addEventListener('click', chatbotClose);
-
-  const cf = $('chatbotForm');
+  const cf = document.getElementById('chatbotForm');
   if (cf) cf.addEventListener('submit', (e) => {
     e.preventDefault();
-    const inp = $('chatbotInput');
-    const q = inp ? inp.value : '';
-    if (!q.trim()) return;
+    const inp = document.getElementById('chatbotInput');
+    if (!inp || !inp.value.trim()) return;
+    const q = inp.value.trim();
     chatbotAddMsg(q, 'user');
-    setTimeout(() => chatbotAddMsg(botAnswer(q), 'bot'), 250);
-    if (inp) inp.value = '';
+    inp.value = '';
+    chatbotAddMsg(botAnswer(q) || "Email info@wallstbots.tech for help!", 'bot');
   });
-
   chatbotRenderQuick();
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeMenu(); chatbotClose(); }
-  });
-
-  window.addEventListener('hashchange', () => {
-    try { route(); } catch (e) { console.error('Route error', e); }
-  });
 }
 
-function boot() {
+window.addEventListener('hashchange', route);
+document.addEventListener('DOMContentLoaded', () => {
   wireUI();
+  updateNavAuthState();
   loadAll();
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', boot);
-} else {
-  boot();
-}
+});
