@@ -78,7 +78,7 @@ UNIVERSE_MAP = {
     "XLM":    "XLM-USD",
     "HBAR":   "HBAR-USD",
     "MKR":    "MKR-USD",
-    "POL":    "POL-USD",           # Polygon (formerly MATIC) — top 20, Coinbase/Binance/Robinhood
+    "POL":    "MATIC-USD",          # Polygon/POL — yfinance still uses MATIC-USD ticker
     "RENDER": "RENDER-USD",        # Render Network — AI/GPU, Coinbase + Binance
     "FET":    "FET-USD",           # Fetch.ai/ASI Alliance — AI crypto, Coinbase + Binance
     "ONDO":   "ONDO-USD",          # Ondo Finance — RWA/DeFi, Coinbase + Binance

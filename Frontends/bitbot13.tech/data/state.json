@@ -1,11 +1,11 @@
 {
   "data": {
     "starting_capital": 50000.0,
-    "last_refresh": "2026-05-22T17:44:25",
+    "last_refresh": "2026-05-22T17:45:49",
     "snapshots": [
       {
         "date": "2026-05-22",
-        "bot13": 55963.11,
+        "bot13": 59130.02,
         "oracle": 50000.0,
         "wizard": 50000.0,
         "equalizer": 50000.0,
@@ -22,73 +22,73 @@
         "inception": "2026-05-22",
         "starting_capital": 50000.0,
         "value": {
-          "total": 55963.11,
+          "total": 59130.02,
           "cash": 0.0,
-          "pos_val": 55963.11,
-          "pnl": 3045.16,
-          "pnl_pct": 5.75,
-          "day_pnl": 3045.16,
-          "day_pct": 5.75,
+          "pos_val": 59130.01,
+          "pnl": 3176.97,
+          "pnl_pct": 5.68,
+          "day_pnl": 3176.97,
+          "day_pct": 5.68,
           "positions": [
             {
               "symbol": "NEAR",
-              "shares": 5505.853984,
+              "shares": 5821.640675,
               "entry_price": 1.92,
-              "cost_basis": 10571.24,
-              "price": 2.12,
-              "value": 11644.88,
-              "pnl": 1073.64,
-              "pnl_pct": 10.16,
-              "day_pnl": 1059.39,
-              "day_pct": 10.01
+              "cost_basis": 11177.55,
+              "price": 2.11,
+              "value": 12266.2,
+              "pnl": 1088.65,
+              "pnl_pct": 9.74,
+              "day_pnl": 1073.58,
+              "day_pct": 9.59
             },
             {
               "symbol": "QNT",
-              "shares": 143.976837,
+              "shares": 152.234587,
               "entry_price": 73.52,
-              "cost_basis": 10585.18,
+              "cost_basis": 11192.29,
               "price": 77.85,
-              "value": 11208.6,
-              "pnl": 623.42,
+              "value": 11851.46,
+              "pnl": 659.18,
               "pnl_pct": 5.89,
-              "day_pnl": 623.1,
+              "day_pnl": 658.84,
               "day_pct": 5.89
             },
             {
               "symbol": "WLD",
-              "shares": 39437.191672,
+              "shares": 41699.100592,
               "entry_price": 0.2684,
-              "cost_basis": 10584.94,
-              "price": 0.2812,
-              "value": 11089.74,
-              "pnl": 504.8,
-              "pnl_pct": 4.77,
-              "day_pnl": 504.24,
-              "day_pct": 4.76
+              "cost_basis": 11192.04,
+              "price": 0.2814,
+              "value": 11734.13,
+              "pnl": 542.09,
+              "pnl_pct": 4.84,
+              "day_pnl": 541.5,
+              "day_pct": 4.84
             },
             {
               "symbol": "FET",
-              "shares": 54704.262908,
+              "shares": 57841.810361,
               "entry_price": 0.1935,
-              "cost_basis": 10585.27,
+              "cost_basis": 11192.39,
               "price": 0.2021,
-              "value": 11055.73,
-              "pnl": 470.46,
+              "value": 11689.83,
+              "pnl": 497.44,
               "pnl_pct": 4.44,
-              "day_pnl": 470.24,
+              "day_pnl": 497.21,
               "day_pct": 4.44
             },
             {
               "symbol": "MANTA",
-              "shares": 138629.8002,
+              "shares": 146580.872992,
               "entry_price": 0.0764,
-              "cost_basis": 10591.32,
+              "cost_basis": 11198.78,
               "price": 0.0791,
-              "value": 10964.16,
-              "pnl": 372.84,
-              "pnl_pct": 3.52,
-              "day_pnl": 378.66,
-              "day_pct": 3.58
+              "value": 11588.39,
+              "pnl": 389.61,
+              "pnl_pct": 3.48,
+              "day_pnl": 395.77,
+              "day_pct": 3.54
             }
           ]
         },
@@ -99,8 +99,8 @@
             {
               "symbol": "NEAR",
               "weight": 0.2,
-              "score": 100.1,
-              "rationale": "NEAR: up +10.01% in 24h \u2014 positive momentum signal."
+              "score": 95.9,
+              "rationale": "NEAR: up +9.59% in 24h \u2014 positive momentum signal."
             },
             {
               "symbol": "QNT",
@@ -111,8 +111,8 @@
             {
               "symbol": "WLD",
               "weight": 0.2,
-              "score": 47.6,
-              "rationale": "WLD: up +4.76% in 24h \u2014 positive momentum signal."
+              "score": 48.4,
+              "rationale": "WLD: up +4.84% in 24h \u2014 positive momentum signal."
             },
             {
               "symbol": "FET",
@@ -123,8 +123,8 @@
             {
               "symbol": "MANTA",
               "weight": 0.2,
-              "score": 35.8,
-              "rationale": "MANTA: up +3.58% in 24h \u2014 positive momentum signal."
+              "score": 35.4,
+              "rationale": "MANTA: up +3.54% in 24h \u2014 positive momentum signal."
             }
           ]
         },
@@ -330,8 +330,8 @@
       "week": [
         {
           "fund": "bot13",
-          "week_pnl": 5963.11,
-          "week_pct": 11.93,
+          "week_pnl": 9130.02,
+          "week_pct": 18.26,
           "week_grade": "A+"
         },
         {
@@ -362,8 +362,8 @@
       "all": [
         {
           "fund": "bot13",
-          "all_pnl": 3045.16,
-          "all_pct": 5.75,
+          "all_pnl": 3176.97,
+          "all_pct": 5.68,
           "overall_grade": "A+"
         },
         {
