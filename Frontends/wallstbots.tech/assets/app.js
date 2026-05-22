@@ -138,7 +138,7 @@ function fundCard(fid, data) {
     + '<div class="fund-head"><span class="fund-icon '+fid+'">'+meta.icon+'</span>'
     + '<div style="min-width:0"><div class="fund-name">'+meta.name+'</div><div class="fund-kind" style="color:'+meta.color+'">'+meta.kind+'</div></div></div>'
     + '<div class="fund-tag">'+meta.tagline+'</div>'
-    + '<div class="fund-value '+cls(v.pnl)+'">'+fmt$0(v.total)+'</div>'
+    + '<div class="fund-value">'+fmt$0(v.total)+'</div>'
     + '<div class="fund-pnl '+cls(v.pnl)+'">'+fmt$0(v.pnl)+' ('+fmtPct(v.pnl_pct)+') since inception</div>'
     + '<div class="stat-row"><span class="stat-label">Today</span>'
     + '<span class="stat-val '+cls(v.day_pnl)+'">'+fmtPct(v.day_pct)+'</span></div></a>';
@@ -399,7 +399,7 @@ function renderFund(fid) {
     + '<div class="fund-tag">'+meta.tagline+'</div></div></div>'
     + '<div class="grid grid-3" style="margin-bottom:18px">'
     + '<div class="card"><h3>Current Value</h3>'
-    + '<div class="fund-value '+cls(Math.round(v.pnl))+'">'+fmt$0(v.total)+'</div>'
+    + '<div class="fund-value">'+fmt$0(v.total)+'</div>'
     + '<div style="color:var(--muted);font-size:11px;margin-top:6px">Started at '+fmt$0(startCap)+'</div></div>'
     + '<div class="card"><h3>Total P&amp;L</h3>'
     + '<div class="fund-value '+cls(Math.round(v.pnl))+'">'+fmt$0(v.pnl)+'</div>'
