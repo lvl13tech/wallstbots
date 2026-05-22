@@ -7,3 +7,7 @@ Backend/.env
 Project/config/secrets.json
 secrets.json
 *.secrets
+
+# Admin utility — reads creds from Backend/.env, must not be committed
+reset_admin.py
+reset-admin-result.txt
