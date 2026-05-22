@@ -1,11 +1,11 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-05-22T18:05:17",
+    "last_refresh": "2026-05-22T22:13:28",
     "snapshots": [
       {
         "date": "2026-05-22",
-        "bot13": 57524.57,
+        "bot13": 60165.01,
         "oracle": 56364.16,
         "wizard": 55555.43,
         "equalizer": 55293.71,
@@ -22,80 +22,80 @@
         "inception": "2026-05-22",
         "starting_capital": 55000.0,
         "value": {
-          "total": 57524.57,
+          "total": 60165.01,
           "cash": 0.0,
-          "pos_val": 57524.56,
-          "pnl": 2524.57,
+          "pos_val": 60165.01,
+          "pnl": 2640.44,
           "pnl_pct": 4.59,
-          "day_pnl": 2524.57,
+          "day_pnl": 2640.44,
           "day_pct": 4.59,
           "positions": [
             {
               "symbol": "SPOT",
-              "shares": 26.154018,
+              "shares": 27.354521,
               "entry_price": 489.93,
-              "cost_basis": 12813.64,
+              "cost_basis": 13401.8,
               "price": 519.86,
-              "value": 13596.43,
-              "pnl": 782.79,
+              "value": 14220.52,
+              "pnl": 818.72,
               "pnl_pct": 6.11,
-              "day_pnl": 782.79,
+              "day_pnl": 818.72,
               "day_pct": 6.11,
               "stop_pct": -1.5,
               "target_pct": 3.0
             },
             {
               "symbol": "VST",
-              "shares": 84.82032,
+              "shares": 88.713681,
               "entry_price": 149.08,
-              "cost_basis": 12645.01,
+              "cost_basis": 13225.44,
               "price": 156.27,
-              "value": 13254.87,
-              "pnl": 609.86,
+              "value": 13863.29,
+              "pnl": 637.85,
               "pnl_pct": 4.82,
-              "day_pnl": 609.86,
+              "day_pnl": 637.85,
               "day_pct": 4.82,
               "stop_pct": -1.5,
               "target_pct": 3.0
             },
             {
               "symbol": "BIRK",
-              "shares": 284.892814,
+              "shares": 297.969757,
               "entry_price": 39.67,
-              "cost_basis": 11301.7,
+              "cost_basis": 11820.46,
               "price": 41.38,
-              "value": 11788.86,
-              "pnl": 487.17,
+              "value": 12329.99,
+              "pnl": 509.53,
               "pnl_pct": 4.31,
-              "day_pnl": 487.17,
+              "day_pnl": 509.53,
               "day_pct": 4.31,
               "stop_pct": -1.5,
               "target_pct": 3.0
             },
             {
               "symbol": "ACHR",
-              "shares": 1680.034434,
+              "shares": 1757.150153,
               "entry_price": 6.12,
-              "cost_basis": 10281.81,
+              "cost_basis": 10753.76,
               "price": 6.36,
-              "value": 10685.02,
-              "pnl": 403.21,
+              "value": 11175.47,
+              "pnl": 421.72,
               "pnl_pct": 3.92,
-              "day_pnl": 403.21,
+              "day_pnl": 421.72,
               "day_pct": 3.92,
               "stop_pct": -1.5,
               "target_pct": 3.0
             },
             {
               "symbol": "ALAB",
-              "shares": 26.718506,
+              "shares": 27.944919,
               "entry_price": 297.84,
-              "cost_basis": 7957.84,
+              "cost_basis": 8323.11,
               "price": 306.88,
-              "value": 8199.38,
-              "pnl": 241.54,
+              "value": 8575.74,
+              "pnl": 252.62,
               "pnl_pct": 3.04,
-              "day_pnl": 241.54,
+              "day_pnl": 252.62,
               "day_pct": 3.04,
               "stop_pct": -1.5,
               "target_pct": 3.0
@@ -111,39 +111,39 @@
               "symbol": "SPOT",
               "weight": 0.233,
               "score": 48.9,
-              "rationale": "SPOT: STRONG momentum +6.11% \u2014 23% allocation ($12,814). Stop: -1.5% | Target: +3.0%."
+              "rationale": "SPOT: STRONG momentum +6.11% \u2014 23% allocation ($13,402). Stop: -1.5% | Target: +3.0%."
             },
             {
               "symbol": "VST",
               "weight": 0.2299,
               "score": 48.2,
-              "rationale": "VST: solid momentum +4.82% \u2014 23% allocation ($12,645). Stop: -1.5% | Target: +3.0%."
+              "rationale": "VST: solid momentum +4.82% \u2014 23% allocation ($13,225). Stop: -1.5% | Target: +3.0%."
             },
             {
               "symbol": "BIRK",
               "weight": 0.2055,
               "score": 43.1,
-              "rationale": "BIRK: solid momentum +4.31% \u2014 21% allocation ($11,302). Stop: -1.5% | Target: +3.0%."
+              "rationale": "BIRK: solid momentum +4.31% \u2014 21% allocation ($11,820). Stop: -1.5% | Target: +3.0%."
             },
             {
               "symbol": "ACHR",
               "weight": 0.1869,
               "score": 39.2,
-              "rationale": "ACHR: solid momentum +3.92% \u2014 19% allocation ($10,282). Stop: -1.5% | Target: +3.0%."
+              "rationale": "ACHR: solid momentum +3.92% \u2014 19% allocation ($10,754). Stop: -1.5% | Target: +3.0%."
             },
             {
               "symbol": "ALAB",
               "weight": 0.1447,
               "score": 30.4,
-              "rationale": "ALAB: solid momentum +3.04% \u2014 14% allocation ($7,958). Stop: -1.5% | Target: +3.0%."
+              "rationale": "ALAB: solid momentum +3.04% \u2014 14% allocation ($8,323). Stop: -1.5% | Target: +3.0%."
             }
           ],
           "session_log": [
             {
-              "time": "18:05 PM",
+              "time": "18:13 PM",
               "phase": "CLOSE",
               "action": "CLOSE \u2014 session complete",
-              "detail": "Final session positions: SPOT +6.11%, VST +4.82%, BIRK +4.31%, ACHR +3.92%, ALAB +3.04%. Day P&L: $+2,525. Breadth: 26/55 green. All positions conceptually closed at 3:50 PM."
+              "detail": "Final session positions: SPOT +6.11%, VST +4.82%, BIRK +4.31%, ACHR +3.92%, ALAB +3.04%. Day P&L: $+2,640. Breadth: 26/55 green. All positions conceptually closed at 3:50 PM."
             }
           ]
         },
@@ -1829,9 +1829,9 @@
       "week": [
         {
           "fund": "bot13",
-          "week_pnl": 2524.57,
-          "week_pct": 4.59,
-          "week_grade": "A"
+          "week_pnl": 5165.01,
+          "week_pct": 9.39,
+          "week_grade": "A+"
         },
         {
           "fund": "oracle",
@@ -1861,7 +1861,7 @@
       "all": [
         {
           "fund": "bot13",
-          "all_pnl": 2524.57,
+          "all_pnl": 2640.44,
           "all_pct": 4.59,
           "overall_grade": "A"
         },
