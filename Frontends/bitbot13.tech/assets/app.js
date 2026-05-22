@@ -534,51 +534,78 @@ function renderReport(weekEnd) {
 }
 
 // ============ PAGE: GET YOURS ============
-// ── Pricing constants (shared across all Level 13 sites) ──────────────────
 const PRICING = {
-  firstMonthly: 79.99, firstAnnual: 799.00,
-  addMonthly: 29.99,   addAnnual: 299.00,
-  refMonthly: 39.99,   refAnnual: 639.20,
+  member:    { monthly: 49.99, annual: 499.00 },
+  insider:   { monthly: 69.99, annual: 699.00 },
+  syndicate: { monthly: 99.99, annual: 899.00 },
+};
+const TIER_META = {
+  member:    { label:'MEMBER',    color:'#00d4ff', popular:false,
+               features:['1 portfolio','Stocks or crypto','Full bot signal history','Daily alerts'] },
+  insider:   { label:'INSIDER',   color:'#a855f7', popular:false,
+               features:['3 portfolios','Mix stocks &amp; crypto','Priority signals','Analytics dashboard'] },
+  syndicate: { label:'SYNDICATE', color:'#ff8c00', popular:true,
+               features:['Up to 10 portfolios','All 5 bots active','All 3 platforms','Max signal coverage','First access to features'] },
 };
 let GY_CYCLE = 'annual';
+let GY_TIER  = 'member';
 let GY_REF   = '';
 let GY_VALID = false;
 
 function renderGetYours() {
   const urlRef = new URLSearchParams(location.search).get('ref')
               || new URLSearchParams(location.hash.split('?')[1] || '').get('ref') || '';
-  const paypal = STATE.meta.paypalEmail;
+
   $('app').innerHTML =
     '<section class="hero" style="margin-bottom:24px"><img src="assets/robot.svg" alt="" class="hero-robot">'
     + '<div class="hero-content"><span class="hero-eyebrow">Master Crypto — Without the Risk</span>'
     + '<h1>You\'ve seen what it does. Now make it yours.</h1>'
     + '<p>Up to 50 coins. 5 AI-powered strategies. Daily signals, custom crypto news, Sunday auto-reports. <strong style="color:var(--blue)">BitBot13</strong> runs 24/7 so you never miss a move.</p></div></section>'
 
-    + '<div class="panel" style="margin-bottom:24px">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">'
-    + '<h3 style="margin:0">Choose Your Plan</h3>'
+    // ── Billing toggle ──
+    + '<div style="display:flex;justify-content:center;margin-bottom:28px">'
     + '<div style="display:flex;background:var(--surface2);border-radius:8px;padding:3px">'
-    + '<button id="cycleMonthly" onclick="setGyCycle(\'monthly\')" style="border:none;cursor:pointer;padding:6px 18px;border-radius:6px;font-weight:600;font-size:13px;transition:all 0.15s">Monthly</button>'
-    + '<button id="cycleAnnual"  onclick="setGyCycle(\'annual\')"  style="border:none;cursor:pointer;padding:6px 18px;border-radius:6px;font-weight:600;font-size:13px;transition:all 0.15s">Annual <span style="color:#10b981;font-size:11px">SAVE 17%</span></button>'
+    + '<button id="cycleMonthly" onclick="setGyCycle(\'monthly\')" style="border:none;cursor:pointer;padding:8px 22px;border-radius:6px;font-weight:600;font-size:13px;transition:all 0.15s">Monthly</button>'
+    + '<button id="cycleAnnual"  onclick="setGyCycle(\'annual\')"  style="border:none;cursor:pointer;padding:8px 22px;border-radius:6px;font-weight:600;font-size:13px;transition:all 0.15s">Annual <span style="font-size:11px;color:#10b981">SAVE 17%</span></button>'
     + '</div></div>'
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">'
-    + '<div class="card" style="border:2px solid var(--blue)">'
-    + '<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--blue);margin-bottom:8px;text-transform:uppercase">1st Portfolio</div>'
-    + '<div id="price1" style="font-size:28px;font-weight:800;color:var(--fg)"></div>'
-    + '<div id="price1sub" style="font-size:12px;color:var(--muted);margin-top:4px"></div>'
+
+    // ── FREE tier ──
+    + '<div class="panel" style="margin-bottom:16px;border:1px solid var(--border)">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">'
+    + '<div>'
+    + '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">FREE</div>'
+    + '<div style="font-size:26px;font-weight:800;color:var(--fg)">$0</div>'
+    + '<div style="font-size:13px;color:var(--muted);margin-top:4px;max-width:380px">Follow a real AI trading bot for free. Get daily Buy/Hold/Sell signals straight to your inbox and see exactly how Bot13 trades every market day.</div>'
     + '</div>'
-    + '<div class="card">'
-    + '<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-transform:uppercase">Each Additional</div>'
-    + '<div id="price2" style="font-size:28px;font-weight:800;color:var(--fg)"></div>'
-    + '<div id="price2sub" style="font-size:12px;color:var(--muted);margin-top:4px"></div>'
-    + '</div></div>'
-    + '<p style="font-size:12px;color:var(--muted);margin:0">Additional portfolios can be on any Level 13 site — stocks, crypto, or AI &amp; Quantum.</p>'
+    + '<div style="min-width:260px">'
+    + '<input id="freeEmail" type="email" placeholder="Enter your email" '
+    + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:8px">'
+    + '<button onclick="gyFreeSignup()" style="width:100%;background:var(--surface2);color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:10px 0;font-weight:700;cursor:pointer;font-size:14px">Get Free Signals →</button>'
+    + '<div id="freeMsg" style="font-size:12px;margin-top:6px;min-height:16px"></div>'
+    + '</div></div></div>'
+
+    // ── Paid tier cards ──
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">'
+    + Object.entries(TIER_META).map(([tier, meta]) =>
+        '<div id="tierCard_'+tier+'" onclick="setGyTier(\''+tier+'\')" '
+        + 'style="border:2px solid '+(meta.popular ? meta.color : 'var(--border)')+';border-radius:12px;padding:20px;cursor:pointer;transition:all 0.15s;position:relative;background:var(--surface)">'
+        + (meta.popular ? '<div style="position:absolute;top:-1px;right:16px;background:'+meta.color+';color:#000;font-size:10px;font-weight:800;letter-spacing:1px;padding:2px 10px;border-radius:0 0 6px 6px;text-transform:uppercase">POPULAR</div>' : '')
+        + '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:'+meta.color+';margin-bottom:10px;text-transform:uppercase">'+meta.label+'</div>'
+        + '<div id="tierPrice_'+tier+'" style="font-size:26px;font-weight:800;color:var(--fg);margin-bottom:4px"></div>'
+        + '<div id="tierSub_'+tier+'" style="font-size:12px;color:var(--muted);margin-bottom:14px"></div>'
+        + '<ul style="margin:0;padding-left:16px;font-size:13px;color:var(--muted);line-height:1.8">'
+        + meta.features.map(f => '<li>'+f+'</li>').join('')
+        + '</ul>'
+        + '<div id="tierSelect_'+tier+'" style="margin-top:14px;padding:7px 0;border-radius:6px;font-size:13px;font-weight:700;text-align:center;border:2px solid '+meta.color+';color:'+meta.color+'">Select Plan</div>'
+        + '</div>'
+      ).join('')
     + '</div>'
 
+    // ── Referral code ──
     + '<div class="panel" style="margin-bottom:24px">'
     + '<h3 style="margin-bottom:12px">Have a Referral Code?</h3>'
     + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
-    + '<input id="refInput" type="text" placeholder="L13-XXXXXXXX" maxlength="20" '
+    + '<input id="refInput" type="text" placeholder="BB13-XXXXXXXX" maxlength="20" '
     + 'style="flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;font-family:monospace;text-transform:uppercase" '
     + 'value="'+escapeHtml(urlRef)+'" oninput="this.value=this.value.toUpperCase()">'
     + '<button onclick="applyRefCode()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer;white-space:nowrap">Apply Code</button>'
@@ -586,6 +613,7 @@ function renderGetYours() {
     + '<div id="refMsg" style="margin-top:10px;font-size:13px"></div>'
     + '</div>'
 
+    // ── Subscribe box ──
     + '<div class="sales-hero"><div class="sales-hero-left">'
     + '<h2 style="font-size:28px;letter-spacing:-0.5px">BUILD YOUR OWN</h2>'
     + '<p style="color:var(--muted);font-size:15px">Pick up to 50 coins from any chain. Daily, weekly, and monthly AI bots. Custom crypto news. Sunday auto-reports.</p>'
@@ -596,6 +624,7 @@ function renderGetYours() {
     + '<div class="powered">POWERED BY PAYPAL BUSINESS</div>'
     + '</div></div>'
 
+    // ── Feature grid ──
     + '<div class="sales-strip"><div><h3>Any Chain. Any Coins. Any News.</h3>'
     + '<p>BTC maxis, ETH degens, altcoin hunters, DeFi explorers — pick the coins that matter; we pull the news.</p></div>'
     + '<span class="signal signal-buy" style="font-size:11px;padding:6px 14px">TOP 50 CRYPTO</span></div>'
@@ -605,28 +634,57 @@ function renderGetYours() {
        ['Daily Buy/Sell/Hold','Composite signals on every coin you track.'],
        ['Custom news feed','Crypto never sleeps. Neither does your news feed.'],
        ['Sunday auto-reports','Weekly grades, pros/cons, trade-by-trade review.'],
-       ['One login, all sites','Add stocks or AI &amp; Quantum for $29.99/mo each.']].map(p =>
+       ['One login, all sites','Syndicate plan includes all 3 platforms.']].map(p =>
          '<div class="card"><h3 style="color:var(--blue);margin-bottom:8px">✓ '+p[0]+'</h3>'
          + '<p style="color:var(--muted);font-size:13px;margin:0">'+p[1]+'</p></div>').join('')
     + '</div>'
     + '<div class="panel" style="margin-top:24px">'
     + '<p style="color:var(--muted);font-size:13px;margin:0 0 8px 0">Built by an operator who runs the same system on his own portfolio. Cancel anytime from your PayPal account. Questions? <a href="mailto:info@bitbot13.tech" style="color:var(--blue)">info@bitbot13.tech</a></p>'
-    + '<p style="font-size:13px;margin:0">Refer a friend → they get <strong style="color:var(--blue)">50% off their first month</strong> and you earn a <strong style="color:var(--blue)">$35 bill credit</strong>. <a href="#/referral" style="color:var(--blue)">Learn more →</a></p>'
+    + '<p style="font-size:13px;margin:0">Refer a friend → they get <strong style="color:var(--blue)">50% off their first month</strong> or <strong style="color:var(--blue)">$100 off annual</strong> and you earn a <strong style="color:var(--blue)">$35 bill credit</strong>. <a href="#/referral" style="color:var(--blue)">Learn more →</a></p>'
     + '</div>';
 
-  GY_CYCLE = 'annual'; GY_REF = ''; GY_VALID = false;
+  GY_CYCLE = 'annual';
+  GY_TIER  = 'member';
+  GY_REF   = '';
+  GY_VALID = false;
   updateGyPricing();
   if (urlRef) { const inp = $('refInput'); if (inp) inp.value = urlRef.toUpperCase(); applyRefCode(); }
 }
 
+async function gyFreeSignup() {
+  const inp = $('freeEmail');
+  const msg = $('freeMsg');
+  if (!inp || !msg) return;
+  const email = inp.value.trim();
+  if (!email || !email.includes('@')) {
+    msg.innerHTML = '<span style="color:var(--red)">Please enter a valid email.</span>';
+    return;
+  }
+  msg.innerHTML = '<span style="color:var(--muted)">Signing you up…</span>';
+  try {
+    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/subscriptions/free-signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, platform: 'bitbot13' })
+    });
+    if (r.ok) {
+      msg.innerHTML = '<span style="color:#10b981;font-weight:700">✓ You\'re in! Check your inbox for your first signal.</span>';
+      inp.value = '';
+    } else {
+      msg.innerHTML = '<span style="color:var(--muted)">Something went wrong — try again or email info@bitbot13.tech</span>';
+    }
+  } catch (_) {
+    msg.innerHTML = '<span style="color:var(--muted)">Could not connect — check your connection.</span>';
+  }
+}
+
+function setGyTier(tier) { GY_TIER = tier; updateGyPricing(); }
 function setGyCycle(cycle) { GY_CYCLE = cycle; updateGyPricing(); }
 
 function updateGyPricing() {
-  const annual = GY_CYCLE === 'annual', hasRef = GY_VALID;
-  const first    = annual ? PRICING.firstAnnual  : PRICING.firstMonthly;
-  const add      = annual ? PRICING.addAnnual    : PRICING.addMonthly;
-  const firstRef = annual ? PRICING.refAnnual    : PRICING.refMonthly;
-  const suffix   = annual ? '/yr' : '/mo';
+  const annual = GY_CYCLE === 'annual';
+  const hasRef = GY_VALID;
+  const suffix = annual ? '/yr' : '/mo';
 
   ['cycleMonthly','cycleAnnual'].forEach(id => {
     const el = $(id); if (!el) return;
@@ -635,18 +693,41 @@ function updateGyPricing() {
     el.style.color = active ? '#fff' : 'var(--muted)';
   });
 
-  const p1 = $('price1'), p1s = $('price1sub'), p2 = $('price2'), p2s = $('price2sub');
-  if (p1) {
-    if (hasRef) {
-      p1.innerHTML = '<span style="text-decoration:line-through;color:var(--muted);font-size:18px">$'+first.toFixed(2)+'</span> $'+firstRef.toFixed(2);
-      p1.style.color = '#10b981';
-    } else { p1.textContent = '$'+first.toFixed(2); p1.style.color = ''; }
-  }
-  if (p1s) p1s.textContent = hasRef ? (annual ? '20% off — then $799/yr' : '50% off 1st month — then $79.99/mo') : suffix+' · auto-renews · cancel anytime';
-  if (p2)  p2.textContent = '$'+add.toFixed(2);
-  if (p2s) p2s.textContent = suffix+' per extra portfolio (any Level 13 site)';
+  Object.entries(PRICING).forEach(([tier, prices]) => {
+    const price    = annual ? prices.annual  : prices.monthly;
+    const refPrice = annual ? (price - 100).toFixed(2) : (price * 0.5).toFixed(2);
+    const isSelected = tier === GY_TIER;
+    const meta = TIER_META[tier];
+    const card  = $('tierCard_'+tier);
+    const prEl  = $('tierPrice_'+tier);
+    const subEl = $('tierSub_'+tier);
+    const selEl = $('tierSelect_'+tier);
+    if (!card) return;
+    card.style.borderColor = isSelected ? meta.color : (meta.popular ? meta.color : 'var(--border)');
+    card.style.background  = isSelected ? 'rgba(0,0,0,0.15)' : 'var(--surface)';
+    if (prEl) {
+      if (hasRef) {
+        prEl.innerHTML = '<span style="text-decoration:line-through;color:var(--muted);font-size:18px">$'+price.toFixed(2)+'</span> $'+refPrice;
+        prEl.style.color = '#10b981';
+      } else { prEl.textContent = '$'+price.toFixed(2); prEl.style.color = ''; }
+    }
+    if (subEl) subEl.textContent = hasRef
+      ? (annual ? '$100 off — then $'+price.toFixed(2)+suffix : '50% off first month — then $'+price.toFixed(2)+suffix)
+      : suffix + ' · cancel anytime';
+    if (selEl) {
+      selEl.textContent      = isSelected ? '✓ Selected' : 'Select Plan';
+      selEl.style.background = isSelected ? meta.color : 'transparent';
+      selEl.style.color      = isSelected ? '#000'     : meta.color;
+    }
+  });
+
+  const tierPrices = PRICING[GY_TIER];
+  const price  = annual ? tierPrices.annual  : tierPrices.monthly;
+  const refPrice = annual ? (price - 100).toFixed(2) : (price * 0.5).toFixed(2);
   const lbl = $('activePriceLabel');
-  if (lbl) lbl.textContent = hasRef ? '$'+firstRef.toFixed(2)+suffix+' today (referral discount applied!)' : '$'+first.toFixed(2)+suffix+' · auto-renews · cancel anytime';
+  if (lbl) lbl.textContent = hasRef
+    ? '$' + refPrice + suffix + ' today — ' + TIER_META[GY_TIER].label + ' plan (referral applied!)'
+    : '$' + price.toFixed(2) + suffix + ' — ' + TIER_META[GY_TIER].label + ' plan · cancel anytime';
   renderPaypalForm();
 }
 
@@ -661,7 +742,9 @@ async function applyRefCode() {
     const d = await r.json();
     if (d.valid) {
       GY_REF = d.code; GY_VALID = true;
-      msg.innerHTML = '<span style="color:#10b981;font-weight:700">✓ Referral code applied! '+(GY_CYCLE==='annual'?'Save $'+d.annual_savings.toFixed(2)+' on your annual plan.':'First month just $'+d.monthly_first_payment.toFixed(2)+' (50% off).')+'</span>';
+      msg.innerHTML = '<span style="color:#10b981;font-weight:700">✓ Referral code applied! '
+        + (GY_CYCLE === 'annual' ? '$100 off your annual plan.' : '50% off your first month.')
+        + '</span>';
     } else {
       GY_REF = ''; GY_VALID = false;
       msg.innerHTML = '<span style="color:var(--red)">✗ '+(d.message||'Invalid code.')+'</span>';
@@ -675,33 +758,41 @@ async function applyRefCode() {
 
 function renderPaypalForm() {
   const wrap = $('paypalFormWrap'); if (!wrap) return;
-  const paypal = STATE.meta.paypalEmail;
-  const annual = GY_CYCLE === 'annual', ref = GY_VALID ? GY_REF : '';
-  const base = annual ? '799.00' : '79.99', unit = annual ? 'Y' : 'M';
-  const firstAmt = annual ? '639.20' : '39.99';
-  // `custom` carries the origin platform (always) + referral code (if any),
-  // pipe-separated. The backend webhook parses this to set origin_platform.
+  const paypal     = STATE.meta.paypalEmail;
+  const annual     = GY_CYCLE === 'annual';
+  const ref        = GY_VALID ? GY_REF : '';
+  const tierPrices = PRICING[GY_TIER];
+  const tierLabel  = TIER_META[GY_TIER].label;
+  const price      = annual ? tierPrices.annual  : tierPrices.monthly;
+  const base       = price.toFixed(2);
+  const unit       = annual ? 'Y' : 'M';
+  const label      = annual ? 'Annual' : 'Monthly';
+  const refPrice   = annual ? (price - 100).toFixed(2) : (price * 0.5).toFixed(2);
+  const btnTxt     = 'Subscribe — $' + base + (annual ? '/yr' : '/mo');
   const customField = 'bitbot13' + (ref ? '|ref=' + ref : '');
   const refFields = ref
-    ? '<input type="hidden" name="a1" value="'+firstAmt+'"><input type="hidden" name="p1" value="1"><input type="hidden" name="t1" value="'+unit+'">'
+    ? '<input type="hidden" name="a1" value="'+refPrice+'"><input type="hidden" name="p1" value="1"><input type="hidden" name="t1" value="'+unit+'">'
     : '';
-  const btnTxt = ref
-    ? (annual ? 'Subscribe — $639.20 today, then $799/yr' : 'Subscribe — $39.99 today, then $79.99/mo')
-    : (annual ? 'Subscribe — $799/yr' : 'Subscribe — $79.99/mo');
+  const refBtnTxt = ref
+    ? 'Subscribe — $' + refPrice + ' today, then $' + base + (annual ? '/yr' : '/mo')
+    : btnTxt;
   wrap.innerHTML =
     '<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="margin:0">'
     + '<input type="hidden" name="cmd" value="_xclick-subscriptions">'
     + '<input type="hidden" name="business" value="'+paypal+'">'
     + '<input type="hidden" name="lc" value="US">'
-    + '<input type="hidden" name="item_name" value="bitbot13.tech Custom Tracker - '+(annual?'Annual':'Monthly')+'">'
+    + '<input type="hidden" name="item_name" value="bitbot13.tech '+tierLabel+' - '+label+'">'
     + '<input type="hidden" name="no_note" value="1"><input type="hidden" name="no_shipping" value="1">'
+    + '<input type="hidden" name="custom" value="'+escapeHtml(customField)+'">'
     + '<input type="hidden" name="src" value="1">'+refFields
     + '<input type="hidden" name="a3" value="'+base+'"><input type="hidden" name="p3" value="1"><input type="hidden" name="t3" value="'+unit+'">'
     + '<input type="hidden" name="currency_code" value="USD">'
     + '<input type="hidden" name="return" value="https://bitbot13.tech/#/thanks">'
     + '<input type="hidden" name="cancel_return" value="https://bitbot13.tech/#/get-yours">'
-    + '<button type="submit" class="paypal-btn">'+btnTxt+'</button></form>'
-    + '<div style="font-size:12px;margin-top:6px;opacity:0.85">'+(ref?'Referral discount on first payment. Renews at $'+base+'/'+unit.toLowerCase()+' afterwards.':'$'+base+' today, $'+base+' every '+(annual?'365 days':'30 days'))+'</div>';
+    + '<button type="submit" class="paypal-btn">'+refBtnTxt+'</button></form>'
+    + '<div style="font-size:12px;margin-top:6px;opacity:0.85">'
+    + (ref ? 'Referral discount applied to first payment. Renews at $'+base+(annual?'/yr':'/mo')+' afterwards.' : '$'+base+' today, renews every '+(annual?'year':'month'))
+    + '</div>';
 }
 
 function renderThanks() {
@@ -715,7 +806,7 @@ function renderThanks() {
     + '</div></section>'
     + '<div class="panel" style="margin-top:24px;border:2px solid var(--blue)">'
     + '<h3 style="color:var(--blue);margin-bottom:8px">Earn $35 per referral</h3>'
-    + '<p style="color:var(--muted);margin-bottom:16px">Share your referral link. Your friend gets <strong style="color:var(--fg)">50% off their first month</strong> (or 20% off annual). You earn <strong style="color:var(--fg)">$35 credit</strong> applied to your next bill — automatically.</p>'
+    + '<p style="color:var(--muted);margin-bottom:16px">Share your referral link. Your friend gets <strong style="color:var(--fg)">50% off their first month</strong> (or $100 off annual). You earn <strong style="color:var(--fg)">$35 credit</strong> applied to your next bill — automatically.</p>'
     + (refCode
       ? '<div style="background:var(--surface2);border-radius:8px;padding:12px 16px;font-family:monospace;font-size:14px;color:var(--blue);word-break:break-all;margin-bottom:12px">'+escapeHtml(refLink)+'</div>'
         + '<button onclick="navigator.clipboard.writeText(\''+escapeHtml(refLink)+'\').then(()=>{this.textContent=\'Copied!\';setTimeout(()=>this.textContent=\'Copy Link\',2000)})" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer">Copy Link</button>'
@@ -729,7 +820,7 @@ function renderReferral() {
     '<section class="hero" style="margin-bottom:24px"><div class="hero-content">'
     + '<span class="hero-eyebrow">Referral Program</span>'
     + '<h1>Share the edge. Get paid.</h1>'
-    + '<p>Every time a friend subscribes using your referral link, you earn <strong style="color:var(--blue)">$35 credit</strong> applied to your next bill automatically. They get <strong style="color:var(--blue)">50% off their first month</strong> — or <strong style="color:var(--blue)">20% off an annual plan</strong>. Everyone wins.</p>'
+    + '<p>Every time a friend subscribes using your referral link, you earn <strong style="color:var(--blue)">$35 credit</strong> applied to your next bill automatically. They get <strong style="color:var(--blue)">50% off their first month</strong> — or <strong style="color:var(--blue)">$100 off an annual plan</strong>. Everyone wins.</p>'
     + '</div></section>'
     + '<h3>How It Works</h3><div class="grid grid-3" style="margin-bottom:32px">'
     + [['1. Share Your Link','Copy your personal referral link and share it. Works across all Level 13 sites — stocks, crypto, AI & Quantum.'],
@@ -740,12 +831,12 @@ function renderReferral() {
     + '<div class="panel" style="margin-bottom:24px"><h3 style="margin-bottom:16px">Referral Discounts</h3>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'
     + '<div style="background:var(--surface2);border-radius:10px;padding:16px"><div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--blue);margin-bottom:8px;text-transform:uppercase">Monthly Plan</div>'
-    + '<div style="font-size:22px;font-weight:800;margin-bottom:4px"><span style="text-decoration:line-through;color:var(--muted);font-size:16px">$79.99</span> $39.99</div>'
-    + '<div style="font-size:13px;color:var(--muted)">First month only — then $79.99/mo</div></div>'
+    + '<div style="font-size:22px;font-weight:800;margin-bottom:4px;color:#10b981">50% off</div>'
+    + '<div style="font-size:13px;color:var(--muted)">First month only — applies to any tier (Member, Insider, or Syndicate)</div></div>'
     + '<div style="background:var(--surface2);border-radius:10px;padding:16px"><div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--blue);margin-bottom:8px;text-transform:uppercase">Annual Plan</div>'
-    + '<div style="font-size:22px;font-weight:800;margin-bottom:4px"><span style="text-decoration:line-through;color:var(--muted);font-size:16px">$799.00</span> $639.20</div>'
-    + '<div style="font-size:13px;color:var(--muted)">20% off — then $799/yr at renewal</div></div>'
-    + '</div><p style="margin:16px 0 0 0;font-size:13px;color:var(--muted)">Discounts apply to the first portfolio. Additional portfolios ($29.99/mo or $299/yr) are regular price.</p>'
+    + '<div style="font-size:22px;font-weight:800;margin-bottom:4px;color:#10b981">$100 off</div>'
+    + '<div style="font-size:13px;color:var(--muted)">Flat $100 discount on any annual plan — then renews at standard rate</div></div>'
+    + '</div><p style="margin:16px 0 0 0;font-size:13px;color:var(--muted)">Referral discounts apply to the subscriber\'s first payment on any paid tier. Choose the plan that fits, discount applies automatically at checkout.</p>'
     + '</div>'
     + '<div class="panel" style="margin-bottom:24px;border:1px solid var(--blue)">'
     + '<h3 style="margin-bottom:8px;color:var(--blue)">Your $35 Credit</h3>'
@@ -790,7 +881,7 @@ async function loadReferralDashboard() {
 // CHATBOT — FAQ engine
 // ================================================================
 const FAQS = [
-  { q: ['price','cost','how much','pricing','799','79'], a: "First portfolio: $79.99/mo or $799/yr. Each additional (crypto, stocks, or AI & Quantum): $29.99/mo or $299/yr. Have a referral code? Get 50% off your first month or 20% off annual." },
+  { q: ['price','cost','how much','pricing','member','insider','syndicate'], a: "MEMBER: $49.99/mo or $499/yr (1 portfolio). INSIDER: $69.99/mo or $699/yr (3 portfolios). SYNDICATE: $99.99/mo or $899/yr (up to 10 portfolios, all 3 platforms). FREE tier available — daily signals by email at no cost." },
   { q: ['referral','refer','code','discount'], a: "Share your referral code and earn $35 credit per friend who subscribes — automatically deducted from your next bill. Your friend gets 50% off their first month (or 20% off annual). No cap." },
   { q: ['cancel','refund','stop'], a: "Cancel anytime from your PayPal account → Settings → Automatic Payments. No refund for the partial year, but no further charges." },
   { q: ['coin','coins','tickers','how many'], a: "Up to 50 coins from any chain or category — BTC, ETH, altcoins, DeFi, gaming, meme. You pick them after checkout." },

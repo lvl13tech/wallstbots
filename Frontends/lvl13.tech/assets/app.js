@@ -543,48 +543,265 @@ function renderReport(weekEnd) {
 }
 
 // ============ PAGE: GET YOURS ============
+const PRICING = {
+  member:    { monthly: 49.99, annual: 499.00 },
+  insider:   { monthly: 69.99, annual: 699.00 },
+  syndicate: { monthly: 99.99, annual: 899.00 },
+};
+const TIER_META = {
+  member:    { label:'MEMBER',    color:'#00d4ff', popular:false,
+               features:['1 portfolio','Stocks or crypto','Full bot signal history','Daily alerts'] },
+  insider:   { label:'INSIDER',   color:'#a855f7', popular:false,
+               features:['3 portfolios','Mix stocks &amp; crypto','Priority signals','Analytics dashboard'] },
+  syndicate: { label:'SYNDICATE', color:'#ff8c00', popular:true,
+               features:['Up to 10 portfolios','All 5 bots active','All 3 platforms','Max signal coverage','First access to features'] },
+};
+let GY_CYCLE = 'annual';
+let GY_TIER  = 'member';
+let GY_REF   = '';
+let GY_VALID = false;
+
 function renderGetYours() {
-  const paypal = STATE.meta.paypalEmail;
+  const urlRef = new URLSearchParams(location.search).get('ref')
+              || new URLSearchParams(location.hash.split('?')[1] || '').get('ref') || '';
+
   $('app').innerHTML =
     '<section class="hero" style="margin-bottom:24px"><img src="assets/robot.svg" alt="" class="hero-robot">'
     + '<div class="hero-content"><span class="hero-eyebrow">Master the Market — Without the Risk</span>'
     + '<h1>You\'ve seen what it does. Now make it yours.</h1>'
-    + '<p>Build, test, and refine your portfolio with a market research tool built for the modern trader. Whether you\'re leveraging AI trading bots or manual strategies, you can track 50 stocks simultaneously with daily technical analysis that includes Buy/Sell/Hold signals analyzed by AI. Plus, never miss a beat with personalized news updates delivered straight to your dashboard. Our <strong style="color:var(--blue)">Level XIII</strong> platform is a game changer that lets you master the market without the risk.</p></div></section>'
+    + '<p>Build, test, and refine your AI &amp; Quantum portfolio. Track 50 stocks with daily Buy/Sell/Hold signals, personalized news, and Sunday auto-reports. <strong style="color:var(--blue)">Level XIII</strong> runs the research so you can make the call.</p></div></section>'
+
+    // ── Billing toggle ──
+    + '<div style="display:flex;justify-content:center;margin-bottom:28px">'
+    + '<div style="display:flex;background:var(--surface2);border-radius:8px;padding:3px">'
+    + '<button id="cycleMonthly" onclick="setGyCycle(\'monthly\')" style="border:none;cursor:pointer;padding:8px 22px;border-radius:6px;font-weight:600;font-size:13px;transition:all 0.15s">Monthly</button>'
+    + '<button id="cycleAnnual"  onclick="setGyCycle(\'annual\')"  style="border:none;cursor:pointer;padding:8px 22px;border-radius:6px;font-weight:600;font-size:13px;transition:all 0.15s">Annual <span style="font-size:11px;color:#10b981">SAVE 17%</span></button>'
+    + '</div></div>'
+
+    // ── FREE tier ──
+    + '<div class="panel" style="margin-bottom:16px;border:1px solid var(--border)">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">'
+    + '<div>'
+    + '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">FREE</div>'
+    + '<div style="font-size:26px;font-weight:800;color:var(--fg)">$0</div>'
+    + '<div style="font-size:13px;color:var(--muted);margin-top:4px;max-width:380px">Follow a real AI trading bot for free. Get daily Buy/Hold/Sell signals straight to your inbox and see exactly how Bot13 trades every market day.</div>'
+    + '</div>'
+    + '<div style="min-width:260px">'
+    + '<input id="freeEmail" type="email" placeholder="Enter your email" '
+    + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:8px">'
+    + '<button onclick="gyFreeSignup()" style="width:100%;background:var(--surface2);color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:10px 0;font-weight:700;cursor:pointer;font-size:14px">Get Free Signals →</button>'
+    + '<div id="freeMsg" style="font-size:12px;margin-top:6px;min-height:16px"></div>'
+    + '</div></div></div>'
+
+    // ── Paid tier cards ──
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">'
+    + Object.entries(TIER_META).map(([tier, meta]) =>
+        '<div id="tierCard_'+tier+'" onclick="setGyTier(\''+tier+'\')" '
+        + 'style="border:2px solid '+(meta.popular ? meta.color : 'var(--border)')+';border-radius:12px;padding:20px;cursor:pointer;transition:all 0.15s;position:relative;background:var(--surface)">'
+        + (meta.popular ? '<div style="position:absolute;top:-1px;right:16px;background:'+meta.color+';color:#000;font-size:10px;font-weight:800;letter-spacing:1px;padding:2px 10px;border-radius:0 0 6px 6px;text-transform:uppercase">POPULAR</div>' : '')
+        + '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:'+meta.color+';margin-bottom:10px;text-transform:uppercase">'+meta.label+'</div>'
+        + '<div id="tierPrice_'+tier+'" style="font-size:26px;font-weight:800;color:var(--fg);margin-bottom:4px"></div>'
+        + '<div id="tierSub_'+tier+'" style="font-size:12px;color:var(--muted);margin-bottom:14px"></div>'
+        + '<ul style="margin:0;padding-left:16px;font-size:13px;color:var(--muted);line-height:1.8">'
+        + meta.features.map(f => '<li>'+f+'</li>').join('')
+        + '</ul>'
+        + '<div id="tierSelect_'+tier+'" style="margin-top:14px;padding:7px 0;border-radius:6px;font-size:13px;font-weight:700;text-align:center;border:2px solid '+meta.color+';color:'+meta.color+'">Select Plan</div>'
+        + '</div>'
+      ).join('')
+    + '</div>'
+
+    // ── Referral code ──
+    + '<div class="panel" style="margin-bottom:24px">'
+    + '<h3 style="margin-bottom:12px">Have a Referral Code?</h3>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+    + '<input id="refInput" type="text" placeholder="L13-XXXXXXXX" maxlength="20" '
+    + 'style="flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;font-family:monospace;text-transform:uppercase" '
+    + 'value="'+escapeHtml(urlRef)+'" oninput="this.value=this.value.toUpperCase()">'
+    + '<button onclick="applyRefCode()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer;white-space:nowrap">Apply Code</button>'
+    + '</div>'
+    + '<div id="refMsg" style="margin-top:10px;font-size:13px"></div>'
+    + '</div>'
+
+    // ── Subscribe box ──
     + '<div class="sales-hero"><div class="sales-hero-left">'
     + '<h2 style="font-size:28px;letter-spacing:-0.5px">BUILD YOUR OWN</h2>'
-    + '<p style="color:var(--muted);font-size:15px">Pick up to 50 stocks from ANY sector. Three custom AI bots. Custom news feed. Sunday auto-reports.</p>'
-    + '<p style="color:var(--blue);font-weight:700;font-size:15px">$799/year &nbsp;·&nbsp; auto-renews &nbsp;·&nbsp; cancel anytime</p>'
-    + '</div><div class="sales-hero-right"><h3>Subscribe with PayPal</h3>'
-    + '<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="margin:0">'
-    + '<input type="hidden" name="cmd" value="_xclick-subscriptions">'
-    + '<input type="hidden" name="business" value="'+paypal+'">'
-    + '<input type="hidden" name="lc" value="US">'
-    + '<input type="hidden" name="item_name" value="lvl13.tech Custom Tracker - Annual">'
-    + '<input type="hidden" name="no_note" value="1"><input type="hidden" name="no_shipping" value="1">'
-    + '<input type="hidden" name="custom" value="lvl13">'
-    + '<input type="hidden" name="src" value="1"><input type="hidden" name="a3" value="799.00">'
-    + '<input type="hidden" name="p3" value="1"><input type="hidden" name="t3" value="Y">'
-    + '<input type="hidden" name="currency_code" value="USD">'
-    + '<input type="hidden" name="return" value="https://lvl13.tech/#/thanks">'
-    + '<input type="hidden" name="cancel_return" value="https://lvl13.tech/#/get-yours">'
-    + '<button type="submit" class="paypal-btn">Subscribe — $799/yr</button></form>'
-    + '<div style="font-size:12px;margin-top:6px;opacity:0.85">$799 today, $799 every 365 days</div>'
-    + '<div class="powered">POWERED BY PAYPAL BUSINESS</div></div></div>'
+    + '<p style="color:var(--muted);font-size:15px">Pick up to 50 AI &amp; Quantum stocks. Daily, weekly, and monthly AI bots. Custom news feed. Sunday auto-reports.</p>'
+    + '<div id="activePriceLabel" style="color:var(--blue);font-weight:700;font-size:15px"></div>'
+    + '</div><div class="sales-hero-right">'
+    + '<h3>Subscribe with PayPal</h3>'
+    + '<div id="paypalFormWrap"></div>'
+    + '<div class="powered">POWERED BY PAYPAL BUSINESS</div>'
+    + '</div></div>'
+
+    // ── Feature grid ──
     + '<div class="sales-strip"><div><h3>Any Sector. Any Stocks. Any News.</h3>'
     + '<p>Tech, biotech, energy, finance, defense, REITs — pick the sectors that matter; we pull the news.</p></div>'
     + '<span class="signal signal-buy" style="font-size:11px;padding:6px 14px">15+ SECTORS</span></div>'
     + '<h3>What\'s Included</h3><div class="grid grid-3">'
     + [['Up to 50 stocks','Any sector, any exchange. NYSE, NASDAQ, plus custom tickers.'],
-       ['3 AI bots','Daily, weekly, monthly — all yours.'],
-       ['2 baselines','Equal-weight + market-cap weighted benchmarks.'],
+       ['5 AI bots','Daily, weekly, monthly — plus two market-cap benchmarks.'],
        ['Daily Buy/Sell/Hold','Composite signals on every stock you picked.'],
        ['Custom news feed','Pick the sectors. We curate, dedupe, deliver.'],
-       ['Sunday auto-reports','Weekly grades, pros/cons, trade-by-trade review.']].map(p =>
+       ['Sunday auto-reports','Weekly grades, pros/cons, trade-by-trade review.'],
+       ['One login, all sites','Syndicate plan includes all 3 platforms.']].map(p =>
          '<div class="card"><h3 style="color:var(--blue);margin-bottom:8px">✓ '+p[0]+'</h3>'
          + '<p style="color:var(--muted);font-size:13px;margin:0">'+p[1]+'</p></div>').join('')
     + '</div>'
-    + '<div class="panel" style="margin-top:24px;text-align:center">'
-    + '<p style="color:var(--muted);font-size:13px;font-style:italic;margin:0">Built by an operator who runs the same system on his own portfolio. Cancel anytime from your PayPal account. Questions? <a href="mailto:info@lvl13.tech" style="color:var(--blue)">info@lvl13.tech</a></p></div>';
+    + '<div class="panel" style="margin-top:24px">'
+    + '<p style="color:var(--muted);font-size:13px;margin:0 0 8px 0">Built by an operator who runs the same system on his own portfolio. Cancel anytime from your PayPal account. Questions? <a href="mailto:info@lvl13.tech" style="color:var(--blue)">info@lvl13.tech</a></p>'
+    + '<p style="font-size:13px;margin:0">Refer a friend → they get <strong style="color:var(--blue)">50% off their first month</strong> or <strong style="color:var(--blue)">$100 off annual</strong> and you earn a <strong style="color:var(--blue)">$35 bill credit</strong>.</p>'
+    + '</div>';
+
+  GY_CYCLE = 'annual';
+  GY_TIER  = 'member';
+  GY_REF   = '';
+  GY_VALID = false;
+  updateGyPricing();
+  if (urlRef) { const inp = $('refInput'); if (inp) inp.value = urlRef.toUpperCase(); applyRefCode(); }
+}
+
+async function gyFreeSignup() {
+  const inp = $('freeEmail');
+  const msg = $('freeMsg');
+  if (!inp || !msg) return;
+  const email = inp.value.trim();
+  if (!email || !email.includes('@')) {
+    msg.innerHTML = '<span style="color:var(--red)">Please enter a valid email.</span>';
+    return;
+  }
+  msg.innerHTML = '<span style="color:var(--muted)">Signing you up…</span>';
+  try {
+    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/subscriptions/free-signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, platform: 'lvl13' })
+    });
+    if (r.ok) {
+      msg.innerHTML = '<span style="color:#10b981;font-weight:700">✓ You\'re in! Check your inbox for your first signal.</span>';
+      inp.value = '';
+    } else {
+      msg.innerHTML = '<span style="color:var(--muted)">Something went wrong — try again or email info@lvl13.tech</span>';
+    }
+  } catch (_) {
+    msg.innerHTML = '<span style="color:var(--muted)">Could not connect — check your connection.</span>';
+  }
+}
+
+function setGyTier(tier) { GY_TIER = tier; updateGyPricing(); }
+function setGyCycle(cycle) { GY_CYCLE = cycle; updateGyPricing(); }
+
+function updateGyPricing() {
+  const annual = GY_CYCLE === 'annual';
+  const hasRef = GY_VALID;
+  const suffix = annual ? '/yr' : '/mo';
+
+  ['cycleMonthly','cycleAnnual'].forEach(id => {
+    const el = $(id); if (!el) return;
+    const active = (id === 'cycleAnnual') === annual;
+    el.style.background = active ? 'var(--blue)' : 'transparent';
+    el.style.color = active ? '#fff' : 'var(--muted)';
+  });
+
+  Object.entries(PRICING).forEach(([tier, prices]) => {
+    const price    = annual ? prices.annual  : prices.monthly;
+    const refPrice = annual ? (price - 100).toFixed(2) : (price * 0.5).toFixed(2);
+    const isSelected = tier === GY_TIER;
+    const meta = TIER_META[tier];
+    const card  = $('tierCard_'+tier);
+    const prEl  = $('tierPrice_'+tier);
+    const subEl = $('tierSub_'+tier);
+    const selEl = $('tierSelect_'+tier);
+    if (!card) return;
+    card.style.borderColor = isSelected ? meta.color : (meta.popular ? meta.color : 'var(--border)');
+    card.style.background  = isSelected ? 'rgba(0,0,0,0.15)' : 'var(--surface)';
+    if (prEl) {
+      if (hasRef) {
+        prEl.innerHTML = '<span style="text-decoration:line-through;color:var(--muted);font-size:18px">$'+price.toFixed(2)+'</span> $'+refPrice;
+        prEl.style.color = '#10b981';
+      } else { prEl.textContent = '$'+price.toFixed(2); prEl.style.color = ''; }
+    }
+    if (subEl) subEl.textContent = hasRef
+      ? (annual ? '$100 off — then $'+price.toFixed(2)+suffix : '50% off first month — then $'+price.toFixed(2)+suffix)
+      : suffix + ' · cancel anytime';
+    if (selEl) {
+      selEl.textContent      = isSelected ? '✓ Selected' : 'Select Plan';
+      selEl.style.background = isSelected ? meta.color : 'transparent';
+      selEl.style.color      = isSelected ? '#000'     : meta.color;
+    }
+  });
+
+  const tierPrices = PRICING[GY_TIER];
+  const price  = annual ? tierPrices.annual  : tierPrices.monthly;
+  const refPrice = annual ? (price - 100).toFixed(2) : (price * 0.5).toFixed(2);
+  const lbl = $('activePriceLabel');
+  if (lbl) lbl.textContent = hasRef
+    ? '$' + refPrice + suffix + ' today — ' + TIER_META[GY_TIER].label + ' plan (referral applied!)'
+    : '$' + price.toFixed(2) + suffix + ' — ' + TIER_META[GY_TIER].label + ' plan · cancel anytime';
+  renderPaypalForm();
+}
+
+async function applyRefCode() {
+  const inp = $('refInput'), msg = $('refMsg');
+  if (!inp || !msg) return;
+  const code = inp.value.trim().toUpperCase();
+  if (!code) { msg.innerHTML = ''; return; }
+  msg.innerHTML = '<span style="color:var(--muted)">Validating…</span>';
+  try {
+    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/subscriptions/validate-referral?code='+encodeURIComponent(code));
+    const d = await r.json();
+    if (d.valid) {
+      GY_REF = d.code; GY_VALID = true;
+      msg.innerHTML = '<span style="color:#10b981;font-weight:700">✓ Referral code applied! '
+        + (GY_CYCLE === 'annual' ? '$100 off your annual plan.' : '50% off your first month.')
+        + '</span>';
+    } else {
+      GY_REF = ''; GY_VALID = false;
+      msg.innerHTML = '<span style="color:var(--red)">✗ '+(d.message||'Invalid code.')+'</span>';
+    }
+  } catch (_) {
+    GY_REF = ''; GY_VALID = false;
+    msg.innerHTML = '<span style="color:var(--muted)">Could not validate — check your connection.</span>';
+  }
+  updateGyPricing();
+}
+
+function renderPaypalForm() {
+  const wrap = $('paypalFormWrap'); if (!wrap) return;
+  const paypal     = STATE.meta.paypalEmail;
+  const annual     = GY_CYCLE === 'annual';
+  const ref        = GY_VALID ? GY_REF : '';
+  const tierPrices = PRICING[GY_TIER];
+  const tierLabel  = TIER_META[GY_TIER].label;
+  const price      = annual ? tierPrices.annual  : tierPrices.monthly;
+  const base       = price.toFixed(2);
+  const unit       = annual ? 'Y' : 'M';
+  const label      = annual ? 'Annual' : 'Monthly';
+  const refPrice   = annual ? (price - 100).toFixed(2) : (price * 0.5).toFixed(2);
+  const btnTxt     = 'Subscribe — $' + base + (annual ? '/yr' : '/mo');
+  const customField = 'lvl13' + (ref ? '|ref=' + ref : '');
+  const refFields = ref
+    ? '<input type="hidden" name="a1" value="'+refPrice+'"><input type="hidden" name="p1" value="1"><input type="hidden" name="t1" value="'+unit+'">'
+    : '';
+  const refBtnTxt = ref
+    ? 'Subscribe — $' + refPrice + ' today, then $' + base + (annual ? '/yr' : '/mo')
+    : btnTxt;
+  wrap.innerHTML =
+    '<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="margin:0">'
+    + '<input type="hidden" name="cmd" value="_xclick-subscriptions">'
+    + '<input type="hidden" name="business" value="'+paypal+'">'
+    + '<input type="hidden" name="lc" value="US">'
+    + '<input type="hidden" name="item_name" value="lvl13.tech '+tierLabel+' - '+label+'">'
+    + '<input type="hidden" name="no_note" value="1"><input type="hidden" name="no_shipping" value="1">'
+    + '<input type="hidden" name="custom" value="'+escapeHtml(customField)+'">'
+    + '<input type="hidden" name="src" value="1">'+refFields
+    + '<input type="hidden" name="a3" value="'+base+'"><input type="hidden" name="p3" value="1"><input type="hidden" name="t3" value="'+unit+'">'
+    + '<input type="hidden" name="currency_code" value="USD">'
+    + '<input type="hidden" name="return" value="https://lvl13.tech/#/thanks">'
+    + '<input type="hidden" name="cancel_return" value="https://lvl13.tech/#/get-yours">'
+    + '<button type="submit" class="paypal-btn">'+refBtnTxt+'</button></form>'
+    + '<div style="font-size:12px;margin-top:6px;opacity:0.85">'
+    + (ref ? 'Referral discount applied to first payment. Renews at $'+base+(annual?'/yr':'/mo')+' afterwards.' : '$'+base+' today, renews every '+(annual?'year':'month'))
+    + '</div>';
 }
 
 
@@ -894,7 +1111,7 @@ function renderThanks() {
 // CHATBOT — FAQ engine
 // ================================================================
 const FAQS = [
-  { q: ['price','cost','how much','pricing','799'], a: "Custom Tracker is $799/year (auto-renews, cancel anytime from your PayPal account). One flat price, all 5 strategies, your stocks, your news." },
+  { q: ['price','cost','how much','pricing','member','insider','syndicate'], a: "MEMBER: $49.99/mo or $499/yr (1 portfolio). INSIDER: $69.99/mo or $699/yr (3 portfolios). SYNDICATE: $99.99/mo or $899/yr (up to 10 portfolios, all 3 platforms). FREE tier available — daily signals by email at no cost." },
   { q: ['cancel','refund','stop'], a: "Cancel anytime from your PayPal account → Settings → Automatic Payments. No refund for the partial year, but no further charges." },
   { q: ['stocks','tickers','how many'], a: "Up to 50 stocks from any sector (NYSE, NASDAQ, plus most listed tickers). You pick them after checkout." },
   { q: ['sector','sectors','industries'], a: "Any sector — tech, biotech, energy, finance, defense, REITs, you name it. We fetch news for the sectors you choose." },
