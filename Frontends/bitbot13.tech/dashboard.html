@@ -460,11 +460,11 @@
 
   <header>
     <div class="header-inner">
-      <a href="/" class="logo">Wall St. <span>Bots</span></a>
+      <a href="/" class="logo">Bit<span>Bot13</span></a>
       <nav>
         <a href="/dashboard.html" class="active">Portfolios</a>
         <a href="/#news">Market News</a>
-        <a href="https://bitbot13.tech" target="_blank">BitBot13</a>
+        <a href="https://wallstbots.tech" target="_blank">Wall St. Bots</a>
         <a href="https://lvl13.tech" target="_blank">Level XIII</a>
       </nav>
       <div class="user-controls">
@@ -584,7 +584,7 @@
     async function loadPortfolios() {
       try {
         const response = await api.getBots();
-        allBots = (response.bots || []).filter(b => b.platform === "wallstbots");
+        allBots = (response.bots || []).filter(b => b.platform === "bitbot13");
 
         const count = allBots.length;
         document.getElementById("totalBots").textContent = count;
@@ -625,7 +625,7 @@
               <div class="pc-name">${escHtml(bot.name)}</div>
               ${bot.description ? `<div class="pc-desc">${escHtml(bot.description)}</div>` : ''}
             </div>
-            <div class="pc-badge">WSB</div>
+            <div class="pc-badge">BB13</div>
           </div>
           <div class="pc-stats">
             <div class="pc-stat">
@@ -750,7 +750,7 @@
       errEl.style.display = "none";
 
       try {
-        const result = await api.createBot(name, "wallstbots", desc || null);
+        const result = await api.createBot(name, "bitbot13", desc || null);
         closeCreateModal();
         // Go straight to the detail page to add stocks
         if (result?.bot?.id || result?.id) {
