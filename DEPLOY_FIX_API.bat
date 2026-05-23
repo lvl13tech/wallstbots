@@ -1,7 +1,7 @@
 @echo off
-title Deploy Stock Search Fix — All 3 Sites
+title Push Backend Deploy Workflow
 echo ============================================================
-echo   Deploying stock search + holdings fix to all 3 sites
+echo   Pushing GitHub Actions backend deploy workflow
 echo ============================================================
 echo.
 
@@ -11,7 +11,7 @@ del /f /q "C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\.git\index
 echo [1/2] Git push (auto-deploys bitbot13 + wallstbots via Cloudflare)...
 cd /d "C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots"
 git add -A
-git commit -m "Fix stock search + holdings: add POST/DELETE /bots/{id}/holdings to backend; expand search to NYSE+NASDAQ+OTC+PinkSheets; fix truncated bot-detail.html files; bitbot13 searches crypto"
+git commit -m "Add GitHub Actions workflow for automatic backend Cloud Run deployment"
 git push origin master
 echo.
 

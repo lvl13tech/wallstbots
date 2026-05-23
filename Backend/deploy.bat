@@ -1,6 +1,6 @@
 @echo off
 REM Deploy Wall St. Bots Backend to Cloud Run
-cd "C:\Users\temps\OneDrive\Desktop\Claude\Websites\1. Wall St Bots\Backend"
+cd "C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Backend"
 
 echo ================================
 echo Building Docker image...
@@ -47,21 +47,6 @@ echo Testing health endpoint...
 echo ================================
 timeout /t 5 /nobreak
 curl "%SERVICE_URL%/health"
-
-echo.
-echo ================================
-echo Updating Frontend API URLs...
-echo ================================
-cd "C:\Users\temps\OneDrive\Desktop\Claude\Websites\1. Wall St Bots"
-python update-frontend-api-urls.py "%SERVICE_URL%"
-
-echo.
-echo ================================
-echo Committing and Pushing to GitHub...
-echo ================================
-git add .
-git commit -m "Update frontend API URLs to Cloud Run service: %SERVICE_URL%"
-git push origin main
 
 echo.
 echo ================================

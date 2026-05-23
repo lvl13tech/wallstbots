@@ -1,7 +1,9 @@
 === PUSH AFTER GITHUB SECRET UNBLOCK === 
-Fri 05/22/2026 14:56:31.86 
+Sat 05/23/2026  2:02:24.17 
  
 [1] fetch origin 
+From https://github.com/lvl13tech/wallstbots
+   bedb29a..2e9de56  master     -> origin/master
  
 [2] rebase onto origin/master 
 error: cannot rebase: You have unstaged changes.
@@ -9,13 +11,13 @@ error: Please commit or stash them.
 fatal: no rebase in progress
 rebase failed - using force push 
 To https://github.com/lvl13tech/wallstbots.git
- + 8df272e...d1c6f58 master -> master (forced update)
+ + 2e9de56...a3439fd master -> master (forced update)
  
-d1c6f58 security: add reset_admin.py to .gitignore, remove from tracking
-c2eef40 deploy: sync all frontend files across sites
-5dcf5c6 deploy: sync all frontend files across sites
-e64a0a3 deploy: sync all frontend files across sites
-2a99892 fix: sync Project/public_html/assets/app.js with 4-tier pricing
+a3439fd Fix: dashboard tier system (member/insider/syndicate) + portfolio limits
+bedb29a Fix stock search + holdings: add POST/DELETE /bots/{id}/holdings to backend; expand search to NYSE+NASDAQ+OTC+PinkSheets; fix truncated bot-detail.html files; bitbot13 searches crypto
+3f1af01 Fix api is not defined: load auth.js + instantiate WallStBotsAuth/WallStBotsAPI in all 3 dashboards and all 3 bot-detail pages
+eeebbbb Fix dashboard data unwrapping + api.js endpoint paths; add /subscriptions/current + /auth/password-reset to backend; upgraded bot-detail.html all 3 sites (platform switcher, account drawer, doughnut chart, live stock search)
+72603c9 Enhanced dashboard: account drawer, platform switcher, membership stats, sort, ticker picker ($1k/security max 50); add searchStocks/getNews/requestPasswordReset to api.js
  
 === SUCCESS - Cloudflare deploying now === 
 Run UPLOAD-LVL13-TO-HOSTGATOR.bat for lvl13.tech 
