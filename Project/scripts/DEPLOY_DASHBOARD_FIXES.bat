@@ -1,14 +1,14 @@
 @echo off
-title Deploy Dashboard Color Fixes
+title Deploy Enhanced Dashboards — All 3 Sites
 echo ============================================================
-echo   Deploying dashboard color fixes to all 3 sites
+echo   Deploying enhanced dashboards to all 3 sites
 echo ============================================================
 echo.
 
 echo [1/2] Git push WallStBots repo (auto-deploys bitbot13 + wallstbots via Cloudflare)...
 cd /d "C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots"
 git add -A
-git commit -m "Fix wallstbots dashboard colors: green -> blue (#00d4ff); sync lvl13 dark-theme dashboard"
+git commit -m "Enhanced dashboard: account drawer, platform switcher, membership stats, sort, ticker picker ($1k/security max 50); add searchStocks/getNews/requestPasswordReset to api.js"
 git push origin master
 echo.
 

@@ -12,9 +12,10 @@
       --border: #1e2633;
       --text: #e6edf3;
       --muted: #7d8590;
-      --green: #00d4ff;
-      --green-dim: #003d47;
-      --green-glow: rgba(63,185,80,0.15);
+      --accent: #00d4ff;
+      --accent-dim: #003d47;
+      --accent-glow: rgba(0,212,255,0.15);
+      --accent-hover: #00b8e0;
       --red: #f85149;
       --radius: 10px;
       --pad: 20px;
@@ -36,260 +37,497 @@
     header {
       background: var(--panel);
       border-bottom: 1px solid var(--border);
-      padding: 0;
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 200;
     }
-
     .header-inner {
       max-width: var(--max);
       margin: 0 auto;
       padding: 0 var(--pad);
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .logo {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      white-space: nowrap;
+    }
+    .logo span { color: var(--accent); }
+    nav { display: flex; gap: 4px; flex: 1; }
+    nav a {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+    nav a:hover { color: var(--text); background: var(--panel2); }
+    nav a.active { color: var(--text); background: var(--panel2); }
+
+    /* Platform switcher */
+    .platform-switcher { position: relative; }
+    .platform-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      color: var(--text);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .platform-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .platform-btn svg { width: 14px; height: 14px; transition: transform 0.2s; }
+    .platform-btn.open svg { transform: rotate(180deg); }
+    .platform-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px;
+      min-width: 220px;
+      box-shadow: var(--shadow);
+      z-index: 300;
+    }
+    .platform-menu.open { display: block; }
+    .platform-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.15s;
+    }
+    .platform-menu-item:hover { background: var(--panel2); }
+    .platform-menu-item.current { background: var(--accent-dim); color: var(--accent); }
+    .platform-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-radius: 4px;
+      padding: 2px 6px;
+      letter-spacing: 0.5px;
+    }
+    .platform-menu-item.current .platform-badge { background: var(--accent); color: var(--bg); }
+
+    .account-btn {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 8px;
+      padding: 7px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .account-btn:hover { background: var(--accent); color: var(--bg); }
+
+    /* ─── ACCOUNT DRAWER ─── */
+    .drawer-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 400;
+    }
+    .drawer-overlay.open { display: block; }
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: 420px;
+      max-width: 95vw;
+      height: 100vh;
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      z-index: 500;
+      transition: right 0.3s cubic-bezier(0.4,0,0.2,1);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .drawer.open { right: 0; }
+    .drawer-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 60px;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--panel);
+      z-index: 1;
     }
-
-    .logo { font-size: 17px; font-weight: 800; color: var(--green); letter-spacing: -0.5px; }
-    .logo span { color: var(--text); }
-
-    nav { display: flex; gap: 24px; }
-    nav a { font-size: 13px; color: var(--muted); transition: color 0.2s; font-weight: 500; }
-    nav a:hover, nav a.active { color: var(--text); }
-
-    .user-controls { display: flex; align-items: center; gap: 12px; }
-
-    .user-email {
-      font-size: 12px;
-      color: var(--muted);
-      padding: 6px 12px;
-      background: var(--panel2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      max-width: 200px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .btn-logout {
-      padding: 6px 14px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 12px;
+    .drawer-header h2 { font-size: 1rem; font-weight: 600; }
+    .drawer-close {
+      background: none;
+      border: none;
       color: var(--muted);
       cursor: pointer;
-      transition: all 0.2s;
+      padding: 4px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
     }
-
-    .btn-logout:hover { border-color: var(--red); color: var(--red); }
-
-    /* ─── MAIN CONTAINER ─── */
-    .container {
-      max-width: var(--max);
-      margin: 0 auto;
-      padding: 32px var(--pad);
+    .drawer-close:hover { background: var(--panel2); color: var(--text); }
+    .drawer-section {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
     }
+    .drawer-section:last-child { border-bottom: none; }
+    .drawer-section-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .profile-email {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 12px;
+      word-break: break-all;
+    }
+    .btn-outline {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      width: 100%;
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
 
-    /* ─── PAGE HEADER ─── */
-    .page-header {
+    .tier-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .tier-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--accent);
+      color: var(--bg);
+    }
+    .tier-badge.free { background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
+    .tier-badge.pro { background: #7c3aed; color: #fff; }
+    .tier-badge.elite { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; }
+    .tier-name { font-weight: 600; font-size: 0.95rem; }
+    .usage-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .usage-bar-wrap {
+      background: var(--panel2);
+      border-radius: 4px;
+      height: 6px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+    .usage-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 4px;
+      transition: width 0.4s;
+    }
+    .usage-bar-fill.near-full { background: #f59e0b; }
+    .usage-bar-fill.full { background: var(--red); }
+    .meta-row {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 32px;
-      gap: 20px;
+      font-size: 0.82rem;
+      margin-bottom: 8px;
+      color: var(--muted);
     }
+    .meta-row span:last-child { color: var(--text); font-weight: 500; }
 
-    .page-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
-    .page-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
-
-    .btn-create {
-      padding: 10px 20px;
-      background: var(--green);
-      color: #000;
-      border: none;
+    .referral-box {
+      background: var(--panel2);
+      border: 1px solid var(--border);
       border-radius: 8px;
-      font-size: 13px;
-      font-weight: 700;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .referral-code {
+      font-family: monospace;
+      font-size: 1rem;
+      letter-spacing: 2px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .btn-copy {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.15s;
       white-space: nowrap;
-      flex-shrink: 0;
     }
-
-    .btn-create:hover {
-      background: #00b8e0;
-      transform: translateY(-1px);
-      box-shadow: 0 8px 20px rgba(63,185,80,0.3);
+    .btn-copy:hover { background: var(--accent); color: var(--bg); }
+    .referral-stats { font-size: 0.8rem; color: var(--muted); }
+    .referral-stats span { color: var(--accent); font-weight: 600; }
+    .manage-link {
+      display: block;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      transition: all 0.15s;
+      margin-top: 4px;
     }
+    .manage-link:hover { border-color: var(--accent); color: var(--accent); }
 
-    /* ─── SUMMARY STATS BAR ─── */
+    /* ─── PASSWORD RESET MODAL ─── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 600;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: var(--shadow);
+    }
+    .modal-box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+    .modal-box p { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .btn-cancel {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+    .btn-confirm {
+      background: var(--accent);
+      border: none;
+      color: var(--bg);
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-confirm:hover { background: var(--accent-hover); }
+
+    /* ─── MAIN ─── */
+    main {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: var(--pad);
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .page-header h1 { font-size: 1.4rem; font-weight: 700; }
+    .page-header-right { display: flex; align-items: center; gap: 10px; }
+    .sort-select {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .sort-select:focus { outline: none; border-color: var(--accent); }
+    .btn-create {
+      background: var(--accent);
+      border: none;
+      color: var(--bg);
+      border-radius: 8px;
+      padding: 9px 18px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn-create:hover { background: var(--accent-hover); }
+    .btn-create:disabled { opacity: 0.5; cursor: not-allowed; }
+
     .stats-bar {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 32px;
+      gap: 12px;
+      margin-bottom: 24px;
     }
-
+    @media (max-width: 800px) { .stats-bar { grid-template-columns: repeat(2, 1fr); } }
     .stat-card {
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 18px 20px;
+      padding: 16px 18px;
     }
-
-    .stat-card-label {
-      font-size: 11px;
+    .stat-label {
+      font-size: 0.72rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.8px;
       color: var(--muted);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
+    .stat-value { font-size: 1.35rem; font-weight: 700; color: var(--text); line-height: 1.2; }
+    .stat-sub { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+    .stat-sub.pos { color: var(--accent); }
+    .stat-sub.neg { color: var(--red); }
 
-    .stat-card-val {
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-    }
-
-    .stat-card-val.up { color: var(--green); }
-    .stat-card-val.dn { color: var(--red); }
-
-    /* ─── PORTFOLIO GRID ─── */
     .portfolio-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+      margin-bottom: 32px;
     }
-
     .portfolio-card {
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 22px;
+      padding: 18px;
       cursor: pointer;
-      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
-      position: relative;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
-
     .portfolio-card:hover {
-      border-color: var(--green);
-      transform: translateY(-3px);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), var(--shadow);
+      transform: translateY(-1px);
     }
-
-    .pc-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 16px;
-    }
-
-    .pc-name { font-size: 15px; font-weight: 700; }
-    .pc-desc { font-size: 12px; color: var(--muted); margin-top: 3px; }
-
-    .pc-badge {
-      font-size: 10px;
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .card-name { font-weight: 600; font-size: 0.95rem; word-break: break-word; }
+    .card-badge {
+      font-size: 0.68rem;
       font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 3px 8px;
-      background: var(--green-dim);
-      color: var(--green);
-      border-radius: 4px;
-    }
-
-    .pc-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-      margin-top: 16px;
-    }
-
-    .pc-stat { text-align: center; }
-    .pc-stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
-    .pc-stat-val { font-size: 16px; font-weight: 700; }
-    .pc-stat-val.up { color: var(--green); }
-    .pc-stat-val.dn { color: var(--red); }
-
-    .pc-footer {
-      margin-top: 14px;
-      font-size: 11px;
+      background: var(--panel2);
       color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      border-radius: 20px;
+      padding: 2px 8px;
+      white-space: nowrap;
     }
+    .card-value { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+    .card-return { font-size: 0.82rem; font-weight: 600; }
+    .card-return.pos { color: var(--accent); }
+    .card-return.neg { color: var(--red); }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; }
+    .holdings-count { font-size: 0.78rem; color: var(--muted); display: flex; align-items: center; gap: 4px; }
 
-    .pc-arrow {
-      color: var(--green);
-      font-size: 16px;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    .portfolio-card:hover .pc-arrow { opacity: 1; }
-
-    /* ─── EMPTY STATE ─── */
     .empty-state {
       grid-column: 1 / -1;
       text-align: center;
-      padding: 80px 20px;
+      padding: 60px 20px;
       color: var(--muted);
     }
+    .empty-state h3 { font-size: 1.1rem; margin-bottom: 8px; color: var(--text); }
+    .empty-state p { font-size: 0.9rem; margin-bottom: 20px; }
 
-    .empty-icon { font-size: 48px; margin-bottom: 16px; }
-    .empty-state h2 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-    .empty-state p { font-size: 14px; max-width: 360px; margin: 0 auto 24px; line-height: 1.6; }
+    .skeleton {
+      background: linear-gradient(90deg, var(--panel) 25%, var(--panel2) 50%, var(--panel) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-    /* ─── LOADING ─── */
-    .loading-state {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 60px;
+    .section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 14px;
       color: var(--muted);
-    }
-
-    .loading-dot {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--green);
-      margin: 0 3px;
-      animation: bounce 1.2s infinite;
-    }
-
-    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
-    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
-
-    @keyframes bounce {
-      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-      40% { transform: scale(1); opacity: 1; }
-    }
-
-    /* ─── NEWS SIDEBAR SECTION ─── */
-    .news-section {
-      margin-top: 40px;
-    }
-
-    .news-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      gap: 8px;
     }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-    .news-title { font-size: 16px; font-weight: 700; }
+    .explore-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+    .explore-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+    .explore-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .explore-card-name { font-weight: 700; font-size: 1rem; }
+    .explore-card-name span { color: var(--accent); }
+    .explore-card-desc { font-size: 0.83rem; color: var(--muted); line-height: 1.5; }
+    .explore-card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-top: 4px;
+      transition: gap 0.15s;
+    }
+    .explore-card:hover .explore-card-link { gap: 10px; }
 
-    .news-list { display: flex; flex-direction: column; gap: 10px; }
-
+    .news-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
     .news-item {
       background: var(--panel);
       border: 1px solid var(--border);
@@ -297,519 +535,681 @@
       padding: 14px 16px;
       display: flex;
       gap: 14px;
-      cursor: pointer;
-      transition: border-color 0.2s;
+      align-items: flex-start;
+      transition: border-color 0.15s;
     }
-
-    .news-item:hover { border-color: var(--green); }
-
-    .news-item-source {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: var(--green);
-      white-space: nowrap;
-      padding-top: 2px;
-      min-width: 80px;
-    }
-
-    .news-item-content { flex: 1; }
-    .news-item-headline { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 4px; }
-    .news-item-time { font-size: 11px; color: var(--muted); }
+    .news-item:hover { border-color: var(--accent); }
+    .news-content { flex: 1; }
+    .news-headline { font-size: 0.9rem; font-weight: 500; margin-bottom: 4px; line-height: 1.4; }
+    .news-meta { font-size: 0.75rem; color: var(--muted); }
+    .sentiment-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .sentiment-dot.pos { background: var(--accent); }
+    .sentiment-dot.neg { background: var(--red); }
+    .sentiment-dot.neu { background: var(--muted); }
 
     /* ─── CREATE MODAL ─── */
-    .modal-overlay {
+    .create-modal {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(4px);
-      z-index: 200;
+      background: rgba(0,0,0,0.75);
+      z-index: 600;
       align-items: center;
       justify-content: center;
       padding: 20px;
     }
-
-    .modal-overlay.open { display: flex; }
-
-    .modal {
+    .create-modal.open { display: flex; }
+    .create-box {
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 16px;
+      padding: 28px;
       width: 100%;
-      max-width: 480px;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+      max-width: 540px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
     }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 22px 24px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .modal-title { font-size: 16px; font-weight: 700; }
-
-    .modal-close {
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      font-size: 20px;
-      cursor: pointer;
-      line-height: 1;
-      padding: 4px;
-      transition: color 0.2s;
-    }
-
-    .modal-close:hover { color: var(--text); }
-
-    .modal-body { padding: 24px; }
-
-    .form-group { margin-bottom: 18px; }
-
-    label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
-
-    input, textarea {
+    .create-box h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; }
+    .field-group { margin-bottom: 16px; }
+    .field-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+    .field-group input, .field-group textarea {
       width: 100%;
-      padding: 11px 14px;
       background: var(--panel2);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 8px;
       color: var(--text);
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.2s;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      transition: border-color 0.15s;
       font-family: inherit;
     }
-
-    input:focus, textarea:focus { border-color: var(--green); }
-    input::placeholder, textarea::placeholder { color: var(--muted); }
-    textarea { resize: vertical; min-height: 80px; }
-
-    .modal-footer {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-      padding: 20px 24px;
-      border-top: 1px solid var(--border);
-    }
-
-    .btn-cancel {
-      padding: 10px 20px;
-      background: transparent;
+    .field-group input:focus, .field-group textarea:focus { outline: none; border-color: var(--accent); }
+    .field-group textarea { resize: vertical; min-height: 70px; }
+    .ticker-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .ticker-row input {
+      flex: 1;
+      background: var(--panel2);
       border: 1px solid var(--border);
       border-radius: 8px;
-      font-size: 13px;
-      color: var(--muted);
-      cursor: pointer;
-      transition: all 0.2s;
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      transition: border-color 0.15s;
     }
-
-    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
-
-    .btn-confirm {
-      padding: 10px 24px;
-      background: var(--green);
-      color: #000;
-      border: none;
+    .ticker-row input:focus { outline: none; border-color: var(--accent); }
+    .btn-add-ticker {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      color: var(--accent);
       border-radius: 8px;
-      font-size: 13px;
-      font-weight: 700;
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.15s;
+      white-space: nowrap;
     }
-
-    .btn-confirm:hover { background: #00b8e0; }
-    .btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .modal-error {
-      background: rgba(248,81,73,0.1);
-      border: 1px solid rgba(248,81,73,0.3);
-      color: var(--red);
-      font-size: 12px;
-      padding: 8px 12px;
-      border-radius: 6px;
-      margin-bottom: 16px;
-      display: none;
+    .btn-add-ticker:hover { background: var(--accent); color: var(--bg); }
+    .ticker-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 38px;
+      padding: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 12px;
     }
-
-    .hint {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 5px;
+    .ticker-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.82rem;
+      font-weight: 600;
     }
+    .chip-remove {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      font-size: 1rem;
+      opacity: 0.7;
+      transition: opacity 0.15s;
+    }
+    .chip-remove:hover { opacity: 1; }
+    .chips-empty { font-size: 0.8rem; color: var(--muted); align-self: center; }
+    .portfolio-value-bar {
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 20px;
+    }
+    .pvb-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.82rem; color: var(--muted); }
+    .pvb-value { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+    .pvb-track { background: var(--bg); border-radius: 4px; height: 6px; overflow: hidden; }
+    .pvb-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s; }
+    .pvb-fill.warning { background: #f59e0b; }
+    .pvb-max-note { font-size: 0.75rem; color: var(--muted); margin-top: 6px; }
+    .pvb-max-note.warn { color: #f59e0b; }
+    .pvb-max-note.danger { color: var(--red); }
+    .create-actions { display: flex; gap: 10px; justify-content: flex-end; }
 
-    /* ─── RESPONSIVE ─── */
-    @media (max-width: 700px) {
-      .stats-bar { grid-template-columns: 1fr 1fr; }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      z-index: 1000;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s;
+      max-width: 320px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--accent); color: var(--accent); }
+    .toast.error { border-color: var(--red); color: var(--red); }
+
+    @media (max-width: 600px) {
+      .header-inner { gap: 10px; }
       nav { display: none; }
-      .page-header { flex-direction: column; }
+      .stats-bar { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="header-inner">
-      <a href="/" class="logo">Wall St. <span>Bots</span></a>
-      <nav>
-        <a href="/dashboard.html" class="active">Portfolios</a>
-        <a href="/#news">Market News</a>
-        <a href="https://bitbot13.tech" target="_blank">BitBot13</a>
-        <a href="https://lvl13.tech" target="_blank">Level XIII</a>
-      </nav>
-      <div class="user-controls">
-        <div class="user-email" id="userEmail">—</div>
-        <button class="btn-logout" id="logoutBtn">Log Out</button>
-      </div>
-    </div>
-  </header>
+<!-- ─── HEADER ─── -->
+<header>
+  <div class="header-inner">
+    <a href="/" class="logo">Wall St. <span>Bots</span></a>
+    <nav>
+      <a href="dashboard.html" class="active">Portfolios</a>
+      <a href="markets.html">Markets</a>
+      <a href="news.html">News</a>
+    </nav>
 
-  <div class="container">
-
-    <!-- Page header -->
-    <div class="page-header">
-      <div>
-        <div class="page-title">Your Portfolios</div>
-        <div class="page-sub" id="portfolioCount">Loading…</div>
-      </div>
-      <button class="btn-create" onclick="openCreateModal()">+ New Portfolio</button>
-    </div>
-
-    <!-- Summary stats -->
-    <div class="stats-bar">
-      <div class="stat-card">
-        <div class="stat-card-label">Total Value</div>
-        <div class="stat-card-val" id="totalValue">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Total Gain / Loss</div>
-        <div class="stat-card-val" id="totalReturn">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Portfolios</div>
-        <div class="stat-card-val" id="totalBots">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Platform</div>
-        <div class="stat-card-val" style="font-size:14px;color:var(--green)">Wall St. Bots</div>
-      </div>
-    </div>
-
-    <!-- Portfolio grid -->
-    <div class="portfolio-grid" id="portfolioGrid">
-      <div class="loading-state">
-        <div style="margin-bottom:16px;">
-          <span class="loading-dot"></span>
-          <span class="loading-dot"></span>
-          <span class="loading-dot"></span>
+    <div class="platform-switcher">
+      <button class="platform-btn" id="platformBtn" onclick="togglePlatformMenu()">
+        <span>🔀 Switch Platform</span>
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.427 7.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 7H4.604a.25.25 0 00-.177.427z"/></svg>
+      </button>
+      <div class="platform-menu" id="platformMenu">
+        <div class="platform-menu-item current">
+          <span class="platform-badge">WSB</span>
+          <div>
+            <div style="font-weight:600">Wall St. Bots</div>
+            <div style="font-size:0.75rem;color:var(--muted)">Stock Market</div>
+          </div>
         </div>
-        Loading your portfolios…
+        <a href="https://bitbot13.tech/dashboard.html" class="platform-menu-item" style="text-decoration:none">
+          <span class="platform-badge" style="background:var(--panel2);color:var(--muted);border:1px solid var(--border)">BB13</span>
+          <div>
+            <div style="font-weight:600">BitBot13</div>
+            <div style="font-size:0.75rem;color:var(--muted)">Cryptocurrency</div>
+          </div>
+        </a>
+        <a href="https://lvl13.tech/dashboard.html" class="platform-menu-item" style="text-decoration:none">
+          <span class="platform-badge" style="background:var(--panel2);color:var(--muted);border:1px solid var(--border)">L13</span>
+          <div>
+            <div style="font-weight:600">Level XIII Tech</div>
+            <div style="font-size:0.75rem;color:var(--muted)">AI & Quantum</div>
+          </div>
+        </a>
       </div>
     </div>
 
-    <!-- Market news strip -->
-    <div class="news-section">
-      <div class="news-header">
-        <div class="news-title">Market News</div>
-        <a href="/#news" style="font-size:12px;color:var(--green);">View all →</a>
-      </div>
-      <div class="news-list" id="newsList">
-        <div style="color:var(--muted);font-size:13px;padding:16px 0;">Loading headlines…</div>
-      </div>
-    </div>
-
+    <button class="account-btn" onclick="openDrawer()">My Account</button>
   </div>
+</header>
 
-  <!-- CREATE PORTFOLIO MODAL -->
-  <div class="modal-overlay" id="createModal" onclick="handleOverlayClick(event)">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">Create New Portfolio</div>
-        <button class="modal-close" onclick="closeCreateModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-error" id="createError"></div>
-        <div class="form-group">
-          <label for="portfolioName">Portfolio Name</label>
-          <input type="text" id="portfolioName" placeholder="e.g. Tech Growth, Dividend Kings" maxlength="60" />
-        </div>
-        <div class="form-group">
-          <label for="portfolioDesc">Description <span style="color:var(--muted);font-weight:400;text-transform:none">(optional)</span></label>
-          <textarea id="portfolioDesc" placeholder="What's the strategy or theme?"></textarea>
-        </div>
-        <div class="hint">You'll add stocks from the portfolio detail page after creation.</div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeCreateModal()">Cancel</button>
-        <button class="btn-confirm" id="createBtn" onclick="createPortfolio()">Create Portfolio</button>
-      </div>
+<!-- ─── ACCOUNT DRAWER ─── -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="accountDrawer">
+  <div class="drawer-header">
+    <h2>My Account</h2>
+    <button class="drawer-close" onclick="closeDrawer()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="drawer-section">
+    <div class="drawer-section-title">Profile</div>
+    <div class="profile-email" id="drawerEmail">Loading…</div>
+    <button class="btn-outline" onclick="openPwModal()">🔑 Reset Password</button>
+  </div>
+  <div class="drawer-section">
+    <div class="drawer-section-title">Membership</div>
+    <div class="tier-row">
+      <span class="tier-badge" id="drawerTierBadge">—</span>
+      <span class="tier-name" id="drawerTierName">Loading…</span>
+    </div>
+    <div class="usage-row">
+      <span>Portfolios Used</span>
+      <span id="drawerUsageText">—</span>
+    </div>
+    <div class="usage-bar-wrap">
+      <div class="usage-bar-fill" id="drawerUsageBar" style="width:0%"></div>
+    </div>
+    <div class="meta-row">
+      <span>Next Billing Date</span>
+      <span id="drawerBillDate">—</span>
+    </div>
+    <div class="meta-row">
+      <span>Status</span>
+      <span id="drawerStatus">—</span>
     </div>
   </div>
+  <div class="drawer-section">
+    <div class="drawer-section-title">Referral Program</div>
+    <div class="referral-box">
+      <span class="referral-code" id="drawerRefCode">———</span>
+      <button class="btn-copy" onclick="copyReferral()">Copy</button>
+    </div>
+    <div class="referral-stats">
+      <span id="drawerRefCount">0</span> referrals · Earn 1 free month per 3 referrals
+    </div>
+  </div>
+  <div class="drawer-section">
+    <a href="https://billing.stripe.com/p/login/test" target="_blank" class="manage-link">
+      Manage Subscription →
+    </a>
+  </div>
+</div>
 
-  <script src="/auth.js"></script>
-  <script src="/api.js"></script>
-  <script>
-    const API_BASE = "https://wallstbots-backend-868128114349.us-east1.run.app";
-    const auth = new WallStBotsAuth(API_BASE);
-    const api = new WallStBotsAPI(API_BASE, auth);
+<!-- ─── PASSWORD RESET MODAL ─── -->
+<div class="modal-overlay" id="pwModal">
+  <div class="modal-box">
+    <h3>Reset Password</h3>
+    <p id="pwModalText">We'll send a reset link to your email address.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closePwModal()">Cancel</button>
+      <button class="btn-confirm" id="pwConfirmBtn" onclick="sendPasswordReset()">Send Reset Link</button>
+    </div>
+  </div>
+</div>
 
-    // Auth guard
-    if (!auth.isAuthenticated()) {
-      window.location.href = "/login.html?redirect=" + encodeURIComponent(window.location.href);
-    }
+<!-- ─── MAIN ─── -->
+<main>
+  <div class="page-header">
+    <h1>My Portfolios</h1>
+    <div class="page-header-right">
+      <select class="sort-select" id="sortSelect" onchange="sortAndRender()">
+        <option value="newest">Newest First</option>
+        <option value="value-desc">Highest Value</option>
+        <option value="return-desc">Best Return</option>
+        <option value="return-asc">Worst Return</option>
+        <option value="name-asc">Name A–Z</option>
+      </select>
+      <button class="btn-create" id="createBtn" onclick="openCreateModal()">+ New Portfolio</button>
+    </div>
+  </div>
 
-    let allBots = [];
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">Total Value</div>
+      <div class="stat-value" id="statTotalValue">$—</div>
+      <div class="stat-sub" id="statTotalReturn">Across all portfolios</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Best Portfolio</div>
+      <div class="stat-value" id="statBestName">—</div>
+      <div class="stat-sub pos" id="statBestReturn">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Portfolios</div>
+      <div class="stat-value" id="statPortfolioCount">0 / —</div>
+      <div class="stat-sub" id="statPortfolioSub">Available slots</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Membership</div>
+      <div class="stat-value" id="statMembership">—</div>
+      <div class="stat-sub" id="statMembershipSub">—</div>
+    </div>
+  </div>
 
-    // ── LOAD USER PROFILE ──
-    async function loadProfile() {
-      try {
-        const profile = await api.getUserProfile();
-        document.getElementById("userEmail").textContent = profile.email || "User";
-      } catch (err) {
-        console.error("Profile load failed:", err);
-      }
-    }
+  <div class="portfolio-grid" id="portfolioGrid">
+    <div class="portfolio-card" style="pointer-events:none">
+      <div class="card-top">
+        <div class="skeleton" style="width:120px;height:18px"></div>
+        <div class="skeleton" style="width:40px;height:18px;border-radius:20px"></div>
+      </div>
+      <div class="skeleton" style="width:90px;height:32px"></div>
+      <div class="skeleton" style="width:70px;height:14px"></div>
+      <div class="skeleton" style="width:100%;height:1px;background:var(--border)"></div>
+      <div class="card-footer"><div class="skeleton" style="width:80px;height:14px"></div></div>
+    </div>
+    <div class="portfolio-card" style="pointer-events:none">
+      <div class="card-top">
+        <div class="skeleton" style="width:140px;height:18px"></div>
+        <div class="skeleton" style="width:40px;height:18px;border-radius:20px"></div>
+      </div>
+      <div class="skeleton" style="width:90px;height:32px"></div>
+      <div class="skeleton" style="width:70px;height:14px"></div>
+      <div class="skeleton" style="width:100%;height:1px;background:var(--border)"></div>
+      <div class="card-footer"><div class="skeleton" style="width:80px;height:14px"></div></div>
+    </div>
+  </div>
 
-    // ── LOAD PORTFOLIOS ──
-    async function loadPortfolios() {
-      try {
-        const response = await api.getBots();
-        allBots = (response.bots || []).filter(b => b.platform === "wallstbots");
+  <div class="section-title">Explore Other Platforms</div>
+  <div class="explore-grid">
+    <div class="explore-card">
+      <div class="explore-card-name">Bit<span>Bot13</span></div>
+      <div class="explore-card-desc">Track crypto portfolios across Bitcoin, Ethereum, Solana, and hundreds of other digital assets. Perfect for Web3 investors.</div>
+      <a href="https://bitbot13.tech/dashboard.html" class="explore-card-link">Open Dashboard →</a>
+    </div>
+    <div class="explore-card">
+      <div class="explore-card-name">Level XIII <span>Tech</span></div>
+      <div class="explore-card-desc">Focus on AI, quantum computing, and next-gen tech stocks. Track the companies building the future of technology.</div>
+      <a href="https://lvl13.tech/dashboard.html" class="explore-card-link">Open Dashboard →</a>
+    </div>
+  </div>
 
-        const count = allBots.length;
-        document.getElementById("totalBots").textContent = count;
-        document.getElementById("portfolioCount").textContent =
-          count === 0 ? "No portfolios yet" :
-          count === 1 ? "1 portfolio" : `${count} portfolios`;
+  <div class="section-title">Market News</div>
+  <div class="news-list" id="newsList">
+    <div class="news-item">
+      <div class="skeleton" style="width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0"></div>
+      <div class="news-content">
+        <div class="skeleton" style="width:90%;height:16px;margin-bottom:6px"></div>
+        <div class="skeleton" style="width:40%;height:12px"></div>
+      </div>
+    </div>
+    <div class="news-item">
+      <div class="skeleton" style="width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0"></div>
+      <div class="news-content">
+        <div class="skeleton" style="width:80%;height:16px;margin-bottom:6px"></div>
+        <div class="skeleton" style="width:35%;height:12px"></div>
+      </div>
+    </div>
+  </div>
+</main>
 
-        renderPortfolios();
-        loadPerformance();
-      } catch (err) {
-        console.error("Portfolio load failed:", err);
-        document.getElementById("portfolioGrid").innerHTML =
-          '<div class="loading-state">Failed to load portfolios. <a href="#" onclick="loadPortfolios()" style="color:var(--green)">Retry</a></div>';
-      }
-    }
+<!-- ─── CREATE MODAL ─── -->
+<div class="create-modal" id="createModal">
+  <div class="create-box">
+    <h2>New Portfolio</h2>
+    <div class="field-group">
+      <label>Portfolio Name</label>
+      <input type="text" id="createName" placeholder="e.g. S&amp;P 500 Core" maxlength="60" />
+    </div>
+    <div class="field-group">
+      <label>Description <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+      <textarea id="createDesc" placeholder="What's this portfolio's strategy?"></textarea>
+    </div>
+    <div class="field-group">
+      <label>Add Securities <span style="color:var(--muted);font-weight:400">(max 50 · $1,000 each)</span></label>
+      <div class="ticker-row">
+        <input type="text" id="tickerInput" placeholder="e.g. AAPL, MSFT, NVDA…" maxlength="10"
+               onkeydown="if(event.key==='Enter')addTicker()" />
+        <button class="btn-add-ticker" onclick="addTicker()">Add</button>
+      </div>
+      <div class="ticker-chips" id="tickerChips">
+        <span class="chips-empty" id="chipsEmpty">No securities added yet</span>
+      </div>
+    </div>
+    <div class="portfolio-value-bar">
+      <div class="pvb-row">
+        <span>Initial Portfolio Value</span>
+        <span class="pvb-value" id="pvbValue">$0</span>
+      </div>
+      <div class="pvb-track">
+        <div class="pvb-fill" id="pvbFill" style="width:0%"></div>
+      </div>
+      <div class="pvb-max-note" id="pvbNote">$1,000 per security · max 50 securities = $50,000</div>
+    </div>
+    <div class="create-actions">
+      <button class="btn-cancel" onclick="closeCreateModal()">Cancel</button>
+      <button class="btn-confirm" id="createSubmitBtn" onclick="createPortfolio()">Create Portfolio</button>
+    </div>
+  </div>
+</div>
 
-    function renderPortfolios() {
-      const grid = document.getElementById("portfolioGrid");
+<div class="toast" id="toast"></div>
 
-      if (allBots.length === 0) {
-        grid.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-icon">📊</div>
-            <h2>No portfolios yet</h2>
-            <p>Create your first portfolio and start tracking NYSE &amp; NASDAQ stocks in real time.</p>
-            <button class="btn-create" onclick="openCreateModal()">+ Create Your First Portfolio</button>
-          </div>
-        `;
-        document.getElementById("totalValue").textContent = "$0.00";
-        document.getElementById("totalReturn").textContent = "—";
-        return;
-      }
+<script src="api.js"></script>
+<script>
+  const PLATFORM = "wallstbots";
+  const MAX_SECURITIES = 50;
+  const VALUE_PER_SECURITY = 1000;
 
-      grid.innerHTML = allBots.map(bot => `
-        <div class="portfolio-card" onclick="window.location.href='/bot-detail.html?id=${bot.id}'">
-          <div class="pc-header">
-            <div>
-              <div class="pc-name">${escHtml(bot.name)}</div>
-              ${bot.description ? `<div class="pc-desc">${escHtml(bot.description)}</div>` : ''}
-            </div>
-            <div class="pc-badge">WSB</div>
-          </div>
-          <div class="pc-stats">
-            <div class="pc-stat">
-              <div class="pc-stat-label">Value</div>
-              <div class="pc-stat-val" id="val-${bot.id}">—</div>
-            </div>
-            <div class="pc-stat">
-              <div class="pc-stat-label">Return</div>
-              <div class="pc-stat-val" id="ret-${bot.id}">—</div>
-            </div>
-            <div class="pc-stat">
-              <div class="pc-stat-label">Holdings</div>
-              <div class="pc-stat-val" id="hld-${bot.id}">—</div>
-            </div>
-          </div>
-          <div class="pc-footer">
-            <span>Created ${formatDate(bot.created_at)}</span>
-            <span class="pc-arrow">→</span>
-          </div>
-        </div>
-      `).join('');
-    }
+  let allBots = [], perfMap = {}, userProfile = null, subscription = null;
+  let tickers = [], maxPortfolios = 3;
 
-    async function loadPerformance() {
-      let totalValue = 0;
-      let totalCost = 0;
-
-      const promises = allBots.map(async bot => {
-        try {
-          const data = await api.getBot(bot.id);
-          const perf = data?.bot?.performance;
-          const holdings = data?.bot?.holdings_count ?? data?.bot?.holdings?.length ?? '—';
-
-          document.getElementById(`hld-${bot.id}`).textContent = holdings;
-
-          if (perf) {
-            const val = perf.total_value || 0;
-            const pct = perf.gain_loss_pct || 0;
-            totalValue += val;
-
-            const valEl = document.getElementById(`val-${bot.id}`);
-            const retEl = document.getElementById(`ret-${bot.id}`);
-
-            valEl.textContent = `$${val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-
-            retEl.textContent = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
-            retEl.className = `pc-stat-val ${pct >= 0 ? 'up' : 'dn'}`;
-          }
-        } catch (err) {
-          console.warn(`Perf load failed for ${bot.id}:`, err);
-        }
-      });
-
-      await Promise.all(promises);
-
-      // Update summary bar
-      if (totalValue > 0) {
-        document.getElementById("totalValue").textContent =
-          `$${totalValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-      } else {
-        document.getElementById("totalValue").textContent = "$0.00";
-      }
-    }
-
-    // ── LOAD NEWS ──
-    async function loadNews() {
-      try {
-        const data = await fetch(`${API_BASE}/public/tracker/news?platform=wallstbots`).then(r => r.json());
-        const articles = (data.data || []).slice(0, 5);
-        const list = document.getElementById("newsList");
-
-        if (!articles.length) {
-          list.innerHTML = '<div style="color:var(--muted);font-size:13px;">No recent news.</div>';
-          return;
-        }
-
-        list.innerHTML = articles.map(a => `
-          <a href="${a.url || '#'}" target="_blank" rel="noopener" class="news-item">
-            <div class="news-item-source">${a.source || 'News'}</div>
-            <div class="news-item-content">
-              <div class="news-item-headline">${escHtml(a.title || a.headline || '')}</div>
-              <div class="news-item-time">${formatTime(a.published_at || a.timestamp)}</div>
-            </div>
-          </a>
-        `).join('');
-      } catch (err) {
-        console.warn("News load failed:", err);
-      }
-    }
-
-    // ── CREATE MODAL ──
-    function openCreateModal() {
-      document.getElementById("portfolioName").value = '';
-      document.getElementById("portfolioDesc").value = '';
-      document.getElementById("createError").style.display = 'none';
-      document.getElementById("createModal").classList.add("open");
-      setTimeout(() => document.getElementById("portfolioName").focus(), 100);
-    }
-
-    function closeCreateModal() {
-      document.getElementById("createModal").classList.remove("open");
-    }
-
-    function handleOverlayClick(e) {
-      if (e.target === document.getElementById("createModal")) closeCreateModal();
-    }
-
-    async function createPortfolio() {
-      const name = document.getElementById("portfolioName").value.trim();
-      const desc = document.getElementById("portfolioDesc").value.trim();
-      const errEl = document.getElementById("createError");
-
-      if (!name) {
-        errEl.textContent = "Portfolio name is required.";
-        errEl.style.display = "block";
-        return;
-      }
-
-      const btn = document.getElementById("createBtn");
-      btn.disabled = true;
-      btn.textContent = "Creating…";
-      errEl.style.display = "none";
-
-      try {
-        const result = await api.createBot(name, "wallstbots", desc || null);
-        closeCreateModal();
-        // Go straight to the detail page to add stocks
-        if (result?.bot?.id || result?.id) {
-          const id = result?.bot?.id || result?.id;
-          window.location.href = `/bot-detail.html?id=${id}&new=1`;
-        } else {
-          await loadPortfolios();
-        }
-      } catch (err) {
-        errEl.textContent = err.message || "Failed to create portfolio. Try again.";
-        errEl.style.display = "block";
-        btn.disabled = false;
-        btn.textContent = "Create Portfolio";
-      }
-    }
-
-    // Enter key support in modal
-    document.addEventListener("keydown", e => {
-      if (e.key === "Escape") closeCreateModal();
-      if (e.key === "Enter" && document.getElementById("createModal").classList.contains("open")) {
-        createPortfolio();
-      }
-    });
-
-    // ── LOGOUT ──
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      auth.logout();
-      window.location.href = "/";
-    });
-
-    // ── HELPERS ──
-    function escHtml(str) {
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    function formatDate(ts) {
-      if (!ts) return '';
-      try { return new Date(ts).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}); }
-      catch { return ''; }
-    }
-
-    function formatTime(ts) {
-      if (!ts) return '';
-      try {
-        const d = new Date(ts);
-        const diff = Math.floor((Date.now() - d) / 60000);
-        if (diff < 60) return `${diff}m ago`;
-        if (diff < 1440) return `${Math.floor(diff/60)}h ago`;
-        return d.toLocaleDateString();
-      } catch { return ''; }
-    }
-
-    // ── INIT ──
-    loadProfile();
-    loadPortfolios();
+  async function init() {
+    try { await Promise.all([loadProfile(), loadSubscription()]); } catch(e) {}
+    await loadPortfolios();
     loadNews();
+  }
 
-    // Refresh portfolios every 60 seconds
-    setInterval(loadPortfolios, 60000);
-  </script>
+  async function loadProfile() {
+    try {
+      userProfile = await api.getUserProfile();
+      document.getElementById("drawerEmail").textContent = userProfile?.email || userProfile?.user?.email || "—";
+    } catch(e) { document.getElementById("drawerEmail").textContent = "—"; }
+  }
+
+  async function loadSubscription() {
+    try { subscription = await api.getSubscription(); renderSubscription(); } catch(e) {}
+  }
+
+  function renderSubscription() {
+    if (!subscription) return;
+    const plan = subscription.plan_name || subscription.plan || subscription.tier || "Free";
+    const planLower = plan.toLowerCase();
+    if (planLower.includes("elite") || planLower.includes("premium")) maxPortfolios = 50;
+    else if (planLower.includes("pro")) maxPortfolios = 10;
+    else maxPortfolios = 3;
+    let badgeClass = "free";
+    if (planLower.includes("elite") || planLower.includes("premium")) badgeClass = "elite";
+    else if (planLower.includes("pro")) badgeClass = "pro";
+    document.getElementById("drawerTierBadge").textContent = plan;
+    document.getElementById("drawerTierBadge").className = "tier-badge " + badgeClass;
+    document.getElementById("drawerTierName").textContent = plan + " Plan";
+    const status = subscription.status || "active";
+    document.getElementById("drawerStatus").textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    const billDate = subscription.current_period_end || subscription.next_billing_date || subscription.renewal_date;
+    document.getElementById("drawerBillDate").textContent = billDate
+      ? new Date(billDate * 1000 || billDate).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"})
+      : "—";
+    document.getElementById("statMembership").textContent = plan;
+    document.getElementById("statMembershipSub").textContent = maxPortfolios + " portfolios max";
+    try {
+      api.getReferralStats().then(r => {
+        document.getElementById("drawerRefCode").textContent = r?.referral_code || r?.code || "—";
+        document.getElementById("drawerRefCount").textContent = r?.referral_count || r?.count || 0;
+      });
+    } catch(e) {}
+  }
+
+  function updateUsageDisplay(count) {
+    document.getElementById("drawerUsageText").textContent = count + " / " + maxPortfolios;
+    document.getElementById("statPortfolioCount").textContent = count + " / " + maxPortfolios;
+    const pct = maxPortfolios > 0 ? (count / maxPortfolios) * 100 : 0;
+    const fill = document.getElementById("drawerUsageBar");
+    fill.style.width = pct + "%";
+    fill.className = "usage-bar-fill" + (pct >= 100 ? " full" : pct >= 80 ? " near-full" : "");
+    const btn = document.getElementById("createBtn");
+    btn.disabled = count >= maxPortfolios;
+    btn.title = count >= maxPortfolios ? "Portfolio limit reached for your plan" : "";
+  }
+
+  async function loadPortfolios() {
+    try {
+      const bots = await api.getBots();
+      allBots = (bots || []).filter(b => b.platform === PLATFORM);
+      updateUsageDisplay(allBots.length);
+      await loadPerformance();
+      sortAndRender();
+    } catch(e) {
+      document.getElementById("portfolioGrid").innerHTML = `<div class="empty-state"><h3>Could not load portfolios</h3><p>${e.message||"Check your connection"}</p></div>`;
+    }
+  }
+
+  async function loadPerformance() {
+    const perf = await Promise.allSettled(allBots.map(b => api.getBot(b.id).then(d=>({id:b.id,data:d})).catch(()=>null)));
+    perf.forEach(r => { if (r.status==="fulfilled"&&r.value) perfMap[r.value.id]=r.value.data; });
+  }
+
+  function sortAndRender() {
+    const sort = document.getElementById("sortSelect").value;
+    allBots.sort((a,b) => {
+      const pa=perfMap[a.id], pb=perfMap[b.id];
+      const va=pa?.portfolio_value||pa?.current_value||0, vb=pb?.portfolio_value||pb?.current_value||0;
+      const ra=pa?.total_return_pct||pa?.return_pct||0, rb=pb?.total_return_pct||pb?.return_pct||0;
+      if (sort==="value-desc") return vb-va;
+      if (sort==="return-desc") return rb-ra;
+      if (sort==="return-asc") return ra-rb;
+      if (sort==="name-asc") return (a.name||"").localeCompare(b.name||"");
+      return new Date(b.created_at||0)-new Date(a.created_at||0);
+    });
+    renderPortfolios();
+    updateStats();
+  }
+
+  function renderPortfolios() {
+    const grid = document.getElementById("portfolioGrid");
+    if (!allBots.length) {
+      grid.innerHTML = `<div class="empty-state"><h3>No portfolios yet</h3><p>Create your first portfolio to start tracking stock performance.</p><button class="btn-create" onclick="openCreateModal()">+ Create Portfolio</button></div>`;
+      return;
+    }
+    grid.innerHTML = allBots.map(bot => {
+      const p=perfMap[bot.id];
+      const value=p?.portfolio_value||p?.current_value||0;
+      const retPct=p?.total_return_pct||p?.return_pct||0;
+      const retDollar=p?.total_return||p?.return_dollar||0;
+      const holdings=p?.holdings?.length||bot.holdings_count||0;
+      const isPos=retPct>=0;
+      const fmtVal=value>=1000?"$"+(value/1000).toFixed(1)+"k":"$"+value.toFixed(0);
+      const fmtRet=(isPos?"+":"")+retPct.toFixed(2)+"% ("+(isPos?"+":"")+"$"+Math.abs(retDollar).toFixed(0)+")";
+      const date=bot.created_at?new Date(bot.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"";
+      return `<div class="portfolio-card" onclick="location.href='bot-detail.html?id=${bot.id}'">
+        <div class="card-top"><div class="card-name">${escHtml(bot.name)}</div><div class="card-badge">${holdings} stocks</div></div>
+        <div class="card-value">${fmtVal}</div>
+        <div class="card-return ${isPos?"pos":"neg"}">${fmtRet}</div>
+        <div style="border-top:1px solid var(--border)"></div>
+        <div class="card-footer">
+          <div class="holdings-count"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V3.5a1 1 0 011-1h8z"/></svg>Created ${date}</div>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="var(--muted)"><path d="M6.22 3.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 010-1.06z"/></svg>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  function updateStats() {
+    let total=0, bestRet=-Infinity, bestName="";
+    allBots.forEach(b => {
+      const p=perfMap[b.id]; if(!p) return;
+      total+=p.portfolio_value||p.current_value||0;
+      const r=p.total_return_pct||p.return_pct||0;
+      if(r>bestRet){bestRet=r;bestName=b.name;}
+    });
+    document.getElementById("statTotalValue").textContent="$"+total.toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0});
+    if(bestName){
+      document.getElementById("statBestName").textContent=bestName.length>14?bestName.slice(0,13)+"…":bestName;
+      const el=document.getElementById("statBestReturn");
+      el.textContent=(bestRet>=0?"+":"")+bestRet.toFixed(2)+"%";
+      el.className="stat-sub "+(bestRet>=0?"pos":"neg");
+    }
+  }
+
+  async function loadNews() {
+    try {
+      const data=await api.getNews("?platform="+PLATFORM+"&limit=6");
+      const items=data?.articles||data?.news||data||[];
+      const list=document.getElementById("newsList");
+      if(!items.length){list.innerHTML=`<p style="color:var(--muted);font-size:0.85rem">No news available.</p>`;return;}
+      list.innerHTML=items.slice(0,6).map(n=>{
+        const s=(n.sentiment||"neu").toLowerCase();
+        const dot=s.includes("pos")?"pos":s.includes("neg")?"neg":"neu";
+        const time=n.published_at?new Date(n.published_at).toLocaleDateString("en-US",{month:"short",day:"numeric"}):"";
+        const url=n.url||n.link||"#";
+        return `<a href="${url}" target="_blank" rel="noopener" class="news-item" style="text-decoration:none">
+          <div class="sentiment-dot ${dot}"></div>
+          <div class="news-content">
+            <div class="news-headline">${escHtml(n.title||n.headline||"")}</div>
+            <div class="news-meta">${escHtml(n.source||"")}${time?" · "+time:""}</div>
+          </div></a>`;
+      }).join("");
+    } catch(e){document.getElementById("newsList").innerHTML=`<p style="color:var(--muted);font-size:0.85rem">Could not load news.</p>`;}
+  }
+
+  function openDrawer(){document.getElementById("accountDrawer").classList.add("open");document.getElementById("drawerOverlay").classList.add("open");document.body.style.overflow="hidden";}
+  function closeDrawer(){document.getElementById("accountDrawer").classList.remove("open");document.getElementById("drawerOverlay").classList.remove("open");document.body.style.overflow="";}
+  function openPwModal(){
+    document.getElementById("pwModal").classList.add("open");
+    document.getElementById("pwModalText").textContent="We'll send a password reset link to: "+(userProfile?.email||userProfile?.user?.email||"your email");
+    document.getElementById("pwConfirmBtn").textContent="Send Reset Link";
+    document.getElementById("pwConfirmBtn").disabled=false;
+  }
+  function closePwModal(){document.getElementById("pwModal").classList.remove("open");}
+  async function sendPasswordReset(){
+    const btn=document.getElementById("pwConfirmBtn");
+    btn.disabled=true;btn.textContent="Sending…";
+    try{
+      await api.requestPasswordReset(userProfile?.email||userProfile?.user?.email);
+      document.getElementById("pwModalText").textContent="✓ Reset link sent! Check your inbox.";
+      btn.textContent="Sent!";
+      setTimeout(closePwModal,2000);
+    }catch(e){
+      document.getElementById("pwModalText").textContent="Error sending reset link. Please try again.";
+      btn.disabled=false;btn.textContent="Try Again";
+    }
+  }
+  function copyReferral(){
+    const code=document.getElementById("drawerRefCode").textContent;
+    if(code==="———")return;
+    navigator.clipboard.writeText(code).then(()=>showToast("Referral code copied!","success")).catch(()=>showToast("Could not copy","error"));
+  }
+  function togglePlatformMenu(){
+    const menu=document.getElementById("platformMenu"),btn=document.getElementById("platformBtn");
+    const isOpen=menu.classList.toggle("open");
+    btn.classList.toggle("open",isOpen);
+  }
+  document.addEventListener("click",e=>{
+    if(!e.target.closest(".platform-switcher")){
+      document.getElementById("platformMenu").classList.remove("open");
+      document.getElementById("platformBtn").classList.remove("open");
+    }
+  });
+  function openCreateModal(){
+    if(allBots.length>=maxPortfolios){showToast("Portfolio limit reached. Upgrade your plan.","error");return;}
+    tickers=[];
+    document.getElementById("createName").value="";
+    document.getElementById("createDesc").value="";
+    document.getElementById("tickerInput").value="";
+    renderTickers();
+    document.getElementById("createModal").classList.add("open");
+    setTimeout(()=>document.getElementById("createName").focus(),100);
+  }
+  function closeCreateModal(){document.getElementById("createModal").classList.remove("open");}
+  function addTicker(){
+    const input=document.getElementById("tickerInput");
+    const sym=input.value.trim().toUpperCase().replace(/[^A-Z0-9.^-]/g,"");
+    if(!sym)return;
+    if(tickers.length>=MAX_SECURITIES){showToast("Maximum 50 securities per portfolio","error");return;}
+    if(tickers.includes(sym)){showToast(sym+" already added","error");input.value="";return;}
+    tickers.push(sym);input.value="";renderTickers();input.focus();
+  }
+  function removeTicker(sym){tickers=tickers.filter(t=>t!==sym);renderTickers();}
+  function renderTickers(){
+    const container=document.getElementById("tickerChips");
+    if(!tickers.length){container.innerHTML=`<span class="chips-empty" id="chipsEmpty">No securities added yet</span>`;
+    }else{container.innerHTML=tickers.map(t=>`<div class="ticker-chip">${escHtml(t)}<button class="chip-remove" onclick="removeTicker('${escHtml(t)}')" title="Remove">×</button></div>`).join("");}
+    const total=tickers.length*VALUE_PER_SECURITY;
+    const pct=(tickers.length/MAX_SECURITIES)*100;
+    document.getElementById("pvbValue").textContent="$"+total.toLocaleString();
+    const fill=document.getElementById("pvbFill");
+    fill.style.width=pct+"%";
+    fill.className="pvb-fill"+(pct>=80?" warning":"");
+    const note=document.getElementById("pvbNote");
+    if(tickers.length>=MAX_SECURITIES){note.textContent="⚠ Maximum 50 securities reached";note.className="pvb-max-note danger";}
+    else if(tickers.length>=40){note.textContent=tickers.length+"/50 securities · "+(MAX_SECURITIES-tickers.length)+" slots remaining";note.className="pvb-max-note warn";}
+    else{note.textContent="$1,000 per security · max 50 securities = $50,000";note.className="pvb-max-note";}
+  }
+  async function createPortfolio(){
+    const name=document.getElementById("createName").value.trim();
+    const desc=document.getElementById("createDesc").value.trim();
+    if(!name){showToast("Please enter a portfolio name","error");document.getElementById("createName").focus();return;}
+    if(!tickers.length){showToast("Add at least one security","error");return;}
+    const btn=document.getElementById("createSubmitBtn");
+    btn.disabled=true;btn.textContent="Creating…";
+    try{
+      const bot=await api.createBot(name,PLATFORM,desc);
+      const botId=bot.id||bot.bot_id||bot.bot?.id;
+      if(!botId)throw new Error("No bot ID returned");
+      for(let i=0;i<tickers.length;i++){
+        btn.textContent=`Adding ${i+1}/${tickers.length}…`;
+        await api.addHolding(botId,tickers[i],VALUE_PER_SECURITY,null,null);
+      }
+      closeCreateModal();showToast("Portfolio created!","success");
+      await loadPortfolios();
+    }catch(e){
+      showToast(e.message||"Failed to create portfolio","error");
+      btn.disabled=false;btn.textContent="Create Portfolio";
+    }
+  }
+  function escHtml(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+  function showToast(msg,type="success"){
+    const t=document.getElementById("toast");t.textContent=msg;t.className="toast "+type;t.classList.add("show");
+    clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove("show"),3500);
+  }
+  document.addEventListener("DOMContentLoaded",init);
+</script>
 </body>
 </html>
