@@ -1004,7 +1004,7 @@
   function renderPortfolios() {
     const grid = document.getElementById("portfolioGrid");
     if (!allBots.length) {
-      grid.innerHTML = `<div class="empty-state"><h3>No portfolios yet</h3><p>Create your first portfolio to start tracking AI &amp; tech stock performance.</p><button class="btn-create" onclick="openCreateModal()">+ Create Portfolio</button></div>`;
+      grid.innerHTML = `<div class="empty-state"><h3>No portfolios yet</h3><p>Create your first portfolio to start tracking AI &amp; tech stock performance.</p><button class="btn-create" onclick="openCreateModal()">+ New Portfolio</button></div>`;
       return;
     }
     grid.innerHTML = allBots.map(bot => {
@@ -1557,41 +1557,4 @@
     }
   }
 
-  // ── MOBILE NAV ────────────────────────────────────────────────────────────
-  function toggleMobNav() {
-    document.getElementById("mobNav").classList.toggle("open");
-    document.getElementById("mobNavOverlay").classList.toggle("open");
-  }
-  function closeMobNav() {
-    document.getElementById("mobNav").classList.remove("open");
-    document.getElementById("mobNavOverlay").classList.remove("open");
-  }
-
-  document.addEventListener("DOMContentLoaded",init);
-
-  function openSubModal() {
-    const sub = subscription || {};
-    const plan = sub.plan_name || sub.plan || sub.tier || "Member Plan";
-    const status = (sub.status || "active").toLowerCase();
-    const billDate = sub.current_period_end || sub.tier_expires_at || sub.next_billing_date || sub.renewal_date;
-    document.getElementById("subModalPlan").textContent = plan;
-    const sbadge = document.getElementById("subModalStatus");
-    sbadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-    sbadge.className = "sub-status-badge" + (status !== "active" ? " inactive" : "");
-    let dateStr = "—";
-    if (billDate) {
-      try {
-        const d = typeof billDate === "number" ? new Date(billDate * 1000) : new Date(billDate);
-        dateStr = d.toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
-      } catch(e) {}
-    }
-    document.getElementById("subModalRenewal").textContent = dateStr;
-    document.getElementById("subModal").classList.add("open");
-  }
-  function closeSubModal() {
-    document.getElementById("subModal").classList.remove("open");
-  }
-
-</script>
-</body>
-</html>
+  // ── MOBILE NAV ─────────────────────────────────────────────────�
