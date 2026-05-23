@@ -730,6 +730,94 @@ async def delete_bot(bot_id: str, current_user: dict = Depends(get_current_user)
         cursor.close()
         return_db_connection(conn)
 
+
+@app.post("/bots/{bot_id}/holdings")
+async def add_holding(bot_id: str, req: BotHoldingCreate, current_user: dict = Depends(get_current_user)):
+    """Add a holding (stock/crypto) to a portfolio."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+
+        # Verify the bot exists and belongs to this user
+        cursor.execute("""
+            SELECT id FROM bots WHERE id = %s AND user_id = %s AND status = 'active'
+        """, (bot_id, current_user["user_id"]))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Bot not found")
+
+        # Cap at 50 holdings
+        cursor.execute("""
+            SELECT COUNT(*) as cnt FROM bot_holdings
+            WHERE bot_id = %s AND removed_at IS NULL
+        """, (bot_id,))
+        if cursor.fetchone()["cnt"] >= 50:
+            raise HTTPException(status_code=400, detail="Maximum 50 holdings per portfolio")
+
+        symbol = req.symbol.upper().strip()
+
+        # Try to fetch the last close price from Polygon as entry_price baseline
+        entry_price = req.entry_price
+        if entry_price is None and POLYGON_API_KEY:
+            try:
+                pr = requests.get(
+                    f"https://api.polygon.io/v2/aggs/ticker/{symbol}/prev",
+                    params={"apiKey": POLYGON_API_KEY}, timeout=5
+                )
+                if pr.status_code == 200:
+                    results = pr.json().get("results", [])
+                    if results:
+                        entry_price = results[0].get("c")  # previous close
+            except Exception:
+                pass
+
+        cursor.execute("""
+            INSERT INTO bot_holdings (bot_id, symbol, asset_type, weight, quantity, entry_price)
+            VALUES (%s, %s, 'stock', %s, %s, %s)
+            RETURNING id, symbol, asset_type, weight, quantity, entry_price, added_at
+        """, (bot_id, symbol, req.weight or 1000, req.quantity, entry_price))
+        h = cursor.fetchone()
+        conn.commit()
+        return {
+            "success": True,
+            "holding": {
+                "id":          str(h["id"]),
+                "symbol":      h["symbol"],
+                "asset_type":  h["asset_type"],
+                "weight":      float(h["weight"] or 0),
+                "quantity":    float(h["quantity"]) if h["quantity"] is not None else None,
+                "entry_price": float(h["entry_price"]) if h["entry_price"] is not None else None,
+                "added_at":    str(h["added_at"]),
+            }
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.delete("/bots/{bot_id}/holdings/{holding_id}")
+async def remove_holding(bot_id: str, holding_id: str, current_user: dict = Depends(get_current_user)):
+    """Soft-delete a holding from a portfolio."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE bot_holdings SET removed_at = NOW()
+            WHERE id = %s
+              AND bot_id = %s
+              AND bot_id IN (
+                  SELECT id FROM bots WHERE user_id = %s AND status = 'active'
+              )
+              AND removed_at IS NULL
+        """, (holding_id, bot_id, current_user["user_id"]))
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Holding not found")
+        conn.commit()
+        return {"success": True}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
 # ============================================================================
 # PROMO CODE ENDPOINTS
 # ============================================================================
@@ -997,26 +1085,51 @@ async def tracker_read(data_type: str, platform: str = "lvl13"):
 # ============================================================================
 
 @app.get("/stocks/search")
-async def search_stocks(q: str = "", limit: int = 15):
+async def search_stocks(q: str = "", limit: int = 15, market: str = "all"):
+    """
+    Search tickers on Polygon.io.
+    market=all    → NYSE + NASDAQ + AMEX + OTC + Pink Sheets  (stocks + otc markets)
+    market=crypto → Cryptocurrencies only
+    market=stocks → Exchange-listed stocks only (NYSE, NASDAQ, AMEX)
+    market=otc    → OTC / Pink Sheets only
+    """
     q = q.strip()
     if not q:
         return {"results": []}
     if not POLYGON_API_KEY:
         return {"results": [], "manual_entry": True}
+
+    # Map the caller's market param to Polygon market values
+    if market == "crypto":
+        markets_to_search = ["crypto"]
+    elif market == "stocks":
+        markets_to_search = ["stocks"]
+    elif market == "otc":
+        markets_to_search = ["otc"]
+    else:  # "all" — NYSE + NASDAQ + OTC + Pink Sheets
+        markets_to_search = ["stocks", "otc"]
+
     try:
-        r = requests.get("https://api.polygon.io/v3/reference/tickers", params={
-            "search": q, "active": "true", "market": "stocks",
-            "limit": min(limit, 20), "apiKey": POLYGON_API_KEY,
-        }, timeout=10)
-        if r.status_code == 200:
-            data = r.json()
-            return {"results": [
-                {"ticker": t.get("ticker",""), "name": t.get("name",""),
-                 "market": t.get("market",""), "type": t.get("type",""),
-                 "exchange": t.get("primary_exchange","")}
-                for t in data.get("results", []) if t.get("ticker")
-            ]}
-        return {"results": []}
+        all_results = []
+        seen = set()
+        for mkt in markets_to_search:
+            r = requests.get("https://api.polygon.io/v3/reference/tickers", params={
+                "search": q, "active": "true", "market": mkt,
+                "limit": min(limit, 20), "apiKey": POLYGON_API_KEY,
+            }, timeout=10)
+            if r.status_code == 200:
+                for t in r.json().get("results", []):
+                    ticker = t.get("ticker", "")
+                    if ticker and ticker not in seen:
+                        seen.add(ticker)
+                        all_results.append({
+                            "ticker":   ticker,
+                            "name":     t.get("name", ""),
+                            "market":   t.get("market", ""),
+                            "type":     t.get("type", ""),
+                            "exchange": t.get("primary_exchange", ""),
+                        })
+        return {"results": all_results[:limit]}
     except Exception as e:
         return {"results": [], "error": str(e)}
 

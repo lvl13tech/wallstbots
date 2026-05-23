@@ -636,7 +636,7 @@
 
   async function doSearch(q) {
     try {
-      const data = await api.searchStocks(q);
+      const data = await api.searchStocks(q, "all");
       const results = data?.results || data || [];
       if (!results.length) {
         document.getElementById("searchResults").innerHTML = `<div class="search-empty">No results for "${escHtml(q)}"</div>`;

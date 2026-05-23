@@ -258,9 +258,9 @@ class WallStBotsAPI {
    * Search for stocks or crypto assets by symbol or name
    * @param {string} q - search query (e.g. "AAPL" or "Apple")
    */
-  async searchStocks(q) {
+  async searchStocks(q, market = "all") {
     const encoded = encodeURIComponent(q);
-    return this.request(`/stocks/search?q=${encoded}`, { method: "GET" });
+    return this.request(`/stocks/search?q=${encoded}&market=${market}`, { method: "GET" });
   }
 
   // ========================================================================
