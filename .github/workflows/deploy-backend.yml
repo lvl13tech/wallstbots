@@ -1,0 +1,71 @@
+name: Deploy Backend to Cloud Run
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'Backend/**'
+  workflow_dispatch:   # also lets you trigger it manually from GitHub Actions tab
+
+permissions:
+  contents: read
+  id-token: write   # required for Workload Identity Federation
+
+jobs:
+  deploy:
+    name: Build & Deploy to Cloud Run
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build Docker image
+        run: |
+          docker build -t wallstbots-backend:${{ github.sha }} Backend/
+
+      - name: Tag image for Artifact Registry
+        run: |
+          docker tag wallstbots-backend:${{ github.sha }} \
+            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/wallstbots/backend:latest
+          docker tag wallstbots-backend:${{ github.sha }} \
+            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/wallstbots/backend:${{ github.sha }}
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
+
+      - name: Push image to Artifact Registry
+        run: |
+          docker push us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/wallstbots/backend:latest
+          docker push us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/wallstbots/backend:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy wallstbots-backend \
+            --image us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/wallstbots/backend:latest \
+            --platform managed \
+            --region us-east1 \
+            --allow-unauthenticated \
+            --memory 512Mi \
+            --cpu 1 \
+            --timeout 60 \
+            --max-instances 10 \
+            --project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Show service URL
+        run: |
+          gcloud run services describe wallstbots-backend \
+            --region us-east1 \
+            --format="value(status.url)" \
+            --project ${{ secrets.GCP_PROJECT_ID }}

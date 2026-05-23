@@ -126,6 +126,78 @@
     .tier-badge.member { background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
     .tier-badge.insider { background: #7c3aed; color: #fff; }
     .tier-badge.syndicate { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; }
+    .tier-badge.webmaster { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+
+    /* ── Webmaster Command Center ───────────────────────────────── */
+    .wm-section { display: none; padding: 24px 20px; max-width: 1200px; margin: 0 auto; }
+    .wm-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .wm-header h2 { font-size: 1.2rem; font-weight: 700; }
+    .wm-badge { background: linear-gradient(135deg,#6366f1,#8b5cf6); color: #fff; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; }
+    .wm-tabs { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 20px; }
+    .wm-tab { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel2); color: var(--muted); cursor: pointer; font-size: 12px; font-family: inherit; transition: all 0.15s; }
+    .wm-tab:hover, .wm-tab.active { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.4); color: var(--text); }
+    .wm-panel { display: none; }
+    .wm-panel.active { display: block; }
+    .wm-kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+    .wm-kpi { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+    .wm-kpi.hi { border-color: rgba(52,211,153,0.25); background: rgba(52,211,153,0.04); }
+    .wm-kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .wm-kpi-val { font-size: 22px; font-weight: 700; color: var(--text); }
+    .wm-kpi-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .wm-kpi-val.g { color: #22d3ae; }
+    .wm-table-wrap { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+    .wm-table-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .wm-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .wm-table th { padding: 8px 12px; text-align: left; color: var(--muted); font-weight: 500; font-size: 11px; border-bottom: 1px solid var(--border); }
+    .wm-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+    .wm-table tr:last-child td { border-bottom: none; }
+    .wm-table tr:hover td { background: var(--panel2); }
+    .wm-table .r { text-align: right; }
+    .wm-table .total-row td { background: rgba(99,102,241,0.06); border-top: 1px solid rgba(99,102,241,0.2); font-weight: 600; }
+    .wm-table .cur-row td { background: rgba(52,211,153,0.04); }
+    .wm-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .wm-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+    .wm-card-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 14px; }
+    .wm-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .wm-row:last-child { border-bottom: none; }
+    .wm-row-label { color: var(--muted); }
+    .wm-search { display: flex; gap: 8px; margin-bottom: 14px; }
+    .wm-search input { flex: 1; background: var(--panel2); border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px; color: var(--text); font-size: 12px; outline: none; font-family: inherit; }
+    .wm-search input:focus { border-color: var(--accent); }
+    .wm-btn { padding: 7px 14px; background: var(--panel2); border: 1px solid var(--border); border-radius: 7px; color: var(--muted); font-size: 12px; cursor: pointer; font-family: inherit; transition: all 0.15s; white-space: nowrap; }
+    .wm-btn:hover { border-color: var(--accent); color: var(--text); }
+    .wm-btn.sm { padding: 3px 9px; font-size: 10px; }
+    .wm-loading { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+    .wm-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .wm-bar-label { width: 80px; font-size: 11px; color: var(--muted); }
+    .wm-bar-track { flex: 1; height: 7px; background: var(--panel2); border-radius: 4px; overflow: hidden; }
+    .wm-bar-fill { height: 100%; border-radius: 4px; }
+    .wm-bar-val { width: 50px; text-align: right; font-size: 11px; color: var(--muted); }
+    .tp { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; }
+    .tp.member { background: var(--panel2); color: var(--muted); }
+    .tp.insider { background: rgba(124,58,237,0.25); color: #a78bfa; }
+    .tp.syndicate { background: rgba(245,158,11,0.2); color: #f59e0b; }
+    .tp.webmaster { background: linear-gradient(135deg,rgba(99,102,241,0.3),rgba(139,92,246,0.3)); color: #c4b5fd; border:1px solid rgba(139,92,246,0.4); }
+    .wm-week-chart { display: flex; align-items: flex-end; gap: 3px; height: 72px; padding: 0 2px; margin-bottom: 6px; }
+    .wm-wk { flex: 1; border-radius: 3px 3px 0 0; background: rgba(99,102,241,0.35); min-height: 3px; cursor: pointer; transition: background 0.15s; }
+    .wm-wk:hover { background: rgba(99,102,241,0.65); }
+    .wm-wk.cur { background: rgba(52,211,153,0.5); }
+    .wm-wk.cur:hover { background: rgba(52,211,153,0.8); }
+    .wm-month-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; margin-bottom: 8px; }
+    .wm-month-cell { background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 6px; text-align: center; }
+    .wm-month-cell.cur { border-color: rgba(52,211,153,0.4); }
+    .wm-month-cell.fut { opacity: 0.3; }
+    .wm-month-name { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+    .wm-month-val { font-size: 12px; font-weight: 600; }
+    .wm-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .wm-dot.g { background: #22d3ae; box-shadow: 0 0 5px #22d3ae; }
+    .wm-dot.y { background: #f59e0b; }
+    .wm-dot.d { background: var(--muted); }
+    @media (max-width: 768px) {
+      .wm-kpi-grid { grid-template-columns: repeat(2,1fr); }
+      .wm-two-col { grid-template-columns: 1fr; }
+      .wm-month-grid { grid-template-columns: repeat(3,1fr); }
+    }
     .tier-name { font-weight: 600; font-size: 0.95rem; }
     .usage-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
     .usage-bar-wrap { background: var(--panel2); border-radius: 4px; height: 6px; overflow: hidden; margin-bottom: 14px; }
@@ -267,6 +339,7 @@
       <a href="dashboard.html" class="active">Portfolios</a>
       <a href="markets.html">Markets</a>
       <a href="news.html">News</a>
+      <a href="#" id="wmNavLink" style="display:none;color:#a78bfa" onclick="toggleWmSection(event)">⚡ Command</a>
     </nav>
 
     <div class="platform-switcher">
@@ -450,6 +523,122 @@
   </div>
 </main>
 
+<!-- ─── WEBMASTER COMMAND CENTER ─── -->
+<section class="wm-section" id="wmSection">
+  <div class="wm-header">
+    <h2>Command Center</h2>
+    <span class="wm-badge">⚡ WEBMASTER</span>
+  </div>
+  <div class="wm-tabs">
+    <button class="wm-tab active" onclick="wmTab('overview',this)">📊 Overview</button>
+    <button class="wm-tab" onclick="wmTab('financials',this)">💵 Financials</button>
+    <button class="wm-tab" onclick="wmTab('members',this)">👥 Members</button>
+    <button class="wm-tab" onclick="wmTab('lookup',this)">🔍 Customer Lookup</button>
+    <button class="wm-tab" onclick="wmTab('system',this)">⚙️ System</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="wm-panel active" id="wmp-overview">
+    <div class="wm-kpi-grid">
+      <div class="wm-kpi hi"><div class="wm-kpi-label">YTD Revenue</div><div class="wm-kpi-val g" id="wmYtdRev">$—</div><div class="wm-kpi-sub" id="wmYtdYear">—</div></div>
+      <div class="wm-kpi"><div class="wm-kpi-label">MRR</div><div class="wm-kpi-val" id="wmMrr">$—</div><div class="wm-kpi-sub">monthly recurring</div></div>
+      <div class="wm-kpi"><div class="wm-kpi-label">Total Members</div><div class="wm-kpi-val" id="wmTotalMembers">—</div><div class="wm-kpi-sub">all accounts</div></div>
+      <div class="wm-kpi"><div class="wm-kpi-label">Paid Members</div><div class="wm-kpi-val" id="wmPaidMembers">—</div><div class="wm-kpi-sub" id="wmConversion">—% conversion</div></div>
+    </div>
+    <div class="wm-two-col">
+      <div class="wm-card">
+        <div class="wm-card-title">Members by Tier</div>
+        <div id="wmTierBars"><div class="wm-loading">Loading…</div></div>
+      </div>
+      <div class="wm-card">
+        <div class="wm-card-title">Revenue This Month</div>
+        <div id="wmRevStats"><div class="wm-loading">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINANCIALS -->
+  <div class="wm-panel" id="wmp-financials">
+    <div class="wm-kpi-grid">
+      <div class="wm-kpi hi"><div class="wm-kpi-label">YTD Total</div><div class="wm-kpi-val g" id="wmFinYtd">$—</div><div class="wm-kpi-sub" id="wmFinYtdSubs">— subs</div></div>
+      <div class="wm-kpi"><div class="wm-kpi-label">This Week</div><div class="wm-kpi-val" id="wmFinThisWk">$—</div><div class="wm-kpi-sub" id="wmFinThisWkLbl">—</div></div>
+      <div class="wm-kpi"><div class="wm-kpi-label">Last Week</div><div class="wm-kpi-val" id="wmFinLastWk">$—</div><div class="wm-kpi-sub">previous week</div></div>
+      <div class="wm-kpi"><div class="wm-kpi-label">ARR</div><div class="wm-kpi-val" id="wmFinArr">$—</div><div class="wm-kpi-sub">annualized</div></div>
+    </div>
+
+    <div class="wm-card">
+      <div class="wm-card-title">Weekly Revenue — <span id="wmFinYear">—</span>
+        <span id="wmFinYtdBadge" style="margin-left:8px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);color:#22d3ae;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600">YTD: $—</span>
+      </div>
+      <div class="wm-week-chart" id="wmWeekChart"></div>
+      <div style="text-align:center;font-size:10px;color:var(--muted);margin-top:4px">Each bar = 1 week · green = current week</div>
+    </div>
+
+    <div class="wm-table-wrap">
+      <div class="wm-table-title">Weekly Breakdown</div>
+      <table class="wm-table">
+        <thead><tr><th>Week</th><th>Dates</th><th class="r">New Subs</th><th class="r">Revenue</th><th class="r">YTD Running</th></tr></thead>
+        <tbody id="wmWeekTableBody"><tr><td colspan="5" class="wm-loading">Loading…</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="wm-card">
+      <div class="wm-card-title">Monthly Totals</div>
+      <div class="wm-month-grid" id="wmMonthGrid1"></div>
+      <div class="wm-month-grid" id="wmMonthGrid2"></div>
+    </div>
+  </div>
+
+  <!-- MEMBERS -->
+  <div class="wm-panel" id="wmp-members">
+    <div class="wm-search">
+      <input type="text" id="wmMemberSearch" placeholder="Search by email…" onkeydown="if(event.key==='Enter')wmSearchMembers()">
+      <button class="wm-btn" onclick="wmSearchMembers()">Search</button>
+      <button class="wm-btn" onclick="wmFilterTier('')">All</button>
+      <button class="wm-btn" onclick="wmFilterTier('member')">Member</button>
+      <button class="wm-btn" onclick="wmFilterTier('insider')">Insider</button>
+      <button class="wm-btn" onclick="wmFilterTier('syndicate')">Syndicate</button>
+    </div>
+    <div class="wm-table-wrap">
+      <div class="wm-table-title">All Members <span id="wmMemberCount" style="font-size:10px;color:var(--muted);font-weight:400;margin-left:6px"></span></div>
+      <table class="wm-table">
+        <thead><tr><th>Email</th><th>Tier</th><th>Joined</th><th class="r">Portfolios</th><th>Actions</th></tr></thead>
+        <tbody id="wmMemberTableBody"><tr><td colspan="5" class="wm-loading">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CUSTOMER LOOKUP -->
+  <div class="wm-panel" id="wmp-lookup">
+    <div class="wm-card">
+      <div class="wm-card-title">Customer Lookup</div>
+      <div class="wm-search">
+        <input type="text" id="wmLookupEmail" placeholder="Enter email address…" onkeydown="if(event.key==='Enter')wmLookupUser()">
+        <button class="wm-btn" onclick="wmLookupUser()">Look Up</button>
+      </div>
+    </div>
+    <div id="wmLookupResult"></div>
+  </div>
+
+  <!-- SYSTEM -->
+  <div class="wm-panel" id="wmp-system">
+    <div class="wm-two-col">
+      <div class="wm-card">
+        <div class="wm-card-title">Service Health</div>
+        <div id="wmSysStatus"><div class="wm-loading">Loading…</div></div>
+      </div>
+      <div class="wm-card">
+        <div class="wm-card-title">Data Freshness</div>
+        <div id="wmDataFresh"><div class="wm-loading">Loading…</div></div>
+      </div>
+    </div>
+    <div class="wm-card">
+      <div class="wm-card-title">Platform Stats</div>
+      <div id="wmSysStats"><div class="wm-loading">Loading…</div></div>
+    </div>
+  </div>
+</section>
+
 <!-- ─── CREATE MODAL ─── -->
 <div class="create-modal" id="createModal">
   <div class="create-box">
@@ -526,12 +715,19 @@
     if (!subscription) return;
     const plan = subscription.plan_name || subscription.plan || subscription.tier || "Member";
     const planLower = plan.toLowerCase();
-    if (planLower.includes("syndicate")) maxPortfolios = 10;
+    if (planLower.includes("webmaster")) maxPortfolios = 99;
+    else if (planLower.includes("syndicate")) maxPortfolios = 10;
     else if (planLower.includes("insider")) maxPortfolios = 3;
     else maxPortfolios = 1;
     let badgeClass = "member";
-    if (planLower.includes("syndicate")) badgeClass = "syndicate";
+    if (planLower.includes("webmaster")) badgeClass = "webmaster";
+    else if (planLower.includes("syndicate")) badgeClass = "syndicate";
     else if (planLower.includes("insider")) badgeClass = "insider";
+    // Show Command Center nav for webmaster only
+    if (planLower.includes("webmaster")) {
+      const link = document.getElementById("wmNavLink");
+      if (link) link.style.display = "";
+    }
     document.getElementById("drawerTierBadge").textContent = plan;
     document.getElementById("drawerTierBadge").className = "tier-badge " + badgeClass;
     document.getElementById("drawerTierName").textContent = plan + " Plan";
@@ -743,6 +939,273 @@
     const t=document.getElementById("toast");t.textContent=msg;t.className="toast "+type;t.classList.add("show");
     clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove("show"),3500);
   }
+
+  // ── WEBMASTER COMMAND CENTER ──────────────────────────────────────────────
+  let _wmLoaded = {};
+  const WM_API = BACKEND_URL;
+
+  function toggleWmSection(e) {
+    e && e.preventDefault();
+    const sec = document.getElementById("wmSection");
+    const visible = sec.style.display === "block";
+    sec.style.display = visible ? "none" : "block";
+    if (!visible && !_wmLoaded.overview) { wmLoadOverview(); wmLoadFinancials(); wmLoadMembers(); wmLoadSystem(); }
+  }
+
+  function wmTab(id, btn) {
+    document.querySelectorAll(".wm-panel").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".wm-tab").forEach(b => b.classList.remove("active"));
+    document.getElementById("wmp-" + id).classList.add("active");
+    btn.classList.add("active");
+  }
+
+  async function wmFetch(path) {
+    const token = auth.getToken ? auth.getToken() : (auth._token || localStorage.getItem("auth_token") || "");
+    const resp = await fetch(WM_API + path, { headers: { "Authorization": "Bearer " + token } });
+    if (!resp.ok) throw new Error(await resp.text());
+    return resp.json();
+  }
+
+  async function wmLoadOverview() {
+    try {
+      const rev = await wmFetch("/webmaster/revenue");
+      document.getElementById("wmYtdRev").textContent = "$" + (rev.total_revenue||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+      document.getElementById("wmYtdYear").textContent = "all-time total";
+      document.getElementById("wmMrr").textContent = "$" + (rev.mrr||0).toFixed(2);
+      document.getElementById("wmTotalMembers").textContent = (rev.total_members||0).toLocaleString();
+      document.getElementById("wmPaidMembers").textContent = (rev.paid_members||0).toLocaleString();
+      document.getElementById("wmConversion").textContent = (rev.conversion_pct||0) + "% conversion";
+      // Tier bars
+      const tc = rev.tier_counts || {};
+      const total = rev.total_members || 1;
+      const tiers = [
+        {name:"member",   color:"rgba(255,255,255,0.18)", label:"Member"},
+        {name:"insider",  color:"#7c3aed",                label:"Insider"},
+        {name:"syndicate",color:"linear-gradient(90deg,#f59e0b,#ef4444)", label:"Syndicate"},
+        {name:"webmaster",color:"linear-gradient(90deg,#6366f1,#8b5cf6)", label:"Webmaster"},
+      ];
+      document.getElementById("wmTierBars").innerHTML = tiers.map(t => {
+        const cnt = tc[t.name]||0, pct = Math.round(cnt/total*100);
+        return `<div class="wm-bar-row">
+          <div class="wm-bar-label">${t.name.charAt(0).toUpperCase()+t.name.slice(1)}</div>
+          <div class="wm-bar-track"><div class="wm-bar-fill" style="width:${pct}%;background:${t.color}"></div></div>
+          <div class="wm-bar-val">${cnt} (${pct}%)</div>
+        </div>`;
+      }).join("");
+      document.getElementById("wmRevStats").innerHTML = `
+        <div class="wm-row"><span class="wm-row-label">This month</span><span>$${(rev.mrr||0).toFixed(2)}</span></div>
+        <div class="wm-row"><span class="wm-row-label">Last month</span><span>$${(rev.last_month_rev||0).toFixed(2)}</span></div>
+        <div class="wm-row"><span class="wm-row-label">ARR estimate</span><span>$${(rev.arr||0).toFixed(2)}</span></div>
+        <div class="wm-row"><span class="wm-row-label">New subs this month</span><span>${rev.this_month_subs||0}</span></div>
+        <div class="wm-row"><span class="wm-row-label">Total orders (all-time)</span><span>${rev.total_orders||0}</span></div>`;
+      _wmLoaded.overview = true;
+    } catch(e) { console.error("wmLoadOverview", e); }
+  }
+
+  async function wmLoadFinancials() {
+    try {
+      const year = new Date().getFullYear();
+      const data = await wmFetch("/webmaster/financials/weekly?year=" + year);
+      document.getElementById("wmFinYtd").textContent = "$" + (data.ytd_revenue||0).toFixed(2);
+      document.getElementById("wmFinYtdSubs").textContent = (data.ytd_subs||0) + " subs";
+      document.getElementById("wmFinArr").textContent = "$" + ((data.ytd_revenue||0)*12/Math.max(new Date().getMonth()+1,1)).toFixed(2);
+      document.getElementById("wmFinYear").textContent = year;
+      document.getElementById("wmFinYtdBadge").textContent = "YTD: $" + (data.ytd_revenue||0).toFixed(2);
+      const weeks = data.weeks || [];
+      const now = new Date();
+      const thisWeek = Math.ceil((now - new Date(now.getFullYear(),0,1)) / 604800000);
+      // Current & last week KPIs
+      const curW = weeks.find(w=>w.week===thisWeek) || weeks[weeks.length-1];
+      const prevW = weeks.find(w=>w.week===(thisWeek-1)) || weeks[weeks.length-2];
+      document.getElementById("wmFinThisWk").textContent = "$" + (curW?.revenue||0).toFixed(2);
+      document.getElementById("wmFinThisWkLbl").textContent = curW ? "Wk " + curW.week : "—";
+      document.getElementById("wmFinLastWk").textContent = "$" + (prevW?.revenue||0).toFixed(2);
+      // Bar chart
+      const chartEl = document.getElementById("wmWeekChart");
+      chartEl.innerHTML = "";
+      const maxRev = Math.max(...weeks.map(w=>w.revenue), 1);
+      weeks.forEach(w => {
+        const bar = document.createElement("div");
+        bar.className = "wm-wk" + (w.week===thisWeek?" cur":"");
+        bar.style.height = Math.max(3, (w.revenue/maxRev)*66) + "px";
+        bar.title = "Wk " + w.week + ": $" + w.revenue.toFixed(2);
+        chartEl.appendChild(bar);
+      });
+      // Table
+      const tbody = document.getElementById("wmWeekTableBody");
+      if (!weeks.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:16px">No data yet</td></tr>'; }
+      else {
+        tbody.innerHTML = weeks.map(w => {
+          const isCur = w.week===thisWeek;
+          return `<tr class="${isCur?"cur-row":""}">
+            <td>Wk ${w.week}${isCur?' <span style="background:rgba(52,211,153,0.15);color:#22d3ae;padding:1px 6px;border-radius:10px;font-size:10px">current</span>':""}</td>
+            <td style="color:var(--muted);font-size:11px">${w.week_start||""} → ${w.week_end||""}</td>
+            <td class="r">${w.new_subs}</td>
+            <td class="r">$${w.revenue.toFixed(2)}</td>
+            <td class="r">$${w.ytd_running.toFixed(2)}</td>
+          </tr>`;
+        }).join("") + `<tr class="total-row"><td colspan="2">📅 YTD Total</td><td class="r">${data.ytd_subs}</td><td class="r" colspan="2" style="color:#22d3ae">$${data.ytd_revenue.toFixed(2)}</td></tr>`;
+      }
+      // Monthly grid
+      const months = data.months || [];
+      const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const curMonth = new Date().getMonth() + 1;
+      const allMonths = MONTH_NAMES.map((name,i)=>{
+        const m = months.find(mo=>mo.month===i+1);
+        return {name, num:i+1, revenue:m?.revenue||0, subs:m?.new_subs||0, future:i+1>curMonth, cur:i+1===curMonth};
+      });
+      const renderGrid = (arr) => arr.map(m=>`
+        <div class="wm-month-cell${m.cur?" cur":""}${m.future?" fut":""}">
+          <div class="wm-month-name">${m.name}${m.cur?" ▸":""}</div>
+          <div class="wm-month-val${m.cur?" g":""}" style="${m.cur?"color:#22d3ae":""}">
+            ${m.future?"—":"$"+m.revenue.toFixed(0)}
+          </div>
+        </div>`).join("");
+      document.getElementById("wmMonthGrid1").innerHTML = renderGrid(allMonths.slice(0,6));
+      document.getElementById("wmMonthGrid2").innerHTML = renderGrid(allMonths.slice(6));
+      _wmLoaded.financials = true;
+    } catch(e) { console.error("wmLoadFinancials", e); }
+  }
+
+  let _wmMemberTierFilter = "";
+  async function wmLoadMembers(search="", tier="") {
+    document.getElementById("wmMemberTableBody").innerHTML = '<tr><td colspan="5" class="wm-loading">Loading…</td></tr>';
+    try {
+      let url = "/webmaster/members?limit=100";
+      if (search) url += "&search=" + encodeURIComponent(search);
+      if (tier)   url += "&tier=" + encodeURIComponent(tier);
+      const data = await wmFetch(url);
+      document.getElementById("wmMemberCount").textContent = data.total + " total";
+      if (!data.members?.length) {
+        document.getElementById("wmMemberTableBody").innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">No members found</td></tr>';
+        return;
+      }
+      document.getElementById("wmMemberTableBody").innerHTML = data.members.map(m => {
+        const t = m.tier||"member";
+        const joined = m.joined ? new Date(m.joined).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"}) : "—";
+        return `<tr>
+          <td style="font-family:monospace;font-size:11px">${escHtml(m.email)}</td>
+          <td><span class="tp ${t}">${t.charAt(0).toUpperCase()+t.slice(1)}</span></td>
+          <td style="color:var(--muted);font-size:11px">${joined}</td>
+          <td class="r">${m.portfolio_count||0}</td>
+          <td><button class="wm-btn sm" onclick="wmShowUserDetail('${escHtml(m.id)}','${escHtml(m.email)}')">View</button>
+              <button class="wm-btn sm" onclick="wmPromptTierChange('${escHtml(m.id)}','${escHtml(m.email)}','${t}')">Tier</button></td>
+        </tr>`;
+      }).join("");
+      _wmLoaded.members = true;
+    } catch(e) {
+      document.getElementById("wmMemberTableBody").innerHTML = `<tr><td colspan="5" style="text-align:center;color:#f87171;padding:16px">${e.message}</td></tr>`;
+    }
+  }
+  function wmSearchMembers() { wmLoadMembers(document.getElementById("wmMemberSearch").value, _wmMemberTierFilter); }
+  function wmFilterTier(t) { _wmMemberTierFilter=t; wmLoadMembers(document.getElementById("wmMemberSearch").value, t); }
+
+  async function wmLookupUser() {
+    const email = document.getElementById("wmLookupEmail").value.trim();
+    if (!email) return;
+    const res = document.getElementById("wmLookupResult");
+    res.innerHTML = '<div class="wm-loading">Searching…</div>';
+    try {
+      // Search members list for this email
+      const data = await wmFetch("/webmaster/members?search=" + encodeURIComponent(email) + "&limit=1");
+      const m = data.members?.[0];
+      if (!m) { res.innerHTML = `<div class="wm-card" style="text-align:center;color:var(--muted)">No account found for "${escHtml(email)}"</div>`; return; }
+      const detail = await wmFetch("/webmaster/member/" + m.id);
+      const u = detail.user;
+      const t = u.tier||"member";
+      const joined = u.joined ? new Date(u.joined).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"}) : "—";
+      const exp = u.tier_expires_at ? new Date(u.tier_expires_at).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"}) : "Lifetime";
+      const totalPaid = (detail.payments||[]).reduce((sum,p)=>sum+(p.amount||0),0);
+      res.innerHTML = `<div class="wm-card">
+        <div class="wm-card-title">Account: ${escHtml(u.email)}</div>
+        <div class="wm-two-col">
+          <div>
+            <div class="wm-row"><span class="wm-row-label">Email</span><span style="font-family:monospace;font-size:11px">${escHtml(u.email)}</span></div>
+            <div class="wm-row"><span class="wm-row-label">User ID</span><span style="font-family:monospace;font-size:10px">${u.id}</span></div>
+            <div class="wm-row"><span class="wm-row-label">Tier</span><span><span class="tp ${t}">${t.charAt(0).toUpperCase()+t.slice(1)}</span></span></div>
+            <div class="wm-row"><span class="wm-row-label">Tier expires</span><span>${exp}</span></div>
+            <div class="wm-row"><span class="wm-row-label">Joined</span><span>${joined}</span></div>
+            <div class="wm-row"><span class="wm-row-label">Portfolios</span><span>${detail.portfolios?.length||0}</span></div>
+            <div class="wm-row"><span class="wm-row-label">Total paid</span><span style="color:#22d3ae">$${totalPaid.toFixed(2)}</span></div>
+            <div class="wm-row"><span class="wm-row-label">Payments</span><span>${detail.payments?.length||0} orders</span></div>
+          </div>
+          <div>
+            <div class="wm-card-title">Admin Actions</div>
+            <button class="wm-btn" style="width:100%;margin-bottom:8px;text-align:left" onclick="wmPromptTierChange('${u.id}','${escHtml(u.email)}','${t}')">🔄 Change Tier</button>
+            <button class="wm-btn" style="width:100%;margin-bottom:8px;text-align:left" onclick="wmShowPayments('${u.id}','${escHtml(u.email)}')">💳 View Payments</button>
+          </div>
+        </div>
+        ${detail.portfolios?.length ? `<div style="margin-top:10px"><div class="wm-card-title">Portfolios</div>${detail.portfolios.map(p=>`<div class="wm-row"><span class="wm-row-label">${escHtml(p.name)}</span><span style="font-size:11px;color:var(--muted)">${p.platform} · ${p.created_at?new Date(p.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"—"}</span></div>`).join("")}</div>`:""}
+      </div>`;
+    } catch(e) {
+      res.innerHTML = `<div class="wm-card" style="color:#f87171">Error: ${e.message}</div>`;
+    }
+  }
+
+  async function wmShowPayments(uid, email) {
+    try {
+      const detail = await wmFetch("/webmaster/member/" + uid);
+      const pays = detail.payments||[];
+      if (!pays.length) { showToast("No payments found for " + email); return; }
+      alert("Payments for " + email + ":\n\n" + pays.map(p=>`${p.date?.slice(0,10)} — $${p.amount} — ${p.status} — ${p.txn_id||"no txn"}`).join("\n"));
+    } catch(e) { showToast("Error: " + e.message, "error"); }
+  }
+
+  function wmPromptTierChange(uid, email, currentTier) {
+    const newTier = prompt(`Change tier for ${email}.\nCurrent: ${currentTier}\n\nEnter new tier (member / insider / syndicate / webmaster):`);
+    if (!newTier) return;
+    const valid = ["member","insider","syndicate","webmaster"];
+    if (!valid.includes(newTier.toLowerCase())) { showToast("Invalid tier: " + newTier, "error"); return; }
+    wmUpdateTier(uid, email, newTier.toLowerCase());
+  }
+
+  async function wmUpdateTier(uid, email, tier) {
+    try {
+      const token = auth.getToken ? auth.getToken() : (auth._token || localStorage.getItem("auth_token") || "");
+      const resp = await fetch(WM_API + "/webmaster/members/" + uid + "/tier", {
+        method: "PUT",
+        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+        body: JSON.stringify({ tier })
+      });
+      if (!resp.ok) throw new Error(await resp.text());
+      showToast("✓ " + email + " → " + tier, "success");
+      wmLoadMembers(); // refresh table
+    } catch(e) { showToast("Error: " + e.message, "error"); }
+  }
+
+  function wmShowUserDetail(uid, email) {
+    document.getElementById("wmLookupEmail").value = email;
+    wmTab("lookup", document.querySelector('.wm-tab[onclick*="lookup"]'));
+    wmLookupUser();
+  }
+
+  async function wmLoadSystem() {
+    try {
+      const data = await wmFetch("/webmaster/system");
+      // Status panel
+      const services = [
+        { name: "Backend API (Cloud Run)", ok: data.db_status === "healthy" },
+        { name: "Database (Supabase)", ok: data.db_status === "healthy", sub: data.db_latency_ms != null ? data.db_latency_ms + "ms" : null },
+      ];
+      document.getElementById("wmSysStatus").innerHTML = services.map(s=>`
+        <div class="wm-row">
+          <span><span class="wm-dot ${s.ok?"g":"y"}"></span>${s.name}</span>
+          <span style="color:${s.ok?"#22d3ae":"#f59e0b"};font-size:11px">${s.ok?"Operational":"Degraded"}${s.sub?" · "+s.sub:""}</span>
+        </div>`).join("") + `<div class="wm-row"><span class="wm-row-label">Checked at</span><span style="font-size:11px">${new Date().toLocaleTimeString()}</span></div>`;
+      // Data freshness
+      const fresh = data.data_freshness || [];
+      document.getElementById("wmDataFresh").innerHTML = fresh.length
+        ? fresh.map(f=>`<div class="wm-row"><span class="wm-row-label">${f.platform} tracker</span><span style="font-size:11px">${f.last_refresh?new Date(f.last_refresh).toLocaleString():"No data"} · ${f.records} records</span></div>`).join("")
+        : '<div style="color:var(--muted);font-size:12px;padding:8px 0">No tracker data yet</div>';
+      // Stats
+      document.getElementById("wmSysStats").innerHTML = `
+        <div class="wm-row"><span class="wm-row-label">Total users in DB</span><span>${(data.total_users||0).toLocaleString()}</span></div>
+        <div class="wm-row"><span class="wm-row-label">DB latency</span><span>${data.db_latency_ms != null ? data.db_latency_ms + "ms" : "—"}</span></div>
+        <div class="wm-row"><span class="wm-row-label">Server time (UTC)</span><span style="font-size:11px;font-family:monospace">${data.timestamp||"—"}</span></div>`;
+      _wmLoaded.system = true;
+    } catch(e) { console.error("wmLoadSystem", e); }
+  }
+
   document.addEventListener("DOMContentLoaded",init);
 </script>
 </body>

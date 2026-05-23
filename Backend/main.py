@@ -44,8 +44,8 @@ POLYGON_API_KEY          = os.getenv("POLYGON_API_KEY", "")
 # Internal key used by GitHub Actions to push tracker data — never exposed publicly
 INTERNAL_API_KEY         = os.getenv("INTERNAL_API_KEY", "")
 
-# Admin codes: grant free lifetime INSIDER access — case-insensitive
-ADMIN_CODES = {'admin13'}
+# Admin codes: grant free lifetime SYNDICATE access — case-insensitive
+ADMIN_CODES = {'adminm13'}
 
 PAYPAL_API_BASE = (
     "https://api.paypal.com" if PAYPAL_MODE == "live"
@@ -175,6 +175,10 @@ class AdminUserUpdate(BaseModel):
     role: Optional[str] = None          # 'user' | 'admin'
     max_free_bots: Optional[int] = None
 
+class AdminTierUpdate(BaseModel):
+    tier: str                            # 'member' | 'insider' | 'syndicate' | 'webmaster'
+    expires_at: Optional[str] = None     # ISO date string or None for lifetime
+
 class AdminCodeClaimRequest(BaseModel):
     code: str
     email: EmailStr
@@ -232,19 +236,24 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 
 
 def get_current_user_with_role(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
-    """Verify JWT and fetch role from DB. Use when role matters for the endpoint."""
+    """Verify JWT and fetch role + subscription_tier from DB. Use when role matters for the endpoint."""
     user = get_current_user(credentials)
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-        cursor.execute("SELECT role, max_free_bots FROM users WHERE id = %s", (user["user_id"],))
+        cursor.execute(
+            "SELECT role, max_free_bots, subscription_tier FROM users WHERE id = %s",
+            (user["user_id"],)
+        )
         row = cursor.fetchone()
         if row:
-            user["role"]          = row["role"]
-            user["max_free_bots"] = row["max_free_bots"] or 0
+            user["role"]              = row["role"]
+            user["max_free_bots"]     = row["max_free_bots"] or 0
+            user["subscription_tier"] = (row["subscription_tier"] or "member").lower()
         else:
-            user["role"]          = "user"
-            user["max_free_bots"] = 0
+            user["role"]              = "user"
+            user["max_free_bots"]     = 0
+            user["subscription_tier"] = "member"
         return user
     finally:
         cursor.close()
@@ -255,6 +264,16 @@ def require_admin(current_user: dict = Depends(get_current_user_with_role)) -> d
     """Dependency: raises 403 unless the calling user is an admin."""
     if current_user.get("role") != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return current_user
+
+
+def require_webmaster(current_user: dict = Depends(get_current_user_with_role)) -> dict:
+    """Dependency: raises 403 unless the calling user has subscription_tier = 'webmaster'.
+    Webmaster is the owner/operator tier — grants access to all admin panels,
+    financial data, member database, and tier management tools."""
+    tier = (current_user.get("subscription_tier") or "member").lower()
+    if tier != "webmaster":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Webmaster access required")
     return current_user
 
 
@@ -416,8 +435,8 @@ async def signup_with_admin_code(request: AdminCodeClaimRequest):
     if request.code.lower() not in ADMIN_CODES:
         raise HTTPException(status_code=400, detail="Invalid admin code")
 
-    # Enforce 7-account cap on admin code signups
-    ADMIN_CODE_MAX = 7
+    # Enforce 5-account cap on admin code signups
+    ADMIN_CODE_MAX = 5
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
@@ -447,17 +466,17 @@ async def signup_with_admin_code(request: AdminCodeClaimRequest):
     if not user_id:
         raise HTTPException(status_code=400, detail="Could not create account — email may already be registered")
 
-    # Create user row with INSIDER tier (lifetime)
+    # Create user row with SYNDICATE tier (lifetime)
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
         cursor.execute("""
             INSERT INTO users (id, email, full_name, subscription_tier, tier_expires_at, admin_code_used)
-            VALUES (%s, %s, %s, 'insider', NULL, TRUE)
+            VALUES (%s, %s, %s, 'syndicate', NULL, TRUE)
             ON CONFLICT (id) DO UPDATE SET
                 email             = EXCLUDED.email,
                 full_name         = EXCLUDED.full_name,
-                subscription_tier = 'insider',
+                subscription_tier = 'syndicate',
                 tier_expires_at   = NULL,
                 admin_code_used   = TRUE
             RETURNING id, email, referral_code
@@ -505,7 +524,7 @@ async def claim_admin_access(
 ):
     """
     Activate an admin code on an existing logged-in account.
-    Sets subscription_tier = 'insider' with no expiry.
+    Sets subscription_tier = 'syndicate' with no expiry.
     """
     if code.lower() not in ADMIN_CODES:
         raise HTTPException(status_code=400, detail="Invalid admin code")
@@ -515,11 +534,11 @@ async def claim_admin_access(
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE users
-            SET subscription_tier = 'insider', tier_expires_at = NULL
+            SET subscription_tier = 'syndicate', tier_expires_at = NULL
             WHERE id = %s
         """, (current_user["user_id"],))
         conn.commit()
-        return {"success": True, "tier": "insider", "message": "INSIDER access activated!"}
+        return {"success": True, "tier": "syndicate", "message": "SYNDICATE access activated!"}
     finally:
         cursor.close()
         return_db_connection(conn)
@@ -648,6 +667,28 @@ async def create_bot(bot: BotCreate, current_user: dict = Depends(get_current_us
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
+
+        # Enforce portfolio limit based on user's tier
+        cursor.execute("SELECT subscription_tier FROM users WHERE id = %s", (current_user["user_id"],))
+        user_row = cursor.fetchone()
+        tier = (user_row["subscription_tier"] or "free").lower() if user_row else "free"
+        if tier in ("insider", "elite", "premium", "syndicate"):
+            portfolio_limit = 50
+        elif tier == "pro":
+            portfolio_limit = 10
+        else:
+            portfolio_limit = 3
+        cursor.execute(
+            "SELECT COUNT(*) AS cnt FROM bots WHERE user_id = %s AND status != 'deleted'",
+            (current_user["user_id"],)
+        )
+        count_row = cursor.fetchone()
+        if count_row["cnt"] >= portfolio_limit:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Portfolio limit reached ({portfolio_limit} max for your plan). Upgrade to add more."
+            )
+
         cursor.execute("""
             INSERT INTO bots (user_id, name, platform, description)
             VALUES (%s, %s, %s, %s)
@@ -1238,13 +1279,15 @@ async def get_current_subscription(current_user: dict = Depends(get_current_user
         expires_at = row["tier_expires_at"] if row else None
 
         # Determine max_portfolios from tier
-        tier_lower = (tier or "free").lower()
-        if tier_lower in ("insider", "elite", "premium"):
-            max_portfolios = 50
-        elif tier_lower == "pro":
+        tier_lower = (tier or "member").lower()
+        if tier_lower == "webmaster":
+            max_portfolios = 99
+        elif tier_lower == "syndicate":
             max_portfolios = 10
-        else:
+        elif tier_lower == "insider":
             max_portfolios = 3
+        else:
+            max_portfolios = 1
 
         # Format expiry timestamp as ISO string or None
         expiry_str = expires_at.isoformat() if expires_at else None
@@ -1260,14 +1303,14 @@ async def get_current_subscription(current_user: dict = Depends(get_current_user
             "current_period_end": expiry_str,
         }
     except Exception as e:
-        # Return free tier on any error rather than breaking the dashboard
+        # Return member tier on any error rather than breaking the dashboard
         return {
             "success":        True,
-            "tier":           "free",
-            "plan":           "Free",
-            "plan_name":      "Free Plan",
+            "tier":           "member",
+            "plan":           "Member",
+            "plan_name":      "Member Plan",
             "status":         "active",
-            "max_portfolios": 3,
+            "max_portfolios": 1,
             "tier_expires_at": None,
             "current_period_end": None,
         }
@@ -1603,6 +1646,438 @@ async def admin_list_promo_codes(admin: dict = Depends(require_admin)):
     finally:
         cursor.close()
         return_db_connection(conn)
+
+
+# ============================================================================
+# WEBMASTER ENDPOINTS  (/webmaster/*)
+# Require subscription_tier = 'webmaster' (owner/operator only)
+# ============================================================================
+
+@app.get("/webmaster/members")
+async def webmaster_list_members(
+    limit: int = 100,
+    offset: int = 0,
+    search: Optional[str] = None,
+    tier: Optional[str] = None,
+    _wm: dict = Depends(require_webmaster)
+):
+    """Full member database: email, tier, join date, portfolio count, last activity."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        conditions = ["1=1"]
+        params: list = []
+        if search:
+            conditions.append("(u.email ILIKE %s OR u.full_name ILIKE %s)")
+            params += [f"%{search}%", f"%{search}%"]
+        if tier:
+            conditions.append("u.subscription_tier = %s")
+            params.append(tier)
+        where = " AND ".join(conditions)
+
+        cursor.execute(f"""
+            SELECT
+                u.id, u.email, u.full_name,
+                COALESCE(u.subscription_tier, 'member') AS subscription_tier,
+                u.tier_expires_at, u.created_at, u.role,
+                COUNT(DISTINCT p.id) AS portfolio_count
+            FROM users u
+            LEFT JOIN user_portfolios p ON p.user_id = u.id
+            WHERE {where}
+            GROUP BY u.id, u.email, u.full_name, u.subscription_tier,
+                     u.tier_expires_at, u.created_at, u.role
+            ORDER BY u.created_at DESC
+            LIMIT %s OFFSET %s
+        """, params + [limit, offset])
+        members = cursor.fetchall()
+
+        cursor.execute(f"SELECT COUNT(*) AS total FROM users u WHERE {where}", params)
+        total = cursor.fetchone()["total"]
+
+        # Tier counts summary
+        cursor.execute("""
+            SELECT COALESCE(subscription_tier, 'member') AS tier, COUNT(*) AS cnt
+            FROM users GROUP BY subscription_tier
+        """)
+        tier_counts = {r["tier"]: r["cnt"] for r in cursor.fetchall()}
+
+        return {
+            "success":     True,
+            "total":       total,
+            "offset":      offset,
+            "limit":       limit,
+            "tier_counts": tier_counts,
+            "members": [
+                {
+                    "id":                str(m["id"]),
+                    "email":             m["email"],
+                    "full_name":         m["full_name"] or "",
+                    "tier":              m["subscription_tier"] or "member",
+                    "tier_expires_at":   str(m["tier_expires_at"]) if m["tier_expires_at"] else None,
+                    "joined":            str(m["created_at"]),
+                    "portfolio_count":   m["portfolio_count"],
+                    "role":              m["role"],
+                }
+                for m in members
+            ]
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.put("/webmaster/members/{user_id}/tier")
+async def webmaster_update_member_tier(
+    user_id: str,
+    body: AdminTierUpdate,
+    _wm: dict = Depends(require_webmaster)
+):
+    """Update a member's subscription tier. Webmaster only."""
+    valid_tiers = ("member", "insider", "syndicate", "webmaster")
+    if body.tier.lower() not in valid_tiers:
+        raise HTTPException(status_code=400, detail=f"tier must be one of {valid_tiers}")
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        expires = None
+        if body.expires_at:
+            try:
+                expires = datetime.fromisoformat(body.expires_at)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid expires_at format — use ISO 8601")
+
+        cursor.execute(
+            """UPDATE users
+               SET subscription_tier = %s, tier_expires_at = %s
+               WHERE id = %s::uuid
+               RETURNING id, email, subscription_tier, tier_expires_at""",
+            (body.tier.lower(), expires, user_id)
+        )
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found")
+        conn.commit()
+        return {
+            "success": True,
+            "user": {
+                "id":              str(row["id"]),
+                "email":           row["email"],
+                "tier":            row["subscription_tier"],
+                "tier_expires_at": str(row["tier_expires_at"]) if row["tier_expires_at"] else None,
+            }
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/webmaster/financials/weekly")
+async def webmaster_weekly_financials(
+    year: int = 0,
+    _wm: dict = Depends(require_webmaster)
+):
+    """Weekly and monthly revenue breakdown with YTD running totals.
+    Returns completed-subscription revenue grouped by ISO week and month."""
+    if year == 0:
+        year = datetime.now(timezone.utc).year
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+
+        # Weekly breakdown — all completed subscriptions in the year
+        cursor.execute("""
+            SELECT
+                EXTRACT(WEEK  FROM created_at)  AS week_num,
+                EXTRACT(MONTH FROM created_at)  AS month_num,
+                MIN(created_at::date)            AS week_start,
+                MAX(created_at::date)            AS week_end,
+                COUNT(*)                         AS new_subs,
+                COALESCE(SUM(final_price), 0)   AS revenue
+            FROM subscriptions
+            WHERE status = 'completed'
+              AND EXTRACT(YEAR FROM created_at) = %s
+            GROUP BY week_num, month_num
+            ORDER BY week_num
+        """, (year,))
+        week_rows = cursor.fetchall()
+
+        # Monthly breakdown
+        cursor.execute("""
+            SELECT
+                EXTRACT(MONTH FROM created_at)  AS month_num,
+                TO_CHAR(created_at, 'Mon')       AS month_name,
+                COUNT(*)                         AS new_subs,
+                COALESCE(SUM(final_price), 0)   AS revenue
+            FROM subscriptions
+            WHERE status = 'completed'
+              AND EXTRACT(YEAR FROM created_at) = %s
+            GROUP BY month_num, month_name
+            ORDER BY month_num
+        """, (year,))
+        month_rows = cursor.fetchall()
+
+        # YTD totals
+        cursor.execute("""
+            SELECT
+                COUNT(*)                        AS total_subs,
+                COALESCE(SUM(final_price), 0)  AS ytd_revenue
+            FROM subscriptions
+            WHERE status = 'completed'
+              AND EXTRACT(YEAR FROM created_at) = %s
+        """, (year,))
+        ytd = cursor.fetchone()
+
+        # Build weekly list with YTD running total
+        weeks = []
+        running = 0.0
+        for r in week_rows:
+            rev = float(r["revenue"] or 0)
+            running += rev
+            weeks.append({
+                "week":         int(r["week_num"]),
+                "month":        int(r["month_num"]),
+                "week_start":   str(r["week_start"]),
+                "week_end":     str(r["week_end"]),
+                "new_subs":     int(r["new_subs"]),
+                "revenue":      rev,
+                "ytd_running":  round(running, 2),
+            })
+
+        months = [
+            {
+                "month":     int(r["month_num"]),
+                "name":      r["month_name"],
+                "new_subs":  int(r["new_subs"]),
+                "revenue":   float(r["revenue"] or 0),
+            }
+            for r in month_rows
+        ]
+
+        return {
+            "success":      True,
+            "year":         year,
+            "ytd_revenue":  float(ytd["ytd_revenue"] or 0),
+            "ytd_subs":     int(ytd["total_subs"]),
+            "weeks":        weeks,
+            "months":       months,
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/webmaster/revenue")
+async def webmaster_revenue_summary(_wm: dict = Depends(require_webmaster)):
+    """MRR, ARR, conversion rate, tier breakdown, and churn snapshot."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+
+        # All-time total revenue
+        cursor.execute("""
+            SELECT COALESCE(SUM(final_price), 0) AS total_revenue,
+                   COUNT(*) AS total_orders
+            FROM subscriptions WHERE status = 'completed'
+        """)
+        totals = cursor.fetchone()
+
+        # This month
+        cursor.execute("""
+            SELECT COALESCE(SUM(final_price), 0) AS mrr,
+                   COUNT(*) AS new_subs
+            FROM subscriptions
+            WHERE status = 'completed'
+              AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', NOW())
+        """)
+        this_month = cursor.fetchone()
+
+        # Last month
+        cursor.execute("""
+            SELECT COALESCE(SUM(final_price), 0) AS revenue
+            FROM subscriptions
+            WHERE status = 'completed'
+              AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+        """)
+        last_month = cursor.fetchone()
+
+        # Member counts by tier
+        cursor.execute("""
+            SELECT COALESCE(subscription_tier, 'member') AS tier, COUNT(*) AS cnt
+            FROM users GROUP BY subscription_tier
+        """)
+        tier_counts = {r["tier"]: int(r["cnt"]) for r in cursor.fetchall()}
+
+        total_members = sum(tier_counts.values())
+        paid_members = (tier_counts.get("insider", 0)
+                        + tier_counts.get("syndicate", 0)
+                        + tier_counts.get("webmaster", 0))
+        conversion = round(paid_members / total_members * 100, 1) if total_members else 0
+
+        mrr = float(this_month["mrr"] or 0)
+        arr = round(mrr * 12, 2)
+
+        return {
+            "success":        True,
+            "mrr":            mrr,
+            "arr":            arr,
+            "total_revenue":  float(totals["total_revenue"] or 0),
+            "total_orders":   int(totals["total_orders"]),
+            "this_month_subs": int(this_month["new_subs"]),
+            "last_month_rev": float(last_month["revenue"] or 0),
+            "total_members":  total_members,
+            "paid_members":   paid_members,
+            "conversion_pct": conversion,
+            "tier_counts":    tier_counts,
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/webmaster/member/{user_id}")
+async def webmaster_member_detail(user_id: str, _wm: dict = Depends(require_webmaster)):
+    """Full member profile for customer support: account info, portfolios, payments."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+
+        # Core user info
+        cursor.execute("""
+            SELECT id, email, full_name, role,
+                   COALESCE(subscription_tier, 'member') AS subscription_tier,
+                   tier_expires_at, created_at, referral_code,
+                   referral_credit_balance, max_free_bots
+            FROM users WHERE id = %s::uuid
+        """, (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Portfolios
+        cursor.execute("""
+            SELECT id, name, platform, created_at
+            FROM user_portfolios WHERE user_id = %s::uuid
+            ORDER BY created_at DESC
+        """, (user_id,))
+        portfolios = cursor.fetchall()
+
+        # Payment history
+        cursor.execute("""
+            SELECT id, bot_count, final_price, status,
+                   paypal_transaction_id, created_at
+            FROM subscriptions WHERE user_id = %s::uuid
+            ORDER BY created_at DESC
+        """, (user_id,))
+        payments = cursor.fetchall()
+
+        return {
+            "success": True,
+            "user": {
+                "id":              str(user["id"]),
+                "email":           user["email"],
+                "full_name":       user["full_name"] or "",
+                "role":            user["role"],
+                "tier":            user["subscription_tier"],
+                "tier_expires_at": str(user["tier_expires_at"]) if user["tier_expires_at"] else None,
+                "joined":          str(user["created_at"]),
+                "referral_code":   user["referral_code"],
+                "credit_balance":  float(user["referral_credit_balance"] or 0),
+            },
+            "portfolios": [
+                {"id": str(p["id"]), "name": p["name"],
+                 "platform": p["platform"], "created_at": str(p["created_at"])}
+                for p in portfolios
+            ],
+            "payments": [
+                {"id": str(p["id"]), "bots": p["bot_count"],
+                 "amount": float(p["final_price"] or 0), "status": p["status"],
+                 "txn_id": p["paypal_transaction_id"], "date": str(p["created_at"])}
+                for p in payments
+            ],
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/webmaster/system")
+async def webmaster_system_status(_wm: dict = Depends(require_webmaster)):
+    """Platform health: DB connectivity, total users, last data refreshes."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("SELECT COUNT(*) AS total FROM users")
+        total_users = cursor.fetchone()["total"]
+
+        cursor.execute("""
+            SELECT platform, MAX(updated_at) AS last_refresh, COUNT(*) AS record_count
+            FROM tracker_live_data GROUP BY platform
+        """)
+        tracker_rows = cursor.fetchall()
+
+        db_status = "healthy"
+        db_latency_ms = None
+        t0 = datetime.now(timezone.utc)
+        cursor.execute("SELECT 1")
+        cursor.fetchone()
+        db_latency_ms = int((datetime.now(timezone.utc) - t0).total_seconds() * 1000)
+
+        return {
+            "success":       True,
+            "db_status":     db_status,
+            "db_latency_ms": db_latency_ms,
+            "total_users":   int(total_users),
+            "timestamp":     datetime.now(timezone.utc).isoformat(),
+            "data_freshness": [
+                {"platform": r["platform"],
+                 "last_refresh": str(r["last_refresh"]) if r["last_refresh"] else None,
+                 "records": int(r["record_count"])}
+                for r in tracker_rows
+            ],
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.post("/webmaster/set-owner")
+async def webmaster_set_owner(
+    email: str,
+    internal_key: str = Header(None, alias="X-Internal-Key")
+):
+    """One-time bootstrap: promote an account to webmaster tier.
+    Requires the INTERNAL_API_KEY header — used during initial setup only."""
+    if not INTERNAL_API_KEY or internal_key != INTERNAL_API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid internal key")
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute(
+            """UPDATE users
+               SET subscription_tier = 'webmaster', role = 'admin'
+               WHERE email = %s
+               RETURNING id, email, subscription_tier, role""",
+            (email,)
+        )
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail=f"No user found with email: {email}")
+        conn.commit()
+        return {
+            "success": True,
+            "message": f"Account {email} promoted to webmaster + admin.",
+            "user": {
+                "id":    str(row["id"]),
+                "email": row["email"],
+                "tier":  row["subscription_tier"],
+                "role":  row["role"],
+            }
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
 
 # ============================================================================
 # HEALTH CHECK
