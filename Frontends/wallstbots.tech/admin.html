@@ -12,7 +12,7 @@
       --purple: #a855f7;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; overflow-x: hidden; }
     a { color: var(--blue); text-decoration: none; }
 
     /* ── Layout ── */
@@ -83,6 +83,29 @@
     .error   { color: var(--red);   text-align: center; padding: 20px; font-size: 13px; }
     .section { display: none; }
     .section.active { display: block; }
+
+    /* ── Mobile ── */
+    @media (max-width: 700px) {
+      .admin-wrap { padding: 16px 12px; }
+      .admin-header { flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding-bottom: 14px; }
+      .admin-header h1 { font-size: 18px; }
+      .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; padding-bottom: 0; scrollbar-width: none; }
+      .tabs::-webkit-scrollbar { display: none; }
+      .tab { flex-shrink: 0; padding: 10px 14px; font-size: 12px; white-space: nowrap; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+      .stat-card { padding: 14px; }
+      .stat-card .value { font-size: 22px; }
+      .search-row { flex-direction: column; gap: 8px; }
+      .search-row button { width: 100%; padding: 12px; }
+      .search-row input { padding: 12px; font-size: 14px; }
+      .pager { flex-wrap: wrap; gap: 8px; }
+      .panel { padding: 14px; }
+    }
+    @media (max-width: 420px) {
+      .stat-grid { grid-template-columns: 1fr; }
+      .admin-header { gap: 8px; }
+      #adminEmail { display: none; }
+    }
   </style>
 </head>
 <body>
