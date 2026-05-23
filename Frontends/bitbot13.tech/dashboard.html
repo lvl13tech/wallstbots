@@ -239,9 +239,9 @@
       background: var(--accent);
       color: var(--bg);
     }
-    .tier-badge.free { background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
-    .tier-badge.pro { background: #7c3aed; color: #fff; }
-    .tier-badge.elite { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; }
+    .tier-badge.member { background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
+    .tier-badge.insider { background: #7c3aed; color: #fff; }
+    .tier-badge.syndicate { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; }
     .tier-name { font-weight: 600; font-size: 0.95rem; }
     .usage-row {
       display: flex;
@@ -1136,18 +1136,18 @@
 
   function renderSubscription() {
     if (!subscription) return;
-    const plan = subscription.plan_name || subscription.plan || subscription.tier || "Free";
+    const plan = subscription.plan_name || subscription.plan || subscription.tier || "Member";
     const planLower = plan.toLowerCase();
 
     // Determine max portfolios from plan
-    if (planLower.includes("elite") || planLower.includes("premium")) maxPortfolios = 50;
-    else if (planLower.includes("pro")) maxPortfolios = 10;
-    else maxPortfolios = 3;
+    if (planLower.includes("syndicate")) maxPortfolios = 10;
+    else if (planLower.includes("insider")) maxPortfolios = 3;
+    else maxPortfolios = 1;
 
     // Tier badge class
-    let badgeClass = "free";
-    if (planLower.includes("elite") || planLower.includes("premium")) badgeClass = "elite";
-    else if (planLower.includes("pro")) badgeClass = "pro";
+    let badgeClass = "member";
+    if (planLower.includes("syndicate")) badgeClass = "syndicate";
+    else if (planLower.includes("insider")) badgeClass = "insider";
 
     document.getElementById("drawerTierBadge").textContent = plan;
     document.getElementById("drawerTierBadge").className = "tier-badge " + badgeClass;
