@@ -411,7 +411,53 @@
     .toast.error { border-color: var(--red); color: var(--red); }
 
     @media (max-width: 600px) { .header-inner { gap: 10px; } nav { display: none; } .stats-bar { grid-template-columns: 1fr 1fr; } }
-  </style>
+  
+    /* ─── HAMBURGER / MOBILE NAV ─── */
+    .ham-btn {
+      display: none; background: none; border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px 10px; cursor: pointer; color: var(--text);
+      margin-left: auto; flex-shrink: 0;
+    }
+    .ham-btn svg { width: 18px; height: 18px; display: block; }
+    .mob-nav {
+      display: none; position: fixed; top: 60px; left: 0; right: 0;
+      background: var(--panel); border-bottom: 1px solid var(--border);
+      z-index: 199; padding: 8px 16px 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .mob-nav a { display: block; padding: 11px 14px; border-radius: 8px; font-size: 0.9rem; color: var(--muted); transition: all 0.15s; }
+    .mob-nav a:hover, .mob-nav a.active { color: var(--text); background: var(--panel2); }
+    .mob-nav-sep { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
+    .mob-nav-overlay { display: none; position: fixed; inset: 0; top: 60px; z-index: 198; }
+    .mob-nav.open, .mob-nav-overlay.open { display: block; }
+
+    /* ─── WEBMASTER MOBILE ─── */
+    @media (max-width: 768px) {
+      .wm-two-col { grid-template-columns: 1fr !important; }
+      .wm-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .wm-table { min-width: 500px; }
+      .wm-search { flex-wrap: wrap; gap: 6px; }
+      .wm-search input { min-width: 0; flex: 1 1 180px; }
+      .wm-search button { flex-shrink: 0; }
+      .wm-tabs { overflow-x: auto; flex-wrap: nowrap !important; padding-bottom: 4px; }
+      .wm-tab { white-space: nowrap; flex-shrink: 0; }
+      .wm-kpi-grid { grid-template-columns: 1fr 1fr; }
+      .wm-month-grid { grid-template-columns: repeat(3, 1fr) !important; }
+    }
+    @media (max-width: 600px) {
+      .ham-btn { display: flex; align-items: center; }
+      nav { display: none; }
+      .header-inner { gap: 8px; }
+      .stats-bar { grid-template-columns: 1fr 1fr; }
+      .session-summary { grid-template-columns: 1fr 1fr; }
+      .wm-section { padding: 16px 12px; }
+      .wm-kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .wm-kpi { padding: 12px; }
+      .wm-kpi-val { font-size: 1.1rem; }
+      .wm-table { min-width: 440px; font-size: 11px; }
+      .wm-table th, .wm-table td { padding: 7px 8px; }
+    }
+</style>
 </head>
 <body>
 
@@ -425,6 +471,15 @@
       <a href="news.html">News</a>
       <a href="#" id="wmNavLink" style="display:none;color:#a78bfa" onclick="toggleWmSection(event)">⚡ Command</a>
     </nav>
+
+    <!-- Mobile menu button -->
+    <button class="ham-btn" id="hamBtn" onclick="toggleMobNav()" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
 
     <div class="platform-switcher">
       <button class="platform-btn" id="platformBtn" onclick="togglePlatformMenu()">
@@ -459,6 +514,16 @@
     <button class="account-btn" onclick="openDrawer()">My Account</button>
   </div>
 </header>
+
+<!-- ─── MOBILE NAV ─── -->
+<div class="mob-nav" id="mobNav">
+  <a href="dashboard.html" class="active">Portfolios</a>
+  <a href="markets.html">Markets</a>
+  <a href="news.html">News</a>
+  <hr class="mob-nav-sep">
+  <a href="#" id="wmNavLinkMob" style="display:none;color:#a78bfa" onclick="closeMobNav();toggleWmSection(event)">⚡ Command Center</a>
+</div>
+<div class="mob-nav-overlay" id="mobNavOverlay" onclick="closeMobNav()"></div>
 
 <!-- ─── ACCOUNT DRAWER ─── -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
@@ -496,7 +561,7 @@
     <div class="referral-stats"><span id="drawerRefCount">0</span> referrals · Earn 1 free month per 3 referrals</div>
   </div>
   <div class="drawer-section">
-    <a href="https://billing.stripe.com/p/login/test" target="_blank" class="manage-link">Manage Subscription →</a>
+    <button onclick="openSubModal()" class="manage-sub-btn">Manage Subscription →</button>
   </div>
 </div>
 
@@ -508,6 +573,46 @@
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closePwModal()">Cancel</button>
       <button class="btn-confirm" id="pwConfirmBtn" onclick="sendPasswordReset()">Send Reset Link</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─── MANAGE SUBSCRIPTION MODAL ─── -->
+<div class="modal-overlay" id="subModal" onclick="if(event.target===this)closeSubModal()">
+  <div class="modal-box sub-modal-box">
+    <div class="sub-modal-header">
+      <h3>Manage Subscription</h3>
+      <button class="sub-modal-close" onclick="closeSubModal()">✕</button>
+    </div>
+    <div class="sub-card">
+      <div>
+        <div class="sub-card-label">Current Plan</div>
+        <div class="sub-card-value" id="subModalPlan">—</div>
+      </div>
+      <span class="sub-status-badge" id="subModalStatus">Active</span>
+    </div>
+    <div class="sub-card">
+      <div class="sub-card-label">Next Renewal</div>
+      <div class="sub-card-value" id="subModalRenewal">—</div>
+    </div>
+    <div class="sub-actions">
+      <a href="https://www.paypal.com/myaccount/autopay/" target="_blank" class="btn-paypal">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15" style="flex-shrink:0"><path d="M7.076 21.337H2.47a.641.641 0 01-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 00-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 00-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 00.554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 01.923-.788h.58c3.76 0 6.705-1.528 7.566-5.946.36-1.847.174-3.388-.778-4.471z"/></svg>
+        Manage on PayPal
+      </a>
+    </div>
+    <div class="sub-divider"></div>
+    <div class="sub-section">
+      <div class="sub-section-title">Upgrade Plan</div>
+      <div class="sub-section-body">To upgrade, cancel your current PayPal subscription then subscribe to a higher tier from the pricing page.</div>
+      <a href="/" class="sub-link">View Plans →</a>
+    </div>
+    <div class="sub-divider"></div>
+    <div class="sub-section">
+      <div class="sub-section-title">Cancel Subscription</div>
+      <div class="sub-section-body">To cancel, remove the automatic payment in your PayPal account. Access continues until the end of the current billing period.</div>
+      <a href="https://www.paypal.com/myaccount/autopay/" target="_blank" class="sub-link cancel-link">Cancel on PayPal →</a>
     </div>
   </div>
 </div>
@@ -592,14 +697,9 @@
   <div class="section-title">📡 Live Bot Session</div>
   <div id="botSessionBanner" class="session-banner">
     <div class="session-banner-dot"></div>
-    <div class="skeleton" style="width:130px;height:14px"></div>
-    <span class="session-banner-hours"><div class="skeleton" style="width:90px;height:12px"></div></span>
+    <span class="session-banner-label" style="color:var(--muted)">Loading session…</span>
   </div>
-  <div class="session-summary" id="botSessionSummary">
-    <div class="session-stat"><div class="session-stat-label">Session Open</div><div class="skeleton" style="width:80px;height:22px;margin:4px 0"></div></div>
-    <div class="session-stat"><div class="session-stat-label">Current Value</div><div class="skeleton" style="width:90px;height:22px;margin:4px 0"></div></div>
-    <div class="session-stat"><div class="session-stat-label">Session P&amp;L</div><div class="skeleton" style="width:70px;height:22px;margin:4px 0"></div></div>
-    <div class="session-stat"><div class="session-stat-label">All-Time P&amp;L</div><div class="skeleton" style="width:80px;height:22px;margin:4px 0"></div></div>
+  <div class="session-summary" id="botSessionSummary" style="display:none">
   </div>
   <div id="botPosContainer" style="margin-bottom:32px">
     <div class="bot-pos-empty">Loading positions…</div>
@@ -797,6 +897,8 @@
 
   async function init() {
     try { await Promise.all([loadProfile(), loadSubscription()]); } catch(e) {}
+    checkWebmaster();
+    renderSubscription();
     await loadPortfolios();
     loadNews();
     loadBotSession();
@@ -817,18 +919,23 @@
     if (!subscription) return;
     const plan = subscription.plan_name || subscription.plan || subscription.tier || "Member";
     const planLower = plan.toLowerCase();
-    if (planLower.includes("webmaster")) maxPortfolios = 99;
+    const isWM = planLower.includes("webmaster") ||
+      ((userProfile?.tier||"").toLowerCase().includes("webmaster")) ||
+      ((userProfile?.role||"").toLowerCase() === "admin");
+    if (isWM) maxPortfolios = 99;
     else if (planLower.includes("syndicate")) maxPortfolios = 10;
     else if (planLower.includes("insider")) maxPortfolios = 3;
     else maxPortfolios = 1;
     let badgeClass = "member";
-    if (planLower.includes("webmaster")) badgeClass = "webmaster";
+    if (isWM) badgeClass = "webmaster";
     else if (planLower.includes("syndicate")) badgeClass = "syndicate";
     else if (planLower.includes("insider")) badgeClass = "insider";
-    // Show Command Center nav for webmaster only
-    if (planLower.includes("webmaster")) {
+    // Show Command Center nav for webmaster
+    if (isWM) {
       const link = document.getElementById("wmNavLink");
       if (link) link.style.display = "";
+      const mob = document.getElementById("wmNavLinkMob");
+      if (mob) mob.style.display = "";
     }
     document.getElementById("drawerTierBadge").textContent = plan;
     document.getElementById("drawerTierBadge").className = "tier-badge " + badgeClass;
@@ -1437,7 +1544,54 @@
     } catch(e) { console.error("wmLoadSystem", e); }
   }
 
+
+
+  function checkWebmaster() {
+    const subPlan = (subscription?.plan_name||subscription?.plan||subscription?.tier||"").toLowerCase();
+    const profTier = (userProfile?.tier||"").toLowerCase();
+    const profRole = (userProfile?.role||"").toLowerCase();
+    const isWM = subPlan.includes("webmaster") || profTier.includes("webmaster") || profRole === "admin";
+    if (isWM) {
+      const link = document.getElementById("wmNavLink"); if(link) link.style.display="";
+      const mob = document.getElementById("wmNavLinkMob"); if(mob) mob.style.display="";
+    }
+  }
+
+  // ── MOBILE NAV ────────────────────────────────────────────────────────────
+  function toggleMobNav() {
+    document.getElementById("mobNav").classList.toggle("open");
+    document.getElementById("mobNavOverlay").classList.toggle("open");
+  }
+  function closeMobNav() {
+    document.getElementById("mobNav").classList.remove("open");
+    document.getElementById("mobNavOverlay").classList.remove("open");
+  }
+
   document.addEventListener("DOMContentLoaded",init);
+
+  function openSubModal() {
+    const sub = subscription || {};
+    const plan = sub.plan_name || sub.plan || sub.tier || "Member Plan";
+    const status = (sub.status || "active").toLowerCase();
+    const billDate = sub.current_period_end || sub.tier_expires_at || sub.next_billing_date || sub.renewal_date;
+    document.getElementById("subModalPlan").textContent = plan;
+    const sbadge = document.getElementById("subModalStatus");
+    sbadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    sbadge.className = "sub-status-badge" + (status !== "active" ? " inactive" : "");
+    let dateStr = "—";
+    if (billDate) {
+      try {
+        const d = typeof billDate === "number" ? new Date(billDate * 1000) : new Date(billDate);
+        dateStr = d.toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+      } catch(e) {}
+    }
+    document.getElementById("subModalRenewal").textContent = dateStr;
+    document.getElementById("subModal").classList.add("open");
+  }
+  function closeSubModal() {
+    document.getElementById("subModal").classList.remove("open");
+  }
+
 </script>
 </body>
 </html>
