@@ -380,12 +380,18 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="auth.js"></script>
 <script src="api.js"></script>
 <script>
   // ── Per-site constants ──────────────────────────────────────────────────────
   const PLATFORM = "bitbot13";
   const SITE_TITLE = "BitBot13";
   // ───────────────────────────────────────────────────────────────────────────
+
+  const BACKEND_URL = "https://wallstbots-backend-868128114349.us-east1.run.app";
+  const auth = new WallStBotsAuth(BACKEND_URL);
+  const api  = new WallStBotsAPI(BACKEND_URL, auth);
+  if (!auth.isAuthenticated()) { window.location.href = "login.html"; }
 
   const BOT_ID = new URLSearchParams(window.location.search).get("id");
   if (!BOT_ID) { window.location.href = "dashboard.html"; }
@@ -400,22 +406,6 @@
     "#a855f7","#eab308","#22c55e","#f43f5e","#0ea5e9","#d946ef",
     "#fb923c","#4ade80"
   ];
-
-  // ── Auth ─────────────────────────────────────────────────────────────────────
-  const AUTH_KEY = "wsb_auth";
-  const WallStBotsAuth = window.WallStBotsAuth || {
-    getAuthHeader() {
-      try { const d = JSON.parse(localStorage.getItem(AUTH_KEY)||"{}"); return d.access_token ? {"Authorization":"Bearer "+d.access_token} : {}; }
-      catch(e){ return {}; }
-    },
-    async refreshTokenIfNeeded() {},
-    logout() { localStorage.removeItem(AUTH_KEY); window.location.href = "/login.html"; }
-  };
-
-  const api = new WallStBotsAPI(
-    "https://wallstbots-backend-868128114349.us-east1.run.app",
-    WallStBotsAuth
-  );
 
   // ── Init ────────────────────────────────────────────────────────────────────
   async function init() {

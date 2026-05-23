@@ -32,6 +32,7 @@ ALT_SITE    = ROOT.parent / "1. lvl13.tech" / "Project" / "public_html"  # stagi
 FILES_TO_UPLOAD = [
     "index.html",
     "dashboard.html",
+    "bot-detail.html",
     "admin.html",
     "login.html",
     "signup.html",
@@ -338,4 +339,6 @@ def main():
 
 
 if __name__ == "__main__":
+    main()
+__main__":
     main()
