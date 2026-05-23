@@ -365,6 +365,8 @@ function renderFund(fid) {
     strategyHTML = renderStrategyPanel(fid, data.current_strategy);
   }
 
+  const holdingCash = v.holding_cash === true;
+  const cashRow = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>';
   const positionRows = (v.positions || []).length
     ? v.positions.map(p => {
         const entry  = p.entry_price || p.entry || 0;
@@ -384,8 +386,8 @@ function renderFund(fid) {
           + '<td class="num '+cls(dayPnl)+'">'+fmtPct(dayPct)+'</td>'
           + '<td class="num '+cls(pnl)+'">'+fmt$0(pnl)+'</td>'
           + '<td class="num '+cls(pnlPct)+'">'+fmtPct(pnlPct)+'</td></tr>';
-      }).join('')
-    : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>';
+      }).join('') + (holdingCash ? cashRow : '')
+    : cashRow;
 
   $('app').innerHTML =
     '<div class="fund-head" style="margin-bottom:14px">'
