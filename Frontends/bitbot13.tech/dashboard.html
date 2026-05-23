@@ -1166,8 +1166,8 @@
     // Referral
     try {
       api.getReferralStats().then(r => {
-        const code = r?.referral_code || r?.code || "—";
-        const count = r?.referral_count || r?.count || 0;
+        const code = r?.referral_code || "—";
+        const count = r?.referred_count || r?.referral_count || 0;
         document.getElementById("drawerRefCode").textContent = code;
         document.getElementById("drawerRefCount").textContent = count;
       });
@@ -1196,8 +1196,8 @@
   /* ─── PORTFOLIOS ─── */
   async function loadPortfolios() {
     try {
-      const bots = await api.getBots();
-      allBots = (bots || []).filter(b => b.platform === PLATFORM);
+      const data = await api.getBots();
+      allBots = ((data?.bots || data) || []).filter(b => b.platform === PLATFORM);
       updateUsageDisplay(allBots.length);
       await loadPerformance();
       sortAndRender();
@@ -1212,7 +1212,7 @@
     );
     perf.forEach(r => {
       if (r.status === "fulfilled" && r.value) {
-        perfMap[r.value.id] = r.value.data;
+        perfMap[r.value.id] = r.value.data?.bot || r.value.data;
       }
     });
   }
@@ -1227,10 +1227,10 @@
   function sortPortfolios(sort) {
     allBots.sort((a, b) => {
       const pa = perfMap[a.id], pb = perfMap[b.id];
-      const va = pa?.portfolio_value || pa?.current_value || 0;
-      const vb = pb?.portfolio_value || pb?.current_value || 0;
-      const ra = pa?.total_return_pct || pa?.return_pct || 0;
-      const rb = pb?.total_return_pct || pb?.return_pct || 0;
+      const va = pa?.performance?.total_value || 0;
+      const vb = pb?.performance?.total_value || 0;
+      const ra = pa?.performance?.gain_loss_pct || 0;
+      const rb = pb?.performance?.gain_loss_pct || 0;
       if (sort === "value-desc") return vb - va;
       if (sort === "return-desc") return rb - ra;
       if (sort === "return-asc") return ra - rb;
@@ -1253,10 +1253,10 @@
     }
     grid.innerHTML = allBots.map(bot => {
       const p = perfMap[bot.id];
-      const value = p?.portfolio_value || p?.current_value || 0;
-      const retPct = p?.total_return_pct || p?.return_pct || 0;
-      const retDollar = p?.total_return || p?.return_dollar || 0;
-      const holdings = p?.holdings?.length || bot.holdings_count || 0;
+      const value = p?.performance?.total_value || 0;
+      const retPct = p?.performance?.gain_loss_pct || 0;
+      const retDollar = p?.performance?.gain_loss || 0;
+      const holdings = p?.holdings?.length || 0;
       const isPos = retPct >= 0;
       const fmtVal = value >= 1000 ? "$" + (value/1000).toFixed(1) + "k" : "$" + value.toFixed(0);
       const fmtRet = (isPos ? "+" : "") + retPct.toFixed(2) + "% (" + (isPos ? "+" : "") + "$" + Math.abs(retDollar).toFixed(0) + ")";
@@ -1286,8 +1286,8 @@
     allBots.forEach(b => {
       const p = perfMap[b.id];
       if (!p) return;
-      totalValue += p.portfolio_value || p.current_value || 0;
-      const r = p.total_return_pct || p.return_pct || 0;
+      totalValue += p?.performance?.total_value || 0;
+      const r = p?.performance?.gain_loss_pct || 0;
       if (r > bestRet) { bestRet = r; bestName = b.name; }
     });
     document.getElementById("statTotalValue").textContent = "$" + totalValue.toLocaleString("en-US", {minimumFractionDigits:0,maximumFractionDigits:0});

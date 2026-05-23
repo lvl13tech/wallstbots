@@ -1106,6 +1106,90 @@ async def get_user_subscription(
         cursor.close()
         return_db_connection(conn)
 
+
+@app.get("/subscriptions/current")
+async def get_current_subscription(current_user: dict = Depends(get_current_user)):
+    """
+    Return the current user's subscription tier and status.
+    Used by all three dashboards to populate the account drawer membership section.
+    """
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute(
+            "SELECT subscription_tier, tier_expires_at FROM users WHERE id = %s",
+            (current_user["user_id"],)
+        )
+        row = cursor.fetchone()
+        tier = row["subscription_tier"] if row else "free"
+        expires_at = row["tier_expires_at"] if row else None
+
+        # Determine max_portfolios from tier
+        tier_lower = (tier or "free").lower()
+        if tier_lower in ("insider", "elite", "premium"):
+            max_portfolios = 50
+        elif tier_lower == "pro":
+            max_portfolios = 10
+        else:
+            max_portfolios = 3
+
+        # Format expiry timestamp as ISO string or None
+        expiry_str = expires_at.isoformat() if expires_at else None
+
+        return {
+            "success":        True,
+            "tier":           tier,
+            "plan":           tier.capitalize(),
+            "plan_name":      tier.capitalize() + " Plan",
+            "status":         "active",
+            "max_portfolios": max_portfolios,
+            "tier_expires_at": expiry_str,
+            "current_period_end": expiry_str,
+        }
+    except Exception as e:
+        # Return free tier on any error rather than breaking the dashboard
+        return {
+            "success":        True,
+            "tier":           "free",
+            "plan":           "Free",
+            "plan_name":      "Free Plan",
+            "status":         "active",
+            "max_portfolios": 3,
+            "tier_expires_at": None,
+            "current_period_end": None,
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+class PasswordResetRequest(BaseModel):
+    email: str
+
+
+@app.post("/auth/password-reset")
+async def request_password_reset(body: PasswordResetRequest):
+    """
+    Trigger a Supabase password reset email for the given address.
+    Proxies to Supabase Auth /auth/v1/recover using the anon key.
+    Always returns success=True to avoid leaking whether an email exists.
+    """
+    try:
+        resp = requests.post(
+            f"{SUPABASE_URL}/auth/v1/recover",
+            headers={
+                "apikey": SUPABASE_ANON_KEY,
+                "Content-Type": "application/json",
+            },
+            json={"email": body.email},
+            timeout=10,
+        )
+        # Supabase returns 200 even if the email doesn't exist (security best practice)
+    except Exception as e:
+        pass  # Don't surface errors — always tell client "sent"
+    return {"success": True, "message": "If that email is registered, a reset link has been sent."}
+
+
 # ============================================================================
 # ADMIN ENDPOINTS  (/admin/*)
 # All require role = 'admin'

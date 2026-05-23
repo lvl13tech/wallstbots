@@ -8,7 +8,7 @@ echo.
 echo [1/2] Git push WallStBots repo (auto-deploys bitbot13 + wallstbots via Cloudflare)...
 cd /d "C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots"
 git add -A
-git commit -m "Enhanced dashboard: account drawer, platform switcher, membership stats, sort, ticker picker ($1k/security max 50); add searchStocks/getNews/requestPasswordReset to api.js"
+git commit -m "Fix dashboard data unwrapping + api.js endpoint paths; add /subscriptions/current + /auth/password-reset to backend; upgraded bot-detail.html all 3 sites (platform switcher, account drawer, doughnut chart, live stock search)"
 git push origin master
 echo.
 

@@ -235,7 +235,7 @@ class WallStBotsAPI {
    * Get user's referral code and stats
    */
   async getReferralStats() {
-    return this.request("/user/referral-stats", { method: "GET" });
+    return this.request("/account/referral", { method: "GET" });
   }
 
   // ========================================================================
@@ -247,7 +247,7 @@ class WallStBotsAPI {
    * @param {string} queryString - e.g. "?platform=lvl13&limit=6"
    */
   async getNews(queryString = "") {
-    return this.request(`/news${queryString}`, { method: "GET" });
+    return this.request(`/public/tracker/news${queryString}`, { method: "GET" });
   }
 
   // ========================================================================
