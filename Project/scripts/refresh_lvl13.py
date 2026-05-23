@@ -43,38 +43,35 @@ STATE_FILE = DATA_DIR / "state.json"
 
 # ── Universe ────────────────────────────────────────────────────────────────────
 UNIVERSE = [
-    "XOM","CVX","COP","FANG","OKLO",
-    "LIN","SHW","FCX","APD","ALB",
-    "CAT","RTX","HON","GE","ACHR",
-    "AMZN","TSLA","HD","IBTA","BIRK",
-    "WMT","PG","COST","CART","KR",
-    "LLY","JNJ","UNH","GRAL","SMMT",
-    "BRK.B","JPM","V","SOFI","AFRM",
-    "NVDA","AAPL","MSFT","ARM","ALAB",
-    "RBRK","GOOGL","META","NFLX","RDDT",
-    "SPOT","NEE","SO","DUK","VST",
-    "PLD","WELL","AMT","LINE","EQIX",
+    # AI Infrastructure & Semiconductors
+    "NVDA","AMD","INTC","ARM","ALAB","MRVL","AVGO","QCOM","SMCI","CRDO",
+    # AI Software & Cloud
+    "MSFT","GOOGL","META","AMZN","CRM","PLTR","AI","BBAI","SOUN","ORCL",
+    # Quantum Computing
+    "IONQ","RGTI","QBTS","QUBT","QTUM",
+    # AI-Powered Tech & Cybersecurity
+    "AAPL","TSLA","RBRK","NOW","SNOW","DDOG","NET","ZS","OKTA","PATH",
+    # Next-Gen Hardware & Space
+    "ACHR","JOBY","RKLB","ASTR","LUNR",
+    # AI Biotech & Health
+    "NVTS","RXRX","GRAL","SMMT","BLUE",
 ]
 
-YF_OVERRIDE = {"BRK.B": "BRK-B"}
-YF_TO_STATE = {"BRK-B": "BRK.B"}
+YF_OVERRIDE = {}
+YF_TO_STATE = {}
 
 SECTORS = {
-    "XOM":"ENERGY","CVX":"ENERGY","COP":"ENERGY","FANG":"ENERGY",
-    "OKLO":"UTILITIES",
-    "LIN":"MATERIALS","SHW":"MATERIALS","FCX":"MATERIALS","APD":"MATERIALS","ALB":"MATERIALS",
-    "CAT":"INDUSTRIALS","RTX":"INDUSTRIALS","HON":"INDUSTRIALS","GE":"INDUSTRIALS","ACHR":"INDUSTRIALS",
-    "AMZN":"CONSUMER DISCRETIONARY","TSLA":"CONSUMER DISCRETIONARY",
-    "HD":"CONSUMER DISCRETIONARY","IBTA":"CONSUMER DISCRETIONARY","BIRK":"CONSUMER DISCRETIONARY",
-    "WMT":"CONSUMER STAPLES","PG":"CONSUMER STAPLES","COST":"CONSUMER STAPLES",
-    "CART":"CONSUMER STAPLES","KR":"CONSUMER STAPLES",
-    "LLY":"HEALTH CARE","JNJ":"HEALTH CARE","UNH":"HEALTH CARE","GRAL":"HEALTH CARE","SMMT":"HEALTH CARE",
-    "BRK.B":"FINANCIALS","JPM":"FINANCIALS","V":"FINANCIALS","SOFI":"FINANCIALS","AFRM":"FINANCIALS",
-    "NVDA":"IT","AAPL":"IT","MSFT":"IT","ARM":"IT","ALAB":"IT","RBRK":"IT",
-    "GOOGL":"COMMUNICATION SERVICES","META":"COMMUNICATION SERVICES",
-    "NFLX":"COMMUNICATION SERVICES","RDDT":"COMMUNICATION SERVICES","SPOT":"COMMUNICATION SERVICES",
-    "NEE":"UTILITIES","SO":"UTILITIES","DUK":"UTILITIES","VST":"UTILITIES",
-    "PLD":"REAL ESTATE","WELL":"REAL ESTATE","AMT":"REAL ESTATE","LINE":"REAL ESTATE","EQIX":"REAL ESTATE",
+    "NVDA":"AI SEMIS","AMD":"AI SEMIS","INTC":"AI SEMIS","ARM":"AI SEMIS",
+    "ALAB":"AI SEMIS","MRVL":"AI SEMIS","AVGO":"AI SEMIS","QCOM":"AI SEMIS",
+    "SMCI":"AI SEMIS","CRDO":"AI SEMIS",
+    "MSFT":"AI CLOUD","GOOGL":"AI CLOUD","META":"AI CLOUD","AMZN":"AI CLOUD",
+    "CRM":"AI CLOUD","PLTR":"AI SOFTWARE","AI":"AI SOFTWARE","BBAI":"AI SOFTWARE",
+    "SOUN":"AI SOFTWARE","ORCL":"AI CLOUD",
+    "IONQ":"QUANTUM","RGTI":"QUANTUM","QBTS":"QUANTUM","QUBT":"QUANTUM","QTUM":"QUANTUM",
+    "AAPL":"AI TECH","TSLA":"AI TECH","RBRK":"CYBER","NOW":"AI CLOUD",
+    "SNOW":"AI DATA","DDOG":"AI OPS","NET":"CYBER","ZS":"CYBER","OKTA":"CYBER","PATH":"AI SOFTWARE",
+    "ACHR":"NEXT-GEN","JOBY":"NEXT-GEN","RKLB":"NEXT-GEN","ASTR":"NEXT-GEN","LUNR":"NEXT-GEN",
+    "NVTS":"AI BIO","RXRX":"AI BIO","GRAL":"AI BIO","SMMT":"AI BIO","BLUE":"AI BIO",
 }
 
 FUND_ORDER = ["bot13", "oracle", "wizard", "equalizer", "titan"]
@@ -920,7 +917,7 @@ def push_to_api(data_type, data, secrets):
     try:
         r = _requests.post(
             f"{api_url}/internal/tracker/push",
-            json={"platform": "wallstbots", "data_type": data_type, "data": data},
+            json={"platform": "lvl13", "data_type": data_type, "data": data},
             headers={"x-internal-key": internal_key},
             timeout=20,
         )
@@ -937,7 +934,7 @@ def git_push(msg):
     git_root = Path(__file__).resolve().parents[2]
     try:
         subprocess.run(["git", "-C", str(git_root), "add",
-                        "Frontends/wallstbots.tech/data/"], check=True)
+                        "Frontends/lvl13.tech/data/"], check=True)
         subprocess.run(["git", "-C", str(git_root), "commit",
                         "-m", f"auto: {msg} [{dt.datetime.now().strftime('%Y-%m-%d %H:%M')}]"],
                        check=True)
@@ -1305,26 +1302,4 @@ def main():
     print(f"[wallstbots] signals — {n_sig} signals")
     push_to_api("signals", signals_data, secrets)
 
-    # ── News ──────────────────────────────────────────────────────────────────
-    print("[wallstbots] fetching news...")
-    news_items = fetch_news(newsapi_key)
-    news_data = {
-        "items":        news_items,
-        "sectors":      sorted({it["sector"] for it in news_items}) if news_items else [],
-        "generated_at": dt.datetime.utcnow().isoformat() + "Z",
-    }
-    print(f"[wallstbots] news — {len(news_items)} articles")
-    push_to_api("news", news_data, secrets)
-
-    # ── Reports (placeholder — keeps API consistent) ──────────────────────────
-    push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
-
-    # ── Git push (optional — static files as backup) ─────────────────────────
-    if args.push:
-        git_push("wallstbots.tech data refresh")
-
-    print("\n[wallstbots] ALL DONE")
-
-
-if __name__ == "__main__":
-    main()
+    # ── News ────────────────────────────────────────────────�

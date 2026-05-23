@@ -1,0 +1,72 @@
+name: Refresh lvl13.tech
+
+on:
+  schedule:
+    - cron: '35 14 * * 1-5'
+    - cron: '5 16 * * 1-5'
+    - cron: '5 21 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-lvl13-${{ hashFiles('**/refresh_lvl13.py') }}
+          restore-keys: pip-lvl13-
+
+      - name: Install dependencies
+        run: |
+          echo "=== Python version ==="
+          python --version
+          echo "=== pip version ==="
+          python -m pip --version
+          echo "=== Installing packages ==="
+          python -m pip install --upgrade pip
+          python -m pip install yfinance requests pandas
+          echo "=== Installed packages ==="
+          python -m pip list | grep -E "yfinance|requests|pandas|numpy"
+
+      - name: Verify script exists
+        run: |
+          echo "=== Repo contents ==="
+          ls -la
+          echo "=== Script check ==="
+          ls -la Project/scripts/refresh_lvl13.py
+          echo "=== Data dir check ==="
+          ls -la Frontends/lvl13.tech/data/
+
+      - name: Run lvl13 refresh
+        env:
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+        run: |
+          echo "=== Running refresh script ==="
+          python Project/scripts/refresh_lvl13.py
+          echo "=== Script exit code: $? ==="
+
+      - name: Commit and push updated data
+        run: |
+          git config user.name  "WallStBots Bot"
+          git config user.email "bot@wallstbots.tech"
+          git add Frontends/lvl13.tech/data/
+          git diff --staged --quiet || git commit -m "auto: lvl13 data refresh [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git push

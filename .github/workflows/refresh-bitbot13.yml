@@ -1,13 +1,19 @@
 name: Refresh bitbot13.tech
 
-# Runs automatically every 4 hours — crypto never closes.
-# Fetches live coin prices, recalculates all bot P&L, generates signals + news,
-# commits updated JSON files, Cloudflare Pages auto-deploys on push.
+# Trading schedule: 7 days/week, 9am-9pm ET sessions.
+# Runs every 30 minutes during the ET trading window; one quiet overnight reprice.
+# The Python script itself gates on actual ET time — outside the window it holds cash.
+# Fetches live coin prices + 1h intraday data, recalculates all bot P&L,
+# generates signals + news, commits updated JSON, Cloudflare Pages auto-deploys.
 
 on:
   schedule:
-    # Every 4 hours around the clock (crypto trades 24/7)
-    - cron: '0 */4 * * *'
+    # Every 30 min, 13:00-23:30 UTC — covers 9am-7:30pm EDT (Mar-Nov)
+    - cron: '*/30 13-23 * * *'
+    # Every 30 min, 00:00-02:30 UTC — covers 7pm-9pm EST (Nov-Mar) and wraps EDT
+    - cron: '*/30 0-2 * * *'
+    # One quiet off-hours reprice at 6am UTC (~1-2am ET) to keep data fresh overnight
+    - cron: '0 6 * * *'
   workflow_dispatch:   # allow manual trigger from GitHub Actions UI if needed
 
 permissions:

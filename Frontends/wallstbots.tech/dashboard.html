@@ -619,6 +619,90 @@
     .sentiment-dot.neg { background: var(--red); }
     .sentiment-dot.neu { background: var(--muted); }
 
+    /* ─── LIVE BOT SESSION ─── */
+    .session-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--muted);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 0.88rem;
+    }
+    .session-banner.open { border-left-color: var(--accent); }
+    .session-banner-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+    .session-banner.open .session-banner-dot {
+      background: var(--accent);
+      box-shadow: 0 0 6px rgba(0,212,255,0.4);
+    }
+    .session-banner-label { font-weight: 600; }
+    .session-banner.open .session-banner-label { color: var(--accent); }
+    .session-banner-hours { color: var(--muted); font-size: 0.8rem; margin-left: auto; }
+    .session-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .session-stat {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .session-stat-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; }
+    .session-stat-value { font-size: 1.2rem; font-weight: 700; }
+    .session-stat-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .session-stat-sub.pos { color: var(--accent); }
+    .session-stat-sub.neg { color: var(--red); }
+    .bot-pos-wrap { overflow-x: auto; margin-bottom: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); }
+    .bot-pos-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .bot-pos-table th {
+      text-align: left;
+      padding: 10px 12px;
+      color: var(--muted);
+      font-size: 0.73rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .bot-pos-table td { padding: 10px 12px; border-bottom: 1px solid rgba(30,38,51,0.6); white-space: nowrap; }
+    .bot-pos-table tr:last-child td { border-bottom: none; }
+    .bot-pos-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .vol-badge {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px; border-radius: 20px;
+      font-size: 0.72rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.02em;
+    }
+    .vol-badge.high  { background: rgba(0,212,255,0.12); color: var(--accent); border: 1px solid rgba(0,212,255,0.25); }
+    .vol-badge.normal { background: rgba(125,133,144,0.12); color: var(--muted); border: 1px solid rgba(125,133,144,0.25); }
+    .vol-badge.low   { background: rgba(248,81,73,0.1); color: var(--red); border: 1px solid rgba(248,81,73,0.25); }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 20px;
+      font-size: 0.72rem; font-weight: 600;
+    }
+    .status-badge.active { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+    .status-badge.stop   { background: rgba(248,81,73,0.1); color: var(--red); border: 1px solid rgba(248,81,73,0.2); }
+    .status-badge.hold   { background: rgba(125,133,144,0.1); color: var(--muted); border: 1px solid rgba(125,133,144,0.2); }
+    .bot-pos-empty {
+      text-align: center; padding: 24px;
+      color: var(--muted); font-size: 0.85rem;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 8px;
+    }
+
     /* ─── CREATE MODAL ─── */
     .create-modal {
       display: none;
@@ -954,6 +1038,23 @@
     </div>
   </div>
 
+  <!-- Live Bot Session -->
+  <div class="section-title">📡 Live Bot Session</div>
+  <div id="botSessionBanner" class="session-banner">
+    <div class="session-banner-dot"></div>
+    <div class="skeleton" style="width:130px;height:14px"></div>
+    <span class="session-banner-hours"><div class="skeleton" style="width:90px;height:12px"></div></span>
+  </div>
+  <div class="session-summary" id="botSessionSummary">
+    <div class="session-stat"><div class="session-stat-label">Session Open</div><div class="skeleton" style="width:80px;height:22px;margin:4px 0"></div></div>
+    <div class="session-stat"><div class="session-stat-label">Current Value</div><div class="skeleton" style="width:90px;height:22px;margin:4px 0"></div></div>
+    <div class="session-stat"><div class="session-stat-label">Session P&amp;L</div><div class="skeleton" style="width:70px;height:22px;margin:4px 0"></div></div>
+    <div class="session-stat"><div class="session-stat-label">All-Time P&amp;L</div><div class="skeleton" style="width:80px;height:22px;margin:4px 0"></div></div>
+  </div>
+  <div id="botPosContainer" style="margin-bottom:32px">
+    <div class="bot-pos-empty">Loading positions…</div>
+  </div>
+
   <div class="section-title">Market News</div>
   <div class="news-list" id="newsList">
     <div class="news-item">
@@ -1116,6 +1217,7 @@
     try { await Promise.all([loadProfile(), loadSubscription()]); } catch(e) {}
     await loadPortfolios();
     loadNews();
+    loadBotSession();
   }
 
   async function loadProfile() {
@@ -1250,6 +1352,135 @@
       el.textContent=(bestRet>=0?"+":"")+bestRet.toFixed(2)+"%";
       el.className="stat-sub "+(bestRet>=0?"pos":"neg");
     }
+  }
+
+  /* ─── BOT SESSION ─── */
+  async function loadBotSession() {
+    try {
+      const resp = await fetch(BACKEND_URL + "/public/tracker/state?platform=wallstbots");
+      if (!resp.ok) throw new Error("No session data");
+      const json = await resp.json();
+      const state = json.data || {};
+      const funds = state.funds || [];
+      const bot13 = funds.find(f => f.id === "bot13") || null;
+      renderBotSession(bot13);
+    } catch(e) {
+      document.getElementById("botSessionBanner").innerHTML = `<div class="session-banner-dot"></div><span class="session-banner-label" style="color:var(--muted)">Session data unavailable</span>`;
+      document.getElementById("botSessionSummary").style.display = "none";
+      document.getElementById("botPosContainer").innerHTML = `<div class="bot-pos-empty">Could not load live session data.</div>`;
+    }
+  }
+
+  function renderBotSession(bot13) {
+    if (!bot13) {
+      document.getElementById("botSessionBanner").innerHTML = `<div class="session-banner-dot"></div><span class="session-banner-label" style="color:var(--muted)">BOT13 data not found</span>`;
+      document.getElementById("botSessionSummary").style.display = "none";
+      document.getElementById("botPosContainer").innerHTML = `<div class="bot-pos-empty">No BOT13 data available yet.</div>`;
+      return;
+    }
+    const val = bot13.value || {};
+    const windowOpen = val.window_open === true;
+    const openET  = val.session_open_et  || "9:30";
+    const closeET = val.session_close_et || "16:00";
+
+    // Banner
+    const banner = document.getElementById("botSessionBanner");
+    banner.className = "session-banner" + (windowOpen ? " open" : "");
+    banner.innerHTML = `
+      <div class="session-banner-dot"></div>
+      <span class="session-banner-label">${windowOpen ? "🟢 Session Open" : "⏸ Session Closed"}</span>
+      <span class="session-banner-hours">Trading hours: ${openET}–${closeET} ET · Mon–Fri</span>
+    `;
+
+    // Summary cards
+    const dayOpen = val.day_open  ?? 0;
+    const total   = val.total     ?? dayOpen;
+    const dayPnl  = val.day_pnl   ?? (total - dayOpen);
+    const dayPct  = val.day_pct   ?? (dayOpen ? (dayPnl / dayOpen * 100) : 0);
+    const allPnl  = val.pnl       ?? 0;
+    const allPct  = val.pnl_pct   ?? 0;
+
+    const fmtD = n => { const a = Math.abs(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}); return (n < 0 ? "-$" : "$") + a; };
+    const fmtP = n => (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
+
+    document.getElementById("botSessionSummary").innerHTML = `
+      <div class="session-stat">
+        <div class="session-stat-label">Session Open</div>
+        <div class="session-stat-value">${fmtD(dayOpen)}</div>
+        <div class="session-stat-sub">${bot13.name || "BOT13"}</div>
+      </div>
+      <div class="session-stat">
+        <div class="session-stat-label">Current Value</div>
+        <div class="session-stat-value">${fmtD(total)}</div>
+        <div class="session-stat-sub">${windowOpen ? "live" : "last close"}</div>
+      </div>
+      <div class="session-stat">
+        <div class="session-stat-label">Session P&amp;L</div>
+        <div class="session-stat-value" style="${dayPnl >= 0 ? 'color:var(--accent)' : 'color:var(--red)'}">${fmtD(dayPnl)}</div>
+        <div class="session-stat-sub ${dayPct >= 0 ? 'pos' : 'neg'}">${fmtP(dayPct)}</div>
+      </div>
+      <div class="session-stat">
+        <div class="session-stat-label">All-Time P&amp;L</div>
+        <div class="session-stat-value" style="${allPnl >= 0 ? 'color:var(--accent)' : 'color:var(--red)'}">${fmtD(allPnl)}</div>
+        <div class="session-stat-sub ${allPct >= 0 ? 'pos' : 'neg'}">${fmtP(allPct)}</div>
+      </div>
+    `;
+
+    // Positions table
+    const positions = val.positions || [];
+    const container = document.getElementById("botPosContainer");
+    if (!positions.length || val.holding_cash) {
+      const msg = val.holding_cash
+        ? (windowOpen ? "📊 Holding cash — awaiting next signal" : `⏸ Outside trading window · Next session opens at ${openET} ET`)
+        : "No open positions";
+      container.innerHTML = `<div class="bot-pos-empty">${msg}</div>`;
+      return;
+    }
+
+    const rows = positions.map(p => {
+      const sym        = escHtml(p.symbol || p.coin || "—");
+      const entryTime  = p.entry_time
+        ? new Date(p.entry_time).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",timeZone:"America/New_York"}) + " ET"
+        : "—";
+      const ep   = p.entry_price   ? "$" + p.entry_price.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:4}) : "—";
+      const cur  = p.current_price ? "$" + p.current_price.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:4}) : "—";
+      const m1h  = p.momentum_1h != null ? ((p.momentum_1h >= 0 ? "+" : "") + p.momentum_1h.toFixed(2) + "%") : "—";
+      const m4h  = p.momentum_4h != null ? ((p.momentum_4h >= 0 ? "+" : "") + p.momentum_4h.toFixed(2) + "%") : "—";
+      const pnlD = p.pnl != null ? fmtD(p.pnl) : "—";
+      const pnlColor = p.pnl != null ? (p.pnl >= 0 ? "color:var(--accent)" : "color:var(--red)") : "";
+      const m1Color  = p.momentum_1h != null ? ((p.momentum_1h >= 0) ? "color:var(--accent)" : "color:var(--red)") : "";
+      const m4Color  = p.momentum_4h != null ? ((p.momentum_4h >= 0) ? "color:var(--accent)" : "color:var(--red)") : "";
+      const vol = (p.volume_signal || "normal").toLowerCase();
+      let statusBadge;
+      if (p.stop_triggered) statusBadge = `<span class="status-badge stop">🛑 Stop-Loss</span>`;
+      else if (p.exit_reason) statusBadge = `<span class="status-badge hold">${escHtml(p.exit_reason)}</span>`;
+      else statusBadge = `<span class="status-badge active">● Active</span>`;
+      return `<tr>
+        <td style="font-weight:600">${sym}</td>
+        <td style="color:var(--muted);font-size:0.8rem">${entryTime}</td>
+        <td>${ep}</td>
+        <td>${cur}</td>
+        <td style="${m1Color}">${m1h}</td>
+        <td style="${m4Color}">${m4h}</td>
+        <td style="${pnlColor}">${pnlD}</td>
+        <td><span class="vol-badge ${vol}">${vol}</span></td>
+        <td>${statusBadge}</td>
+      </tr>`;
+    }).join("");
+
+    container.innerHTML = `
+      <div class="bot-pos-wrap">
+        <table class="bot-pos-table">
+          <thead>
+            <tr>
+              <th>Stock</th><th>Entry Time</th><th>Entry Price</th><th>Current</th>
+              <th>1h Mom</th><th>4h Mom</th><th>Session P&amp;L</th><th>Volume</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
   }
 
   async function loadNews() {
