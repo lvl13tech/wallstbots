@@ -404,6 +404,18 @@
   </div>
 </main>
 
+<!-- ─── PORTFOLIO PERFORMANCE CHART ─── -->
+<div style="max-width:var(--max);margin:0 auto;padding:0 var(--pad) var(--pad)">
+  <div class="panel-card">
+    <div class="panel-card-header">
+      <div class="panel-card-title" id="perfChartTitle">Portfolio Performance</div>
+    </div>
+    <div id="perfChartWrap" style="position:relative;height:260px;padding:16px">
+      <canvas id="chartPortfolio"></canvas>
+    </div>
+  </div>
+</div>
+
 <!-- ─── ADD HOLDING MODAL ─── -->
 <div class="search-modal" id="searchModal">
   <div class="search-box">
@@ -445,7 +457,7 @@
   if (!BOT_ID) { window.location.href = "dashboard.html"; }
 
   let botData = null, holdings = [], userProfile = null;
-  let selectedSymbol = null;
+  let selectedSymbol = null, portfolioChart = null;
 
   // ── Open universe: any Nasdaq, NYSE, OTC & Pink Sheet symbol via Polygon ──
   let allocChart = null;
@@ -463,6 +475,7 @@
     try { loadReferralCode(); } catch(e) {}
     try { loadSubscriptionInfo(); } catch(e) {}
     await loadBot();
+    drawPortfolioChart();
   }
 
   function renderProfile() {
@@ -740,6 +753,38 @@
       showToast(e.message || "Failed to add " + selectedSymbol, "error");
       btn.disabled = false; btn.textContent = "Add Holding";
     }
+  }
+
+  // ── Portfolio Performance Chart ─────────────────────────────────────────────
+  async function drawPortfolioChart() {
+    const wrap = document.getElementById("perfChartWrap");
+    const ctx  = document.getElementById("chartPortfolio");
+    if (!wrap || !ctx) return;
+    if (portfolioChart) { portfolioChart.destroy(); portfolioChart = null; }
+    let snapshots = [];
+    try {
+      const data = await api.getBotPerformance(BOT_ID, 90);
+      snapshots = data?.snapshots || [];
+    } catch(e) {}
+    if (!snapshots.length) {
+      const created = botData?.created_at
+        ? new Date(botData.created_at).toLocaleDateString("en-US", {month:"short", day:"numeric", year:"numeric"})
+        : "today";
+      wrap.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:180px;color:var(--muted);font-size:0.85rem;text-align:center;line-height:1.6">Portfolio started ${created}.<br>Performance history will appear after the first trading day.</div>`;
+      return;
+    }
+    const labels = snapshots.map(s => s.date);
+    const values = snapshots.map(s => s.total_value);
+    const last   = snapshots[snapshots.length - 1];
+    const retPct = last.gain_loss_pct;
+    const color  = retPct >= 0 ? "#00d4ff" : "#ef4444";
+    const titleEl = document.getElementById("perfChartTitle");
+    if (titleEl) titleEl.textContent = "Portfolio Performance — " + (retPct >= 0 ? "+" : "") + retPct.toFixed(2) + "% since inception";
+    portfolioChart = new Chart(ctx, {
+      type: "line",
+      data: { labels, datasets: [{ label: botData?.name || "Portfolio", data: values, borderColor: color, backgroundColor: color + "18", tension: 0.3, borderWidth: 2, fill: true, pointRadius: values.length > 30 ? 0 : 3, pointHoverRadius: 5 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => "$" + ctx.parsed.y.toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2}) } } }, scales: { x: { ticks: { color:"#7d8590", maxTicksLimit:8 }, grid: { color:"#1e2633" } }, y: { ticks: { color:"#7d8590", callback: v => "$" + v.toLocaleString() }, grid: { color:"#1e2633" } } } }
+    });
   }
 
   // ── Drawer / Account ─────────────────────────────────────────────────────────

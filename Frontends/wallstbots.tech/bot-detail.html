@@ -104,6 +104,12 @@
     /* ── Signals note ── */
     .signals-note { font-size: 0.72rem; color: var(--muted); margin-top: 8px; font-style: italic; }
 
+    /* ── Bot Analysis cards ── */
+    .bot-pick-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; font-size: 0.82rem; border-bottom: 1px solid var(--border); }
+    .bot-pick-row:last-child { border-bottom: none; }
+    .bot-pick-tag { font-weight: 700; font-size: 0.82rem; }
+    .bot-coverage-picks { margin-top: 4px; }
+
     /* ── Account Drawer ── */
     .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 400; }
     .drawer-overlay.open { display: block; }
@@ -310,12 +316,13 @@
     </div>
   </section>
 
-  <!-- 2. Live Leaderboard -->
+  <!-- 2. Bot Analysis — Portfolio Holdings -->
   <div class="section-head">
-    <h3>Your Bots — Today</h3>
+    <h3>Bot Analysis — Your Holdings</h3>
+    <span style="font-size:0.72rem;color:var(--muted)">How each strategy applies to this portfolio</span>
   </div>
-  <div class="lb-strip" id="lbStrip">
-    <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading bot data…</div>
+  <div class="grid grid-5" id="botAnalysisGrid">
+    <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading bot analysis…</div>
   </div>
 
   <!-- 3. Signals on Your Holdings -->
@@ -337,19 +344,12 @@
     <div class="card" style="color:var(--muted);font-size:0.82rem">Loading news…</div>
   </div>
 
-  <!-- 5. The Race -->
-  <div class="section-head" style="margin-top:28px">
-    <h3>The Race</h3>
-    <a class="more" href="/#/race">Full race →</a>
-  </div>
-  <div class="grid grid-5" id="raceGrid">
-    <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1">Loading…</div>
-  </div>
-
-  <!-- 6. Performance Trajectory -->
+  <!-- 5. Portfolio Performance Chart -->
   <div class="panel" style="margin-top:18px">
-    <h3>Performance Trajectory — All 5 Strategies</h3>
-    <div class="chart-wrap"><canvas id="chartRace"></canvas></div>
+    <h3 id="chartTitle">Portfolio Performance</h3>
+    <div class="chart-wrap" style="min-height:240px" id="chartWrap">
+      <canvas id="chartPortfolio"></canvas>
+    </div>
   </div>
 
   <!-- 7. Your Holdings -->
@@ -459,7 +459,9 @@ async function init() {
   try { userProfile = await api.getUserProfile(); renderProfile(); } catch(e) {}
   try { loadReferralCode(); } catch(e) {}
   try { loadSubscriptionInfo(); } catch(e) {}
-  await Promise.all([ loadBot(), loadSiteData() ]);
+  // loadBot first so holdings are available before bot analysis renders
+  await loadBot();
+  await loadSiteData();
 }
 
 function renderProfile() {
@@ -603,7 +605,7 @@ async function loadSiteData() {
   renderSignals();
   renderNews();
   renderRace();
-  drawTrajectory();
+  drawPortfolioChart();
 }
 
 // ── Leaderboard strip (exact same as homepage) ───────────────────────────────
@@ -715,27 +717,55 @@ function renderRace() {
   document.getElementById('raceGrid').innerHTML = FUND_ORDER.map(fid => fundCard(fid)).join('');
 }
 
-// ── Trajectory chart (exact same as app.js) ──────────────────────────────
-function drawTrajectory() {
-  const ctx = document.getElementById('chartRace');
-  if (!ctx || !window.Chart) return;
-  if (CHARTS_BD.race) CHARTS_BD.race.destroy();
-  const snaps = (STATE.funds && STATE.funds.snapshots) || [];
-  const labels = snaps.map(s => s.date);
-  const datasets = FUND_ORDER.map(fid => ({
-    label: FUND_META[fid].name,
-    data: snaps.map(s => s[fid] || null),
-    borderColor: FUND_META[fid].color,
-    backgroundColor: FUND_META[fid].color + '22',
-    tension: 0.3, borderWidth: 2,
-  }));
-  CHARTS_BD.race = new Chart(ctx, {
-    type: 'line', data: { labels, datasets },
-    options: { responsive:true, maintainAspectRatio:false,
-      plugins: { legend: { labels: { color:'#e6edf3', font:{size:12} } } },
+// ── Portfolio performance chart (portfolio-specific, starts day 1) ──────────
+async function drawPortfolioChart() {
+  const wrap = document.getElementById('chartWrap');
+  const ctx  = document.getElementById('chartPortfolio');
+  if (!wrap) return;
+  if (ctx && CHARTS_BD.portfolio) CHARTS_BD.portfolio.destroy();
+
+  let snapshots = [];
+  try {
+    const data = await api.getBotPerformance(BOT_ID, 90);
+    snapshots = data?.snapshots || [];
+  } catch(e) {}
+
+  if (!snapshots.length) {
+    const created = botData?.created_at
+      ? new Date(botData.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
+      : 'today';
+    wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.6">Portfolio started ' + created + '.<br>Performance history will appear after the first trading day.</div>';
+    return;
+  }
+
+  const labels = snapshots.map(s => s.date);
+  const values = snapshots.map(s => s.total_value);
+  const last   = snapshots[snapshots.length - 1];
+  const retPct = last.gain_loss_pct;
+  const color  = retPct >= 0 ? '#00d4ff' : '#ef4444';
+
+  const titleEl = document.getElementById('chartTitle');
+  if (titleEl) titleEl.innerHTML = 'Portfolio Performance &nbsp;<span style="font-size:0.85rem;font-weight:600;color:' + color + '">' + (retPct >= 0 ? '+' : '') + retPct.toFixed(2) + '%</span>';
+
+  CHARTS_BD.portfolio = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: botData?.name || 'Portfolio Value',
+        data: values,
+        borderColor: color,
+        backgroundColor: color + '18',
+        tension: 0.3, borderWidth: 2, fill: true,
+        pointRadius: values.length > 30 ? 0 : 3,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
       scales: {
-        x: { ticks:{color:'#7d8590'}, grid:{color:'#1e2633'} },
-        y: { ticks:{color:'#7d8590', callback: v => '$'+v.toLocaleString()}, grid:{color:'#1e2633'} }
+        x: { ticks: { color:'#7d8590', maxTicksLimit:8 }, grid: { color:'#1e2633' } },
+        y: { ticks: { color:'#7d8590', callback: v => '$'+v.toLocaleString() }, grid: { color:'#1e2633' } }
       }
     }
   });
