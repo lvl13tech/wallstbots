@@ -33,10 +33,19 @@
     .header-inner { max-width: var(--max); margin: 0 auto; padding: 0 var(--pad); height: 60px; display: flex; align-items: center; gap: 20px; }
     .logo { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; white-space: nowrap; }
     .logo span { color: var(--accent); }
-    .back-link { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.85rem; transition: color 0.15s; white-space: nowrap; }
-    .back-link:hover { color: var(--text); }
-    .back-link svg { width: 14px; height: 14px; }
-    .header-spacer { flex: 1; }
+    nav { display: flex; align-items: center; gap: 16px; flex: 1; }
+    nav a { color: var(--muted); font-size: 0.85rem; transition: color 0.15s; white-space: nowrap; }
+    nav a:hover { color: var(--text); }
+    .ham-btn { display: none; background: none; border: none; color: var(--text); cursor: pointer; padding: 4px; align-items: center; justify-content: center; }
+    .ham-btn svg { width: 22px; height: 22px; }
+    .mob-nav { display: none; flex-direction: column; background: var(--panel); border-bottom: 1px solid var(--border); padding: 12px 20px; gap: 0; }
+    .mob-nav.open { display: flex; }
+    .mob-nav a { padding: 11px 0; font-size: 0.9rem; color: var(--text); border-bottom: 1px solid var(--border); }
+    .mob-nav a:last-child { border-bottom: none; }
+    .mob-nav a:hover { color: var(--accent); }
+    .mob-nav-sep { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+    .mob-nav-overlay { display: none; position: fixed; inset: 0; z-index: 150; }
+    .mob-nav-overlay.open { display: block; }
 
     /* Platform switcher */
     .platform-switcher { position: relative; }
@@ -186,7 +195,7 @@
     .toast.success { border-color: var(--accent); color: var(--accent); }
     .toast.error { border-color: var(--red); color: var(--red); }
 
-    @media (max-width:600px) { .header-inner { gap: 10px; } .back-link span { display: none; } }
+    @media (max-width:600px) { .header-inner { gap: 10px; } nav { display: none; } .ham-btn { display: flex; } .platform-btn span { display: none; } }
   </style>
 </head>
 <body>
@@ -195,12 +204,16 @@
 <header>
   <div class="header-inner">
     <a href="/" class="logo">Level XIII <span>Tech</span></a>
-    <a href="dashboard.html" class="back-link">
-      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M9.78 3.22a.75.75 0 010 1.06L6.56 7.5l3.22 3.22a.75.75 0 11-1.06 1.06L4.97 8.03a.75.75 0 010-1.06l3.75-3.75a.75.75 0 011.06 0z"/></svg>
-      <span>My Portfolios</span>
-    </a>
-    <div class="header-spacer"></div>
-
+    <nav>
+      <a href="dashboard.html">← Portfolios</a>
+    </nav>
+    <button class="ham-btn" id="hamBtn" onclick="toggleMobNav()" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
     <div class="platform-switcher">
       <button class="platform-btn" id="platformBtn" onclick="togglePlatformMenu()">
         <span>🔀 Switch Platform</span>
@@ -225,6 +238,14 @@
     <button class="account-btn" onclick="openDrawer()">My Account</button>
   </div>
 </header>
+
+<div class="mob-nav" id="mobNav">
+  <a href="dashboard.html">← My Portfolios</a>
+  <hr class="mob-nav-sep">
+  <a href="https://wallstbots.tech/dashboard.html">Wall St. Bots — Stocks</a>
+  <a href="https://bitbot13.tech/dashboard.html">BitBot13 — Crypto</a>
+</div>
+<div class="mob-nav-overlay" id="mobNavOverlay" onclick="closeMobNav()"></div>
 
 <!-- ─── ACCOUNT DRAWER ─── -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
@@ -732,4 +753,34 @@
   document.addEventListener("click", e => {
     if (!e.target.closest(".platform-switcher")) {
       document.getElementById("platformMenu").classList.remove("open");
-      document.getElementById("platformBtn").classList.remove
+      document.getElementById("platformBtn").classList.remove("open");
+    }
+  });
+
+  function toggleMobNav() {
+    document.getElementById('mobNav').classList.toggle('open');
+    document.getElementById('mobNavOverlay').classList.toggle('open');
+  }
+  function closeMobNav() {
+    document.getElementById('mobNav').classList.remove('open');
+    document.getElementById('mobNavOverlay').classList.remove('open');
+  }
+
+  function escHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ── Toast ─────────────────────────────────────────────────────────────────────
+  let toastTimer;
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className = 'toast'; }, 4000);
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
