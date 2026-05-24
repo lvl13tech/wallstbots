@@ -723,6 +723,9 @@
     {ticker:"XCN",    name:"Onyxcoin",                  sector:"EMERGING"},
   ];
 
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  function escHtml(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
   // ── Init ────────────────────────────────────────────────────────────────────
   async function init() {
     try { userProfile = await api.getUserProfile(); renderProfile(); } catch(e) {}

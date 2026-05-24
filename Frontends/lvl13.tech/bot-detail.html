@@ -469,6 +469,9 @@
     "#fb923c","#4ade80"
   ];
 
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  function escHtml(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
   // ── Init ────────────────────────────────────────────────────────────────────
   async function init() {
     try { userProfile = await api.getUserProfile(); renderProfile(); } catch(e) {}
