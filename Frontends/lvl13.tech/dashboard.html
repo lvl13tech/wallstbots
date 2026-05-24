@@ -1404,10 +1404,14 @@
     try{
       const bot=await api.createBot(name,PLATFORM,desc);
       const botId=bot.id||bot.bot_id||bot.bot?.id;
-      if(!botId)throw new Error("No bot ID returned");
+      if(!botId)throw new Error("No bot ID returned from server");
       for(let i=0;i<tickers.length;i++){btn.textContent=`Adding ${i+1}/${tickers.length}…`;await api.addHolding(botId,tickers[i],VALUE_PER_SECURITY,null,null);}
       closeCreateModal();showToast("Portfolio created!","success");await loadPortfolios();
-    }catch(e){showToast(e.message||"Failed to create portfolio","error");btn.disabled=false;btn.textContent="Create Portfolio";}
+    }catch(e){
+      console.error("[createPortfolio]", e);
+      showToast(e.message||"Failed to create portfolio — check console (F12) for details","error");
+      btn.disabled=false;btn.textContent="Create Portfolio";
+    }
   }
   function escHtml(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
   function showToast(msg,type="success"){
@@ -1436,8 +1440,19 @@
 
   async function wmFetch(path) {
     const token = auth.getToken ? auth.getToken() : (auth._token || localStorage.getItem("auth_token") || "");
-    const resp = await fetch(WM_API + path, { headers: { "Authorization": "Bearer " + token } });
-    if (!resp.ok) throw new Error(await resp.text());
+    let resp;
+    try {
+      resp = await fetch(WM_API + path, { headers: { "Authorization": "Bearer " + token } });
+    } catch(netErr) {
+      throw new Error("Network error: " + (netErr.message || "Could not reach server"));
+    }
+    if (!resp.ok) {
+      let body = "";
+      try { body = await resp.text(); } catch(_) {}
+      let msg = body || "";
+      try { const j = JSON.parse(msg); msg = j.detail || j.error || msg; } catch(_) {}
+      throw new Error(`HTTP ${resp.status}: ${msg || "No details"}`);
+    }
     return resp.json();
   }
 
