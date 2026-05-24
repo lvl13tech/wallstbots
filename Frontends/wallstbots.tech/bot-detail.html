@@ -316,8 +316,17 @@
     </div>
   </section>
 
-  <!-- 2. Bot Analysis — Portfolio Holdings -->
+  <!-- 2. Live Leaderboard — Today (same as homepage) -->
   <div class="section-head">
+    <h3>Live Leaderboard — Today</h3>
+    <a class="more" href="/#/race">View all →</a>
+  </div>
+  <div class="lb-strip" id="lbStrip">
+    <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading leaderboard…</div>
+  </div>
+
+  <!-- 3. Bot Analysis — Portfolio Holdings -->
+  <div class="section-head" style="margin-top:28px">
     <h3>Bot Analysis — Your Holdings</h3>
     <span style="font-size:0.72rem;color:var(--muted)">How each strategy applies to this portfolio</span>
   </div>
@@ -325,17 +334,17 @@
     <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading bot analysis…</div>
   </div>
 
-  <!-- 3. Signals on Your Holdings -->
+  <!-- 4. Signals on Your Holdings -->
   <div class="section-head" style="margin-top:28px">
     <h3>Signals on Your Holdings — Today</h3>
-    <a class="more" href="/#/signals">View all →</a>
+    <a class="more" href="/#/signals">View all signals →</a>
   </div>
   <div class="signals-today" id="signalsToday">
     <div class="card" style="color:var(--muted);font-size:0.82rem">Loading signals…</div>
   </div>
   <div class="signals-note" id="signalsNote"></div>
 
-  <!-- 4. News on Your Holdings -->
+  <!-- 5. News on Your Holdings -->
   <div class="section-head" style="margin-top:28px">
     <h3>News on Your Holdings</h3>
     <a class="more" href="/#/news-all">More news →</a>
@@ -344,7 +353,16 @@
     <div class="card" style="color:var(--muted);font-size:0.82rem">Loading news…</div>
   </div>
 
-  <!-- 5. Portfolio Performance Chart -->
+  <!-- 6. The Race -->
+  <div class="section-head" style="margin-top:28px">
+    <h3>The Race</h3>
+    <a class="more" href="/#/race">Full standings →</a>
+  </div>
+  <div class="grid grid-5" id="raceGrid">
+    <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading race…</div>
+  </div>
+
+  <!-- 7. Portfolio Performance Chart -->
   <div class="panel" style="margin-top:18px">
     <h3 id="chartTitle">Portfolio Performance</h3>
     <div class="chart-wrap" style="min-height:240px" id="chartWrap">
@@ -352,7 +370,7 @@
     </div>
   </div>
 
-  <!-- 7. Your Holdings -->
+  <!-- 8. Your Holdings -->
   <div class="section-head" style="margin-top:32px">
     <h3>Your Holdings &nbsp;<span id="holdingsCount" style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:0.78rem"></span></h3>
     <button class="btn-add-holding" onclick="openSearchModal()">+ Add Holding</button>
@@ -623,15 +641,15 @@ function renderPortfolioBotAnalysis() {
     const dayPnl  = v ? fmt$0(v.day_pnl)   : '—';
     const allTime = v ? fmtPct(v.pnl_pct)  : '—';
     const dayClass = v ? cls(v.day_pnl) : '';
-    return '<div class="card" style="padding:14px">'
-      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
-      + '<span class="fund-icon ' + fid + '" style="font-size:1.2rem">' + meta.icon + '</span>'
-      + '<div><div style="font-weight:700;font-size:0.85rem">' + meta.name + '</div>'
-      + '<div style="font-size:0.7rem;color:var(--muted)">' + meta.kind + '</div></div></div>'
-      + '<div style="font-size:0.78rem;color:var(--muted);margin-bottom:6px">Simulating <strong style="color:var(--text)">' + tickers + '</strong></div>'
+    return '<a class="card clickable fund-card" href="/#/fund/' + fid + '">'
+      + '<div class="fund-head"><span class="fund-icon ' + fid + '">' + meta.icon + '</span>'
+      + '<div style="min-width:0"><div class="fund-name">' + meta.name + '</div>'
+      + '<div class="fund-kind" style="color:' + meta.color + '">' + meta.kind + '</div></div></div>'
+      + '<div class="fund-tag">' + meta.tagline + '</div>'
+      + '<div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">Tracking: <strong style="color:var(--text)">' + tickers + '</strong></div>'
       + '<div style="font-size:0.82rem">Today: <span class="' + dayClass + '">' + dayPct + ' (' + dayPnl + ')</span></div>'
       + '<div style="font-size:0.78rem;color:var(--muted)">All-time: ' + allTime + '</div>'
-      + '</div>';
+      + '</a>';
   }).join('');
   grid.innerHTML = cards;
 }
@@ -911,6 +929,32 @@ async function addSelectedHolding() {
   }
 }
 
+// ── Mobile Nav ────────────────────────────────────────────────────────────────
+function toggleMobNav() {
+  const nav = document.getElementById('mobNav');
+  const overlay = document.getElementById('mobNavOverlay');
+  const isOpen = nav.classList.toggle('open');
+  overlay.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+function closeMobNav() {
+  document.getElementById('mobNav').classList.remove('open');
+  document.getElementById('mobNavOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── Platform Switcher ─────────────────────────────────────────────────────────
+function togglePlatformMenu() {
+  const btn  = document.getElementById('platformBtn');
+  const menu = document.getElementById('platformMenu');
+  const open = menu.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  if (open) {
+    const close = e => { if (!btn.contains(e.target) && !menu.contains(e.target)) { menu.classList.remove('open'); btn.classList.remove('open'); document.removeEventListener('click', close); } };
+    setTimeout(() => document.addEventListener('click', close), 0);
+  }
+}
+
 // ── Account Drawer ────────────────────────────────────────────────────────────
 function openDrawer() {
   document.getElementById('accountDrawer').classList.add('open');
@@ -970,6 +1014,9 @@ function showToast(msg, type = 'success') {
 
 // ── Explicit window bindings for inline onclick handlers ──────────────────────
 // Ensures functions are globally accessible regardless of script evaluation order
+window.toggleMobNav           = toggleMobNav;
+window.closeMobNav            = closeMobNav;
+window.togglePlatformMenu     = togglePlatformMenu;
 window.openDeleteModal        = openDeleteModal;
 window.closeDeleteModal       = closeDeleteModal;
 window.confirmDeletePortfolio = confirmDeletePortfolio;
