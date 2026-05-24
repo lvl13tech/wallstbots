@@ -72,16 +72,16 @@ jobs:
           git push
 
       - name: Send daily email notifications
-        # Only send once per day — guard to the 21:xx UTC run (after market close)
+        # Only send once per day — guard to the 14:xx UTC run (9:35am ET, market open)
         env:
           RESEND_API_KEY:   ${{ secrets.RESEND_API_KEY }}
           INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
           BACKEND_URL:      ${{ secrets.BACKEND_URL }}
         run: |
           HOUR=$(date -u +%H)
-          if [ "$HOUR" = "21" ]; then
+          if [ "$HOUR" = "14" ]; then
             echo "=== Dispatching daily emails for lvl13 ==="
             python Project/scripts/send_emails.py --platform lvl13
           else
-            echo "=== Skipping email dispatch (hour=$HOUR, only runs at 21:xx UTC) ==="
+            echo "=== Skipping email dispatch (hour=$HOUR, only runs at 14:xx UTC) ==="
           fi
