@@ -22,7 +22,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 import requests
@@ -52,15 +52,33 @@ def load_platform_data(platform: str) -> dict:
         signals_raw = json.loads((base / "signals.json").read_text())
     except Exception as e:
         print(f"[send_emails] WARNING: could not load {platform} data: {e}")
-        return {"funds": {}, "leaderboard": [], "signals": []}
+        return {"funds": {}, "leaderboard": [], "signals": [], "is_fresh": False, "last_updated": "unknown"}
 
     state   = state_raw.get("data", state_raw)
     signals = signals_raw.get("data", {}).get("recommendations", [])
 
+    # ── Staleness check ───────────────────────────────────────────────────────
+    # wallstbots / lvl13 use "last_refresh"; bitbot13 uses "last_updated".
+    # Compare the data's date to today (UTC). If it's from a prior day the
+    # platform section is suppressed so stale Friday data never appears in a
+    # weekend email.
+    ts_str   = state.get("last_refresh") or state.get("last_updated")
+    is_fresh = True   # default: assume fresh if we can't parse the timestamp
+    if ts_str:
+        try:
+            data_date = datetime.fromisoformat(ts_str).date()
+            is_fresh  = (data_date == date.today())
+        except Exception:
+            pass
+    if not is_fresh:
+        print(f"[send_emails] {platform}: data is stale (last updated {ts_str}) — section will be suppressed")
+
     return {
-        "funds":       state.get("funds", {}),
-        "leaderboard": state.get("leaderboards", {}).get("week", []),
-        "signals":     signals,
+        "funds":        state.get("funds", {}),
+        "leaderboard":  state.get("leaderboards", {}).get("week", []),
+        "signals":      signals,
+        "is_fresh":     is_fresh,
+        "last_updated": ts_str or "unknown",
     }
 
 

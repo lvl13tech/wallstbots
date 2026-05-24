@@ -752,6 +752,21 @@ def build_consolidated_email(
         funds    = pdata.get("funds", {})
         signals  = pdata.get("signals", [])
         site_url = SITE_URLS[plat]
+        is_fresh = pdata.get("is_fresh", True)
+
+        # ── Stale data guard ─────────────────────────────────────────────────
+        # If this platform hasn't refreshed today (e.g. wallstbots/lvl13 on
+        # weekends when only bitbot13 runs), show a brief "closed" note instead
+        # of outdated Friday data.
+        if not is_fresh:
+            last_upd = pdata.get("last_updated", "recently")
+            sections.append(_platform_section_header(plat))
+            sections.append(f"""
+<p style="font-size:13px;color:#7d8590;margin:8px 0 20px;padding:12px 16px;background:#141b27;border:1px solid #1e2633;border-radius:8px;line-height:1.5;">
+  No update today — markets are closed for this platform.
+  &nbsp;<a href="{site_url}/dashboard.html" style="color:#00d4ff;text-decoration:none;font-weight:600;">View last update →</a>
+</p>""")
+            continue
 
         # Extract BOT13 strategy (key may be 'bot13' or 'BOT13')
         bot13_data = funds.get("bot13") or funds.get("BOT13") or {}
