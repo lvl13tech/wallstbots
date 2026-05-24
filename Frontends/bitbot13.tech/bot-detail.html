@@ -969,4 +969,103 @@
     selectedSymbol = null;
     document.getElementById("selectedDisplay").style.display = "none";
     document.getElementById("addHoldingBtn").disabled = true;
-    document.getEleme
+    document.getElementById("searchResults").style.display = "block";
+    document.getElementById("searchInput").focus();
+  }
+
+  async function addSelectedHolding() {
+    if (!selectedSymbol) return;
+    const btn = document.getElementById("addHoldingBtn");
+    btn.disabled = true; btn.textContent = "Adding…";
+    try {
+      await api.addHolding(BOT_ID, selectedSymbol, 1000, null, null);
+      closeSearchModal();
+      showToast(selectedSymbol + " added to portfolio", "success");
+      await loadBot();
+    } catch(e) {
+      showToast(e.message || "Failed to add " + selectedSymbol, "error");
+      btn.disabled = false; btn.textContent = "Add Holding";
+    }
+  }
+
+  // ── Account Drawer ──────────────────────────────────────────────────────────
+  function openDrawer() {
+    document.getElementById("accountDrawer").classList.add("open");
+    document.getElementById("drawerOverlay").classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeDrawer() {
+    document.getElementById("accountDrawer").classList.remove("open");
+    document.getElementById("drawerOverlay").classList.remove("open");
+    document.body.style.overflow = "";
+  }
+
+  // ── Password Reset Modal ────────────────────────────────────────────────────
+  function openPwModal() {
+    document.getElementById("pwModal").classList.add("open");
+    document.getElementById("pwModalText").textContent = "We'll send a reset link to your email address.";
+    const btn = document.getElementById("pwConfirmBtn");
+    btn.disabled = false; btn.textContent = "Send Reset Link";
+  }
+  function closePwModal() { document.getElementById("pwModal").classList.remove("open"); }
+  async function sendPasswordReset() {
+    const btn = document.getElementById("pwConfirmBtn");
+    btn.disabled = true; btn.textContent = "Sending…";
+    try {
+      const email = userProfile?.email || userProfile?.user?.email;
+      if (!email) throw new Error("No email on file");
+      await api.requestPasswordReset(email);
+      document.getElementById("pwModalText").textContent = "Reset link sent! Check your inbox.";
+      btn.textContent = "Sent ✓";
+    } catch(e) {
+      document.getElementById("pwModalText").textContent = e.message || "Failed to send reset link.";
+      btn.disabled = false; btn.textContent = "Try Again";
+    }
+  }
+
+  // ── Referral ────────────────────────────────────────────────────────────────
+  function copyReferral() {
+    const code = document.getElementById("drawerRefCode").textContent;
+    if (code && code !== "———") {
+      navigator.clipboard.writeText(code)
+        .then(() => showToast("Referral code copied!", "success"))
+        .catch(() => showToast("Copy failed", "error"));
+    }
+  }
+
+  // ── Logout ──────────────────────────────────────────────────────────────────
+  function logout() { auth.logout(); window.location.href = "login.html"; }
+
+  // ── Toast ────────────────────────────────────────────────────────────────────
+  function showToast(msg, type = "success") {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.className = "toast show " + type;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove("show"), 3000);
+  }
+
+  // ── Explicit window bindings for onclick handlers ───────────────────────────
+  window.openDeleteModal        = openDeleteModal;
+  window.closeDeleteModal       = closeDeleteModal;
+  window.confirmDeletePortfolio = confirmDeletePortfolio;
+  window.openSearchModal        = openSearchModal;
+  window.closeSearchModal       = closeSearchModal;
+  window.onSearchInput          = onSearchInput;
+  window.selectTicker           = selectTicker;
+  window.clearSelection         = clearSelection;
+  window.addSelectedHolding     = addSelectedHolding;
+  window.removeHolding          = removeHolding;
+  window.openDrawer             = openDrawer;
+  window.closeDrawer            = closeDrawer;
+  window.openPwModal            = openPwModal;
+  window.closePwModal           = closePwModal;
+  window.sendPasswordReset      = sendPasswordReset;
+  window.copyReferral           = copyReferral;
+  window.logout                 = logout;
+
+  // ── Boot ────────────────────────────────────────────────────────────────────
+  document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>

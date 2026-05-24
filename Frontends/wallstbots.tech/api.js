@@ -311,4 +311,4 @@ class WallStBotsAPI {
 }
 
 // Export for use in HTML
-window.WallStBotsAPI = Wal
+window.WallStBotsAPI = WallStBotsAPI;

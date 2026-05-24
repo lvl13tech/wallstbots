@@ -908,6 +908,26 @@ function showToast(msg, type = 'success') {
   t._timer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+// ── Explicit window bindings for inline onclick handlers ──────────────────────
+// Ensures functions are globally accessible regardless of script evaluation order
+window.openDeleteModal        = openDeleteModal;
+window.closeDeleteModal       = closeDeleteModal;
+window.confirmDeletePortfolio = confirmDeletePortfolio;
+window.openSearchModal        = openSearchModal;
+window.closeSearchModal       = closeSearchModal;
+window.onSearchInput          = onSearchInput;
+window.selectTicker           = selectTicker;
+window.clearSelection         = clearSelection;
+window.addSelectedHolding     = addSelectedHolding;
+window.removeHolding          = removeHolding;
+window.openDrawer             = openDrawer;
+window.closeDrawer            = closeDrawer;
+window.openPwModal            = openPwModal;
+window.closePwModal           = closePwModal;
+window.sendPasswordReset      = sendPasswordReset;
+window.copyReferral           = copyReferral;
+window.logout                 = logout;
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', init);
 </script>
