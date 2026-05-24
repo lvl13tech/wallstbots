@@ -382,6 +382,50 @@
     .referral-stats { font-size: 0.8rem; color: var(--muted); }
     .referral-stats span { color: var(--accent); font-weight: 600; }
 
+    /* ─── EMAIL PREFS TOGGLES ─── */
+    .email-toggle-row {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .email-toggle-row:last-of-type { border-bottom: none; }
+    .email-toggle-label { font-size: 0.85rem; color: var(--text); line-height: 1.3; }
+    .email-toggle-sub   { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      background: var(--panel2); border: 1px solid var(--border);
+      border-radius: 22px; cursor: pointer; transition: background 0.2s;
+    }
+    .toggle-track::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 16px; height: 16px;
+      background: var(--muted); border-radius: 50%; transition: all 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-track { background: var(--accent-dim); border-color: var(--accent); }
+    .toggle-switch input:checked + .toggle-track::after { transform: translateX(18px); background: var(--accent); }
+    .email-sub-prefs { transition: opacity 0.2s; }
+    .email-sub-prefs.disabled { opacity: 0.35; pointer-events: none; }
+    .email-source-row {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 10px 0 2px;
+    }
+    .email-source-select {
+      background: var(--panel2); border: 1px solid var(--border);
+      color: var(--text); border-radius: 6px;
+      padding: 5px 8px; font-size: 0.8rem; cursor: pointer; outline: none;
+    }
+    .email-source-select:focus { border-color: var(--accent); }
+    .email-save-btn {
+      width: 100%; margin-top: 14px; padding: 9px;
+      background: var(--accent-dim); border: 1px solid var(--accent);
+      color: var(--accent); border-radius: 8px;
+      font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .email-save-btn:hover { background: var(--accent); color: var(--bg); }
+
     /* Manage subscription link */
     .manage-link {
       display: block;
@@ -1136,6 +1180,73 @@
   </div>
 
   <!-- Manage -->
+  <div class="drawer-section" id="emailPrefsSection">
+    <div class="drawer-section-title">Email Notifications</div>
+    <div class="email-toggle-row">
+      <div>
+        <div class="email-toggle-label">Enable Emails</div>
+        <div class="email-toggle-sub">Master on/off for all notifications</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="epEnabled" onchange="toggleEmailMaster()">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+    <div class="email-sub-prefs disabled" id="emailSubToggles">
+      <div class="email-toggle-row">
+        <div>
+          <div class="email-toggle-label">Daily Signals</div>
+          <div class="email-toggle-sub">Sent each weekday evening</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="epDaily">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="email-toggle-row">
+        <div>
+          <div class="email-toggle-label">Bot13 Trade Alerts</div>
+          <div class="email-toggle-sub">When Bot13 enters a position</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="epBot13">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="email-toggle-row">
+        <div>
+          <div class="email-toggle-label">Weekly Picks</div>
+          <div class="email-toggle-sub">Oracle's picks every Monday</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="epWeekly">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="email-toggle-row">
+        <div>
+          <div class="email-toggle-label">Monthly Picks</div>
+          <div class="email-toggle-sub">Wizard's picks on the 1st</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="epMonthly">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="email-source-row">
+        <div>
+          <div class="email-toggle-label">Signal Source</div>
+          <div class="email-toggle-sub">Which picks to receive</div>
+        </div>
+        <select class="email-source-select" id="epSource">
+          <option value="both">Site + My Portfolio</option>
+          <option value="site">Site picks only</option>
+          <option value="portfolio">My holdings only</option>
+        </select>
+      </div>
+    </div>
+    <button class="email-save-btn" onclick="saveEmailPrefs()">Save Preferences</button>
+  </div>
   <div class="drawer-section">
     <button onclick="openSubModal()" class="manage-sub-btn">Manage Subscription →</button>
   </div>
@@ -2007,8 +2118,77 @@
   /* ─── START ─── */
 
 
-  function checkWebmaster() {
+    function checkWebmaster() {
     const subPlan = (subscription?.plan_name||subscription?.plan||subscription?.tier||"").toLowerCase();
     const profTier = (userProfile?.tier||"").toLowerCase();
     const profRole = (userProfile?.role||"").toLowerCase();
-    const isWM = subPlan.incl
+    const isWM = subPlan.includes("webmaster") || profTier.includes("webmaster") || profRole === "admin";
+    if (isWM) {
+      const link = document.getElementById("wmNavLink"); if(link) link.style.display="";
+      const mob = document.getElementById("wmNavLinkMob"); if(mob) mob.style.display="";
+    }
+  }
+  // ── Email preferences ───────────────────────────────────────────────────
+  async function loadEmailPrefs() {
+    try {
+      const token = auth.getToken ? auth.getToken() : (auth._token || localStorage.getItem("auth_token") || "");
+      const resp = await fetch((window.API_BASE || "") + "/user/email-prefs", {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      if (!resp.ok) return;
+      const d = await resp.json();
+      document.getElementById("epEnabled").checked  = d.email_enabled       !== false;
+      document.getElementById("epDaily").checked    = d.email_daily         !== false;
+      document.getElementById("epBot13").checked    = d.email_bot13_alerts  !== false;
+      document.getElementById("epWeekly").checked   = d.email_weekly        !== false;
+      document.getElementById("epMonthly").checked  = d.email_monthly       !== false;
+      const src = document.getElementById("epSource");
+      if (src) src.value = d.email_source || "both";
+      toggleEmailMaster();
+    } catch(e) { /* silently ignore */ }
+  }
+  function toggleEmailMaster() {
+    const on = document.getElementById("epEnabled").checked;
+    document.getElementById("emailSubToggles").classList.toggle("disabled", !on);
+  }
+  async function saveEmailPrefs() {
+    const btn = document.querySelector(".email-save-btn");
+    const orig = btn.textContent;
+    btn.textContent = "Saving…"; btn.disabled = true;
+    try {
+      const token = auth.getToken ? auth.getToken() : (auth._token || localStorage.getItem("auth_token") || "");
+      const body = {
+        email_enabled:      document.getElementById("epEnabled").checked,
+        email_daily:        document.getElementById("epDaily").checked,
+        email_bot13_alerts: document.getElementById("epBot13").checked,
+        email_weekly:       document.getElementById("epWeekly").checked,
+        email_monthly:      document.getElementById("epMonthly").checked,
+        email_source:       document.getElementById("epSource").value,
+      };
+      const resp = await fetch((window.API_BASE || "") + "/user/email-prefs", {
+        method: "PUT",
+        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!resp.ok) throw new Error(await resp.text());
+      showToast("✓ Email preferences saved", "success");
+    } catch(e) {
+      showToast("Error saving preferences: " + e.message, "error");
+    } finally {
+      btn.textContent = orig; btn.disabled = false;
+    }
+  }
+
+  // ── MOBILE NAV ─────────────────────────────────────────────
+  function toggleMobNav(){
+    document.getElementById("mobNav").classList.toggle("open");
+    document.getElementById("mobNavOverlay").classList.toggle("open");
+  }
+  function closeMobNav(){
+    document.getElementById("mobNav").classList.remove("open");
+    document.getElementById("mobNavOverlay").classList.remove("open");
+  }
+  document.addEventListener("DOMContentLoaded",init);
+</script>
+</body>
+</html>

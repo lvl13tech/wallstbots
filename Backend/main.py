@@ -2080,6 +2080,155 @@ async def webmaster_set_owner(
 
 
 # ============================================================================
+# EMAIL PREFERENCES
+# ============================================================================
+
+class EmailPrefsUpdate(BaseModel):
+    email_enabled:      Optional[bool] = None
+    email_daily:        Optional[bool] = None
+    email_bot13_alerts: Optional[bool] = None
+    email_weekly:       Optional[bool] = None
+    email_monthly:      Optional[bool] = None
+    email_source:       Optional[str]  = None   # 'site' | 'portfolio' | 'both'
+
+
+@app.get("/user/email-prefs")
+async def get_email_prefs(current_user: dict = Depends(get_current_user)):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT email_enabled, email_daily, email_bot13_alerts,
+                   email_weekly, email_monthly, email_source
+            FROM users WHERE id = %s
+        """, (current_user["user_id"],))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found")
+        return {
+            "email_enabled":      row["email_enabled"],
+            "email_daily":        row["email_daily"],
+            "email_bot13_alerts": row["email_bot13_alerts"],
+            "email_weekly":       row["email_weekly"],
+            "email_monthly":      row["email_monthly"],
+            "email_source":       row["email_source"],
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.put("/user/email-prefs")
+async def update_email_prefs(
+    body: EmailPrefsUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    fields, values = [], []
+    if body.email_enabled      is not None: fields.append("email_enabled = %s");      values.append(body.email_enabled)
+    if body.email_daily        is not None: fields.append("email_daily = %s");        values.append(body.email_daily)
+    if body.email_bot13_alerts is not None: fields.append("email_bot13_alerts = %s"); values.append(body.email_bot13_alerts)
+    if body.email_weekly       is not None: fields.append("email_weekly = %s");       values.append(body.email_weekly)
+    if body.email_monthly      is not None: fields.append("email_monthly = %s");      values.append(body.email_monthly)
+    if body.email_source       is not None:
+        if body.email_source not in ("site", "portfolio", "both"):
+            raise HTTPException(status_code=400, detail="email_source must be 'site', 'portfolio', or 'both'")
+        fields.append("email_source = %s"); values.append(body.email_source)
+
+    if not fields:
+        raise HTTPException(status_code=400, detail="No fields to update")
+
+    values.append(current_user["user_id"])
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            f"UPDATE users SET {', '.join(fields)}, updated_at = NOW() WHERE id = %s",
+            values
+        )
+        conn.commit()
+        return {"success": True}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+# ── Admin: get all email subscribers for a platform ────────────────────────────
+@app.get("/admin/email-subscribers")
+async def get_email_subscribers(
+    platform: str = Query(..., description="wallstbots | bitbot13 | lvl13"),
+    x_internal_key: Optional[str] = Header(None, alias="X-Internal-Key"),
+):
+    """
+    Called by GitHub Actions send_emails.py script.
+    Returns all opted-in users + their portfolio holdings for the given platform.
+    Requires X-Internal-Key header matching INTERNAL_API_KEY env var.
+    """
+    expected_key = os.environ.get("INTERNAL_API_KEY", "")
+    if not expected_key or x_internal_key != expected_key:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        # Get all email-enabled users
+        cursor.execute("""
+            SELECT u.id, u.email, u.full_name, u.role,
+                   u.email_enabled, u.email_daily, u.email_bot13_alerts,
+                   u.email_weekly, u.email_monthly, u.email_source
+            FROM users u
+            WHERE u.email_enabled = TRUE
+            ORDER BY u.created_at
+        """)
+        users = cursor.fetchall()
+
+        subscribers = []
+        for u in users:
+            # Determine tier
+            tier = "free"
+            if u["role"] in ("admin", "webmaster"):
+                tier = "paid"
+            else:
+                cursor.execute("""
+                    SELECT subscription_tier FROM bots
+                    WHERE user_id = %s AND platform = %s
+                    LIMIT 1
+                """, (u["id"], platform))
+                bot_row = cursor.fetchone()
+                if bot_row:
+                    tier = "paid"
+
+            # Get holdings for this user on this platform
+            cursor.execute("""
+                SELECT bh.symbol
+                FROM bot_holdings bh
+                JOIN bots b ON b.id = bh.bot_id
+                WHERE b.user_id = %s AND b.platform = %s
+            """, (u["id"], platform))
+            holdings = [r["symbol"] for r in cursor.fetchall()]
+
+            # Parse first name from full_name
+            full = u.get("full_name") or ""
+            first_name = full.split()[0] if full.strip() else ""
+
+            subscribers.append({
+                "email":             u["email"],
+                "first_name":        first_name,
+                "tier":              tier,
+                "email_daily":       u["email_daily"],
+                "email_bot13_alerts": u["email_bot13_alerts"],
+                "email_weekly":      u["email_weekly"],
+                "email_monthly":     u["email_monthly"],
+                "email_source":      u["email_source"],
+                "portfolio_holdings": list(set(holdings)),
+            })
+
+        return {"subscribers": subscribers, "count": len(subscribers)}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+# ============================================================================
 # HEALTH CHECK
 # ============================================================================
 
