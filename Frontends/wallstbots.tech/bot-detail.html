@@ -601,11 +601,39 @@ async function loadSiteData() {
     STATE.news    = nr.status   === 'fulfilled' ? nr.value   : { items: [] };
     STATE.signals = sigr.status === 'fulfilled' ? sigr.value : { recommendations: [], summary: {} };
   } catch(e) {}
-  renderLeaderboard();
-  renderSignals();
-  renderNews();
-  renderRace();
+  try { renderLeaderboard(); } catch(e) {}
+  try { renderPortfolioBotAnalysis(); } catch(e) {}
+  try { renderSignals(); } catch(e) {}
+  try { renderNews(); } catch(e) {}
+  try { renderRace(); } catch(e) {}
   drawPortfolioChart();
+}
+
+// ── Bot Analysis grid (portfolio-scoped) ─────────────────────────────────────
+function renderPortfolioBotAnalysis() {
+  const grid = document.getElementById('botAnalysisGrid');
+  if (!grid) return;
+  const tickers = holdings.map(h => h.symbol).join(', ') || 'your holdings';
+  const funds = STATE.funds && STATE.funds.funds ? STATE.funds.funds : {};
+  const cards = FUND_ORDER.map(fid => {
+    const meta = FUND_META[fid];
+    const data = funds[fid];
+    const v = data && data.value ? data.value : null;
+    const dayPct  = v ? fmtPct(v.day_pct)  : '—';
+    const dayPnl  = v ? fmt$0(v.day_pnl)   : '—';
+    const allTime = v ? fmtPct(v.pnl_pct)  : '—';
+    const dayClass = v ? cls(v.day_pnl) : '';
+    return '<div class="card" style="padding:14px">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+      + '<span class="fund-icon ' + fid + '" style="font-size:1.2rem">' + meta.icon + '</span>'
+      + '<div><div style="font-weight:700;font-size:0.85rem">' + meta.name + '</div>'
+      + '<div style="font-size:0.7rem;color:var(--muted)">' + meta.kind + '</div></div></div>'
+      + '<div style="font-size:0.78rem;color:var(--muted);margin-bottom:6px">Simulating <strong style="color:var(--text)">' + tickers + '</strong></div>'
+      + '<div style="font-size:0.82rem">Today: <span class="' + dayClass + '">' + dayPct + ' (' + dayPnl + ')</span></div>'
+      + '<div style="font-size:0.78rem;color:var(--muted)">All-time: ' + allTime + '</div>'
+      + '</div>';
+  }).join('');
+  grid.innerHTML = cards;
 }
 
 // ── Leaderboard strip (exact same as homepage) ───────────────────────────────
@@ -619,7 +647,8 @@ function renderLeaderboard() {
       + '<div class="lb-name"><strong>' + m.name + '</strong><small>' + m.kind + '</small></div>'
       + '<div class="lb-pct ' + cls(v.day_pnl) + '">' + fmtPct(v.day_pct) + '</div></a>';
   }).join('');
-  document.getElementById('lbStrip').innerHTML = strip;
+  const lbEl = document.getElementById('lbStrip');
+  if (lbEl) lbEl.innerHTML = strip;
 }
 
 // ── Signals (filtered to user's holdings) ────────────────────────────────────
@@ -714,7 +743,8 @@ function fundCard(fid) {
 }
 
 function renderRace() {
-  document.getElementById('raceGrid').innerHTML = FUND_ORDER.map(fid => fundCard(fid)).join('');
+  const el = document.getElementById('raceGrid');
+  if (el) el.innerHTML = FUND_ORDER.map(fid => fundCard(fid)).join('');
 }
 
 // ── Portfolio performance chart (portfolio-specific, starts day 1) ──────────
