@@ -632,23 +632,16 @@ function renderPortfolioBotAnalysis() {
   const grid = document.getElementById('botAnalysisGrid');
   if (!grid) return;
   const tickers = holdings.map(h => h.symbol).join(', ') || 'your holdings';
-  const funds = STATE.funds && STATE.funds.funds ? STATE.funds.funds : {};
+  // NOTE: Performance numbers are NOT pulled from the global tracker.
+  // Portfolio-specific P&L is tracked from the next trading day onward.
   const cards = FUND_ORDER.map(fid => {
     const meta = FUND_META[fid];
-    const data = funds[fid];
-    const v = data && data.value ? data.value : null;
-    const dayPct  = v ? fmtPct(v.day_pct)  : '—';
-    const dayPnl  = v ? fmt$0(v.day_pnl)   : '—';
-    const allTime = v ? fmtPct(v.pnl_pct)  : '—';
-    const dayClass = v ? cls(v.day_pnl) : '';
     return '<a class="card clickable fund-card" href="/#/fund/' + fid + '">'
       + '<div class="fund-head"><span class="fund-icon ' + fid + '">' + meta.icon + '</span>'
       + '<div style="min-width:0"><div class="fund-name">' + meta.name + '</div>'
       + '<div class="fund-kind" style="color:' + meta.color + '">' + meta.kind + '</div></div></div>'
       + '<div class="fund-tag">' + meta.tagline + '</div>'
-      + '<div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">Tracking: <strong style="color:var(--text)">' + tickers + '</strong></div>'
-      + '<div style="font-size:0.82rem">Today: <span class="' + dayClass + '">' + dayPct + ' (' + dayPnl + ')</span></div>'
-      + '<div style="font-size:0.78rem;color:var(--muted)">All-time: ' + allTime + '</div>'
+      + '<div style="font-size:0.72rem;color:var(--muted);margin-top:6px">Tracking: <strong style="color:var(--text)">' + tickers + '</strong></div>'
       + '</a>';
   }).join('');
   grid.innerHTML = cards;
@@ -669,30 +662,31 @@ function renderLeaderboard() {
   if (lbEl) lbEl.innerHTML = strip;
 }
 
-// ── Signals (filtered to user's holdings) ────────────────────────────────────
+// ── Signals (filtered to user's holdings only — no global fallback) ──────────
 function renderSignals() {
   const allSigs  = (STATE.signals && STATE.signals.recommendations) || [];
-  const summary  = (STATE.signals && STATE.signals.summary) || {};
   const holdingTickers = holdings.map(h => h.symbol);
 
-  // Filter to only signals for holdings the user owns (fallback: all signals)
-  let filtered = holdingTickers.length
+  // Filter strictly to the user's holdings — never fall back to global signals
+  const filtered = holdingTickers.length
     ? allSigs.filter(r => holdingTickers.includes(r.symbol))
-    : allSigs;
+    : [];
 
   // Update note
   const note = document.getElementById('signalsNote');
-  if (holdingTickers.length && filtered.length === 0) {
-    note.textContent = 'No signals today for your ' + holdingTickers.length + ' holdings. Add holdings or check back after the next refresh.';
-  } else if (holdingTickers.length) {
-    note.textContent = 'Showing signals for your ' + holdingTickers.length + ' holding' + (holdingTickers.length !== 1 ? 's' : '') + ' only.';
-  } else {
+  if (!holdingTickers.length) {
     note.textContent = 'Add holdings above to see signals filtered to your portfolio.';
+  } else if (filtered.length === 0) {
+    note.textContent = 'No signals today for your ' + holdingTickers.length + ' holding' + (holdingTickers.length !== 1 ? 's' : '') + '. Check back after the next refresh.';
+  } else {
+    note.textContent = 'Showing signals for your ' + holdingTickers.length + ' holding' + (holdingTickers.length !== 1 ? 's' : '') + ' only.';
   }
 
   const topByAction = (action, n) => filtered.filter(r => r.action === action).slice(0, n);
   const sigCol = (label, action, n) => {
     const items = topByAction(action, n);
+    // Count is portfolio-specific — never show global totals
+    const count = filtered.filter(r => r.action === action).length;
     const rows = items.length
       ? items.map(r => '<div class="row"><strong>' + escHtml(r.symbol) + '</strong>'
           + '<span class="' + (r.upside_pct >= 0 ? 'pos' : 'neg') + '">'
@@ -701,7 +695,8 @@ function renderSignals() {
     const sigClass = action === 'STRONG BUY' ? 'signal-strong-buy' : action === 'HOLD' ? 'signal-hold' : 'signal-strong-sell';
     return '<div class="card">'
       + '<div class="signals-today-head"><span class="signal ' + sigClass + '">' + label + '</span>'
-      + '<span style="color:var(--muted);font-size:10px">' + (summary[action] || filtered.filter(r => r.action === action).length) + ' total</span></div>'
+      + (count ? '<span style="color:var(--muted);font-size:10px">' + count + ' of your holdings</span>' : '')
+      + '</div>'
       + '<div class="signals-today-list">' + rows + '</div></div>';
   };
 
@@ -736,20 +731,19 @@ function renderNews() {
       const title = (item.title || '').toUpperCase();
       return holdingTickers.some(t => title.includes(t));
     });
-    // Fall back to all news if nothing matched (avoids empty section)
-    if (!filtered.length) filtered = allNews;
+    // No fallback — only show news relevant to user's holdings
   }
 
   const cards = filtered.slice(0, 6).map(newsCard).join('');
   document.getElementById('newsGrid').innerHTML = cards || '<p style="color:var(--muted);font-size:0.9rem">No headlines yet — the fetcher runs nightly.</p>';
 }
 
-// ── Race grid (exact same as homepage) ───────────────────────────────────────
+// ── Race grid — portfolio-scoped (zeros on day 1, updates next trading day) ───
 function fundCard(fid) {
   const meta = FUND_META[fid];
-  const cap  = (STATE.funds && STATE.funds.starting_capital) || 55000;
-  const data = STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null;
-  const v    = data && data.value ? data.value : { total: cap, pnl: 0, pnl_pct: 0, day_pnl: 0, day_pct: 0 };
+  const cap  = holdings.length * 1000 || 0;
+  // Always show $0 P&L — portfolio-specific tracking starts next trading day
+  const v    = { total: cap, pnl: 0, pnl_pct: 0, day_pnl: 0, day_pct: 0 };
   return '<a class="card clickable fund-card" href="/#/fund/' + fid + '">'
     + '<div class="fund-head"><span class="fund-icon ' + fid + '">' + meta.icon + '</span>'
     + '<div style="min-width:0"><div class="fund-name">' + meta.name + '</div><div class="fund-kind" style="color:' + meta.color + '">' + meta.kind + '</div></div></div>'

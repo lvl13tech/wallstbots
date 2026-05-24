@@ -2,200 +2,60 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Portfolio — Level XIII Tech</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="assets/style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
-    :root {
-      --bg: #06080d;
-      --panel: #0d1117;
-      --panel2: #141b27;
-      --border: #1e2633;
-      --text: #e6edf3;
-      --muted: #7d8590;
-      --accent: #00d4ff;
-      --accent-dim: #003d47;
-      --accent-glow: rgba(0,212,255,0.15);
-      --accent-hover: #00b8e0;
-      --red: #f85149;
-      --radius: 10px;
-      --pad: 20px;
-      --shadow: 0 4px 24px rgba(0,0,0,0.5);
-      --max: 1200px;
+    /* ── Header (matches dashboard) ── */
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 200;
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    a { text-decoration: none; color: inherit; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-
-    /* ─── HEADER ─── */
-    header { background: var(--panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 200; }
-    .header-inner { max-width: var(--max); margin: 0 auto; padding: 0 var(--pad); height: 60px; display: flex; align-items: center; gap: 20px; }
+    .header-inner {
+      max-width: var(--max); margin: 0 auto;
+      padding: 0 var(--pad); height: 60px;
+      display: flex; align-items: center; gap: 24px;
+    }
     .logo { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; white-space: nowrap; }
-    .logo span { color: var(--accent); }
-    nav { display: flex; align-items: center; gap: 16px; flex: 1; }
-    nav a { color: var(--muted); font-size: 0.85rem; transition: color 0.15s; white-space: nowrap; }
-    nav a:hover { color: var(--text); }
-    .ham-btn { display: none; background: none; border: none; color: var(--text); cursor: pointer; padding: 4px; align-items: center; justify-content: center; }
-    .ham-btn svg { width: 22px; height: 22px; }
-    .mob-nav { display: none; flex-direction: column; background: var(--panel); border-bottom: 1px solid var(--border); padding: 12px 20px; gap: 0; }
-    .mob-nav.open { display: flex; }
-    .mob-nav a { padding: 11px 0; font-size: 0.9rem; color: var(--text); border-bottom: 1px solid var(--border); }
-    .mob-nav a:last-child { border-bottom: none; }
-    .mob-nav a:hover { color: var(--accent); }
-    .mob-nav-sep { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
-    .mob-nav-overlay { display: none; position: fixed; inset: 0; z-index: 150; }
-    .mob-nav-overlay.open { display: block; }
+    .logo span { color: var(--blue); }
+    nav { display: flex; gap: 4px; flex: 1; }
+    nav a { padding: 6px 14px; border-radius: 6px; font-size: 0.875rem; color: var(--muted); transition: all 0.15s; }
+    nav a:hover { color: var(--text); background: var(--panel2); }
 
-    /* Platform switcher */
     .platform-switcher { position: relative; }
     .platform-btn { display: flex; align-items: center; gap: 8px; background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; color: var(--text); font-size: 0.8rem; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-    .platform-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .platform-btn:hover { border-color: var(--blue); color: var(--blue); }
     .platform-btn svg { width: 14px; height: 14px; transition: transform 0.2s; }
     .platform-btn.open svg { transform: rotate(180deg); }
     .platform-menu { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 6px; min-width: 220px; box-shadow: var(--shadow); z-index: 300; }
     .platform-menu.open { display: block; }
     .platform-menu-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 7px; cursor: pointer; font-size: 0.85rem; transition: background 0.15s; text-decoration: none; color: var(--text); }
     .platform-menu-item:hover { background: var(--panel2); }
-    .platform-menu-item.current { background: var(--accent-dim); color: var(--accent); }
-    .platform-badge { font-size: 0.65rem; font-weight: 700; background: var(--accent-dim); color: var(--accent); border-radius: 4px; padding: 2px 6px; letter-spacing: 0.5px; }
-    .platform-menu-item.current .platform-badge { background: var(--accent); color: var(--bg); }
-    .account-btn { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 7px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-    .account-btn:hover { background: var(--accent); color: var(--bg); }
+    .platform-menu-item.current { background: rgba(0,212,255,0.08); color: var(--blue); }
+    .platform-badge { font-size: 0.65rem; font-weight: 700; background: rgba(0,212,255,0.12); color: var(--blue); border: 1px solid rgba(0,212,255,0.3); border-radius: 4px; padding: 2px 6px; letter-spacing: 0.5px; }
+    .platform-menu-item.current .platform-badge { background: var(--blue); color: var(--bg); }
+    .account-btn { background: rgba(0,212,255,0.1); border: 1px solid var(--blue); color: var(--blue); border-radius: 8px; padding: 7px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .account-btn:hover { background: var(--blue); color: var(--bg); }
 
-    /* ─── ACCOUNT DRAWER ─── */
-    .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 400; }
-    .drawer-overlay.open { display: block; }
-    .drawer { position: fixed; top: 0; right: -420px; width: 420px; max-width: 95vw; height: 100vh; background: var(--panel); border-left: 1px solid var(--border); z-index: 500; transition: right 0.3s cubic-bezier(0.4,0,0.2,1); overflow-y: auto; display: flex; flex-direction: column; }
-    .drawer.open { right: 0; }
-    .drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--panel); z-index: 1; }
-    .drawer-header h2 { font-size: 1rem; font-weight: 600; }
-    .drawer-close { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-    .drawer-close:hover { background: var(--panel2); color: var(--text); }
-    .drawer-section { padding: 20px 24px; border-bottom: 1px solid var(--border); }
-    .drawer-section:last-child { border-bottom: none; }
-    .drawer-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 14px; }
-    .profile-email { font-size: 0.95rem; font-weight: 500; margin-bottom: 12px; word-break: break-all; }
-    .btn-outline { background: none; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 16px; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; width: 100%; }
-    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
-    .tier-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-    .tier-badge { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; padding: 3px 10px; border-radius: 20px; background: var(--accent); color: var(--bg); }
-    .tier-badge.free { background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
-    .tier-badge.pro { background: #7c3aed; color: #fff; }
-    .tier-badge.elite { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; }
-    .tier-name { font-weight: 600; font-size: 0.95rem; }
-    .referral-box { background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
-    .referral-code { font-family: monospace; font-size: 1rem; letter-spacing: 2px; color: var(--accent); font-weight: 600; }
-    .btn-copy { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; padding: 5px 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-    .btn-copy:hover { background: var(--accent); color: var(--bg); }
-    .referral-stats { font-size: 0.8rem; color: var(--muted); }
-    .referral-stats span { color: var(--accent); font-weight: 600; }
-    .manage-link { display: block; text-align: center; padding: 10px; border-radius: 8px; font-size: 0.85rem; color: var(--muted); border: 1px solid var(--border); transition: all 0.15s; margin-top: 4px; }
-    .manage-link:hover { border-color: var(--accent); color: var(--accent); }
+    /* ── Hamburger / Mobile Nav ── */
+    .ham-btn { display: none; background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; cursor: pointer; color: var(--text); margin-left: auto; flex-shrink: 0; }
+    .ham-btn svg { width: 18px; height: 18px; display: block; }
+    .mob-nav { display: none; position: fixed; top: 60px; left: 0; right: 0; background: var(--panel); border-bottom: 1px solid var(--border); z-index: 199; padding: 8px 16px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    .mob-nav a { display: block; padding: 11px 14px; border-radius: 8px; font-size: 0.9rem; color: var(--muted); transition: all 0.15s; }
+    .mob-nav a:hover { color: var(--text); background: var(--panel2); }
+    .mob-nav-sep { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
+    .mob-nav-overlay { display: none; position: fixed; inset: 0; top: 60px; z-index: 198; }
+    .mob-nav.open, .mob-nav-overlay.open { display: block; }
 
-    /* ─── PASSWORD RESET MODAL ─── */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 600; align-items: center; justify-content: center; }
-    .modal-overlay.open { display: flex; }
-    .modal-box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; width: 100%; max-width: 380px; box-shadow: var(--shadow); }
-    .modal-box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
-    .modal-box p { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-    .btn-cancel { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
-    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
-    .btn-confirm { background: var(--accent); border: none; color: var(--bg); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
-    .btn-confirm:hover { background: var(--accent-hover); }
-    .btn-danger { background: var(--red); border: none; color: #fff; border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
-    .btn-danger:hover { opacity: 0.85; }
-
-    /* ─── MAIN ─── */
-    main { max-width: var(--max); margin: 0 auto; padding: var(--pad); }
-
-    .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
-    .page-header-left h1 { font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
-    .page-header-left .bot-meta { font-size: 0.82rem; color: var(--muted); margin-top: 6px; }
-    .status-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted); }
-    .status-badge.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
-    .page-header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .btn-add { background: var(--accent); border: none; color: var(--bg); border-radius: 8px; padding: 9px 18px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
-    .btn-add:hover { background: var(--accent-hover); }
-    .btn-delete-portfolio { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 9px 16px; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-    .btn-delete-portfolio:hover { border-color: var(--red); color: var(--red); }
-
-    .stats-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 28px; }
-    @media (max-width:800px){ .stats-bar{ grid-template-columns: repeat(2,1fr); } }
-    .stat-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
-    .stat-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 6px; }
-    .stat-value { font-size: 1.35rem; font-weight: 700; color: var(--text); line-height: 1.2; }
-    .stat-sub { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
-    .stat-sub.pos { color: var(--accent); }
-    .stat-sub.neg { color: var(--red); }
-
-    .main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
-    @media (max-width:900px){ .main-grid{ grid-template-columns: 1fr; } }
-
-    /* Holdings table */
-    .panel-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .panel-card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--border); }
-    .panel-card-title { font-size: 0.9rem; font-weight: 600; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
-    thead th { padding: 10px 14px; text-align: left; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--panel); white-space: nowrap; }
-    thead th:last-child { text-align: right; }
-    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: var(--panel2); }
-    td { padding: 12px 14px; vertical-align: middle; }
-    td:last-child { text-align: right; }
-    .symbol-cell { font-weight: 700; font-size: 0.9rem; letter-spacing: 0.3px; }
-    .symbol-cell small { display: block; font-size: 0.72rem; font-weight: 400; color: var(--muted); letter-spacing: 0; }
-    .pos { color: var(--accent); }
-    .neg { color: var(--red); }
-    .btn-remove { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; transition: all 0.15s; }
-    .btn-remove:hover { border-color: var(--red); color: var(--red); }
-    .empty-table { padding: 40px; text-align: center; color: var(--muted); font-size: 0.9rem; }
-
-    /* Right column */
-    .right-col { display: flex; flex-direction: column; gap: 16px; }
-    .chart-wrap { position: relative; padding: 20px; display: flex; align-items: center; justify-content: center; }
-    .chart-wrap canvas { max-width: 220px; max-height: 220px; }
-    .chart-center { position: absolute; text-align: center; pointer-events: none; }
-    .chart-center-value { font-size: 1.2rem; font-weight: 700; }
-    .chart-center-label { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
-    .legend-list { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
-    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
-    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .legend-sym { font-weight: 600; flex: 1; }
-    .legend-pct { color: var(--muted); }
-
-    /* ─── SEARCH MODAL ─── */
-    .search-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 600; align-items: center; justify-content: center; padding: 20px; }
-    .search-modal.open { display: flex; }
-    .search-box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 24px; width: 100%; max-width: 480px; box-shadow: var(--shadow); }
-    .search-box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; }
-    .search-input-wrap { position: relative; margin-bottom: 10px; }
-    .search-input { width: 100%; background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: 0.9rem; transition: border-color 0.15s; }
-    .search-input:focus { outline: none; border-color: var(--accent); }
-    .search-results { background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; max-height: 220px; overflow-y: auto; margin-bottom: 16px; }
-    .search-result-item { padding: 10px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.12s; border-bottom: 1px solid var(--border); }
-    .search-result-item:last-child { border-bottom: none; }
-    .search-result-item:hover, .search-result-item.selected { background: var(--accent-dim); }
-    .result-ticker { font-weight: 700; font-size: 0.9rem; min-width: 60px; }
-    .result-name { font-size: 0.8rem; color: var(--muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .result-type { font-size: 0.72rem; color: var(--muted); background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; }
-    .search-empty { padding: 20px; text-align: center; color: var(--muted); font-size: 0.85rem; }
-    .search-disclosure { font-size: 0.72rem; color: var(--muted); padding: 4px 2px 10px; line-height: 1.5; }
-    .selected-ticker-display { background: var(--accent-dim); border: 1px solid var(--accent); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; font-size: 0.9rem; font-weight: 600; color: var(--accent); }
-    .allocation-note { font-size: 0.78rem; color: var(--muted); margin-bottom: 16px; }
-    .search-actions { display: flex; gap: 10px; justify-content: flex-end; }
-
-    .skeleton { background: linear-gradient(90deg, var(--panel) 25%, var(--panel2) 50%, var(--panel) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
-    @keyframes shimmer { 0%{ background-position: 200% 0; } 100%{ background-position: -200% 0; } }
-
-    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 0.875rem; font-weight: 500; z-index: 1000; transform: translateY(20px); opacity: 0; transition: all 0.3s; max-width: 320px; }
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.success { border-color: var(--accent); color: var(--accent); }
-    .toast.error { border-color: var(--red); color: var(--red); }
-
-    @media (max-width:600px) { .header-inner { gap: 10px; } nav { display: none; } .ham-btn { display: flex; } .platform-btn span { display: none; } }
+    @media (max-width: 600px) {
+      .header-inner { gap: 10px; }
+      nav { display: none; }
+      .ham-btn { display: flex; align-items: center; }
+      .platform-btn span { display: none; }
+    }
 
     /* ─── MOBILE: ≤480px ─── */
     @media (max-width: 480px) {
@@ -203,16 +63,14 @@
       .header-inner { padding: 0 12px; gap: 6px; }
       .platform-btn { display: none !important; }
       .account-btn { padding: 6px 10px; font-size: 0.78rem; }
-      .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-      .page-header-right { width: 100%; flex-direction: column; gap: 8px; }
-      .btn-add, .btn-delete-portfolio { width: 100%; text-align: center; display: block; }
-      .stats-bar { gap: 8px; }
-      .stat-card { padding: 12px 14px; }
-      .stat-value { font-size: 1.1rem; }
-      .panel-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-      table { min-width: 460px; }
-      .panel-card-header { padding: 12px 14px; flex-wrap: wrap; gap: 8px; }
-      thead th, td { padding: 8px 10px; }
+      .hero-stats-bar { gap: 16px; }
+      .hs-val { font-size: 1.1rem; }
+      .hero-ctas { flex-wrap: wrap; gap: 8px; }
+      .hero-ctas .btn { flex: 1; min-width: 140px; text-align: center; justify-content: center; }
+      .section-head { flex-wrap: wrap; gap: 8px; }
+      .btn-add-holding, .btn-del-portfolio { width: 100%; text-align: center; }
+      .panel[style*="overflow:hidden"] { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+      .holdings-head { flex-wrap: wrap; gap: 8px; padding: 12px 14px; }
       .search-box { padding: 16px; max-width: 100%; }
       .search-actions { flex-direction: column-reverse; gap: 8px; }
       .search-actions button { width: 100%; }
@@ -221,14 +79,114 @@
       .modal-box { padding: 16px; margin: 12px; }
       .toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
     }
+
+    /* ── Member Hero ── */
+    .member-hero { margin-bottom: 24px; }
+    .hero-stats-bar { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 16px; }
+    .hs { display: flex; flex-direction: column; gap: 2px; }
+    .hs-val { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.4px; }
+    .hs-lbl { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); }
+
+    /* ── Chart ── */
+    .chart-wrap { min-height: 280px; position: relative; }
+
+    /* ── Holdings table wrapper ── */
+    .holdings-section { margin-top: 12px; }
+    .holdings-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+    .holdings-title { font-size: 0.9rem; font-weight: 600; }
+    .status-dot { display: inline-flex; align-items: center; gap: 5px; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: rgba(0,212,255,0.1); border: 1px solid var(--blue); color: var(--blue); }
+    .btn-add-holding { background: var(--blue); border: none; color: var(--bg); border-radius: 8px; padding: 8px 16px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+    .btn-add-holding:hover { background: #00b8e0; }
+    .btn-del-portfolio { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 8px 14px; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .btn-del-portfolio:hover { border-color: var(--red); color: var(--red); }
+    .empty-holdings { padding: 40px; text-align: center; color: var(--muted); font-size: 0.9rem; }
+
+    /* ── Signals note ── */
+    .signals-note { font-size: 0.72rem; color: var(--muted); margin-top: 8px; font-style: italic; }
+
+    /* ── Bot Analysis cards ── */
+    .bot-pick-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; font-size: 0.82rem; border-bottom: 1px solid var(--border); }
+    .bot-pick-row:last-child { border-bottom: none; }
+    .bot-pick-tag { font-weight: 700; font-size: 0.82rem; }
+    .bot-coverage-picks { margin-top: 4px; }
+
+    /* ── Account Drawer ── */
+    .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 400; }
+    .drawer-overlay.open { display: block; }
+    .drawer { position: fixed; top: 0; right: -420px; width: 420px; max-width: 95vw; height: 100vh; background: var(--panel); border-left: 1px solid var(--border); z-index: 500; transition: right 0.3s cubic-bezier(0.4,0,0.2,1); overflow-y: auto; display: flex; flex-direction: column; }
+    .drawer.open { right: 0; }
+    .drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--panel); z-index: 1; }
+    .drawer-header h2 { font-size: 1rem; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--text); margin: 0; }
+    .drawer-close { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 6px; display: flex; align-items: center; transition: all 0.15s; }
+    .drawer-close:hover { background: var(--panel2); color: var(--text); }
+    .drawer-section { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+    .drawer-section:last-child { border-bottom: none; }
+    .drawer-section-title { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; }
+    .profile-email { font-size: 0.95rem; font-weight: 500; margin-bottom: 12px; word-break: break-all; }
+    .btn-outline { background: none; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 16px; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; width: 100%; }
+    .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+    .tier-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .tier-badge { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.5px; padding: 3px 10px; border-radius: 20px; background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
+    .tier-badge.pro { background: #7c3aed; color: #fff; border-color: #7c3aed; }
+    .tier-badge.elite { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; border: none; }
+    .tier-name { font-weight: 600; font-size: 0.92rem; }
+    .referral-box { background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .referral-code { font-family: monospace; font-size: 1rem; letter-spacing: 2px; color: var(--blue); font-weight: 600; }
+    .btn-copy { background: rgba(0,212,255,0.1); border: 1px solid var(--blue); color: var(--blue); border-radius: 6px; padding: 4px 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .btn-copy:hover { background: var(--blue); color: var(--bg); }
+    .referral-stats { font-size: 0.78rem; color: var(--muted); }
+    .referral-stats span { color: var(--blue); font-weight: 600; }
+    .manage-link { display: block; text-align: center; padding: 10px; border-radius: 8px; font-size: 0.82rem; color: var(--muted); border: 1px solid var(--border); transition: all 0.15s; margin-top: 4px; }
+    .manage-link:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* ── Modals ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 600; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; width: 100%; max-width: 380px; box-shadow: var(--shadow); }
+    .modal-box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; text-transform: none; letter-spacing: 0; color: var(--text); }
+    .modal-box p { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .btn-cancel { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+    .btn-confirm { background: var(--blue); border: none; color: var(--bg); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .btn-confirm:hover { background: #00b8e0; }
+    .btn-danger { background: var(--red); border: none; color: #fff; border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+    .btn-danger:hover { opacity: 0.85; }
+
+    /* ── Search modal ── */
+    .search-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 600; align-items: center; justify-content: center; padding: 20px; }
+    .search-modal.open { display: flex; }
+    .search-box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 24px; width: 100%; max-width: 480px; box-shadow: var(--shadow); }
+    .search-box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; text-transform: none; letter-spacing: 0; color: var(--text); }
+    .search-input { width: 100%; background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: 0.9rem; transition: border-color 0.15s; font-family: inherit; }
+    .search-input:focus { outline: none; border-color: var(--blue); }
+    .search-results { background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; max-height: 220px; overflow-y: auto; margin: 10px 0 6px; }
+    .search-result-item { padding: 10px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.12s; border-bottom: 1px solid var(--border); }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover, .search-result-item.selected { background: rgba(0,212,255,0.08); }
+    .result-ticker { font-weight: 700; font-size: 0.88rem; min-width: 60px; }
+    .result-name { font-size: 0.78rem; color: var(--muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .result-type { font-size: 0.7rem; color: var(--muted); background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; }
+    .search-empty { padding: 20px; text-align: center; color: var(--muted); font-size: 0.82rem; }
+    .search-disclosure { font-size: 0.7rem; color: var(--muted); padding: 2px 2px 12px; line-height: 1.5; }
+    .selected-ticker-display { background: rgba(0,212,255,0.1); border: 1px solid var(--blue); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-size: 0.88rem; font-weight: 600; color: var(--blue); }
+    .allocation-note { font-size: 0.76rem; color: var(--muted); margin-bottom: 16px; }
+    .search-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 0.875rem; font-weight: 500; z-index: 1000; transform: translateY(20px); opacity: 0; transition: all 0.3s; max-width: 340px; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--blue); color: var(--blue); }
+    .toast.error { border-color: var(--red); color: var(--red); }
+
   </style>
 </head>
 <body>
 
-<!-- ─── HEADER ─── -->
+<!-- ── HEADER ── -->
 <header>
   <div class="header-inner">
-    <a href="/" class="logo">Level XIII <span>Tech</span></a>
+    <a href="/" class="logo">Level <span>XIII</span></a>
     <nav>
       <a href="dashboard.html">← Portfolios</a>
     </nav>
@@ -241,29 +199,29 @@
     </button>
     <div class="platform-switcher">
       <button class="platform-btn" id="platformBtn" onclick="togglePlatformMenu()">
-        <span>🔀 Switch Platform</span>
+        <span>Switch Platform</span>
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.427 7.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 7H4.604a.25.25 0 00-.177.427z"/></svg>
       </button>
       <div class="platform-menu" id="platformMenu">
         <div class="platform-menu-item current">
           <span class="platform-badge">L13</span>
-          <div><div style="font-weight:600">Level XIII Tech</div><div style="font-size:0.75rem;color:var(--muted)">AI & Quantum</div></div>
+          <div><div style="font-weight:600">Level XIII Tech</div><div style="font-size:0.72rem;color:var(--muted)">AI &amp; Quantum</div></div>
         </div>
         <a href="https://wallstbots.tech/dashboard.html" class="platform-menu-item">
-          <span class="platform-badge" style="background:var(--panel2);color:var(--muted);border:1px solid var(--border)">WSB</span>
-          <div><div style="font-weight:600">Wall St. Bots</div><div style="font-size:0.75rem;color:var(--muted)">Stock Market</div></div>
+          <span class="platform-badge" style="background:var(--panel2);color:var(--muted);border-color:var(--border)">WSB</span>
+          <div><div style="font-weight:600">Wall St. Bots</div><div style="font-size:0.72rem;color:var(--muted)">Stock Market</div></div>
         </a>
         <a href="https://bitbot13.tech/dashboard.html" class="platform-menu-item">
-          <span class="platform-badge" style="background:var(--panel2);color:var(--muted);border:1px solid var(--border)">BB13</span>
-          <div><div style="font-weight:600">BitBot13</div><div style="font-size:0.75rem;color:var(--muted)">Cryptocurrency</div></div>
+          <span class="platform-badge" style="background:var(--panel2);color:var(--muted);border-color:var(--border)">BB13</span>
+          <div><div style="font-weight:600">BitBot13</div><div style="font-size:0.72rem;color:var(--muted)">Cryptocurrency</div></div>
         </a>
       </div>
     </div>
-
     <button class="account-btn" onclick="openDrawer()">My Account</button>
   </div>
 </header>
 
+<!-- ── MOBILE NAV ── -->
 <div class="mob-nav" id="mobNav">
   <a href="dashboard.html">← My Portfolios</a>
   <hr class="mob-nav-sep">
@@ -272,7 +230,7 @@
 </div>
 <div class="mob-nav-overlay" id="mobNavOverlay" onclick="closeMobNav()"></div>
 
-<!-- ─── ACCOUNT DRAWER ─── -->
+<!-- ── ACCOUNT DRAWER ── -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="accountDrawer">
   <div class="drawer-header">
@@ -291,15 +249,11 @@
   <div class="drawer-section">
     <div class="drawer-section-title">Membership</div>
     <div class="tier-row">
-      <span class="tier-badge free" id="drawerTierBadge">Free</span>
+      <span class="tier-badge" id="drawerTierBadge">Free</span>
       <span class="tier-name" id="drawerTierName">Free Plan</span>
     </div>
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:8px">
-      Status: <span id="drawerStatus" style="color:var(--text);font-weight:500">—</span>
-    </div>
-    <div style="font-size:0.82rem;color:var(--muted)">
-      Renewal: <span id="drawerBillDate" style="color:var(--text);font-weight:500">—</span>
-    </div>
+    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:6px">Status: <span id="drawerStatus" style="color:var(--text);font-weight:500">—</span></div>
+    <div style="font-size:0.8rem;color:var(--muted)">Renewal: <span id="drawerBillDate" style="color:var(--text);font-weight:500">—</span></div>
   </div>
   <div class="drawer-section">
     <div class="drawer-section-title">Referral Program</div>
@@ -310,11 +264,11 @@
     <div class="referral-stats"><span id="drawerRefCount">0</span> referrals · Earn 1 free month per 3 referrals</div>
   </div>
   <div class="drawer-section">
-    <a href="https://www.paypal.com/myaccount/autopay/" target="_blank" class="manage-link">Manage on PayPal →</a>
+    <a href="https://www.paypal.com/myaccount/autopay/" target="_blank" class="manage-link">Manage Subscription on PayPal →</a>
   </div>
 </div>
 
-<!-- ─── PASSWORD RESET MODAL ─── -->
+<!-- ── PASSWORD RESET MODAL ── -->
 <div class="modal-overlay" id="pwModal">
   <div class="modal-box">
     <h3>Reset Password</h3>
@@ -326,7 +280,7 @@
   </div>
 </div>
 
-<!-- ─── DELETE CONFIRMATION MODAL ─── -->
+<!-- ── DELETE PORTFOLIO MODAL ── -->
 <div class="modal-overlay" id="deleteModal">
   <div class="modal-box">
     <h3>Delete Portfolio</h3>
@@ -338,99 +292,113 @@
   </div>
 </div>
 
-<!-- ─── MAIN ─── -->
-<main>
-  <div class="page-header">
-    <div class="page-header-left">
-      <h1 id="botName"><div class="skeleton" style="width:200px;height:28px"></div></h1>
-      <div class="bot-meta" id="botMeta">&nbsp;</div>
-    </div>
-    <div class="page-header-right">
-      <button class="btn-add" onclick="openSearchModal()">+ Add Holding</button>
-      <button class="btn-delete-portfolio" onclick="openDeleteModal()">Delete Portfolio</button>
-    </div>
-  </div>
+<!-- ── MAIN ── -->
+<main class="app">
 
-  <div class="stats-bar">
-    <div class="stat-card">
-      <div class="stat-label">Total Value</div>
-      <div class="stat-value" id="statValue">$—</div>
-      <div class="stat-sub" id="statValueSub">—</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Cost Basis</div>
-      <div class="stat-value" id="statCost">$—</div>
-      <div class="stat-sub">Initial investment</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Gain / Loss</div>
-      <div class="stat-value" id="statGain">$—</div>
-      <div class="stat-sub" id="statGainPct">—</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Holdings</div>
-      <div class="stat-value" id="statHoldings">—</div>
-      <div class="stat-sub" id="statHoldingsSub">Securities tracked</div>
-    </div>
-  </div>
-
-  <div class="main-grid">
-    <!-- Holdings Table -->
-    <div class="panel-card">
-      <div class="panel-card-header">
-        <div class="panel-card-title">Holdings</div>
-        <span class="status-badge active" id="statusBadge">Active</span>
+  <!-- 1. Member Hero -->
+  <section class="hero member-hero">
+    <img src="assets/robot.svg" alt="" class="hero-robot">
+    <div class="hero-content">
+      <span class="hero-eyebrow" id="heroEyebrow">Your Portfolio</span>
+      <h1 id="heroName" style="margin-bottom:10px">Loading…</h1>
+      <p id="heroMeta" style="color:var(--muted);margin-bottom:18px">&nbsp;</p>
+      <div class="hero-ctas">
+        <button class="btn btn-primary" onclick="openSearchModal()">+ Add Holding</button>
+        <button class="btn btn-secondary" onclick="openDeleteModal()">Delete Portfolio</button>
       </div>
-      <div id="holdingsWrap">
-        <div class="empty-table"><div class="skeleton" style="width:80%;height:14px;margin:0 auto 10px"></div><div class="skeleton" style="width:60%;height:14px;margin:0 auto"></div></div>
+      <div class="hero-stats-bar" id="heroStats" style="display:none">
+        <div class="hs"><span class="hs-val" id="hsValue">—</span><span class="hs-lbl">Value</span></div>
+        <div class="hs"><span class="hs-val" id="hsCost">—</span><span class="hs-lbl">Cost Basis</span></div>
+        <div class="hs"><span class="hs-val" id="hsGain">—</span><span class="hs-lbl">Total Gain</span></div>
+        <div class="hs"><span class="hs-val" id="hsGainPct">—</span><span class="hs-lbl">Return</span></div>
+        <div class="hs"><span class="hs-val" id="hsHoldings">—</span><span class="hs-lbl">Holdings</span></div>
       </div>
     </div>
+  </section>
 
-    <!-- Right Column -->
-    <div class="right-col">
-      <!-- Allocation Chart -->
-      <div class="panel-card">
-        <div class="panel-card-header"><div class="panel-card-title">Allocation</div></div>
-        <div class="chart-wrap">
-          <canvas id="allocChart"></canvas>
-          <div class="chart-center">
-            <div class="chart-center-value" id="chartCenterValue">—</div>
-            <div class="chart-center-label">portfolio</div>
-          </div>
-        </div>
-        <div class="legend-list" id="chartLegend"></div>
-      </div>
-    </div>
+  <!-- 2. Live Leaderboard — Today (same as homepage) -->
+  <div class="section-head">
+    <h3>Live Leaderboard — Today</h3>
+    <a class="more" href="/#/race">View all →</a>
   </div>
-</main>
+  <div class="lb-strip" id="lbStrip">
+    <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading leaderboard…</div>
+  </div>
 
-<!-- ─── PORTFOLIO PERFORMANCE CHART ─── -->
-<div style="max-width:var(--max);margin:0 auto;padding:0 var(--pad) var(--pad)">
-  <div class="panel-card">
-    <div class="panel-card-header">
-      <div class="panel-card-title" id="perfChartTitle">Portfolio Performance</div>
-    </div>
-    <div id="perfChartWrap" style="position:relative;height:260px;padding:16px">
+  <!-- 3. Bot Analysis — Portfolio Holdings -->
+  <div class="section-head" style="margin-top:28px">
+    <h3>Bot Analysis — Your Holdings</h3>
+    <span style="font-size:0.72rem;color:var(--muted)">How each strategy applies to this portfolio</span>
+  </div>
+  <div class="grid grid-5" id="botAnalysisGrid">
+    <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading bot analysis…</div>
+  </div>
+
+  <!-- 4. Signals on Your Holdings -->
+  <div class="section-head" style="margin-top:28px">
+    <h3>Signals on Your Holdings — Today</h3>
+    <a class="more" href="/#/signals">View all signals →</a>
+  </div>
+  <div class="signals-today" id="signalsToday">
+    <div class="card" style="color:var(--muted);font-size:0.82rem">Loading signals…</div>
+  </div>
+  <div class="signals-note" id="signalsNote"></div>
+
+  <!-- 5. News on Your Holdings -->
+  <div class="section-head" style="margin-top:28px">
+    <h3>News on Your Holdings</h3>
+    <a class="more" href="/#/news-all">More news →</a>
+  </div>
+  <div class="news-grid" id="newsGrid">
+    <div class="card" style="color:var(--muted);font-size:0.82rem">Loading news…</div>
+  </div>
+
+  <!-- 6. The Race -->
+  <div class="section-head" style="margin-top:28px">
+    <h3>The Race</h3>
+    <a class="more" href="/#/race">Full standings →</a>
+  </div>
+  <div class="grid grid-5" id="raceGrid">
+    <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading race…</div>
+  </div>
+
+  <!-- 7. Portfolio Performance Chart -->
+  <div class="panel" style="margin-top:18px">
+    <h3 id="chartTitle">Portfolio Performance</h3>
+    <div class="chart-wrap" style="min-height:240px" id="chartWrap">
       <canvas id="chartPortfolio"></canvas>
     </div>
   </div>
-</div>
 
-<!-- ─── ADD HOLDING MODAL ─── -->
+  <!-- 8. Your Holdings -->
+  <div class="section-head" style="margin-top:32px">
+    <h3>Your Holdings &nbsp;<span id="holdingsCount" style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:0.78rem"></span></h3>
+    <button class="btn-add-holding" onclick="openSearchModal()">+ Add Holding</button>
+  </div>
+  <div class="panel" style="padding:0;overflow:hidden">
+    <div id="holdingsWrap">
+      <div class="empty-holdings">Loading your holdings…</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── ADD HOLDING MODAL ── -->
 <div class="search-modal" id="searchModal">
   <div class="search-box">
     <h3>Add a Stock</h3>
-    <input class="search-input" id="searchInput" type="text" placeholder="Search AI, tech, or quantum stocks…"
+    <input class="search-input" id="searchInput" type="text"
+           placeholder="Search ticker or company name…"
            oninput="onSearchInput(this.value)" autocomplete="off" />
     <div class="search-results" id="searchResults">
-      <div class="search-empty">Type a ticker or company name to search</div>
+      <div class="search-empty">Type 2+ characters to search AI, quantum, and tech stocks (Nasdaq, NYSE, OTC)</div>
     </div>
-    <div class="search-disclosure">Focus on AI, quantum computing, semiconductors, and emerging tech — or add any Nasdaq/NYSE-listed ticker. Max 50 holdings per portfolio.</div>
+    <div class="search-disclosure">AI, quantum computing, and emerging tech stocks — Nasdaq, NYSE, OTC &amp; Pink Sheet symbols. Covers the full universe of U.S.-listed tech and innovation companies. Max 50 holdings per portfolio.</div>
     <div class="selected-ticker-display" id="selectedDisplay" style="display:none">
       <span id="selectedTicker">—</span>
-      <button style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:1rem" onclick="clearSelection()">×</button>
+      <button style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:1.1rem" onclick="clearSelection()">×</button>
     </div>
-    <div class="allocation-note">Each holding is allocated <strong style="color:var(--accent)">$1,000</strong> from your portfolio.</div>
+    <div class="allocation-note">Each holding is allocated <strong style="color:var(--blue)">$1,000</strong> from your portfolio.</div>
     <div class="search-actions">
       <button class="btn-cancel" onclick="closeSearchModal()">Cancel</button>
       <button class="btn-confirm" id="addHoldingBtn" onclick="addSelectedHolding()" disabled>Add Holding</button>
@@ -443,423 +411,626 @@
 <script src="auth.js"></script>
 <script src="api.js"></script>
 <script>
-  // ── Per-site constants ──────────────────────────────────────────────────────
-  const PLATFORM = "lvl13";
-  const SITE_TITLE = "Level XIII Tech";
-  // ───────────────────────────────────────────────────────────────────────────
+// ── Per-site constants ──────────────────────────────────────────────────────
+const PLATFORM   = "lvl13";
+const SITE_TITLE = "Level XIII Tech";
+// ───────────────────────────────────────────────────────────────────────────
 
-  const BACKEND_URL = "https://wallstbots-backend-868128114349.us-east1.run.app";
-  const auth = new WallStBotsAuth(BACKEND_URL);
-  const api  = new WallStBotsAPI(BACKEND_URL, auth);
-  if (!auth.isAuthenticated()) { window.location.href = "login.html"; }
+const BACKEND_URL  = "https://wallstbots-backend-868128114349.us-east1.run.app";
+const TRACKER_API  = BACKEND_URL + "/public/tracker";
+const auth = new WallStBotsAuth(BACKEND_URL);
+const api  = new WallStBotsAPI(BACKEND_URL, auth);
+if (!auth.isAuthenticated()) { window.location.href = "login.html"; }
 
-  const BOT_ID = new URLSearchParams(window.location.search).get("id");
-  if (!BOT_ID) { window.location.href = "dashboard.html"; }
+const BOT_ID = new URLSearchParams(window.location.search).get("id");
+if (!BOT_ID) { window.location.href = "dashboard.html"; }
 
-  let botData = null, holdings = [], userProfile = null;
-  let selectedSymbol = null, portfolioChart = null;
+// ── Shared state ─────────────────────────────────────────────────────────────
+let botData = null, holdings = [], userProfile = null;
+let selectedSymbol = null, searchTimer = null;
+let allocChart = null;
+const CHARTS_BD = {};
+const STATE = { funds: null, news: null, signals: null };
 
-  // ── Open universe: any Nasdaq, NYSE, OTC & Pink Sheet symbol via Polygon ──
-  let allocChart = null;
+// ── Helpers (same as app.js) ──────────────────────────────────────────────────
+const fmt$  = n => { const v = n||0; return (v<0?'-$':'$') + Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); };
+const fmt$0 = n => { const v = Math.round(n||0); return (v<0?'-$':'$') + Math.abs(v).toLocaleString(); };
+const fmtPct = n => (n>=0?'+':'') + (n||0).toFixed(2) + '%';
+const cls    = n => n >= 0 ? 'pos' : 'neg';
+function escHtml(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function relTime(iso) {
+  if (!iso) return '';
+  const t = new Date(iso); if (isNaN(t)) return iso;
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 60)   return m + 'm ago';
+  if (m < 1440) return Math.round(m/60) + 'h ago';
+  if (m < 10080)return Math.round(m/1440) + 'd ago';
+  return t.toLocaleDateString();
+}
+function sectorClass(s) {
+  if (!s) return 'other';
+  const v = s.toLowerCase();
+  if (v.includes('energy') || v.includes('util'))        return 'energy';
+  if (v.includes('health') || v.includes('bio'))         return 'bio';
+  if (v.includes('financ') || v.includes('bank'))        return 'finance';
+  if (v.includes('tech') || v.includes(' it') || v.includes('communic') || v.includes('industrial')) return 'tech';
+  return 'other';
+}
 
-  const CHART_PALETTE = [
-    "#00d4ff","#7c3aed","#f59e0b","#10b981","#ef4444","#3b82f6",
-    "#ec4899","#8b5cf6","#14b8a6","#f97316","#84cc16","#06b6d4",
-    "#a855f7","#eab308","#22c55e","#f43f5e","#0ea5e9","#d946ef",
-    "#fb923c","#4ade80"
-  ];
+// ── FUND_META (same as app.js) ─────────────────────────────────────────────
+const FUND_META = {
+  bot13:     { name:'BOT13',     icon:'13', color:'#ec4899', kind:'DAILY',
+               tagline:"Daily intraday bot. Buys at open, sells before close. Skips the day if no edge." },
+  oracle:    { name:'ORACLE',    icon:'OR', color:'#a855f7', kind:'WEEKLY',
+               tagline:"Weekly bot. Trades every Monday. All-in on the week's best bets." },
+  wizard:    { name:'WIZARD',    icon:'WZ', color:'#10b981', kind:'MONTHLY',
+               tagline:"Monthly hold bot. Buys the 1st trading day, sells the last. Slow and patient." },
+  equalizer: { name:'EQUALIZER', icon:'EQ', color:'#00d4ff', kind:'BASELINE',
+               tagline:"Equal weight. No favorites. $1,000 in every stock." },
+  titan:     { name:'TITAN',     icon:'TT', color:'#ff8c00', kind:'BASELINE',
+               tagline:"Half on the heavyweights. Half on the rest. Concentration meets coverage." },
+};
+const FUND_ORDER = ['bot13','oracle','wizard','equalizer','titan'];
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
-  function escHtml(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  try { userProfile = await api.getUserProfile(); renderProfile(); } catch(e) {}
+  try { loadReferralCode(); } catch(e) {}
+  try { loadSubscriptionInfo(); } catch(e) {}
+  // loadBot first so holdings are available before bot analysis renders
+  await loadBot();
+  await loadSiteData();
+}
 
-  // ── Init ────────────────────────────────────────────────────────────────────
-  async function init() {
-    try { userProfile = await api.getUserProfile(); renderProfile(); } catch(e) {}
-    try { loadReferralCode(); } catch(e) {}
-    try { loadSubscriptionInfo(); } catch(e) {}
-    await loadBot();
-    drawPortfolioChart();
-  }
+function renderProfile() {
+  const email = userProfile?.email || userProfile?.user?.email || '—';
+  document.getElementById('drawerEmail').textContent = email;
+}
 
-  function renderProfile() {
-    const email = userProfile?.email || userProfile?.user?.email || "—";
-    document.getElementById("drawerEmail").textContent = email;
-  }
-
-  async function loadSubscriptionInfo() {
-    try {
-      const sub = await api.getSubscription();
-      if (!sub) return;
-      const tier = sub.tier || sub.plan || "Free";
-      const tierLower = tier.toLowerCase();
-      let badgeClass = "free";
-      if (tierLower.includes("insider") || tierLower.includes("elite") || tierLower.includes("premium")) badgeClass = "elite";
-      else if (tierLower.includes("pro")) badgeClass = "pro";
-      document.getElementById("drawerTierBadge").textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
-      document.getElementById("drawerTierBadge").className = "tier-badge " + badgeClass;
-      document.getElementById("drawerTierName").textContent = (sub.plan_name || tier + " Plan");
-      document.getElementById("drawerStatus").textContent = (sub.status || "active").charAt(0).toUpperCase() + (sub.status || "active").slice(1);
-      if (sub.current_period_end || sub.tier_expires_at) {
-        const d = new Date((sub.current_period_end || sub.tier_expires_at) * 1000 || (sub.current_period_end || sub.tier_expires_at));
-        document.getElementById("drawerBillDate").textContent = d.toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"});
-      }
-    } catch(e) {}
-  }
-
-  async function loadReferralCode() {
-    try {
-      const r = await api.getReferralStats();
-      document.getElementById("drawerRefCode").textContent = r?.referral_code || "—";
-      document.getElementById("drawerRefCount").textContent = r?.referred_count || r?.referral_count || 0;
-    } catch(e) {}
-  }
-
-  // ── Bot data ─────────────────────────────────────────────────────────────────
-  async function loadBot() {
-    try {
-      const data = await api.getBot(BOT_ID);
-      botData = data?.bot || data;
-      holdings = botData?.holdings || [];
-      render();
-    } catch(e) {
-      document.getElementById("botName").textContent = "Error loading portfolio";
-      showToast(e.message || "Could not load portfolio", "error");
+async function loadSubscriptionInfo() {
+  try {
+    const sub = await api.getSubscription(); if (!sub) return;
+    const tier = sub.tier || sub.plan || 'Free';
+    const tl = tier.toLowerCase();
+    let bc = '';
+    if (tl.includes('insider')||tl.includes('elite')||tl.includes('premium')) bc = 'elite';
+    else if (tl.includes('pro')) bc = 'pro';
+    const tb = document.getElementById('drawerTierBadge');
+    tb.textContent = tier.charAt(0).toUpperCase()+tier.slice(1);
+    if (bc) tb.className = 'tier-badge ' + bc;
+    document.getElementById('drawerTierName').textContent = sub.plan_name || tier + ' Plan';
+    document.getElementById('drawerStatus').textContent = (sub.status||'active').charAt(0).toUpperCase()+(sub.status||'active').slice(1);
+    if (sub.current_period_end || sub.tier_expires_at) {
+      const d = new Date((sub.current_period_end||sub.tier_expires_at)*1000||(sub.current_period_end||sub.tier_expires_at));
+      document.getElementById('drawerBillDate').textContent = d.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
     }
-  }
+  } catch(e) {}
+}
 
-  function render() {
-    if (!botData) return;
-    const perf = botData.performance || {};
-    const totalValue = perf.total_value || 0;
-    const cost = perf.entry_cost || 0;
-    const gain = perf.gain_loss || 0;
-    const gainPct = perf.gain_loss_pct || 0;
-    const isPos = gain >= 0;
+async function loadReferralCode() {
+  try {
+    const r = await api.getReferralStats();
+    document.getElementById('drawerRefCode').textContent = r?.referral_code || '—';
+    document.getElementById('drawerRefCount').textContent = r?.referred_count || r?.referral_count || 0;
+  } catch(e) {}
+}
 
-    // Header
-    document.getElementById("botName").textContent = botData.name || "Untitled Portfolio";
-    const created = botData.created_at ? new Date(botData.created_at).toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}) : "";
-    document.getElementById("botMeta").textContent = created ? "Created " + created : "";
-    document.title = (botData.name || "Portfolio") + " — " + SITE_TITLE;
-
-    // Stats
-    document.getElementById("statValue").textContent = "$" + totalValue.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
-    document.getElementById("statValueSub").textContent = "Current value";
-    document.getElementById("statCost").textContent = "$" + cost.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
-    const gainEl = document.getElementById("statGain");
-    gainEl.textContent = (isPos?"+":"")+gain.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2,style:"currency",currency:"USD"});
-    gainEl.className = "stat-value " + (isPos ? "pos" : "neg");
-    const gainPctEl = document.getElementById("statGainPct");
-    gainPctEl.textContent = (isPos?"+":"") + gainPct.toFixed(2) + "% all time";
-    gainPctEl.className = "stat-sub " + (isPos ? "pos" : "neg");
-    document.getElementById("statHoldings").textContent = holdings.length;
-    document.getElementById("statHoldingsSub").textContent = "×$1,000 each = $" + (holdings.length * 1000).toLocaleString();
-
-    // Status
-    const sb = document.getElementById("statusBadge");
-    sb.textContent = (botData.status || "active").charAt(0).toUpperCase() + (botData.status || "active").slice(1);
-    sb.className = "status-badge" + (botData.status === "active" ? " active" : "");
-
+// ── Portfolio data ────────────────────────────────────────────────────────────
+async function loadBot() {
+  try {
+    const data = await api.getBot(BOT_ID);
+    botData = data?.bot || data;
+    holdings = botData?.holdings || [];
+    renderHero();
     renderHoldings();
-    renderChart();
+  } catch(e) {
+    document.getElementById('heroName').textContent = 'Error loading portfolio';
+    showToast(e.message || 'Could not load portfolio', 'error');
   }
+}
 
-  function renderHoldings() {
-    const wrap = document.getElementById("holdingsWrap");
-    if (!holdings.length) {
-      wrap.innerHTML = `<div class="empty-table">No holdings yet. Click <strong>+ Add Holding</strong> to get started.</div>`;
-      return;
-    }
-    wrap.innerHTML = `
-      <table>
-        <thead>
-          <tr>
-            <th>Symbol</th>
-            <th>Allocated</th>
-            <th>Qty</th>
-            <th>Entry</th>
-            <th>Current</th>
-            <th>Return</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          ${holdings.map(h => {
-            const alloc = (h.weight || 1000);
-            const qty = h.quantity != null ? parseFloat(h.quantity).toFixed(4) : "—";
-            const entry = h.entry_price != null ? "$" + parseFloat(h.entry_price).toFixed(2) : "—";
-            const current = h.current_price != null ? "$" + parseFloat(h.current_price).toFixed(2) : "—";
-            let retPct = "—", retClass = "";
-            if (h.entry_price != null && h.current_price != null && h.entry_price > 0) {
-              const pct = ((h.current_price - h.entry_price) / h.entry_price) * 100;
-              retPct = (pct >= 0 ? "+" : "") + pct.toFixed(2) + "%";
-              retClass = pct >= 0 ? "pos" : "neg";
-            }
-            return `<tr>
-              <td><div class="symbol-cell">${escHtml(h.symbol)}<small>${h.name || ""}</small></div></td>
-              <td>$${alloc.toLocaleString()}</td>
-              <td>${qty}</td>
-              <td>${entry}</td>
-              <td>${current}</td>
-              <td class="${retClass}">${retPct}</td>
-              <td><button class="btn-remove" onclick="removeHolding('${h.id}','${escHtml(h.symbol)}')">Remove</button></td>
-            </tr>`;
-          }).join("")}
-        </tbody>
-      </table>`;
+function renderHero() {
+  if (!botData) return;
+  const perf     = botData.performance || {};
+  const totalVal = perf.total_value || 0;
+  const cost     = perf.entry_cost  || 0;
+  const gain     = perf.gain_loss   || 0;
+  const gainPct  = perf.gain_loss_pct || 0;
+  const isPos    = gain >= 0;
+
+  const email    = userProfile?.email || userProfile?.user?.email || '';
+  const username = email ? '@' + email.split('@')[0] : '';
+
+  document.getElementById('heroEyebrow').textContent = username ? 'Your Portfolio · ' + username : 'Your Portfolio';
+  document.getElementById('heroName').textContent = botData.name || 'Untitled Portfolio';
+  document.title = (botData.name || 'Portfolio') + ' — ' + SITE_TITLE;
+
+  const created  = botData.created_at ? new Date(botData.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '';
+  document.getElementById('heroMeta').textContent =
+    holdings.length + ' holdings · $' + (holdings.length * 1000).toLocaleString() + ' allocated' + (created ? ' · Since ' + created : '');
+
+  document.getElementById('holdingsCount').textContent = '(' + holdings.length + ' of 50)';
+
+  // stats bar
+  const hs = document.getElementById('heroStats');
+  hs.style.display = 'flex';
+  document.getElementById('hsValue').textContent   = fmt$(totalVal);
+  document.getElementById('hsCost').textContent    = fmt$(cost);
+  const gEl = document.getElementById('hsGain');
+  gEl.textContent = (isPos?'+':'') + fmt$(gain).replace('$','') + ' USD';
+  gEl.className   = 'hs-val ' + (isPos ? 'pos' : 'neg');
+  const gpEl = document.getElementById('hsGainPct');
+  gpEl.textContent = (isPos?'+':'') + gainPct.toFixed(2) + '%';
+  gpEl.className   = 'hs-val ' + (isPos ? 'pos' : 'neg');
+  document.getElementById('hsHoldings').textContent = holdings.length + ' / 50';
+}
+
+function renderHoldings() {
+  const wrap = document.getElementById('holdingsWrap');
+  if (!holdings.length) {
+    wrap.innerHTML = '<div class="empty-holdings">No holdings yet. Click <strong>+ Add Holding</strong> to get started.</div>';
+    return;
   }
-
-  function renderChart() {
-    const ctx = document.getElementById("allocChart").getContext("2d");
-    if (!holdings.length) {
-      document.getElementById("chartLegend").innerHTML = `<div style="color:var(--muted);font-size:0.82rem;padding:8px 0">No holdings to display</div>`;
-      document.getElementById("chartCenterValue").textContent = "$0";
-      return;
-    }
-    const labels = holdings.map(h => h.symbol);
-    const data = holdings.map(h => h.weight || 1000);
-    const total = data.reduce((a,b)=>a+b, 0);
-    const colors = holdings.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length]);
-
-    if (allocChart) allocChart.destroy();
-    allocChart = new Chart(ctx, {
-      type: "doughnut",
-      data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: "#06080d", borderWidth: 3, hoverOffset: 6 }] },
-      options: {
-        responsive: true,
-        cutout: "70%",
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label(ctx) { const pct = ((ctx.parsed / total) * 100).toFixed(1); return ` ${ctx.label}: $${ctx.parsed.toLocaleString()} (${pct}%)`; }
-            }
-          }
+  wrap.innerHTML =
+    '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'
+    + '<table style="min-width:600px;width:100%;border-collapse:collapse;font-size:0.82rem">'
+    + '<thead><tr>'
+    + '<th style="padding:10px 16px;text-align:left;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Symbol</th>'
+    + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Allocated</th>'
+    + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Entry</th>'
+    + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Current</th>'
+    + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Return</th>'
+    + '<th style="padding:10px 16px;border-bottom:1px solid var(--border)"></th>'
+    + '</tr></thead>'
+    + '<tbody>'
+    + holdings.map(h => {
+        const alloc   = h.weight || 1000;
+        const entry   = h.entry_price   != null ? '$' + parseFloat(h.entry_price).toFixed(2)   : '—';
+        const current = h.current_price != null ? '$' + parseFloat(h.current_price).toFixed(2) : '—';
+        let retPct = '—', retClass = '';
+        if (h.entry_price != null && h.current_price != null && h.entry_price > 0) {
+          const pct = ((h.current_price - h.entry_price) / h.entry_price) * 100;
+          retPct    = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+          retClass  = pct >= 0 ? 'pos' : 'neg';
         }
-      }
+        return '<tr style="border-bottom:1px solid var(--border)">'
+          + '<td style="padding:11px 16px"><strong style="font-size:0.88rem">' + escHtml(h.symbol) + '</strong>'
+          + (h.name ? '<div style="font-size:0.72rem;color:var(--muted);margin-top:1px">' + escHtml(h.name) + '</div>' : '')
+          + '</td>'
+          + '<td style="padding:11px 16px;text-align:right">$' + alloc.toLocaleString() + '</td>'
+          + '<td style="padding:11px 16px;text-align:right">' + entry + '</td>'
+          + '<td style="padding:11px 16px;text-align:right">' + current + '</td>'
+          + '<td style="padding:11px 16px;text-align:right" class="' + retClass + '">' + retPct + '</td>'
+          + '<td style="padding:11px 16px;text-align:right"><button onclick="removeHolding(\'' + h.id + '\',\'' + escHtml(h.symbol) + '\')" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:3px 9px;font-size:0.72rem;cursor:pointer">Remove</button></td>'
+          + '</tr>';
+      }).join('')
+    + '</tbody></table></div>';
+}
+
+// ── Site data (state / signals / news) ───────────────────────────────────────
+async function loadSiteData() {
+  try {
+    const [sr, nr, sigr] = await Promise.allSettled([
+      fetch(TRACKER_API + '/state?platform='   + PLATFORM, {cache:'no-store'}).then(r=>r.json()).then(r=>r.data),
+      fetch(TRACKER_API + '/news?platform='    + PLATFORM, {cache:'no-store'}).then(r=>r.json()).then(r=>r.data),
+      fetch(TRACKER_API + '/signals?platform=' + PLATFORM, {cache:'no-store'}).then(r=>r.json()).then(r=>r.data),
+    ]);
+    STATE.funds   = sr.status   === 'fulfilled' ? sr.value   : null;
+    STATE.news    = nr.status   === 'fulfilled' ? nr.value   : { items: [] };
+    STATE.signals = sigr.status === 'fulfilled' ? sigr.value : { recommendations: [], summary: {} };
+  } catch(e) {}
+  try { renderLeaderboard(); } catch(e) {}
+  try { renderPortfolioBotAnalysis(); } catch(e) {}
+  try { renderSignals(); } catch(e) {}
+  try { renderNews(); } catch(e) {}
+  try { renderRace(); } catch(e) {}
+  drawPortfolioChart();
+}
+
+// ── Bot Analysis grid (portfolio-scoped) ─────────────────────────────────────
+function renderPortfolioBotAnalysis() {
+  const grid = document.getElementById('botAnalysisGrid');
+  if (!grid) return;
+  const tickers = holdings.map(h => h.symbol).join(', ') || 'your holdings';
+  // NOTE: Performance numbers are NOT pulled from the global tracker.
+  // Portfolio-specific P&L is tracked from the next trading day onward.
+  const cards = FUND_ORDER.map(fid => {
+    const meta = FUND_META[fid];
+    return '<a class="card clickable fund-card" href="/#/fund/' + fid + '">'
+      + '<div class="fund-head"><span class="fund-icon ' + fid + '">' + meta.icon + '</span>'
+      + '<div style="min-width:0"><div class="fund-name">' + meta.name + '</div>'
+      + '<div class="fund-kind" style="color:' + meta.color + '">' + meta.kind + '</div></div></div>'
+      + '<div class="fund-tag">' + meta.tagline + '</div>'
+      + '<div style="font-size:0.72rem;color:var(--muted);margin-top:6px">Tracking: <strong style="color:var(--text)">' + tickers + '</strong></div>'
+      + '</a>';
+  }).join('');
+  grid.innerHTML = cards;
+}
+
+// ── Leaderboard strip (exact same as homepage) ───────────────────────────────
+function renderLeaderboard() {
+  const strip = FUND_ORDER.map(fid => {
+    const data = STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null;
+    const v = data && data.value ? data.value : { day_pct: 0, day_pnl: 0 };
+    const m = FUND_META[fid];
+    return '<a class="card clickable" href="/#/fund/' + fid + '">'
+      + '<span class="fund-icon ' + fid + '">' + m.icon + '</span>'
+      + '<div class="lb-name"><strong>' + m.name + '</strong><small>' + m.kind + '</small></div>'
+      + '<div class="lb-pct ' + cls(v.day_pnl) + '">' + fmtPct(v.day_pct) + '</div></a>';
+  }).join('');
+  const lbEl = document.getElementById('lbStrip');
+  if (lbEl) lbEl.innerHTML = strip;
+}
+
+// ── Signals (filtered to user's holdings only — no global fallback) ──────────
+function renderSignals() {
+  const allSigs  = (STATE.signals && STATE.signals.recommendations) || [];
+  const holdingTickers = holdings.map(h => h.symbol);
+
+  // Filter strictly to the user's holdings — never fall back to global signals
+  const filtered = holdingTickers.length
+    ? allSigs.filter(r => holdingTickers.includes(r.symbol))
+    : [];
+
+  // Update note
+  const note = document.getElementById('signalsNote');
+  if (!holdingTickers.length) {
+    note.textContent = 'Add holdings above to see signals filtered to your portfolio.';
+  } else if (filtered.length === 0) {
+    note.textContent = 'No signals today for your ' + holdingTickers.length + ' holding' + (holdingTickers.length !== 1 ? 's' : '') + '. Check back after the next refresh.';
+  } else {
+    note.textContent = 'Showing signals for your ' + holdingTickers.length + ' holding' + (holdingTickers.length !== 1 ? 's' : '') + ' only.';
+  }
+
+  const topByAction = (action, n) => filtered.filter(r => r.action === action).slice(0, n);
+  const sigCol = (label, action, n) => {
+    const items = topByAction(action, n);
+    // Count is portfolio-specific — never show global totals
+    const count = filtered.filter(r => r.action === action).length;
+    const rows = items.length
+      ? items.map(r => '<div class="row"><strong>' + escHtml(r.symbol) + '</strong>'
+          + '<span class="' + (r.upside_pct >= 0 ? 'pos' : 'neg') + '">'
+          + (r.upside_pct != null ? fmtPct(r.upside_pct) : '') + '</span></div>').join('')
+      : '<div class="row" style="color:var(--muted);font-size:11px">None today</div>';
+    const sigClass = action === 'STRONG BUY' ? 'signal-strong-buy' : action === 'HOLD' ? 'signal-hold' : 'signal-strong-sell';
+    return '<div class="card">'
+      + '<div class="signals-today-head"><span class="signal ' + sigClass + '">' + label + '</span>'
+      + (count ? '<span style="color:var(--muted);font-size:10px">' + count + ' of your holdings</span>' : '')
+      + '</div>'
+      + '<div class="signals-today-list">' + rows + '</div></div>';
+  };
+
+  document.getElementById('signalsToday').innerHTML =
+    sigCol('STRONG BUY', 'STRONG BUY', 4)
+    + sigCol('HOLD',       'HOLD',       4)
+    + sigCol('STRONG SELL','STRONG SELL',4);
+}
+
+// ── News (filtered to user's holdings) ───────────────────────────────────────
+function newsCard(it) {
+  const cat  = sectorClass(it.sector);
+  const url  = it.url && it.url !== '#' ? it.url : null;
+  const open = url ? ' target="_blank" rel="noopener noreferrer"' : '';
+  const href = url || 'javascript:void(0)';
+  return '<a class="news-card cat-' + cat + '" href="' + escHtml(href) + '"' + open + '>'
+    + '<div class="news-title">' + escHtml(it.title || '') + '</div>'
+    + '<div class="news-meta">' + escHtml(it.source || it.sector || 'Source') + ' · ' + relTime(it.published_at) + '</div></a>';
+}
+
+function renderNews() {
+  const allNews = (STATE.news && STATE.news.items) || [];
+  const holdingTickers = holdings.map(h => (h.symbol || '').toUpperCase());
+
+  let filtered = allNews;
+  if (holdingTickers.length) {
+    // Match by explicit ticker field, or by ticker appearing in the headline
+    filtered = allNews.filter(item => {
+      if (item.ticker && holdingTickers.includes(item.ticker.toUpperCase())) return true;
+      if (item.symbol && holdingTickers.includes(item.symbol.toUpperCase())) return true;
+      if (item.tickers && item.tickers.some(t => holdingTickers.includes(t.toUpperCase()))) return true;
+      const title = (item.title || '').toUpperCase();
+      return holdingTickers.some(t => title.includes(t));
     });
-
-    document.getElementById("chartCenterValue").textContent = "$" + (total >= 1000 ? (total/1000).toFixed(1)+"k" : total.toLocaleString());
-    document.getElementById("chartLegend").innerHTML = holdings.slice(0, 15).map((h, i) => {
-      const pct = ((h.weight||1000) / total * 100).toFixed(1);
-      return `<div class="legend-item"><div class="legend-dot" style="background:${colors[i]}"></div><span class="legend-sym">${escHtml(h.symbol)}</span><span class="legend-pct">${pct}%</span></div>`;
-    }).join("");
+    // No fallback — only show news relevant to user's holdings
   }
 
-  // ── Remove Holding ───────────────────────────────────────────────────────────
-  async function removeHolding(holdingId, symbol) {
-    if (!confirm(`Remove ${symbol} from this portfolio?`)) return;
-    try {
-      await api.removeHolding(BOT_ID, holdingId);
-      showToast(symbol + " removed", "success");
-      await loadBot();
-    } catch(e) {
-      showToast("Failed to remove " + symbol, "error");
-    }
+  const cards = filtered.slice(0, 6).map(newsCard).join('');
+  document.getElementById('newsGrid').innerHTML = cards || '<p style="color:var(--muted);font-size:0.9rem">No headlines yet — the fetcher runs nightly.</p>';
+}
+
+// ── Race grid — portfolio-scoped (zeros on day 1, updates next trading day) ───
+function fundCard(fid) {
+  const meta = FUND_META[fid];
+  const cap  = holdings.length * 1000 || 0;
+  // Always show $0 P&L — portfolio-specific tracking starts next trading day
+  const v    = { total: cap, pnl: 0, pnl_pct: 0, day_pnl: 0, day_pct: 0 };
+  return '<a class="card clickable fund-card" href="/#/fund/' + fid + '">'
+    + '<div class="fund-head"><span class="fund-icon ' + fid + '">' + meta.icon + '</span>'
+    + '<div style="min-width:0"><div class="fund-name">' + meta.name + '</div><div class="fund-kind" style="color:' + meta.color + '">' + meta.kind + '</div></div></div>'
+    + '<div class="fund-tag">' + meta.tagline + '</div>'
+    + '<div class="fund-value">' + fmt$0(v.total) + '</div>'
+    + '<div class="fund-pnl ' + cls(v.pnl) + '">' + fmt$0(v.pnl) + ' (' + fmtPct(v.pnl_pct) + ') since inception</div>'
+    + '<div class="stat-row"><span class="stat-label">Today</span>'
+    + '<span class="stat-val ' + cls(v.day_pnl) + '">' + fmtPct(v.day_pct) + '</span></div></a>';
+}
+
+function renderRace() {
+  const el = document.getElementById('raceGrid');
+  if (el) el.innerHTML = FUND_ORDER.map(fid => fundCard(fid)).join('');
+}
+
+// ── Portfolio performance chart (portfolio-specific, starts day 1) ──────────
+async function drawPortfolioChart() {
+  const wrap = document.getElementById('chartWrap');
+  const ctx  = document.getElementById('chartPortfolio');
+  if (!wrap) return;
+  if (ctx && CHARTS_BD.portfolio) CHARTS_BD.portfolio.destroy();
+
+  let snapshots = [];
+  try {
+    const data = await api.getBotPerformance(BOT_ID, 90);
+    snapshots = data?.snapshots || [];
+  } catch(e) {}
+
+  if (!snapshots.length) {
+    const created = botData?.created_at
+      ? new Date(botData.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
+      : 'today';
+    wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.6">Portfolio started ' + created + '.<br>Performance history will appear after the first trading day.</div>';
+    return;
   }
 
-  // ── Delete Portfolio ─────────────────────────────────────────────────────────
-  function openDeleteModal() {
-    const name = botData?.name || "this portfolio";
-    document.getElementById("deleteModalText").textContent = `Are you sure you want to permanently delete "${name}"? This cannot be undone.`;
-    document.getElementById("deleteModal").classList.add("open");
-  }
-  function closeDeleteModal() { document.getElementById("deleteModal").classList.remove("open"); }
-  async function confirmDeletePortfolio() {
-    const btn = document.getElementById("deleteConfirmBtn");
-    btn.disabled = true; btn.textContent = "Deleting…";
-    try {
-      await api.deleteBot(BOT_ID);
-      showToast("Portfolio deleted", "success");
-      setTimeout(() => { window.location.href = "dashboard.html"; }, 1200);
-    } catch(e) {
-      showToast(e.message || "Failed to delete portfolio", "error");
-      btn.disabled = false; btn.textContent = "Delete Portfolio";
-    }
-  }
+  const labels = snapshots.map(s => s.date);
+  const values = snapshots.map(s => s.total_value);
+  const last   = snapshots[snapshots.length - 1];
+  const retPct = last.gain_loss_pct;
+  const color  = retPct >= 0 ? '#00d4ff' : '#ef4444';
 
-  // ── Add Holding Modal ────────────────────────────────────────────────────────
-  // ── Tracked asset universe: all Nasdaq, NYSE, OTC & Pink Sheet symbols ──────
-  // (Search powered by Polygon.io — no hardcoded list needed)
+  const titleEl = document.getElementById('chartTitle');
+  if (titleEl) titleEl.innerHTML = 'Portfolio Performance &nbsp;<span style="font-size:0.85rem;font-weight:600;color:' + color + '">' + (retPct >= 0 ? '+' : '') + retPct.toFixed(2) + '%</span>';
 
-  function openSearchModal() {
-    if (holdings.length >= 50) {
-      showToast("This portfolio is full (50/50). Create another portfolio to track more — or upgrade your plan for more portfolios.", "error");
-      return;
-    }
-    selectedSymbol = null;
-    document.getElementById("searchInput").value = "";
-    document.getElementById("searchResults").innerHTML = `<div class="search-empty">Type 2+ characters to search any Nasdaq, NYSE, OTC, or Pink Sheet symbol</div>`;
-    document.getElementById("selectedDisplay").style.display = "none";
-    document.getElementById("addHoldingBtn").disabled = true;
-    document.getElementById("searchModal").classList.add("open");
-    setTimeout(() => document.getElementById("searchInput").focus(), 100);
-  }
-  function closeSearchModal() { document.getElementById("searchModal").classList.remove("open"); }
-
-  function onSearchInput(q) {
-    clearTimeout(searchTimer);
-    const trimmed = q.trim();
-    if (trimmed.length < 2) {
-      document.getElementById("searchResults").innerHTML = `<div class="search-empty">Type 2+ characters to search any Nasdaq, NYSE, OTC, or Pink Sheet symbol</div>`;
-      return;
-    }
-    document.getElementById("searchResults").innerHTML = `<div class="search-empty">Searching…</div>`;
-    searchTimer = setTimeout(() => doSearch(trimmed), 350);
-  }
-
-  async function doSearch(q) {
-    try {
-      const data = await api.searchStocks(q, "all");
-      const results = data?.results || data || [];
-      if (!results.length) {
-        document.getElementById("searchResults").innerHTML = `<div class="search-empty">No results for "<strong>${escHtml(q)}</strong>" — try the exact ticker (e.g. AAPL) or a keyword</div>`;
-        return;
+  CHARTS_BD.portfolio = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: botData?.name || 'Portfolio Value',
+        data: values,
+        borderColor: color,
+        backgroundColor: color + '18',
+        tension: 0.3, borderWidth: 2, fill: true,
+        pointRadius: values.length > 30 ? 0 : 3,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color:'#7d8590', maxTicksLimit:8 }, grid: { color:'#1e2633' } },
+        y: { ticks: { color:'#7d8590', callback: v => '$'+v.toLocaleString() }, grid: { color:'#1e2633' } }
       }
-      document.getElementById("searchResults").innerHTML = results.slice(0, 12).map(r => `
-        <div class="search-result-item" onclick="selectTicker('${escHtml(r.ticker)}','${escHtml(r.name||r.ticker)}')">
-          <span class="result-ticker">${escHtml(r.ticker)}</span>
-          <span class="result-name">${escHtml(r.name||"")}</span>
-          <span class="result-type">${escHtml(r.market||r.type||r.exchange||"")}</span>
-        </div>`).join("");
-    } catch(e) {
-      document.getElementById("searchResults").innerHTML = `<div class="search-empty">Search unavailable — check connection or try the exact ticker symbol.</div>`;
     }
-  }
+  });
+}
 
-  function selectTicker(ticker, name) {
-    selectedSymbol = ticker;
-    document.getElementById("selectedDisplay").style.display = "flex";
-    document.getElementById("selectedTicker").textContent = ticker + " — " + name;
-    document.getElementById("addHoldingBtn").disabled = false;
-    document.getElementById("searchResults").style.display = "none";
+// ── Remove Holding ───────────────────────────────────────────────────────────
+async function removeHolding(holdingId, symbol) {
+  if (!confirm('Remove ' + symbol + ' from this portfolio?')) return;
+  try {
+    await api.removeHolding(BOT_ID, holdingId);
+    showToast(symbol + ' removed', 'success');
+    await loadBot();
+  } catch(e) {
+    showToast('Failed to remove ' + symbol, 'error');
   }
+}
 
-  function clearSelection() {
-    selectedSymbol = null;
-    document.getElementById("selectedDisplay").style.display = "none";
-    document.getElementById("addHoldingBtn").disabled = true;
-    document.getElementById("searchResults").style.display = "block";
-    document.getElementById("searchInput").focus();
+// ── Delete Portfolio ──────────────────────────────────────────────────────────
+function openDeleteModal() {
+  const name = botData?.name || 'this portfolio';
+  document.getElementById('deleteModalText').textContent = 'Are you sure you want to permanently delete "' + name + '"? This cannot be undone.';
+  document.getElementById('deleteModal').classList.add('open');
+}
+function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('open'); }
+async function confirmDeletePortfolio() {
+  const btn = document.getElementById('deleteConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Deleting…';
+  try {
+    await api.deleteBot(BOT_ID);
+    showToast('Portfolio deleted', 'success');
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1200);
+  } catch(e) {
+    showToast(e.message || 'Failed to delete portfolio', 'error');
+    btn.disabled = false; btn.textContent = 'Delete Portfolio';
   }
+}
 
-  async function addSelectedHolding() {
-    if (!selectedSymbol) return;
-    const btn = document.getElementById("addHoldingBtn");
-    btn.disabled = true; btn.textContent = "Adding…";
-    try {
-      await api.addHolding(BOT_ID, selectedSymbol, 1000, null, null);
-      closeSearchModal();
-      showToast(selectedSymbol + " added to portfolio", "success");
-      await loadBot();
-    } catch(e) {
-      showToast(e.message || "Failed to add " + selectedSymbol, "error");
-      btn.disabled = false; btn.textContent = "Add Holding";
-    }
+// ── Add Holding (Search Modal) ────────────────────────────────────────────────
+function openSearchModal() {
+  if (holdings.length >= 50) {
+    showToast('This portfolio is full (50/50). Create another portfolio to track more, or upgrade your plan.', 'error');
+    return;
   }
+  selectedSymbol = null;
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').innerHTML = '<div class="search-empty">Type 2+ characters to search AI, quantum, and tech stocks</div>';
+  document.getElementById('selectedDisplay').style.display = 'none';
+  document.getElementById('addHoldingBtn').disabled = true;
+  document.getElementById('searchModal').classList.add('open');
+  setTimeout(() => document.getElementById('searchInput').focus(), 100);
+}
+function closeSearchModal() { document.getElementById('searchModal').classList.remove('open'); }
 
-  // ── Portfolio Performance Chart ─────────────────────────────────────────────
-  async function drawPortfolioChart() {
-    const wrap = document.getElementById("perfChartWrap");
-    const ctx  = document.getElementById("chartPortfolio");
-    if (!wrap || !ctx) return;
-    if (portfolioChart) { portfolioChart.destroy(); portfolioChart = null; }
-    let snapshots = [];
-    try {
-      const data = await api.getBotPerformance(BOT_ID, 90);
-      snapshots = data?.snapshots || [];
-    } catch(e) {}
-    if (!snapshots.length) {
-      const created = botData?.created_at
-        ? new Date(botData.created_at).toLocaleDateString("en-US", {month:"short", day:"numeric", year:"numeric"})
-        : "today";
-      wrap.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:180px;color:var(--muted);font-size:0.85rem;text-align:center;line-height:1.6">Portfolio started ${created}.<br>Performance history will appear after the first trading day.</div>`;
+function onSearchInput(q) {
+  clearTimeout(searchTimer);
+  const trimmed = q.trim();
+  if (trimmed.length < 2) {
+    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Type 2+ characters to search AI, quantum, and tech stocks</div>';
+    return;
+  }
+  document.getElementById('searchResults').innerHTML = '<div class="search-empty">Searching…</div>';
+  searchTimer = setTimeout(() => doSearch(trimmed), 350);
+}
+
+async function doSearch(q) {
+  try {
+    const data = await api.searchStocks(q, 'all');
+    const results = data?.results || data || [];
+    if (!results.length) {
+      document.getElementById('searchResults').innerHTML = '<div class="search-empty">No results for "<strong>' + escHtml(q) + '</strong>" — try the exact ticker (e.g. NVDA) or a keyword</div>';
       return;
     }
-    const labels = snapshots.map(s => s.date);
-    const values = snapshots.map(s => s.total_value);
-    const last   = snapshots[snapshots.length - 1];
-    const retPct = last.gain_loss_pct;
-    const color  = retPct >= 0 ? "#00d4ff" : "#ef4444";
-    const titleEl = document.getElementById("perfChartTitle");
-    if (titleEl) titleEl.textContent = "Portfolio Performance — " + (retPct >= 0 ? "+" : "") + retPct.toFixed(2) + "% since inception";
-    portfolioChart = new Chart(ctx, {
-      type: "line",
-      data: { labels, datasets: [{ label: botData?.name || "Portfolio", data: values, borderColor: color, backgroundColor: color + "18", tension: 0.3, borderWidth: 2, fill: true, pointRadius: values.length > 30 ? 0 : 3, pointHoverRadius: 5 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => "$" + ctx.parsed.y.toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2}) } } }, scales: { x: { ticks: { color:"#7d8590", maxTicksLimit:8 }, grid: { color:"#1e2633" } }, y: { ticks: { color:"#7d8590", callback: v => "$" + v.toLocaleString() }, grid: { color:"#1e2633" } } } }
-    });
+    document.getElementById('searchResults').innerHTML = results.slice(0, 12).map(r =>
+      '<div class="search-result-item" onclick="selectTicker(\'' + escHtml(r.ticker) + '\',\'' + escHtml((r.name||r.ticker).replace(/'/g,"&#39;")) + '\')">'
+      + '<span class="result-ticker">' + escHtml(r.ticker) + '</span>'
+      + '<span class="result-name">' + escHtml(r.name||'') + '</span>'
+      + '<span class="result-type">' + escHtml(r.market||r.type||r.exchange||'') + '</span>'
+      + '</div>'
+    ).join('');
+  } catch(e) {
+    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Search unavailable — check connection or try the exact ticker symbol.</div>';
   }
+}
 
-  // ── Drawer / Account ─────────────────────────────────────────────────────────
-  function openDrawer() { document.getElementById("accountDrawer").classList.add("open"); document.getElementById("drawerOverlay").classList.add("open"); document.body.style.overflow = "hidden"; }
-  function closeDrawer() { document.getElementById("accountDrawer").classList.remove("open"); document.getElementById("drawerOverlay").classList.remove("open"); document.body.style.overflow = ""; }
+function selectTicker(ticker, name) {
+  selectedSymbol = ticker;
+  document.getElementById('selectedDisplay').style.display = 'flex';
+  document.getElementById('selectedTicker').textContent = ticker + ' — ' + name;
+  document.getElementById('addHoldingBtn').disabled = false;
+  document.getElementById('searchResults').style.display = 'none';
+}
 
-  // ── Password Reset Modal ────────────────────────────────────────────────────
-  function openPwModal() {
-    document.getElementById("pwModal").classList.add("open");
-    document.getElementById("pwModalText").textContent = "We'll send a reset link to your email address.";
-    const btn = document.getElementById("pwConfirmBtn");
-    btn.disabled = false; btn.textContent = "Send Reset Link";
+function clearSelection() {
+  selectedSymbol = null;
+  document.getElementById('selectedDisplay').style.display = 'none';
+  document.getElementById('addHoldingBtn').disabled = true;
+  document.getElementById('searchResults').style.display = 'block';
+  document.getElementById('searchInput').focus();
+}
+
+async function addSelectedHolding() {
+  if (!selectedSymbol) return;
+  const btn = document.getElementById('addHoldingBtn');
+  btn.disabled = true; btn.textContent = 'Adding…';
+  try {
+    await api.addHolding(BOT_ID, selectedSymbol, 1000, null, null);
+    closeSearchModal();
+    showToast(selectedSymbol + ' added to portfolio', 'success');
+    await loadBot();
+  } catch(e) {
+    showToast(e.message || 'Failed to add ' + selectedSymbol, 'error');
+    btn.disabled = false; btn.textContent = 'Add Holding';
   }
-  function closePwModal() { document.getElementById("pwModal").classList.remove("open"); }
-  async function sendPasswordReset() {
-    const btn = document.getElementById("pwConfirmBtn");
-    btn.disabled = true; btn.textContent = "Sending…";
-    try {
-      const email = userProfile?.email || userProfile?.user?.email;
-      if (!email) throw new Error("No email on file");
-      await api.requestPasswordReset(email);
-      document.getElementById("pwModalText").textContent = "Reset link sent! Check your inbox.";
-      btn.textContent = "Sent ✓";
-    } catch(e) {
-      document.getElementById("pwModalText").textContent = e.message || "Failed to send reset link.";
-      btn.disabled = false; btn.textContent = "Try Again";
-    }
+}
+
+// ── Mobile Nav ────────────────────────────────────────────────────────────────
+function toggleMobNav() {
+  const nav = document.getElementById('mobNav');
+  const overlay = document.getElementById('mobNavOverlay');
+  const isOpen = nav.classList.toggle('open');
+  overlay.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+function closeMobNav() {
+  document.getElementById('mobNav').classList.remove('open');
+  document.getElementById('mobNavOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── Platform Switcher ─────────────────────────────────────────────────────────
+function togglePlatformMenu() {
+  const btn  = document.getElementById('platformBtn');
+  const menu = document.getElementById('platformMenu');
+  const open = menu.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  if (open) {
+    const close = e => { if (!btn.contains(e.target) && !menu.contains(e.target)) { menu.classList.remove('open'); btn.classList.remove('open'); document.removeEventListener('click', close); } };
+    setTimeout(() => document.addEventListener('click', close), 0);
   }
+}
 
-  // ── Referral ──────────────────────────────────────────────────────────────
-  function copyReferral() {
-    const code = document.getElementById("drawerRefCode").textContent;
-    if (code && code !== "———") {
-      navigator.clipboard.writeText(code)
-        .then(() => showToast("Referral code copied!", "success"))
-        .catch(() => showToast("Copy failed", "error"));
-    }
+// ── Account Drawer ────────────────────────────────────────────────────────────
+function openDrawer() {
+  document.getElementById('accountDrawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDrawer() {
+  document.getElementById('accountDrawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── Password Reset Modal ──────────────────────────────────────────────────────
+function openPwModal() {
+  document.getElementById('pwModal').classList.add('open');
+  document.getElementById('pwModalText').textContent = "We'll send a reset link to your email address.";
+  const btn = document.getElementById('pwConfirmBtn');
+  btn.disabled = false; btn.textContent = 'Send Reset Link';
+}
+function closePwModal() { document.getElementById('pwModal').classList.remove('open'); }
+async function sendPasswordReset() {
+  const btn = document.getElementById('pwConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const email = userProfile?.email || userProfile?.user?.email;
+    if (!email) throw new Error('No email on file');
+    await api.requestPasswordReset(email);
+    document.getElementById('pwModalText').textContent = 'Reset link sent! Check your inbox.';
+    btn.textContent = 'Sent ✓';
+  } catch(e) {
+    document.getElementById('pwModalText').textContent = e.message || 'Failed to send reset link.';
+    btn.disabled = false; btn.textContent = 'Try Again';
   }
+}
 
-  // ── Logout ────────────────────────────────────────────────────────────────
-  function logout() { auth.logout(); window.location.href = "login.html"; }
-
-  // ── Toast ─────────────────────────────────────────────────────────────────
-  function showToast(msg, type = "success") {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.className = "toast show " + type;
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove("show"), 3000);
+// ── Referral ──────────────────────────────────────────────────────────────────
+function copyReferral() {
+  const code = document.getElementById('drawerRefCode').textContent;
+  if (code && code !== '———') {
+    navigator.clipboard.writeText(code)
+      .then(() => showToast('Referral code copied!', 'success'))
+      .catch(() => showToast('Copy failed', 'error'));
   }
+}
 
-  // ── Explicit window bindings for inline onclick handlers ──────────────────
-  window.openDeleteModal        = openDeleteModal;
-  window.closeDeleteModal       = closeDeleteModal;
-  window.confirmDeletePortfolio = confirmDeletePortfolio;
-  window.openSearchModal        = openSearchModal;
-  window.closeSearchModal       = closeSearchModal;
-  window.onSearchInput          = onSearchInput;
-  window.selectTicker           = selectTicker;
-  window.clearSelection         = clearSelection;
-  window.addSelectedHolding     = addSelectedHolding;
-  window.removeHolding          = removeHolding;
-  window.openDrawer             = openDrawer;
-  window.closeDrawer            = closeDrawer;
-  window.openPwModal            = openPwModal;
-  window.closePwModal           = closePwModal;
-  window.sendPasswordReset      = sendPasswordReset;
-  window.copyReferral           = copyReferral;
-  window.logout                 = logout;
+// ── Logout ────────────────────────────────────────────────────────────────────
+function logout() { auth.logout(); window.location.href = 'login.html'; }
 
-  // ── Boot ──────────────────────────────────────────────────────────────────
-  document.addEventListener("DOMContentLoaded", init);
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Explicit window bindings for inline onclick handlers ──────────────────────
+// Ensures functions are globally accessible regardless of script evaluation order
+window.toggleMobNav           = toggleMobNav;
+window.closeMobNav            = closeMobNav;
+window.togglePlatformMenu     = togglePlatformMenu;
+window.openDeleteModal        = openDeleteModal;
+window.closeDeleteModal       = closeDeleteModal;
+window.confirmDeletePortfolio = confirmDeletePortfolio;
+window.openSearchModal        = openSearchModal;
+window.closeSearchModal       = closeSearchModal;
+window.onSearchInput          = onSearchInput;
+window.selectTicker           = selectTicker;
+window.clearSelection         = clearSelection;
+window.addSelectedHolding     = addSelectedHolding;
+window.removeHolding          = removeHolding;
+window.openDrawer             = openDrawer;
+window.closeDrawer            = closeDrawer;
+window.openPwModal            = openPwModal;
+window.closePwModal           = closePwModal;
+window.sendPasswordReset      = sendPasswordReset;
+window.copyReferral           = copyReferral;
+window.logout                 = logout;
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
