@@ -2142,7 +2142,11 @@ class EmailPrefsUpdate(BaseModel):
     email_bot13_alerts: Optional[bool] = None
     email_weekly:       Optional[bool] = None
     email_monthly:      Optional[bool] = None
-    email_source:       Optional[str]  = None   # 'site' | 'portfolio' | 'both'
+    # Per-section content toggles (v2 — replaces email_source)
+    email_portfolio:    Optional[bool] = None   # user's own portfolio signals
+    email_wallstbots:   Optional[bool] = None   # Wall St. Bots section
+    email_bitbot13:     Optional[bool] = None   # BitBot13 crypto section
+    email_lvl13:        Optional[bool] = None   # Level XIII AI/quantum section
 
 
 @app.get("/user/email-prefs")
@@ -2152,7 +2156,8 @@ async def get_email_prefs(current_user: dict = Depends(get_current_user)):
         cursor = conn.cursor()
         cursor.execute("""
             SELECT email_enabled, email_daily, email_bot13_alerts,
-                   email_weekly, email_monthly, email_source
+                   email_weekly, email_monthly,
+                   email_portfolio, email_wallstbots, email_bitbot13, email_lvl13
             FROM users WHERE id = %s
         """, (current_user["user_id"],))
         row = cursor.fetchone()
@@ -2164,7 +2169,10 @@ async def get_email_prefs(current_user: dict = Depends(get_current_user)):
             "email_bot13_alerts": row["email_bot13_alerts"],
             "email_weekly":       row["email_weekly"],
             "email_monthly":      row["email_monthly"],
-            "email_source":       row["email_source"],
+            "email_portfolio":    row["email_portfolio"]   if row["email_portfolio"]   is not None else True,
+            "email_wallstbots":   row["email_wallstbots"]  if row["email_wallstbots"]  is not None else True,
+            "email_bitbot13":     row["email_bitbot13"]    if row["email_bitbot13"]    is not None else True,
+            "email_lvl13":        row["email_lvl13"]       if row["email_lvl13"]       is not None else True,
         }
     finally:
         cursor.close()
@@ -2182,10 +2190,10 @@ async def update_email_prefs(
     if body.email_bot13_alerts is not None: fields.append("email_bot13_alerts = %s"); values.append(body.email_bot13_alerts)
     if body.email_weekly       is not None: fields.append("email_weekly = %s");       values.append(body.email_weekly)
     if body.email_monthly      is not None: fields.append("email_monthly = %s");      values.append(body.email_monthly)
-    if body.email_source       is not None:
-        if body.email_source not in ("site", "portfolio", "both"):
-            raise HTTPException(status_code=400, detail="email_source must be 'site', 'portfolio', or 'both'")
-        fields.append("email_source = %s"); values.append(body.email_source)
+    if body.email_portfolio    is not None: fields.append("email_portfolio = %s");    values.append(body.email_portfolio)
+    if body.email_wallstbots   is not None: fields.append("email_wallstbots = %s");   values.append(body.email_wallstbots)
+    if body.email_bitbot13     is not None: fields.append("email_bitbot13 = %s");     values.append(body.email_bitbot13)
+    if body.email_lvl13        is not None: fields.append("email_lvl13 = %s");        values.append(body.email_lvl13)
 
     if not fields:
         raise HTTPException(status_code=400, detail="No fields to update")
@@ -2205,15 +2213,14 @@ async def update_email_prefs(
         return_db_connection(conn)
 
 
-# ── Admin: get all email subscribers for a platform ────────────────────────────
+# ── Admin: get all email subscribers (platform-agnostic, consolidated send) ───
 @app.get("/admin/email-subscribers")
 async def get_email_subscribers(
-    platform: str = Query(..., description="wallstbots | bitbot13 | lvl13"),
     x_internal_key: Optional[str] = Header(None, alias="X-Internal-Key"),
 ):
     """
-    Called by GitHub Actions send_emails.py script.
-    Returns all opted-in users + their portfolio holdings for the given platform.
+    Called by GitHub Actions send_emails.py script (once per day from wallstbots workflow).
+    Returns all opted-in users + their portfolio holdings across ALL platforms.
     Requires X-Internal-Key header matching INTERNAL_API_KEY env var.
     """
     expected_key = os.environ.get("INTERNAL_API_KEY", "")
@@ -2223,11 +2230,11 @@ async def get_email_subscribers(
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        # Get all email-enabled users
         cursor.execute("""
             SELECT u.id, u.email, u.full_name, u.role,
                    u.email_enabled, u.email_daily, u.email_bot13_alerts,
-                   u.email_weekly, u.email_monthly, u.email_source
+                   u.email_weekly, u.email_monthly,
+                   u.email_portfolio, u.email_wallstbots, u.email_bitbot13, u.email_lvl13
             FROM users u
             WHERE u.email_enabled = TRUE
             ORDER BY u.created_at
@@ -2236,43 +2243,49 @@ async def get_email_subscribers(
 
         subscribers = []
         for u in users:
-            # Determine tier
+            # Determine paid tier (any platform)
             tier = "free"
             if u["role"] in ("admin", "webmaster"):
                 tier = "paid"
             else:
                 cursor.execute("""
-                    SELECT subscription_tier FROM bots
-                    WHERE user_id = %s AND platform = %s
-                    LIMIT 1
-                """, (u["id"], platform))
-                bot_row = cursor.fetchone()
-                if bot_row:
+                    SELECT id FROM bots WHERE user_id = %s LIMIT 1
+                """, (u["id"],))
+                if cursor.fetchone():
                     tier = "paid"
 
-            # Get holdings for this user on this platform
+            # Get all holdings grouped by platform
             cursor.execute("""
-                SELECT bh.symbol
+                SELECT b.platform, bh.symbol
                 FROM bot_holdings bh
                 JOIN bots b ON b.id = bh.bot_id
-                WHERE b.user_id = %s AND b.platform = %s
-            """, (u["id"], platform))
-            holdings = [r["symbol"] for r in cursor.fetchall()]
+                WHERE b.user_id = %s
+            """, (u["id"],))
+            holdings_by_platform: dict[str, list[str]] = {}
+            for r in cursor.fetchall():
+                holdings_by_platform.setdefault(r["platform"], []).append(r["symbol"])
 
-            # Parse first name from full_name
+            # Parse first name
             full = u.get("full_name") or ""
             first_name = full.split()[0] if full.strip() else ""
 
             subscribers.append({
-                "email":             u["email"],
-                "first_name":        first_name,
-                "tier":              tier,
-                "email_daily":       u["email_daily"],
+                "email":              u["email"],
+                "first_name":         first_name,
+                "tier":               tier,
+                "email_daily":        u["email_daily"],
                 "email_bot13_alerts": u["email_bot13_alerts"],
-                "email_weekly":      u["email_weekly"],
-                "email_monthly":     u["email_monthly"],
-                "email_source":      u["email_source"],
-                "portfolio_holdings": list(set(holdings)),
+                "email_weekly":       u["email_weekly"],
+                "email_monthly":      u["email_monthly"],
+                # Per-section content prefs (default True if column not yet migrated)
+                "email_portfolio":    u["email_portfolio"]   if u["email_portfolio"]   is not None else True,
+                "email_wallstbots":   u["email_wallstbots"]  if u["email_wallstbots"]  is not None else True,
+                "email_bitbot13":     u["email_bitbot13"]    if u["email_bitbot13"]    is not None else True,
+                "email_lvl13":        u["email_lvl13"]       if u["email_lvl13"]       is not None else True,
+                # Holdings per platform for personal signal matching
+                "holdings_wallstbots": list(set(holdings_by_platform.get("wallstbots", []))),
+                "holdings_bitbot13":   list(set(holdings_by_platform.get("bitbot13",   []))),
+                "holdings_lvl13":      list(set(holdings_by_platform.get("lvl13",      []))),
             })
 
         return {"subscribers": subscribers, "count": len(subscribers)}

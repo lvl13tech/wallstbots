@@ -80,8 +80,8 @@ jobs:
         run: |
           HOUR=$(date -u +%H)
           if [ "$HOUR" = "14" ]; then
-            echo "=== Dispatching daily emails for wallstbots ==="
-            python Project/scripts/send_emails.py --platform wallstbots
+            echo "=== Dispatching consolidated daily email ==="
+            python Project/scripts/send_emails.py
           else
             echo "=== Skipping email dispatch (hour=$HOUR, only runs at 14:xx UTC) ==="
           fi

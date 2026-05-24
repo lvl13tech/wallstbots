@@ -407,16 +407,10 @@
     .toggle-switch input:checked + .toggle-track::after { transform: translateX(18px); background: var(--accent); }
     .email-sub-prefs { transition: opacity 0.2s; }
     .email-sub-prefs.disabled { opacity: 0.35; pointer-events: none; }
-    .email-source-row {
-      display: flex; justify-content: space-between;
-      align-items: center; padding: 10px 0 2px;
+    .email-section-label {
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.7px; color: var(--muted); margin: 16px 0 6px;
     }
-    .email-source-select {
-      background: var(--panel2); border: 1px solid var(--border);
-      color: var(--text); border-radius: 6px;
-      padding: 5px 8px; font-size: 0.8rem; cursor: pointer; outline: none;
-    }
-    .email-source-select:focus { border-color: var(--accent); }
     .email-save-btn {
       width: 100%; margin-top: 14px; padding: 9px;
       background: var(--accent-dim); border: 1px solid var(--accent);
@@ -1259,16 +1253,46 @@
           <span class="toggle-track"></span>
         </label>
       </div>
-      <div class="email-source-row">
+      <div class="email-section-label">Email Sections</div>
+      <div class="email-toggle-row">
         <div>
-          <div class="email-toggle-label">Signal Source</div>
-          <div class="email-toggle-sub">Which picks to receive</div>
+          <div class="email-toggle-label">My Portfolio</div>
+          <div class="email-toggle-sub">Signals matching your holdings</div>
         </div>
-        <select class="email-source-select" id="epSource">
-          <option value="both">Site + My Portfolio</option>
-          <option value="site">Site picks only</option>
-          <option value="portfolio">My holdings only</option>
-        </select>
+        <label class="toggle-switch">
+          <input type="checkbox" id="epPortfolio">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="email-toggle-row">
+        <div>
+          <div class="email-toggle-label">Wall St. Bots</div>
+          <div class="email-toggle-sub">Market signals &amp; BOT13 picks</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="epSiteWallstbots">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="email-toggle-row">
+        <div>
+          <div class="email-toggle-label">BitBot13</div>
+          <div class="email-toggle-sub">Crypto signals &amp; BOT13 picks</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="epSiteBitbot13">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="email-toggle-row">
+        <div>
+          <div class="email-toggle-label">Level XIII</div>
+          <div class="email-toggle-sub">AI &amp; quantum signals &amp; BOT13 picks</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="epSiteLvl13">
+          <span class="toggle-track"></span>
+        </label>
       </div>
     </div>
     <button class="email-save-btn" onclick="saveEmailPrefs()">Save Preferences</button>
@@ -2166,10 +2190,12 @@
       document.getElementById("epEnabled").checked  = d.email_enabled       !== false;
       document.getElementById("epDaily").checked    = d.email_daily         !== false;
       document.getElementById("epBot13").checked    = d.email_bot13_alerts  !== false;
-      document.getElementById("epWeekly").checked   = d.email_weekly        !== false;
-      document.getElementById("epMonthly").checked  = d.email_monthly       !== false;
-      const src = document.getElementById("epSource");
-      if (src) src.value = d.email_source || "both";
+      document.getElementById("epWeekly").checked         = d.email_weekly        !== false;
+      document.getElementById("epMonthly").checked        = d.email_monthly       !== false;
+      document.getElementById("epPortfolio").checked      = d.email_portfolio     !== false;
+      document.getElementById("epSiteWallstbots").checked = d.email_wallstbots    !== false;
+      document.getElementById("epSiteBitbot13").checked   = d.email_bitbot13      !== false;
+      document.getElementById("epSiteLvl13").checked      = d.email_lvl13         !== false;
       toggleEmailMaster();
     } catch(e) { /* silently ignore */ }
   }
@@ -2189,7 +2215,10 @@
         email_bot13_alerts: document.getElementById("epBot13").checked,
         email_weekly:       document.getElementById("epWeekly").checked,
         email_monthly:      document.getElementById("epMonthly").checked,
-        email_source:       document.getElementById("epSource").value,
+        email_portfolio:    document.getElementById("epPortfolio").checked,
+        email_wallstbots:   document.getElementById("epSiteWallstbots").checked,
+        email_bitbot13:     document.getElementById("epSiteBitbot13").checked,
+        email_lvl13:        document.getElementById("epSiteLvl13").checked,
       };
       const resp = await fetch((window.API_BASE || "") + "/user/email-prefs", {
         method: "PUT",

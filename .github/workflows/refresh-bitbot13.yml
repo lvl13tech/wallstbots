@@ -60,18 +60,4 @@ jobs:
           git diff --staged --quiet || git commit -m "auto: bitbot13 data refresh [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push
 
-      - name: Send daily email notifications
-        # Only send once per day — guard to 13:00-13:29 UTC window (9:00am ET, market open)
-        env:
-          RESEND_API_KEY:   ${{ secrets.RESEND_API_KEY }}
-          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
-          BACKEND_URL:      ${{ secrets.BACKEND_URL }}
-        run: |
-          HOUR=$(date -u +%H)
-          MIN=$(date -u +%M)
-          if [ "$HOUR" = "13" ] && [ "$MIN" -lt "30" ]; then
-            echo "=== Dispatching daily emails for bitbot13 ==="
-            python Project/scripts/send_emails.py --platform bitbot13
-          else
-            echo "=== Skipping email dispatch ($(date -u '+%H:%M UTC'), only runs at 13:00-13:29 UTC) ==="
-          fi
+      # Email dispatch removed — consolidated daily email is sent by refresh-wallstbots.yml only.

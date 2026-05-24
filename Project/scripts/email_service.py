@@ -547,3 +547,306 @@ def build_monthly_email(
     body = eyebrow_html + greeting + wizard_block + picks_table + _cta_button(f"{site_url}/dashboard.html", "View Full Report")
     preheader = f"Wizard's monthly portfolio for {month} — {len(picks)} positions"
     return _wrap(platform, preheader, body)
+
+
+# ═══════════════════════════════════════════════════════════════════
+# CONSOLIDATED WRAPPER — multi-site header/footer
+# ═══════════════════════════════════════════════════════════════════
+def _wrap_consolidated(preheader: str, body_html: str) -> str:
+    year = datetime.now().year
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="color-scheme" content="dark"/>
+<title>Wall St. Bots — Daily Report</title>
+</head>
+<body style="margin:0;padding:0;background:#06080d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,system-ui,sans-serif;color:#e6edf3;-webkit-font-smoothing:antialiased;">
+
+<!-- preheader -->
+<span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</span>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#06080d;padding:28px 0 48px;">
+  <tr><td align="center" style="padding:0 16px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
+
+      <!-- ── HEADER ── -->
+      <tr>
+        <td style="background:#0d1117;border:1px solid #1e2633;border-bottom:2px solid #00d4ff;padding:18px 24px;border-radius:12px 12px 0 0;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td>
+                <a href="https://wallstbots.tech" style="text-decoration:none;font-size:20px;font-weight:800;color:#e6edf3;letter-spacing:-0.5px;">
+                  Wall St. <span style="color:#00d4ff;">Bots</span>
+                </a>
+                <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#7d8590;margin-top:3px;">AI-Powered Trading Signals — Daily Report</div>
+              </td>
+              <td align="right">
+                <a href="https://wallstbots.tech/dashboard.html" style="display:inline-block;background:#003d47;border:1px solid #00d4ff;color:#00d4ff;border-radius:6px;padding:7px 14px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">Dashboard</a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <!-- ── BODY ── -->
+      <tr>
+        <td style="background:#0d1117;border-left:1px solid #1e2633;border-right:1px solid #1e2633;padding:28px 24px;">
+          {body_html}
+        </td>
+      </tr>
+
+      <!-- ── FOOTER ── -->
+      <tr>
+        <td style="background:#0a0e16;border:1px solid #1e2633;border-top:none;padding:20px 24px;border-radius:0 0 12px 12px;text-align:center;">
+          <p style="font-size:11px;color:#7d8590;margin:0 0 6px;">
+            You're receiving this because you're subscribed to Wall St. Bots.
+          </p>
+          <p style="font-size:11px;margin:0 0 8px;">
+            <a href="https://wallstbots.tech/dashboard.html" style="color:#00d4ff;text-decoration:none;">WallStBots</a>
+            &nbsp;<span style="color:#1e2633;">·</span>&nbsp;
+            <a href="https://bitbot13.tech/dashboard.html" style="color:#00d4ff;text-decoration:none;">BitBot13</a>
+            &nbsp;<span style="color:#1e2633;">·</span>&nbsp;
+            <a href="https://lvl13.tech/dashboard.html" style="color:#00d4ff;text-decoration:none;">Level XIII</a>
+          </p>
+          <p style="font-size:11px;margin:0;">
+            <a href="https://wallstbots.tech/dashboard.html#email-prefs" style="color:#7d8590;text-decoration:none;">Email Preferences</a>
+            &nbsp;<span style="color:#1e2633;">·</span>&nbsp;
+            <span style="color:#4b5563;">&copy; {year} Wall St. Bots</span>
+          </p>
+        </td>
+      </tr>
+
+    </table>
+  </td></tr>
+</table>
+
+</body>
+</html>"""
+
+
+def _platform_section_header(platform: str) -> str:
+    """Divider bar between platform sections."""
+    labels = {
+        "wallstbots": ("Wall St. Bots", "https://wallstbots.tech", "#00d4ff"),
+        "bitbot13":   ("BitBot13",       "https://bitbot13.tech",   "#ec4899"),
+        "lvl13":      ("Level XIII",     "https://lvl13.tech",      "#a855f7"),
+    }
+    name, url, color = labels.get(platform, ("Wall St. Bots", "https://wallstbots.tech", "#00d4ff"))
+    return f"""
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:28px 0 16px;">
+  <tr>
+    <td style="border-top:1px solid #1e2633;padding-top:20px;">
+      <table cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding-right:10px;border-right:2px solid {color};"></td>
+          <td style="padding-left:10px;">
+            <a href="{url}/dashboard.html" style="text-decoration:none;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:{color};">{name}</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>"""
+
+
+def _compact_signals_table(signals: list[dict], max_rows: int = 8) -> str:
+    """Compact signal table for use inside a consolidated email section."""
+    if not signals:
+        return '<p style="font-size:12px;color:#7d8590;margin:10px 0 0;">No signals today.</p>'
+    rows = "".join(
+        _signal_row(
+            s.get("symbol", ""),
+            s.get("action", "HOLD"),
+            s.get("reason", s.get("rationale", "")),
+            s.get("price"),
+        )
+        for s in signals[:max_rows]
+    )
+    return f"""
+<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1e2633;border-radius:10px;overflow:hidden;border-collapse:collapse;">
+  <thead>
+    <tr style="background:#141b27;">
+      <th style="padding:7px 12px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Symbol</th>
+      <th style="padding:7px 12px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Signal</th>
+      <th style="padding:7px 12px;text-align:right;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Price</th>
+      <th style="padding:7px 12px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Reason</th>
+    </tr>
+  </thead>
+  <tbody>{rows}</tbody>
+</table>"""
+
+
+def _portfolio_section(recipient: dict) -> str:
+    """Render the user's portfolio signals across all platforms."""
+    blocks = []
+    platform_labels = [
+        ("wallstbots", "Stocks", "#00d4ff"),
+        ("bitbot13",   "Crypto", "#ec4899"),
+        ("lvl13",      "AI / Quantum", "#a855f7"),
+    ]
+    for plat, label, color in platform_labels:
+        signals = recipient.get(f"portfolio_signals_{plat}", [])
+        if not signals:
+            continue
+        pill = f'<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:rgba(0,0,0,0.3);border:1px solid {color};color:{color};font-size:9px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;margin-left:8px;">{label}</span>'
+        blocks.append(
+            f'<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.7px;color:#7d8590;margin:16px 0 8px;">Your Portfolio{pill}</div>'
+            + _compact_signals_table(signals, max_rows=10)
+        )
+
+    if not blocks:
+        return '<p style="font-size:13px;color:#7d8590;margin:0 0 4px;">No active signals match your holdings today.</p>'
+    return "".join(blocks)
+
+
+# ═══════════════════════════════════════════════════════════════════
+# EMAIL TEMPLATE 5 — Consolidated Daily Report (all three sites)
+# ═══════════════════════════════════════════════════════════════════
+def build_consolidated_email(
+    recipient: dict,
+    platform_data: dict,
+    is_weekly: bool = False,
+    is_monthly: bool = False,
+) -> str:
+    """
+    Build a single consolidated email covering all three platforms.
+    Sections rendered depend on per-user preference flags:
+      email_portfolio, email_wallstbots, email_bitbot13, email_lvl13
+    """
+    name      = recipient.get("first_name") or "Trader"
+    today_str = date.today().strftime("%B %d, %Y")
+    preheader = f"Your trading signals for {today_str} — Wall St. Bots, BitBot13 & Level XIII"
+
+    show_portfolio  = recipient.get("email_portfolio",  True)
+    show_wallstbots = recipient.get("email_wallstbots", True)
+    show_bitbot13   = recipient.get("email_bitbot13",   True)
+    show_lvl13      = recipient.get("email_lvl13",      True)
+
+    sections = []
+
+    # ── Greeting ──────────────────────────────────────────────────
+    sections.append(f"""
+<p style="font-size:15px;color:#adb8c6;margin:0 0 20px;line-height:1.6;">
+  Hey <strong style="color:#e6edf3;">{name}</strong> — here's your daily trading report for <strong style="color:#e6edf3;">{today_str}</strong>.
+</p>""")
+
+    # ── 1. Portfolio signals ──────────────────────────────────────
+    if show_portfolio:
+        sections.append(_eyebrow("📊 Your Portfolio", "#facc15"))
+        sections.append(_portfolio_section(recipient))
+
+    # ── 2–4. Per-platform sections ────────────────────────────────
+    platform_order = [
+        ("wallstbots", show_wallstbots),
+        ("bitbot13",   show_bitbot13),
+        ("lvl13",      show_lvl13),
+    ]
+
+    for plat, enabled in platform_order:
+        if not enabled:
+            continue
+
+        pdata    = platform_data.get(plat, {})
+        funds    = pdata.get("funds", {})
+        signals  = pdata.get("signals", [])
+        site_url = SITE_URLS[plat]
+
+        # Extract BOT13 strategy (key may be 'bot13' or 'BOT13')
+        bot13_data = funds.get("bot13") or funds.get("BOT13") or {}
+        strategy   = bot13_data.get("strategy") or bot13_data
+        decision   = strategy.get("decision", "HOLD")
+        rationale  = strategy.get("rationale", "No analysis available.")
+        picks      = strategy.get("picks", [])
+
+        sections.append(_platform_section_header(plat))
+
+        # BOT13 strategy card
+        sections.append(_strategy_card("bot13", f"BOT13 · {today_str}", decision, rationale))
+
+        # Picks table (if TRADE decision)
+        if picks and decision == "TRADE":
+            picks_rows = "".join(
+                _pick_row(p["symbol"], f"{p['weight']*100:.0f}%", p.get("rationale",""), "bot13")
+                for p in picks
+            )
+            sections.append(f"""
+{_section_label("Positions Entered")}
+<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1e2633;border-radius:10px;overflow:hidden;border-collapse:collapse;margin-bottom:16px;">
+  <thead>
+    <tr style="background:#141b27;">
+      <th style="padding:7px 12px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Symbol</th>
+      <th style="padding:7px 12px;text-align:right;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Allocation</th>
+      <th style="padding:7px 12px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Rationale</th>
+    </tr>
+  </thead>
+  <tbody>{picks_rows}</tbody>
+</table>""")
+
+        # Top signals
+        if signals:
+            sections.append(_section_label(f"Top Signals — {SITE_NAMES[plat]}"))
+            sections.append(_compact_signals_table(signals, max_rows=8))
+
+        # Oracle / weekly picks (if is_weekly)
+        if is_weekly:
+            oracle_data = funds.get("oracle") or funds.get("ORACLE") or {}
+            oracle_strat = oracle_data.get("strategy") or oracle_data
+            oracle_picks = oracle_strat.get("picks", [])
+            if oracle_picks:
+                oracle_rows = "".join(
+                    _pick_row(p["symbol"], f"{p['weight']*100:.0f}%", p.get("rationale",""), "oracle")
+                    for p in oracle_picks
+                )
+                sections.append(f"""
+{_section_label("Oracle — Weekly Picks")}
+<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1e2633;border-radius:10px;overflow:hidden;border-collapse:collapse;margin-bottom:16px;">
+  <thead>
+    <tr style="background:#141b27;">
+      <th style="padding:7px 12px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Symbol</th>
+      <th style="padding:7px 12px;text-align:right;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Weight</th>
+      <th style="padding:7px 12px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Thesis</th>
+    </tr>
+  </thead>
+  <tbody>{oracle_rows}</tbody>
+</table>""")
+
+        # Wizard / monthly picks (if is_monthly)
+        if is_monthly:
+            wizard_data = funds.get("wizard") or funds.get("WIZARD") or {}
+            wizard_strat = wizard_data.get("strategy") or wizard_data
+            wizard_picks = wizard_strat.get("picks", [])
+            if wizard_picks:
+                wizard_rows = "".join(
+                    _pick_row(p["symbol"], f"{p['weight']*100:.0f}%", p.get("rationale",""), "wizard")
+                    for p in wizard_picks
+                )
+                sections.append(f"""
+{_section_label("Wizard — Monthly Portfolio")}
+<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1e2633;border-radius:10px;overflow:hidden;border-collapse:collapse;margin-bottom:16px;">
+  <thead>
+    <tr style="background:#141b27;">
+      <th style="padding:7px 12px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Symbol</th>
+      <th style="padding:7px 12px;text-align:right;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Weight</th>
+      <th style="padding:7px 12px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Thesis</th>
+    </tr>
+  </thead>
+  <tbody>{wizard_rows}</tbody>
+</table>""")
+
+        # Dashboard CTA (compact)
+        sections.append(f"""
+<div style="text-align:right;margin-top:12px;">
+  <a href="{site_url}/dashboard.html" style="font-size:11px;color:#00d4ff;text-decoration:none;font-weight:600;">View {SITE_NAMES[plat]} Dashboard →</a>
+</div>""")
+
+    # ── Nothing enabled guard ─────────────────────────────────────
+    if not (show_portfolio or show_wallstbots or show_bitbot13 or show_lvl13):
+        sections.append(
+            '<p style="font-size:13px;color:#7d8590;margin:20px 0;">You have no email sections enabled. '
+            '<a href="https://wallstbots.tech/dashboard.html#email-prefs" style="color:#00d4ff;">Update preferences →</a></p>'
+        )
+
+    body = "\n".join(sections)
+    return _wrap_consolidated(preheader, body)

@@ -1,40 +1,36 @@
 """
 send_emails.py
 --------------
-Dispatch script — run after each refresh to send email notifications.
+Consolidated daily email dispatch — ONE email per user covering all three sites.
 
-Usage (GitHub Actions):
-  python Project/scripts/send_emails.py --platform wallstbots [--weekly] [--monthly]
+Usage (GitHub Actions — called only from refresh-wallstbots.yml):
+  python Project/scripts/send_emails.py [--weekly] [--monthly]
 
 Environment variables required:
   RESEND_API_KEY      — from Resend dashboard
   INTERNAL_API_KEY    — same key used by refresh scripts to call backend
   BACKEND_URL         — e.g. https://wallstbots-api-xxxx.run.app
 
-The script:
-  1. Reads the platform's state.json + signals.json from Frontends/
-  2. Calls the backend /admin/email-subscribers to get all opted-in users
-  3. Sends daily signals to all, weekly on Mondays, monthly on the 1st
-  4. For paid members, includes their personal portfolio signals
+The email structure (user-controllable):
+  1. Portfolio signals  — the user's own holdings across all platforms
+  2. Wall St. Bots      — stocks/market BOT13 decision + top signals
+  3. BitBot13           — crypto BOT13 decision + top signals
+  4. Level XIII         — AI/quantum BOT13 decision + top signals
 """
 
 import argparse
 import json
 import os
 import sys
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 import requests
 
-# Add scripts dir to path so we can import email_service
 sys.path.insert(0, str(Path(__file__).parent))
 from email_service import (
     send_batch,
-    build_daily_signals_email,
-    build_bot13_alert_email,
-    build_weekly_email,
-    build_monthly_email,
+    build_consolidated_email,
     SITE_NAMES,
 )
 
@@ -48,29 +44,34 @@ PLATFORM_DATA_PATHS = {
 }
 
 
-def load_data(platform: str) -> tuple[dict, dict]:
-    """Load state.json and signals.json for a platform."""
+def load_platform_data(platform: str) -> dict:
+    """Load state.json + signals.json for a platform. Returns a normalised dict."""
     base = PLATFORM_DATA_PATHS[platform]
-    state   = json.loads((base / "state.json").read_text())["data"]
-    signals_raw = json.loads((base / "signals.json").read_text())
+    try:
+        state_raw   = json.loads((base / "state.json").read_text())
+        signals_raw = json.loads((base / "signals.json").read_text())
+    except Exception as e:
+        print(f"[send_emails] WARNING: could not load {platform} data: {e}")
+        return {"funds": {}, "leaderboard": [], "signals": []}
+
+    state   = state_raw.get("data", state_raw)
     signals = signals_raw.get("data", {}).get("recommendations", [])
-    return state, signals
+
+    return {
+        "funds":       state.get("funds", {}),
+        "leaderboard": state.get("leaderboards", {}).get("week", []),
+        "signals":     signals,
+    }
 
 
-def get_subscribers(platform: str) -> list[dict]:
-    """
-    Fetch all opted-in email subscribers from backend.
-    Returns list of dicts: {email, first_name, tier, email_source,
-                             email_daily, email_bot13, email_weekly, email_monthly,
-                             portfolio_holdings: [symbol, ...]}
-    """
+def get_subscribers() -> list[dict]:
+    """Fetch all opted-in subscribers from backend (platform-agnostic)."""
     if not BACKEND_URL or not INTERNAL_API_KEY:
-        print("[send_emails] WARNING: BACKEND_URL or INTERNAL_API_KEY not set — skipping subscriber fetch")
+        print("[send_emails] WARNING: BACKEND_URL or INTERNAL_API_KEY not set — skipping")
         return []
     try:
         resp = requests.get(
             f"{BACKEND_URL}/admin/email-subscribers",
-            params={"platform": platform},
             headers={"X-Internal-Key": INTERNAL_API_KEY},
             timeout=30,
         )
@@ -83,117 +84,71 @@ def get_subscribers(platform: str) -> list[dict]:
         return []
 
 
-def match_portfolio_signals(holdings: list[str], all_signals: list[dict]) -> list[dict]:
+def match_signals(holdings: list[str], all_signals: list[dict]) -> list[dict]:
     """Return signals that match the user's portfolio holdings."""
     sym_set = {s.upper() for s in holdings}
-    return [s for s in all_signals if s.get("symbol","").upper() in sym_set]
+    return [s for s in all_signals if s.get("symbol", "").upper() in sym_set]
 
 
-def run(platform: str, is_weekly: bool = False, is_monthly: bool = False):
+def run(is_weekly: bool = False, is_monthly: bool = False):
     today = date.today()
-    print(f"[send_emails] {platform} | {today} | weekly={is_weekly} monthly={is_monthly}")
+    print(f"[send_emails] consolidated | {today} | weekly={is_weekly} monthly={is_monthly}")
 
-    state, all_signals = load_data(platform)
-    funds      = state.get("funds", {})
-    leaderboard = state.get("leaderboards", {}).get("week", [])
+    # Load all three platforms
+    platform_data = {p: load_platform_data(p) for p in ("wallstbots", "bitbot13", "lvl13")}
 
-    bot13_strategy  = funds.get("bot13", {}).get("current_strategy", {})
-    oracle_strategy = funds.get("oracle", {}).get("current_strategy", {})
-    wizard_strategy = funds.get("wizard", {}).get("current_strategy", {})
-
-    subscribers = get_subscribers(platform)
+    subscribers = get_subscribers()
     print(f"[send_emails] {len(subscribers)} subscriber(s) found")
-
     if not subscribers:
         print("[send_emails] No subscribers — done.")
         return
 
-    daily_recipients  = []
-    bot13_recipients  = []
-    weekly_recipients = []
+    daily_recipients   = []
+    weekly_recipients  = []
     monthly_recipients = []
-
-    bot13_traded = bot13_strategy.get("decision") == "TRADE"
 
     for sub in subscribers:
         if not sub.get("email"):
             continue
 
-        # Attach personal portfolio signals
-        holdings = sub.get("portfolio_holdings", [])
-        sub["portfolio_signals"] = match_portfolio_signals(holdings, all_signals)
+        # Attach per-platform portfolio signals
+        for plat in ("wallstbots", "bitbot13", "lvl13"):
+            holdings = sub.get(f"holdings_{plat}", [])
+            signals  = platform_data[plat]["signals"]
+            sub[f"portfolio_signals_{plat}"] = match_signals(holdings, signals)
 
         if sub.get("email_daily", True):
             daily_recipients.append(sub)
-        if sub.get("email_bot13", True) and bot13_traded:
-            bot13_recipients.append(sub)
         if is_weekly and sub.get("email_weekly", True):
             weekly_recipients.append(sub)
         if is_monthly and sub.get("email_monthly", True):
             monthly_recipients.append(sub)
 
-    site_name = SITE_NAMES[platform]
-
-    # ── Daily signals ──────────────────────────────────────────────
+    # ── Daily consolidated email ───────────────────────────────────────────────
     if daily_recipients:
-        print(f"[send_emails] Sending daily signals to {len(daily_recipients)} subscriber(s)...")
+        print(f"[send_emails] Sending consolidated daily email to {len(daily_recipients)} subscriber(s)...")
+        subject = f"Your Daily Trading Signals — {today.strftime('%b %d')}"
         result = send_batch(
             daily_recipients,
-            f"{site_name} · Daily Signals — {today.strftime('%b %d')}",
-            lambda r: build_daily_signals_email(
-                platform, all_signals, bot13_strategy, leaderboard, r
-            ),
+            subject,
+            lambda r: build_consolidated_email(r, platform_data, is_weekly, is_monthly),
         )
         print(f"[send_emails] Daily: sent={result['sent']} failed={result['failed']}")
-
-    # ── Bot13 trade alert ──────────────────────────────────────────
-    if bot13_recipients:
-        picks = bot13_strategy.get("picks", [])
-        n_pos = len(picks)
-        print(f"[send_emails] Sending Bot13 trade alert to {len(bot13_recipients)} subscriber(s)...")
-        result = send_batch(
-            bot13_recipients,
-            f"BOT13 TRADE ALERT · {n_pos} position{'s' if n_pos!=1 else ''} entered",
-            lambda r: build_bot13_alert_email(platform, bot13_strategy, r),
-        )
-        print(f"[send_emails] Bot13 alert: sent={result['sent']} failed={result['failed']}")
-
-    # ── Weekly picks ───────────────────────────────────────────────
-    if weekly_recipients:
-        print(f"[send_emails] Sending weekly picks to {len(weekly_recipients)} subscriber(s)...")
-        result = send_batch(
-            weekly_recipients,
-            f"{site_name} · Oracle's Weekly Picks — {today.strftime('%b %d')}",
-            lambda r: build_weekly_email(platform, oracle_strategy, leaderboard, r),
-        )
-        print(f"[send_emails] Weekly: sent={result['sent']} failed={result['failed']}")
-
-    # ── Monthly picks ──────────────────────────────────────────────
-    if monthly_recipients:
-        print(f"[send_emails] Sending monthly picks to {len(monthly_recipients)} subscriber(s)...")
-        result = send_batch(
-            monthly_recipients,
-            f"{site_name} · Wizard's Monthly Picks — {today.strftime('%B %Y')}",
-            lambda r: build_monthly_email(platform, wizard_strategy, leaderboard, r),
-        )
-        print(f"[send_emails] Monthly: sent={result['sent']} failed={result['failed']}")
 
     print("[send_emails] Done.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--platform", required=True, choices=["wallstbots","bitbot13","lvl13"])
-    parser.add_argument("--weekly",  action="store_true", help="Also send Oracle weekly picks")
-    parser.add_argument("--monthly", action="store_true", help="Also send Wizard monthly picks")
+    parser.add_argument("--weekly",  action="store_true")
+    parser.add_argument("--monthly", action="store_true")
     args = parser.parse_args()
 
-    today = date.today()
-    is_monday = today.weekday() == 0   # auto-detect Monday for weekly
-    is_first  = today.day == 1         # auto-detect 1st of month for monthly
+    today      = date.today()
+    is_monday  = today.weekday() == 0
+    is_first   = today.day == 1
 
     run(
-        platform  = args.platform,
-        is_weekly = args.weekly or is_monday,
+        is_weekly  = args.weekly  or is_monday,
         is_monthly = args.monthly or is_first,
     )
