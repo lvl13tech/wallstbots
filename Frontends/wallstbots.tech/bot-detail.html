@@ -173,6 +173,7 @@
     .result-name { font-size: 0.8rem; color: var(--muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .result-type { font-size: 0.72rem; color: var(--muted); background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; }
     .search-empty { padding: 20px; text-align: center; color: var(--muted); font-size: 0.85rem; }
+    .search-disclosure { font-size: 0.72rem; color: var(--muted); padding: 4px 2px 10px; line-height: 1.5; }
     .selected-ticker-display { background: var(--accent-dim); border: 1px solid var(--accent); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; font-size: 0.9rem; font-weight: 600; color: var(--accent); }
     .allocation-note { font-size: 0.78rem; color: var(--muted); margin-bottom: 16px; }
     .search-actions { display: flex; gap: 10px; justify-content: flex-end; }
@@ -364,8 +365,9 @@
     <input class="search-input" id="searchInput" type="text" placeholder="Search ticker or company name…"
            oninput="onSearchInput(this.value)" autocomplete="off" />
     <div class="search-results" id="searchResults">
-      <div class="search-empty">Type to search stocks & ETFs</div>
+      <div class="search-empty">Type a ticker or company name to search</div>
     </div>
+    <div class="search-disclosure">Search covers all Nasdaq, NYSE, OTC &amp; Pink Sheet symbols. Max 50 holdings per portfolio.</div>
     <div class="selected-ticker-display" id="selectedDisplay" style="display:none">
       <span id="selectedTicker">—</span>
       <button style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:1rem" onclick="clearSelection()">×</button>
@@ -397,7 +399,9 @@
   if (!BOT_ID) { window.location.href = "dashboard.html"; }
 
   let botData = null, holdings = [], userProfile = null;
-  let selectedSymbol = null, searchTimer = null;
+  let selectedSymbol = null;
+
+  // ── Open universe: any Nasdaq, NYSE, OTC & Pink Sheet symbol via Polygon ──
   let allocChart = null;
 
   const CHART_PALETTE = [
@@ -613,10 +617,17 @@
   }
 
   // ── Add Holding Modal ────────────────────────────────────────────────────────
+  // ── Tracked asset universe: all Nasdaq, NYSE, OTC & Pink Sheet symbols ──────
+  // (Search powered by Polygon.io — no hardcoded list needed)
+
   function openSearchModal() {
+    if (holdings.length >= 50) {
+      showToast("This portfolio is full (50/50). Create another portfolio to track more — or upgrade your plan for more portfolios.", "error");
+      return;
+    }
     selectedSymbol = null;
     document.getElementById("searchInput").value = "";
-    document.getElementById("searchResults").innerHTML = `<div class="search-empty">Type to search stocks & ETFs</div>`;
+    document.getElementById("searchResults").innerHTML = `<div class="search-empty">Type 2+ characters to search any Nasdaq, NYSE, OTC, or Pink Sheet symbol</div>`;
     document.getElementById("selectedDisplay").style.display = "none";
     document.getElementById("addHoldingBtn").disabled = true;
     document.getElementById("searchModal").classList.add("open");
@@ -626,12 +637,13 @@
 
   function onSearchInput(q) {
     clearTimeout(searchTimer);
-    if (q.trim().length < 1) {
-      document.getElementById("searchResults").innerHTML = `<div class="search-empty">Type to search stocks & ETFs</div>`;
+    const trimmed = q.trim();
+    if (trimmed.length < 2) {
+      document.getElementById("searchResults").innerHTML = `<div class="search-empty">Type 2+ characters to search any Nasdaq, NYSE, OTC, or Pink Sheet symbol</div>`;
       return;
     }
     document.getElementById("searchResults").innerHTML = `<div class="search-empty">Searching…</div>`;
-    searchTimer = setTimeout(() => doSearch(q.trim()), 300);
+    searchTimer = setTimeout(() => doSearch(trimmed), 350);
   }
 
   async function doSearch(q) {
@@ -639,17 +651,17 @@
       const data = await api.searchStocks(q, "all");
       const results = data?.results || data || [];
       if (!results.length) {
-        document.getElementById("searchResults").innerHTML = `<div class="search-empty">No results for "${escHtml(q)}"</div>`;
+        document.getElementById("searchResults").innerHTML = `<div class="search-empty">No results for "<strong>${escHtml(q)}</strong>" — try the exact ticker (e.g. AAPL) or a keyword</div>`;
         return;
       }
-      document.getElementById("searchResults").innerHTML = results.slice(0, 10).map(r => `
+      document.getElementById("searchResults").innerHTML = results.slice(0, 12).map(r => `
         <div class="search-result-item" onclick="selectTicker('${escHtml(r.ticker)}','${escHtml(r.name||r.ticker)}')">
           <span class="result-ticker">${escHtml(r.ticker)}</span>
           <span class="result-name">${escHtml(r.name||"")}</span>
-          <span class="result-type">${escHtml(r.market||r.type||"")}</span>
+          <span class="result-type">${escHtml(r.market||r.type||r.exchange||"")}</span>
         </div>`).join("");
     } catch(e) {
-      document.getElementById("searchResults").innerHTML = `<div class="search-empty">Search failed. Try again.</div>`;
+      document.getElementById("searchResults").innerHTML = `<div class="search-empty">Search unavailable — check connection or try the exact ticker symbol.</div>`;
     }
   }
 
@@ -720,19 +732,4 @@
   document.addEventListener("click", e => {
     if (!e.target.closest(".platform-switcher")) {
       document.getElementById("platformMenu").classList.remove("open");
-      document.getElementById("platformBtn").classList.remove("open");
-    }
-  });
-
-  // ── Helpers ──────────────────────────────────────────────────────────────────
-  function escHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-  function showToast(msg, type="success") {
-    const t = document.getElementById("toast");
-    t.textContent = msg; t.className = "toast " + type; t.classList.add("show");
-    clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove("show"), 3500);
-  }
-
-  document.addEventListener("DOMContentLoaded", init);
-</script>
-</body>
-</html>
+      document.getElementById("platformBtn").classList.remove(

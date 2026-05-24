@@ -173,6 +173,7 @@
     .result-name { font-size: 0.8rem; color: var(--muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .result-type { font-size: 0.72rem; color: var(--muted); background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; }
     .search-empty { padding: 20px; text-align: center; color: var(--muted); font-size: 0.85rem; }
+    .search-disclosure { font-size: 0.72rem; color: var(--muted); padding: 4px 2px 10px; line-height: 1.5; }
     .selected-ticker-display { background: var(--accent-dim); border: 1px solid var(--accent); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; font-size: 0.9rem; font-weight: 600; color: var(--accent); }
     .allocation-note { font-size: 0.78rem; color: var(--muted); margin-bottom: 16px; }
     .search-actions { display: flex; gap: 10px; justify-content: flex-end; }
@@ -364,8 +365,9 @@
     <input class="search-input" id="searchInput" type="text" placeholder="Search crypto or token symbol…"
            oninput="onSearchInput(this.value)" autocomplete="off" />
     <div class="search-results" id="searchResults">
-      <div class="search-empty">Type to search stocks & ETFs</div>
+      <div class="search-empty">Type a ticker or company name to search</div>
     </div>
+    <div class="search-disclosure">Top coins by market cap — available on Binance, Robinhood, or Coinbase. Excludes stablecoins.</div>
     <div class="selected-ticker-display" id="selectedDisplay" style="display:none">
       <span id="selectedTicker">—</span>
       <button style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:1rem" onclick="clearSelection()">×</button>
@@ -397,14 +399,271 @@
   if (!BOT_ID) { window.location.href = "dashboard.html"; }
 
   let botData = null, holdings = [], userProfile = null;
-  let selectedSymbol = null, searchTimer = null;
-  let allocChart = null;
+  let selectedSymbol = null;
 
-  const CHART_PALETTE = [
-    "#00d4ff","#7c3aed","#f59e0b","#10b981","#ef4444","#3b82f6",
-    "#ec4899","#8b5cf6","#14b8a6","#f97316","#84cc16","#06b6d4",
-    "#a855f7","#eab308","#22c55e","#f43f5e","#0ea5e9","#d946ef",
-    "#fb923c","#4ade80"
+  const SUPPORTED_ASSETS = [
+    // ── LAYER 1 — Base chains ──────────────────────────────────────────────────
+    {ticker:"BTC",    name:"Bitcoin",                   sector:"LAYER 1"},
+    {ticker:"ETH",    name:"Ethereum",                  sector:"LAYER 1"},
+    {ticker:"BNB",    name:"BNB (Binance Coin)",        sector:"LAYER 1"},
+    {ticker:"SOL",    name:"Solana",                    sector:"LAYER 1"},
+    {ticker:"XRP",    name:"XRP",                       sector:"LAYER 1"},
+    {ticker:"ADA",    name:"Cardano",                   sector:"LAYER 1"},
+    {ticker:"TON",    name:"Toncoin",                   sector:"LAYER 1"},
+    {ticker:"AVAX",   name:"Avalanche",                 sector:"LAYER 1"},
+    {ticker:"TRX",    name:"TRON",                      sector:"LAYER 1"},
+    {ticker:"DOT",    name:"Polkadot",                  sector:"LAYER 1"},
+    {ticker:"NEAR",   name:"NEAR Protocol",             sector:"LAYER 1"},
+    {ticker:"ATOM",   name:"Cosmos",                    sector:"LAYER 1"},
+    {ticker:"ALGO",   name:"Algorand",                  sector:"LAYER 1"},
+    {ticker:"ETC",    name:"Ethereum Classic",          sector:"LAYER 1"},
+    {ticker:"XLM",    name:"Stellar",                   sector:"LAYER 1"},
+    {ticker:"EGLD",   name:"MultiversX",                sector:"LAYER 1"},
+    {ticker:"APT",    name:"Aptos",                     sector:"LAYER 1"},
+    {ticker:"SUI",    name:"Sui",                       sector:"LAYER 1"},
+    {ticker:"BCH",    name:"Bitcoin Cash",              sector:"LAYER 1"},
+    {ticker:"LTC",    name:"Litecoin",                  sector:"LAYER 1"},
+    {ticker:"KAS",    name:"Kaspa",                     sector:"LAYER 1"},
+    {ticker:"SEI",    name:"Sei Network",               sector:"LAYER 1"},
+    {ticker:"STX",    name:"Stacks",                    sector:"LAYER 1"},
+    {ticker:"XTZ",    name:"Tezos",                     sector:"LAYER 1"},
+    {ticker:"EOS",    name:"EOS",                       sector:"LAYER 1"},
+    {ticker:"MINA",   name:"Mina Protocol",             sector:"LAYER 1"},
+    {ticker:"ROSE",   name:"Oasis Network",             sector:"LAYER 1"},
+    {ticker:"KAVA",   name:"Kava",                      sector:"LAYER 1"},
+    {ticker:"ZEC",    name:"Zcash",                     sector:"LAYER 1"},
+    {ticker:"DASH",   name:"Dash",                      sector:"LAYER 1"},
+    {ticker:"ZIL",    name:"Zilliqa",                   sector:"LAYER 1"},
+    {ticker:"ONE",    name:"Harmony",                   sector:"LAYER 1"},
+    {ticker:"FLOW",   name:"Flow",                      sector:"LAYER 1"},
+    {ticker:"ICX",    name:"ICON",                      sector:"LAYER 1"},
+    {ticker:"CFX",    name:"Conflux",                   sector:"LAYER 1"},
+    {ticker:"XDC",    name:"XDC Network",               sector:"LAYER 1"},
+    {ticker:"HOT",    name:"Holo",                      sector:"LAYER 1"},
+    {ticker:"CRO",    name:"Cronos",                    sector:"LAYER 1"},
+    {ticker:"MNT",    name:"Mantle",                    sector:"LAYER 1"},
+    {ticker:"FTM",    name:"Fantom (Sonic)",            sector:"LAYER 1"},
+    {ticker:"CELO",   name:"Celo",                      sector:"LAYER 1"},
+    {ticker:"WAVES",  name:"Waves",                     sector:"LAYER 1"},
+    {ticker:"KDA",    name:"Kadena",                    sector:"LAYER 1"},
+    {ticker:"CSPR",   name:"Casper",                    sector:"LAYER 1"},
+    {ticker:"GLMR",   name:"Moonbeam",                  sector:"LAYER 1"},
+    {ticker:"MOVR",   name:"Moonriver",                 sector:"LAYER 1"},
+    {ticker:"XNO",    name:"Nano",                      sector:"LAYER 1"},
+    {ticker:"DCR",    name:"Decred",                    sector:"LAYER 1"},
+    {ticker:"RVN",    name:"Ravencoin",                 sector:"LAYER 1"},
+    {ticker:"HIVE",   name:"Hive",                      sector:"LAYER 1"},
+    {ticker:"BTT",    name:"BitTorrent Token",          sector:"LAYER 1"},
+    {ticker:"WIN",    name:"WINkLink",                  sector:"LAYER 1"},
+    {ticker:"FLUX",   name:"Flux",                      sector:"LAYER 1"},
+    {ticker:"SCRT",   name:"Secret Network",            sector:"LAYER 1"},
+    {ticker:"EVMOS",  name:"Evmos",                     sector:"LAYER 1"},
+    {ticker:"AKT",    name:"Akash Network",             sector:"LAYER 1"},
+    {ticker:"JUNO",   name:"Juno Network",              sector:"LAYER 1"},
+    {ticker:"CORE",   name:"Core Chain",                sector:"LAYER 1"},
+    {ticker:"ZEN",    name:"Horizen",                   sector:"LAYER 1"},
+    // ── LAYER 2 — Scaling & rollups ────────────────────────────────────────────
+    {ticker:"ARB",    name:"Arbitrum",                  sector:"LAYER 2"},
+    {ticker:"OP",     name:"Optimism",                  sector:"LAYER 2"},
+    {ticker:"MATIC",  name:"Polygon (POL)",             sector:"LAYER 2"},
+    {ticker:"IMX",    name:"Immutable X",               sector:"LAYER 2"},
+    {ticker:"MANTA",  name:"Manta Network",             sector:"LAYER 2"},
+    {ticker:"STRK",   name:"Starknet",                  sector:"LAYER 2"},
+    {ticker:"METIS",  name:"Metis",                     sector:"LAYER 2"},
+    {ticker:"ZK",     name:"ZKsync",                    sector:"LAYER 2"},
+    {ticker:"BOBA",   name:"Boba Network",              sector:"LAYER 2"},
+    {ticker:"AXL",    name:"Axelar",                    sector:"LAYER 2"},
+    {ticker:"OMG",    name:"OMG Network",               sector:"LAYER 2"},
+    // ── MEME — Community & meme coins ──────────────────────────────────────────
+    {ticker:"DOGE",   name:"Dogecoin",                  sector:"MEME"},
+    {ticker:"SHIB",   name:"Shiba Inu",                 sector:"MEME"},
+    {ticker:"PEPE",   name:"Pepe",                      sector:"MEME"},
+    {ticker:"FLOKI",  name:"Floki",                     sector:"MEME"},
+    {ticker:"WIF",    name:"dogwifhat",                 sector:"MEME"},
+    {ticker:"BONK",   name:"Bonk",                      sector:"MEME"},
+    {ticker:"POPCAT", name:"Popcat",                    sector:"MEME"},
+    {ticker:"NOT",    name:"Notcoin",                   sector:"MEME"},
+    {ticker:"BRETT",  name:"Brett",                     sector:"MEME"},
+    {ticker:"MOG",    name:"Mog Coin",                  sector:"MEME"},
+    {ticker:"NEIRO",  name:"Neiro",                     sector:"MEME"},
+    {ticker:"TURBO",  name:"Turbo",                     sector:"MEME"},
+    {ticker:"MYRO",   name:"Myro",                      sector:"MEME"},
+    {ticker:"MEW",    name:"cat in a dogs world",       sector:"MEME"},
+    {ticker:"SLERF",  name:"Slerf",                     sector:"MEME"},
+    {ticker:"BOME",   name:"Book of Meme",              sector:"MEME"},
+    // ── DEFI — Decentralized finance ───────────────────────────────────────────
+    {ticker:"UNI",    name:"Uniswap",                   sector:"DEFI"},
+    {ticker:"AAVE",   name:"Aave",                      sector:"DEFI"},
+    {ticker:"MKR",    name:"Maker",                     sector:"DEFI"},
+    {ticker:"CRV",    name:"Curve DAO Token",           sector:"DEFI"},
+    {ticker:"RUNE",   name:"THORChain",                 sector:"DEFI"},
+    {ticker:"INJ",    name:"Injective",                 sector:"DEFI"},
+    {ticker:"PENDLE", name:"Pendle",                    sector:"DEFI"},
+    {ticker:"ONDO",   name:"Ondo Finance",              sector:"DEFI"},
+    {ticker:"JUP",    name:"Jupiter",                   sector:"DEFI"},
+    {ticker:"COMP",   name:"Compound",                  sector:"DEFI"},
+    {ticker:"SNX",    name:"Synthetix",                 sector:"DEFI"},
+    {ticker:"YFI",    name:"yearn.finance",             sector:"DEFI"},
+    {ticker:"BAL",    name:"Balancer",                  sector:"DEFI"},
+    {ticker:"SUSHI",  name:"SushiSwap",                 sector:"DEFI"},
+    {ticker:"1INCH",  name:"1inch",                     sector:"DEFI"},
+    {ticker:"LDO",    name:"Lido DAO",                  sector:"DEFI"},
+    {ticker:"RPL",    name:"Rocket Pool",               sector:"DEFI"},
+    {ticker:"GMX",    name:"GMX",                       sector:"DEFI"},
+    {ticker:"DYDX",   name:"dYdX",                      sector:"DEFI"},
+    {ticker:"CAKE",   name:"PancakeSwap",               sector:"DEFI"},
+    {ticker:"RAY",    name:"Raydium",                   sector:"DEFI"},
+    {ticker:"OSMO",   name:"Osmosis",                   sector:"DEFI"},
+    {ticker:"AERO",   name:"Aerodrome Finance",         sector:"DEFI"},
+    {ticker:"ENA",    name:"Ethena",                    sector:"DEFI"},
+    {ticker:"GNO",    name:"Gnosis",                    sector:"DEFI"},
+    {ticker:"PERP",   name:"Perpetual Protocol",        sector:"DEFI"},
+    {ticker:"ZRX",    name:"0x Protocol",               sector:"DEFI"},
+    {ticker:"UMA",    name:"UMA Protocol",              sector:"DEFI"},
+    {ticker:"CVX",    name:"Convex Finance",            sector:"DEFI"},
+    {ticker:"FXS",    name:"Frax Share",                sector:"DEFI"},
+    {ticker:"BNT",    name:"Bancor",                    sector:"DEFI"},
+    {ticker:"COTI",   name:"COTI",                      sector:"DEFI"},
+    {ticker:"GFI",    name:"Goldfinch",                 sector:"DEFI"},
+    {ticker:"SYN",    name:"Synapse",                   sector:"DEFI"},
+    {ticker:"SPELL",  name:"Abracadabra (SPELL)",       sector:"DEFI"},
+    {ticker:"QUICK",  name:"QuickSwap",                 sector:"DEFI"},
+    {ticker:"LQTY",   name:"Liquity",                   sector:"DEFI"},
+    {ticker:"RDNT",   name:"Radiant Capital",           sector:"DEFI"},
+    {ticker:"C98",    name:"Coin98",                    sector:"DEFI"},
+    {ticker:"FORTH",  name:"Ampleforth Governance",     sector:"DEFI"},
+    {ticker:"FARM",   name:"Harvest Finance",           sector:"DEFI"},
+    {ticker:"RLY",    name:"Rally",                     sector:"DEFI"},
+    {ticker:"NCT",    name:"PolySwarm",                 sector:"DEFI"},
+    // ── INFRASTRUCTURE — Oracles, storage, compute ─────────────────────────────
+    {ticker:"LINK",   name:"Chainlink",                 sector:"INFRA"},
+    {ticker:"FIL",    name:"Filecoin",                  sector:"INFRA"},
+    {ticker:"ICP",    name:"Internet Computer",         sector:"INFRA"},
+    {ticker:"HBAR",   name:"Hedera",                    sector:"INFRA"},
+    {ticker:"QNT",    name:"Quant",                     sector:"INFRA"},
+    {ticker:"THETA",  name:"Theta Network",             sector:"INFRA"},
+    {ticker:"VET",    name:"VeChain",                   sector:"INFRA"},
+    {ticker:"GRT",    name:"The Graph",                 sector:"INFRA"},
+    {ticker:"HNT",    name:"Helium",                    sector:"INFRA"},
+    {ticker:"STORJ",  name:"Storj",                     sector:"INFRA"},
+    {ticker:"ANKR",   name:"Ankr",                      sector:"INFRA"},
+    {ticker:"API3",   name:"API3",                      sector:"INFRA"},
+    {ticker:"BAT",    name:"Basic Attention Token",     sector:"INFRA"},
+    {ticker:"NMR",    name:"Numeraire",                 sector:"INFRA"},
+    {ticker:"SKL",    name:"SKALE",                     sector:"INFRA"},
+    {ticker:"BAND",   name:"Band Protocol",             sector:"INFRA"},
+    {ticker:"AR",     name:"Arweave",                   sector:"INFRA"},
+    {ticker:"CTSI",   name:"Cartesi",                   sector:"INFRA"},
+    {ticker:"GLM",    name:"Golem",                     sector:"INFRA"},
+    {ticker:"IOTX",   name:"IoTeX",                     sector:"INFRA"},
+    {ticker:"ACH",    name:"Alchemy Pay",               sector:"INFRA"},
+    {ticker:"AUDIO",  name:"Audius",                    sector:"INFRA"},
+    {ticker:"MASK",   name:"Mask Network",              sector:"INFRA"},
+    {ticker:"RSR",    name:"Reserve Rights",            sector:"INFRA"},
+    {ticker:"OXT",    name:"Orchid",                    sector:"INFRA"},
+    {ticker:"NKN",    name:"NKN",                       sector:"INFRA"},
+    {ticker:"RLC",    name:"iExec RLC",                 sector:"INFRA"},
+    {ticker:"TRB",    name:"Tellor",                    sector:"INFRA"},
+    {ticker:"AMP",    name:"Amp",                       sector:"INFRA"},
+    {ticker:"CELR",   name:"Celer Network",             sector:"INFRA"},
+    {ticker:"ENS",    name:"Ethereum Name Service",     sector:"INFRA"},
+    {ticker:"BICO",   name:"Biconomy",                  sector:"INFRA"},
+    {ticker:"GAL",    name:"Galxe",                     sector:"INFRA"},
+    {ticker:"GTC",    name:"Gitcoin",                   sector:"INFRA"},
+    {ticker:"FORT",   name:"Forta",                     sector:"INFRA"},
+    {ticker:"OGN",    name:"Origin Protocol",           sector:"INFRA"},
+    {ticker:"RAD",    name:"Radicle",                   sector:"INFRA"},
+    {ticker:"XYO",    name:"XYO Network",               sector:"INFRA"},
+    {ticker:"CLV",    name:"Clover Finance",            sector:"INFRA"},
+    {ticker:"REN",    name:"Ren",                       sector:"INFRA"},
+    {ticker:"LCX",    name:"LCX",                       sector:"INFRA"},
+    {ticker:"AIOZ",   name:"AIOZ Network",              sector:"INFRA"},
+    {ticker:"DNT",    name:"district0x",                sector:"INFRA"},
+    {ticker:"LOOM",   name:"Loom Network",              sector:"INFRA"},
+    {ticker:"LPT",    name:"Livepeer",                  sector:"INFRA"},
+    {ticker:"T",      name:"Threshold Network",         sector:"INFRA"},
+    {ticker:"TWT",    name:"Trust Wallet Token",        sector:"INFRA"},
+    {ticker:"ID",     name:"SPACE ID",                  sector:"INFRA"},
+    {ticker:"GAS",    name:"Gas (NEO)",                 sector:"INFRA"},
+    {ticker:"CYBER",  name:"CyberConnect",              sector:"INFRA"},
+    {ticker:"MATH",   name:"MATH Token",                sector:"INFRA"},
+    {ticker:"DESO",   name:"Decentralized Social",      sector:"INFRA"},
+    {ticker:"POND",   name:"Marlin",                    sector:"INFRA"},
+    {ticker:"TRAC",   name:"OriginTrail",               sector:"INFRA"},
+    {ticker:"REQ",    name:"Request Network",           sector:"INFRA"},
+    {ticker:"POWR",   name:"Power Ledger",              sector:"INFRA"},
+    // ── AI CRYPTO — AI, data & intelligence tokens ─────────────────────────────
+    {ticker:"FET",    name:"Fetch.ai / ASI Alliance",   sector:"AI CRYPTO"},
+    {ticker:"RENDER", name:"Render Network",            sector:"AI CRYPTO"},
+    {ticker:"WLD",    name:"Worldcoin",                 sector:"AI CRYPTO"},
+    {ticker:"TAO",    name:"Bittensor",                 sector:"AI CRYPTO"},
+    {ticker:"OCEAN",  name:"Ocean Protocol",            sector:"AI CRYPTO"},
+    {ticker:"ARKM",   name:"Arkham",                    sector:"AI CRYPTO"},
+    {ticker:"ALT",    name:"AltLayer",                  sector:"AI CRYPTO"},
+    {ticker:"JASMY",  name:"JasmyCoin",                 sector:"AI CRYPTO"},
+    {ticker:"PHALA",  name:"Phala Network",             sector:"AI CRYPTO"},
+    {ticker:"NFP",    name:"NFPrompt",                  sector:"AI CRYPTO"},
+    {ticker:"CGPT",   name:"ChainGPT",                  sector:"AI CRYPTO"},
+    {ticker:"MDT",    name:"Measurable Data Token",     sector:"AI CRYPTO"},
+    // ── GAMING / NFT / METAVERSE ───────────────────────────────────────────────
+    {ticker:"SAND",   name:"The Sandbox",               sector:"GAMING"},
+    {ticker:"MANA",   name:"Decentraland",              sector:"GAMING"},
+    {ticker:"AXS",    name:"Axie Infinity",             sector:"GAMING"},
+    {ticker:"GALA",   name:"Gala Games",                sector:"GAMING"},
+    {ticker:"ENJ",    name:"Enjin Coin",                sector:"GAMING"},
+    {ticker:"CHZ",    name:"Chiliz",                    sector:"GAMING"},
+    {ticker:"ILV",    name:"Illuvium",                  sector:"GAMING"},
+    {ticker:"YGG",    name:"Yield Guild Games",         sector:"GAMING"},
+    {ticker:"BEAM",   name:"Beam",                      sector:"GAMING"},
+    {ticker:"MAGIC",  name:"Magic",                     sector:"GAMING"},
+    {ticker:"SLP",    name:"Smooth Love Potion",        sector:"GAMING"},
+    {ticker:"RON",    name:"Ronin",                     sector:"GAMING"},
+    {ticker:"PRIME",  name:"Echelon Prime",             sector:"GAMING"},
+    {ticker:"GODS",   name:"Gods Unchained",            sector:"GAMING"},
+    {ticker:"ALICE",  name:"My Neighbor Alice",         sector:"GAMING"},
+    {ticker:"TLM",    name:"Alien Worlds",              sector:"GAMING"},
+    {ticker:"AGLD",   name:"Adventure Gold",            sector:"GAMING"},
+    {ticker:"HIGH",   name:"Highstreet",                sector:"GAMING"},
+    {ticker:"ACE",    name:"Fusionist",                 sector:"GAMING"},
+    {ticker:"RARE",   name:"SuperRare",                 sector:"GAMING"},
+    {ticker:"ATLAS",  name:"Star Atlas",                sector:"GAMING"},
+    {ticker:"PLA",    name:"PlayDapp",                  sector:"GAMING"},
+    {ticker:"VOXEL",  name:"Voxies",                    sector:"GAMING"},
+    {ticker:"LOKA",   name:"League of Kingdoms",        sector:"GAMING"},
+    // ── EMERGING — New & recently listed ───────────────────────────────────────
+    {ticker:"TIA",    name:"Celestia",                  sector:"EMERGING"},
+    {ticker:"JTO",    name:"Jito",                      sector:"EMERGING"},
+    {ticker:"W",      name:"Wormhole",                  sector:"EMERGING"},
+    {ticker:"ZRO",    name:"LayerZero",                 sector:"EMERGING"},
+    {ticker:"EIGEN",  name:"EigenLayer",                sector:"EMERGING"},
+    {ticker:"PYTH",   name:"Pyth Network",              sector:"EMERGING"},
+    {ticker:"ORDI",   name:"Ordinals (ORDI)",           sector:"EMERGING"},
+    {ticker:"ATH",    name:"Aethir",                    sector:"EMERGING"},
+    {ticker:"IO",     name:"io.net",                    sector:"EMERGING"},
+    {ticker:"PORTAL", name:"Portal",                    sector:"EMERGING"},
+    {ticker:"PIXELS", name:"Pixels",                    sector:"EMERGING"},
+    {ticker:"LISTA",  name:"Lista DAO",                 sector:"EMERGING"},
+    {ticker:"OMNI",   name:"Omni Network",              sector:"EMERGING"},
+    {ticker:"REZ",    name:"Renzo",                     sector:"EMERGING"},
+    {ticker:"BB",     name:"BounceBit",                 sector:"EMERGING"},
+    {ticker:"SAGA",   name:"Saga",                      sector:"EMERGING"},
+    {ticker:"ETHFI",  name:"Ether.fi",                  sector:"EMERGING"},
+    {ticker:"TNSR",   name:"Tensor",                    sector:"EMERGING"},
+    {ticker:"VANRY",  name:"Vanar Chain",               sector:"EMERGING"},
+    {ticker:"ZETA",   name:"ZetaChain",                 sector:"EMERGING"},
+    {ticker:"MOCA",   name:"Moca Network",              sector:"EMERGING"},
+    {ticker:"DRIFT",  name:"Drift",                     sector:"EMERGING"},
+    {ticker:"AVAIL",  name:"Avail",                     sector:"EMERGING"},
+    {ticker:"PRCL",   name:"Parcl",                     sector:"EMERGING"},
+    {ticker:"BANANA", name:"Banana Gun",                sector:"EMERGING"},
+    {ticker:"VELO",   name:"Velodrome Finance",         sector:"EMERGING"},
+    {ticker:"DEGEN",  name:"Degen",                     sector:"EMERGING"},
+    {ticker:"SAFE",   name:"Safe",                      sector:"EMERGING"},
+    {ticker:"KMNO",   name:"Kamino Finance",            sector:"EMERGING"},
+    {ticker:"HOOK",   name:"Hooked Protocol",           sector:"EMERGING"},
+    {ticker:"POLS",   name:"Polkastarter",              sector:"EMERGING"},
+    {ticker:"PRO",    name:"Propy",                     sector:"EMERGING"},
+    {ticker:"XCN",    name:"Onyxcoin",                  sector:"EMERGING"},
   ];
 
   // ── Init ────────────────────────────────────────────────────────────────────
@@ -614,9 +873,13 @@
 
   // ── Add Holding Modal ────────────────────────────────────────────────────────
   function openSearchModal() {
+    if (holdings.length >= 50) {
+      showToast("This portfolio is full (50/50). Create another portfolio to track more — or upgrade your plan for more portfolios.", "error");
+      return;
+    }
     selectedSymbol = null;
     document.getElementById("searchInput").value = "";
-    document.getElementById("searchResults").innerHTML = `<div class="search-empty">Type to search crypto & tokens</div>`;
+    document.getElementById("searchResults").innerHTML = `<div class="search-empty">Type a coin name or ticker to search</div>`;
     document.getElementById("selectedDisplay").style.display = "none";
     document.getElementById("addHoldingBtn").disabled = true;
     document.getElementById("searchModal").classList.add("open");
@@ -625,32 +888,28 @@
   function closeSearchModal() { document.getElementById("searchModal").classList.remove("open"); }
 
   function onSearchInput(q) {
-    clearTimeout(searchTimer);
-    if (q.trim().length < 1) {
-      document.getElementById("searchResults").innerHTML = `<div class="search-empty">Type to search crypto & tokens</div>`;
+    const trimmed = q.trim();
+    if (!trimmed) {
+      document.getElementById("searchResults").innerHTML = `<div class="search-empty">Type a coin name or ticker to search</div>`;
       return;
     }
-    document.getElementById("searchResults").innerHTML = `<div class="search-empty">Searching…</div>`;
-    searchTimer = setTimeout(() => doSearch(q.trim()), 300);
-  }
-
-  async function doSearch(q) {
-    try {
-      const data = await api.searchStocks(q, "crypto");
-      const results = data?.results || data || [];
-      if (!results.length) {
-        document.getElementById("searchResults").innerHTML = `<div class="search-empty">No results for "${escHtml(q)}"</div>`;
-        return;
-      }
-      document.getElementById("searchResults").innerHTML = results.slice(0, 10).map(r => `
-        <div class="search-result-item" onclick="selectTicker('${escHtml(r.ticker)}','${escHtml(r.name||r.ticker)}')">
-          <span class="result-ticker">${escHtml(r.ticker)}</span>
-          <span class="result-name">${escHtml(r.name||"")}</span>
-          <span class="result-type">${escHtml(r.market||r.type||"")}</span>
-        </div>`).join("");
-    } catch(e) {
-      document.getElementById("searchResults").innerHTML = `<div class="search-empty">Search failed. Try again.</div>`;
+    const tu = trimmed.toUpperCase(), tl = trimmed.toLowerCase();
+    const results = SUPPORTED_ASSETS
+      .filter(a => a.ticker.includes(tu) || a.name.toLowerCase().includes(tl))
+      .sort((a, b) => {
+        const rank = t => t === tu ? 0 : t.startsWith(tu) ? 1 : 2;
+        return rank(a.ticker) - rank(b.ticker);
+      });
+    if (!results.length) {
+      document.getElementById("searchResults").innerHTML = `<div class="search-empty">No matches — we track top coins available on Binance, Robinhood &amp; Coinbase.</div>`;
+      return;
     }
+    document.getElementById("searchResults").innerHTML = results.slice(0, 14).map(r => `
+      <div class="search-result-item" onclick="selectTicker('${escHtml(r.ticker)}','${escHtml(r.name)}')">
+        <span class="result-ticker">${escHtml(r.ticker)}</span>
+        <span class="result-name">${escHtml(r.name)}</span>
+        <span class="result-type">${escHtml(r.sector)}</span>
+      </div>`).join("");
   }
 
   function selectTicker(ticker, name) {
@@ -720,19 +979,4 @@
   document.addEventListener("click", e => {
     if (!e.target.closest(".platform-switcher")) {
       document.getElementById("platformMenu").classList.remove("open");
-      document.getElementById("platformBtn").classList.remove("open");
-    }
-  });
-
-  // ── Helpers ──────────────────────────────────────────────────────────────────
-  function escHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-  function showToast(msg, type="success") {
-    const t = document.getElementById("toast");
-    t.textContent = msg; t.className = "toast " + type; t.classList.add("show");
-    clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove("show"), 3500);
-  }
-
-  document.addEventListener("DOMContentLoaded", init);
-</script>
-</body>
-</html>
+      document.getElementById("platformBtn").classList.remove
