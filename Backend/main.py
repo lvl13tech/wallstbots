@@ -381,6 +381,28 @@ async def login(request: LoginRequest):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
 
+@app.post("/auth/refresh")
+async def refresh_token(body: dict):
+    """Refresh a Supabase JWT using a refresh_token."""
+    try:
+        refresh_tok = body.get("refresh_token")
+        if not refresh_tok:
+            raise HTTPException(status_code=400, detail="refresh_token required")
+        auth_response = call_supabase_auth("POST", "/token?grant_type=refresh_token", {
+            "refresh_token": refresh_tok
+        })
+        return {
+            "success":       True,
+            "access_token":  auth_response["access_token"],
+            "refresh_token": auth_response.get("refresh_token"),
+            "expires_in":    auth_response.get("expires_in", 3600)
+        }
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token refresh failed")
+
+
 @app.post("/auth/logout")
 async def logout(current_user: dict = Depends(get_current_user)):
     return {"success": True, "message": "Logged out"}
@@ -672,7 +694,9 @@ async def create_bot(bot: BotCreate, current_user: dict = Depends(get_current_us
         cursor.execute("SELECT subscription_tier FROM users WHERE id = %s", (current_user["user_id"],))
         user_row = cursor.fetchone()
         tier = (user_row["subscription_tier"] or "free").lower() if user_row else "free"
-        if tier in ("insider", "elite", "premium", "syndicate"):
+        if tier == "webmaster":
+            portfolio_limit = 99
+        elif tier in ("insider", "elite", "premium", "syndicate"):
             portfolio_limit = 50
         elif tier == "pro":
             portfolio_limit = 10

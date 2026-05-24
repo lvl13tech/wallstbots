@@ -194,6 +194,31 @@
     .toast.error { border-color: var(--red); color: var(--red); }
 
     @media (max-width:600px) { .header-inner { gap: 10px; } nav { display: none; } .ham-btn { display: flex; align-items: center; } .platform-btn span { display: none; } }
+
+    /* ─── MOBILE: ≤480px ─── */
+    @media (max-width: 480px) {
+      main { padding: 12px; }
+      .header-inner { padding: 0 12px; gap: 6px; }
+      .platform-btn { display: none !important; }
+      .account-btn { padding: 6px 10px; font-size: 0.78rem; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .page-header-right { width: 100%; flex-direction: column; gap: 8px; }
+      .btn-add, .btn-delete-portfolio { width: 100%; text-align: center; display: block; }
+      .stats-bar { gap: 8px; }
+      .stat-card { padding: 12px 14px; }
+      .stat-value { font-size: 1.1rem; }
+      .panel-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { min-width: 460px; }
+      .panel-card-header { padding: 12px 14px; flex-wrap: wrap; gap: 8px; }
+      thead th, td { padding: 8px 10px; }
+      .search-box { padding: 16px; max-width: 100%; }
+      .search-actions { flex-direction: column-reverse; gap: 8px; }
+      .search-actions button { width: 100%; }
+      .modal-actions { flex-direction: column-reverse; gap: 8px; }
+      .modal-actions button { width: 100%; }
+      .modal-box { padding: 16px; margin: 12px; }
+      .toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
+    }
   </style>
 </head>
 <body>

@@ -57,6 +57,28 @@
       .platform-btn span { display: none; }
     }
 
+    /* ─── MOBILE: ≤480px ─── */
+    @media (max-width: 480px) {
+      .header-inner { padding: 0 12px; gap: 6px; }
+      .platform-btn { display: none !important; }
+      .account-btn { padding: 6px 10px; font-size: 0.78rem; }
+      .hero-stats-bar { gap: 16px; }
+      .hs-val { font-size: 1.1rem; }
+      .hero-ctas { flex-wrap: wrap; gap: 8px; }
+      .hero-ctas .btn { flex: 1; min-width: 140px; text-align: center; justify-content: center; }
+      .section-head { flex-wrap: wrap; gap: 8px; }
+      .btn-add-holding, .btn-del-portfolio { width: 100%; text-align: center; }
+      .panel[style*="overflow:hidden"] { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+      .holdings-head { flex-wrap: wrap; gap: 8px; padding: 12px 14px; }
+      .search-box { padding: 16px; max-width: 100%; }
+      .search-actions { flex-direction: column-reverse; gap: 8px; }
+      .search-actions button { width: 100%; }
+      .modal-actions { flex-direction: column-reverse; gap: 8px; }
+      .modal-actions button { width: 100%; }
+      .modal-box { padding: 16px; margin: 12px; }
+      .toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
+    }
+
     /* ── Member Hero ── */
     .member-hero { margin-bottom: 24px; }
     .hero-stats-bar { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 16px; }
