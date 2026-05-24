@@ -58,8 +58,9 @@ PAYPAL_API_BASE = (
 
 db_pool = ConnectionPool(
     DATABASE_URL,
-    min_size=1,
+    min_size=0,    # Don't eagerly connect at module import — prevents crash before CORS is set up
     max_size=20,
+    open=False,    # Opened in startup event; allows FastAPI + CORS middleware to initialize first
     check=ConnectionPool.check_connection,
     kwargs={
         "connect_timeout": 10,
@@ -410,7 +411,14 @@ async def logout(current_user: dict = Depends(get_current_user)):
 
 @app.on_event("startup")
 async def startup_migration():
-    """Add subscription tier columns to users table if they don't exist yet."""
+    """Open DB pool then run schema migrations."""
+    # Open the pool lazily — if DB is unreachable, app still serves CORS-correct responses
+    try:
+        db_pool.open(wait=False)
+        print("[startup] DB pool opened (async)")
+    except Exception as pool_err:
+        print(f"[startup] DB pool open warning (non-fatal): {pool_err}")
+
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
