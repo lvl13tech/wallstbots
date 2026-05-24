@@ -381,13 +381,13 @@
 <!-- ─── ADD HOLDING MODAL ─── -->
 <div class="search-modal" id="searchModal">
   <div class="search-box">
-    <h3>Add Holding</h3>
+    <h3>Add a Coin</h3>
     <input class="search-input" id="searchInput" type="text" placeholder="Search crypto or token symbol…"
            oninput="onSearchInput(this.value)" autocomplete="off" />
     <div class="search-results" id="searchResults">
       <div class="search-empty">Type a ticker or company name to search</div>
     </div>
-    <div class="search-disclosure">Top coins by market cap — available on Binance, Robinhood, or Coinbase. Excludes stablecoins.</div>
+    <div class="search-disclosure">Search by coin name or ticker — BTC, ETH, altcoins, DeFi, Layer 2, gaming, and more. Choose any tradeable crypto asset. Excludes stablecoins. Max 50 coins per portfolio.</div>
     <div class="selected-ticker-display" id="selectedDisplay" style="display:none">
       <span id="selectedTicker">—</span>
       <button style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:1rem" onclick="clearSelection()">×</button>
@@ -944,89 +944,4 @@
     selectedSymbol = null;
     document.getElementById("selectedDisplay").style.display = "none";
     document.getElementById("addHoldingBtn").disabled = true;
-    document.getElementById("searchResults").style.display = "block";
-    document.getElementById("searchInput").focus();
-  }
-
-  async function addSelectedHolding() {
-    if (!selectedSymbol) return;
-    const btn = document.getElementById("addHoldingBtn");
-    btn.disabled = true; btn.textContent = "Adding…";
-    try {
-      await api.addHolding(BOT_ID, selectedSymbol, 1000, null, null);
-      closeSearchModal();
-      showToast(selectedSymbol + " added to portfolio", "success");
-      await loadBot();
-    } catch(e) {
-      showToast(e.message || "Failed to add " + selectedSymbol, "error");
-      btn.disabled = false; btn.textContent = "Add Holding";
-    }
-  }
-
-  // ── Drawer / Account ─────────────────────────────────────────────────────────
-  function openDrawer() { document.getElementById("accountDrawer").classList.add("open"); document.getElementById("drawerOverlay").classList.add("open"); document.body.style.overflow = "hidden"; }
-  function closeDrawer() { document.getElementById("accountDrawer").classList.remove("open"); document.getElementById("drawerOverlay").classList.remove("open"); document.body.style.overflow = ""; }
-  function openPwModal() {
-    document.getElementById("pwModal").classList.add("open");
-    document.getElementById("pwModalText").textContent = "We'll send a reset link to: " + (userProfile?.email || "your email");
-    document.getElementById("pwConfirmBtn").textContent = "Send Reset Link";
-    document.getElementById("pwConfirmBtn").disabled = false;
-  }
-  function closePwModal() { document.getElementById("pwModal").classList.remove("open"); }
-  async function sendPasswordReset() {
-    const btn = document.getElementById("pwConfirmBtn");
-    btn.disabled = true; btn.textContent = "Sending…";
-    try {
-      await api.requestPasswordReset(userProfile?.email || userProfile?.user?.email);
-      document.getElementById("pwModalText").textContent = "✓ Reset link sent! Check your inbox.";
-      btn.textContent = "Sent!";
-      setTimeout(closePwModal, 2000);
-    } catch(e) {
-      document.getElementById("pwModalText").textContent = "Error sending reset link. Please try again.";
-      btn.disabled = false; btn.textContent = "Try Again";
-    }
-  }
-  function copyReferral() {
-    const code = document.getElementById("drawerRefCode").textContent;
-    if (code === "———") return;
-    navigator.clipboard.writeText(code).then(() => showToast("Referral code copied!", "success")).catch(() => showToast("Could not copy", "error"));
-  }
-  function togglePlatformMenu() {
-    const menu = document.getElementById("platformMenu"), btn = document.getElementById("platformBtn");
-    const isOpen = menu.classList.toggle("open");
-    btn.classList.toggle("open", isOpen);
-  }
-  document.addEventListener("click", e => {
-    if (!e.target.closest(".platform-switcher")) {
-      document.getElementById("platformMenu").classList.remove("open");
-      document.getElementById("platformBtn").classList.remove("open");
-    }
-  });
-
-  function toggleMobNav() {
-    document.getElementById('mobNav').classList.toggle('open');
-    document.getElementById('mobNavOverlay').classList.toggle('open');
-  }
-  function closeMobNav() {
-    document.getElementById('mobNav').classList.remove('open');
-    document.getElementById('mobNavOverlay').classList.remove('open');
-  }
-
-  function escHtml(s) {
-    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  // ── Toast ─────────────────────────────────────────────────────────────────────
-  let toastTimer;
-  function showToast(msg, type = 'success') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast show ' + type;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { t.className = 'toast'; }, 4000);
-  }
-
-  document.addEventListener("DOMContentLoaded", init);
-</script>
-</body>
-</html>
+    document.getEleme

@@ -382,13 +382,13 @@
 <!-- ─── ADD HOLDING MODAL ─── -->
 <div class="search-modal" id="searchModal">
   <div class="search-box">
-    <h3>Add Holding</h3>
+    <h3>Add a Stock</h3>
     <input class="search-input" id="searchInput" type="text" placeholder="Search AI, tech, or quantum stocks…"
            oninput="onSearchInput(this.value)" autocomplete="off" />
     <div class="search-results" id="searchResults">
       <div class="search-empty">Type a ticker or company name to search</div>
     </div>
-    <div class="search-disclosure">Search covers all Nasdaq, NYSE, OTC &amp; Pink Sheet symbols. Max 50 holdings per portfolio.</div>
+    <div class="search-disclosure">Focus on AI, quantum computing, semiconductors, and emerging tech — or add any Nasdaq/NYSE-listed ticker. Max 50 holdings per portfolio.</div>
     <div class="selected-ticker-display" id="selectedDisplay" style="display:none">
       <span id="selectedTicker">—</span>
       <button style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:1rem" onclick="clearSelection()">×</button>
@@ -719,68 +719,4 @@
 
   // ── Drawer / Account ─────────────────────────────────────────────────────────
   function openDrawer() { document.getElementById("accountDrawer").classList.add("open"); document.getElementById("drawerOverlay").classList.add("open"); document.body.style.overflow = "hidden"; }
-  function closeDrawer() { document.getElementById("accountDrawer").classList.remove("open"); document.getElementById("drawerOverlay").classList.remove("open"); document.body.style.overflow = ""; }
-  function openPwModal() {
-    document.getElementById("pwModal").classList.add("open");
-    document.getElementById("pwModalText").textContent = "We'll send a reset link to: " + (userProfile?.email || "your email");
-    document.getElementById("pwConfirmBtn").textContent = "Send Reset Link";
-    document.getElementById("pwConfirmBtn").disabled = false;
-  }
-  function closePwModal() { document.getElementById("pwModal").classList.remove("open"); }
-  async function sendPasswordReset() {
-    const btn = document.getElementById("pwConfirmBtn");
-    btn.disabled = true; btn.textContent = "Sending…";
-    try {
-      await api.requestPasswordReset(userProfile?.email || userProfile?.user?.email);
-      document.getElementById("pwModalText").textContent = "✓ Reset link sent! Check your inbox.";
-      btn.textContent = "Sent!";
-      setTimeout(closePwModal, 2000);
-    } catch(e) {
-      document.getElementById("pwModalText").textContent = "Error sending reset link. Please try again.";
-      btn.disabled = false; btn.textContent = "Try Again";
-    }
-  }
-  function copyReferral() {
-    const code = document.getElementById("drawerRefCode").textContent;
-    if (code === "———") return;
-    navigator.clipboard.writeText(code).then(() => showToast("Referral code copied!", "success")).catch(() => showToast("Could not copy", "error"));
-  }
-  function togglePlatformMenu() {
-    const menu = document.getElementById("platformMenu"), btn = document.getElementById("platformBtn");
-    const isOpen = menu.classList.toggle("open");
-    btn.classList.toggle("open", isOpen);
-  }
-  document.addEventListener("click", e => {
-    if (!e.target.closest(".platform-switcher")) {
-      document.getElementById("platformMenu").classList.remove("open");
-      document.getElementById("platformBtn").classList.remove("open");
-    }
-  });
-
-  function toggleMobNav() {
-    document.getElementById('mobNav').classList.toggle('open');
-    document.getElementById('mobNavOverlay').classList.toggle('open');
-  }
-  function closeMobNav() {
-    document.getElementById('mobNav').classList.remove('open');
-    document.getElementById('mobNavOverlay').classList.remove('open');
-  }
-
-  function escHtml(s) {
-    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  // ── Toast ─────────────────────────────────────────────────────────────────────
-  let toastTimer;
-  function showToast(msg, type = 'success') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast show ' + type;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { t.className = 'toast'; }, 4000);
-  }
-
-  document.addEventListener("DOMContentLoaded", init);
-</script>
-</body>
-</html>
+  function closeDrawer() { 

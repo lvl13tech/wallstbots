@@ -1062,18 +1062,20 @@ async function loadReferralDashboard() {
 // ================================================================
 const FAQS = [
   { q: ['price','cost','how much','pricing','member','insider','syndicate'], a: "MEMBER: $49.99/mo or $499/yr (1 portfolio). INSIDER: $69.99/mo or $699/yr (3 portfolios). SYNDICATE: $99.99/mo or $899/yr (up to 10 portfolios, all 3 platforms). FREE tier available — daily signals by email at no cost." },
-  { q: ['referral','refer','code','discount'], a: "Share your referral code and earn $35 credit per friend who subscribes — automatically deducted from your next bill. Your friend gets 50% off their first month or $100 off an annual plan. No cap on referrals." },
+  { q: ['referral','refer','code','discount'], a: "Share your referral code and earn $35 credit per friend who subscribes — automatically applied to your next bill. Your friend gets 50% off their first month or $100 off an annual plan. No cap on referrals." },
   { q: ['cancel','refund','stop'], a: "Cancel anytime from your PayPal account → Settings → Automatic Payments. No further charges after cancellation." },
-  { q: ['stocks','tickers','how many'], a: "Up to 50 stocks from any sector (NYSE, NASDAQ, plus most listed tickers). You pick them after checkout." },
-  { q: ['sector','sectors','industries'], a: "Any of the 11 GICS sectors — tech, biotech, energy, financials, industrials, real estate, you name it. We fetch news for the sectors you choose." },
-  { q: ['news','articles','sources'], a: "We pull from 80+ sources via NewsAPI, dedupe, and filter to the sectors you picked. Updated every night." },
-  { q: ['bot','bots','strategy','strategies'], a: "5 strategies race on the SAME stock list: BOT13 (daily intraday), ORACLE (weekly Monday rebalance), WIZARD (monthly hold), EQUALIZER (equal-weight baseline), TITAN (cap-weighted baseline)." },
+  { q: ['stocks','tickers','how many','add','holding','portfolio tracker'], a: "Add any U.S.-listed stock to your portfolio tracker — tech, biotech, energy, financials, REITs, and more. Covers Nasdaq, NYSE, OTC & Pink Sheet symbols. Up to 50 stocks per portfolio. Each holding gets a $1,000 paper allocation." },
+  { q: ['sector','sectors','industries','what can i track'], a: "Any of the 11 GICS sectors — tech, biotech, energy, financials, industrials, real estate, utilities, you name it. We pull news and signals for the sectors your stocks belong to." },
+  { q: ['portfolio','tracker','bot-detail','my portfolio','dashboard'], a: "Your portfolio page shows: your holdings table with live P&L, pie chart breakdown, bot signals on each stock, curated news for your picks, and a live leaderboard of all 5 bots competing on your exact stock list." },
+  { q: ['news','articles','sources'], a: "We pull from 80+ sources via NewsAPI, dedupe, and filter to the sectors your stocks are in. Updated every night." },
+  { q: ['bot','bots','strategy','strategies'], a: "5 strategies race on YOUR stock list: BOT13 (daily intraday), ORACLE (weekly Monday rebalance), WIZARD (monthly hold), EQUALIZER (equal-weight baseline), TITAN (cap-weighted baseline)." },
   { q: ['signals','buy','sell','hold'], a: "Every trading day we score every stock on your list — momentum, RSI, MACD, volume, volatility — and label it Strong Buy / Buy / Hold / Sell / Strong Sell." },
-  { q: ['report','reports','sunday','weekly'], a: "Every Sunday you get an auto-generated report: each fund's grade, what they bought/sold, why, and what's coming up." },
-  { q: ['real money','live trade','execute','broker'], a: "Nope — these are paper portfolios for research and signals. We don't touch a brokerage account. You see what the bots WOULD do, then decide for yourself." },
-  { q: ['data','privacy','share','sell my'], a: "Your data stays yours. We don't share or sell. Your tracker runs on a private endpoint — only you see it." },
+  { q: ['report','reports','sunday','weekly'], a: "Every Sunday you get an auto-generated report: each bot's grade, what they bought/sold, why, and what's coming up next week." },
+  { q: ['real money','live trade','execute','broker'], a: "No — these are paper portfolios for research and signals only. We never touch a brokerage account. You see what the bots would do, then decide for yourself." },
+  { q: ['mobile','phone','app','iphone','android'], a: "The site is fully mobile-optimized. Open it in your phone's browser — no app download needed. The dashboard, portfolio tracker, and all bot data work on any screen size." },
+  { q: ['data','privacy','share','sell my'], a: "Your data stays yours. We don't share or sell it. Your tracker runs on a private endpoint — only you see it." },
   { q: ['contact','support','help','email'], a: "Email info@wallstbots.tech anytime. Built and supported directly by the operator." },
-  { q: ['how long','setup','time','when'], a: "Tracker is live within 24 hours of checkout. You'll get an email with your private dashboard link." },
+  { q: ['how long','setup','time','when'], a: "Your tracker is live within 24 hours of checkout. You'll get an email with your private dashboard link." },
 ];
 function botAnswer(input) {
   const q = (input || '').toLowerCase().trim();

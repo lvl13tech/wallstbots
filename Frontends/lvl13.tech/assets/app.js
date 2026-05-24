@@ -1177,17 +1177,20 @@ function renderThanks() {
 // ================================================================
 const FAQS = [
   { q: ['price','cost','how much','pricing','member','insider','syndicate'], a: "MEMBER: $49.99/mo or $499/yr (1 portfolio). INSIDER: $69.99/mo or $699/yr (3 portfolios). SYNDICATE: $99.99/mo or $899/yr (up to 10 portfolios, all 3 platforms). FREE tier available — daily signals by email at no cost." },
-  { q: ['cancel','refund','stop'], a: "Cancel anytime from your PayPal account → Settings → Automatic Payments. No refund for the partial year, but no further charges." },
-  { q: ['stocks','tickers','how many'], a: "Up to 50 stocks from any sector (NYSE, NASDAQ, plus most listed tickers). You pick them after checkout." },
-  { q: ['sector','sectors','industries'], a: "Any sector — tech, biotech, energy, finance, defense, REITs, you name it. We fetch news for the sectors you choose." },
-  { q: ['news','articles','sources'], a: "We pull from 80+ sources via NewsAPI, dedupe, and filter to the sectors you picked. Updated every 30 min during market hours." },
-  { q: ['bot','bots','strategy','strategies'], a: "5 strategies race on the SAME stock list: BOT13 (daily intraday), ORACLE (weekly Monday rebalance), WIZARD (monthly hold), EQUALIZER (equal-weight baseline), TITAN (cap-weighted baseline)." },
+  { q: ['referral','refer','code','discount'], a: "Share your referral code and earn $35 credit per friend who subscribes — automatically applied to your next bill. Your friend gets 50% off their first month or $100 off an annual plan. No cap on referrals." },
+  { q: ['cancel','refund','stop'], a: "Cancel anytime from your PayPal account → Settings → Automatic Payments. No further charges after cancellation." },
+  { q: ['stocks','tickers','how many','add','holding','what can i add'], a: "Add any Nasdaq/NYSE-listed stock — with a focus on AI, quantum computing, semiconductors, and emerging tech. You can also add any other U.S.-listed ticker. Up to 50 holdings per portfolio. Each gets a $1,000 paper allocation." },
+  { q: ['ai','quantum','semiconductor','tech stocks','what can i track'], a: "Level XIII is built for AI and quantum — NVDA, AMD, INTC, IONQ, QCOM, MSFT, GOOGL, and any emerging tech play. Track the stocks shaping the next wave of computing." },
+  { q: ['portfolio','tracker','bot-detail','my portfolio','dashboard'], a: "Your portfolio page shows: your holdings with live P&L, pie chart breakdown, bot signals on each stock, curated AI/quantum news for your picks, and a live leaderboard of all 5 bots competing on your exact stock list." },
+  { q: ['news','articles','sources'], a: "We pull from 80+ sources via NewsAPI, dedupe, and filter to the sectors your stocks are in. AI and tech news updated every night." },
+  { q: ['bot','bots','strategy','strategies'], a: "5 strategies race on YOUR stock list: BOT13 (daily intraday), ORACLE (weekly Monday rebalance), WIZARD (monthly hold), EQUALIZER (equal-weight baseline), TITAN (cap-weighted baseline)." },
   { q: ['signals','buy','sell','hold'], a: "Every trading day we score every stock on your list — momentum, RSI, MACD, volume, volatility — and label it Strong Buy / Buy / Hold / Sell / Strong Sell." },
-  { q: ['report','reports','sunday','weekly'], a: "Every Sunday you get an auto-generated report: each fund's grade, what they bought/sold, why, and what's coming up." },
-  { q: ['real money','live trade','execute','broker'], a: "Nope — these are paper portfolios for research and signals. We don't touch a brokerage account. You see what the bots WOULD do, then decide for yourself." },
-  { q: ['data','privacy','share','sell my'], a: "Your data stays yours. We don't share or sell. Your tracker runs on a private endpoint — only you and the people you share the link with see it." },
+  { q: ['report','reports','sunday','weekly'], a: "Every Sunday you get an auto-generated report: each bot's grade, what they bought/sold, why, and what's coming next." },
+  { q: ['real money','live trade','execute','broker'], a: "No — these are paper portfolios for research and signals only. We never touch a brokerage account. You see what the bots would do, then decide for yourself." },
+  { q: ['mobile','phone','app','iphone','android'], a: "Fully mobile-optimized. Open it in your phone's browser — no app download needed. Your dashboard, portfolio, and all bot data work on any screen size." },
+  { q: ['data','privacy','share','sell my'], a: "Your data stays yours. We don't share or sell it. Your tracker runs on a private endpoint — only you see it." },
   { q: ['contact','support','help','email'], a: "Email info@lvl13.tech anytime. Built and supported directly by the operator." },
-  { q: ['how long','setup','time','when'], a: "Tracker is live within 24 hours of checkout. You'll get an email with your private dashboard link." },
+  { q: ['how long','setup','time','when'], a: "Your tracker is live within 24 hours of checkout. You'll get an email with your private dashboard link." },
 ];
 function botAnswer(input) {
   const q = (input || '').toLowerCase().trim();

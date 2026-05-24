@@ -946,19 +946,21 @@ async function loadReferralDashboard() {
 // ================================================================
 const FAQS = [
   { q: ['price','cost','how much','pricing','member','insider','syndicate'], a: "MEMBER: $49.99/mo or $499/yr (1 portfolio). INSIDER: $69.99/mo or $699/yr (3 portfolios). SYNDICATE: $99.99/mo or $899/yr (up to 10 portfolios, all 3 platforms). FREE tier available — daily signals by email at no cost." },
-  { q: ['referral','refer','code','discount'], a: "Share your referral code and earn $35 credit per friend who subscribes — automatically deducted from your next bill. Your friend gets 50% off their first month (or 20% off annual). No cap." },
-  { q: ['cancel','refund','stop'], a: "Cancel anytime from your PayPal account → Settings → Automatic Payments. No refund for the partial year, but no further charges." },
-  { q: ['coin','coins','tickers','how many'], a: "Up to 50 coins from any chain or category — BTC, ETH, altcoins, DeFi, gaming, meme. You pick them after checkout." },
-  { q: ['chain','chains','layer','defi','category'], a: "Any chain, any category — Layer 1, DeFi, exchanges, gaming, meme coins, and more. We fetch crypto news for the coins and projects you choose." },
-  { q: ['news','articles','sources'], a: "We pull from 80+ sources via NewsAPI, dedupe, and filter to the crypto topics you picked. Updated every night." },
-  { q: ['bot','bots','strategy','strategies'], a: "5 strategies race on the SAME coin list: BOT13 (daily intraday), ORACLE (weekly Monday rebalance), WIZARD (monthly hold), EQUALIZER (equal-weight baseline), TITAN (cap-weighted baseline)." },
+  { q: ['referral','refer','code','discount'], a: "Share your referral code and earn $35 credit per friend who subscribes — automatically applied to your next bill. Your friend gets 50% off their first month or 20% off annual. No cap on referrals." },
+  { q: ['cancel','refund','stop'], a: "Cancel anytime from your PayPal account → Settings → Automatic Payments. No further charges after cancellation." },
+  { q: ['coin','coins','tickers','how many','add','holding','what can i add'], a: "Add any tradeable crypto — BTC, ETH, altcoins, DeFi, Layer 2, gaming tokens, meme coins, and more. Search by name or ticker symbol. Excludes stablecoins. Up to 50 coins per portfolio. Each coin gets a $1,000 paper allocation." },
+  { q: ['chain','chains','layer','defi','category','what can i track'], a: "Any chain or category — Layer 1, Layer 2, DeFi protocols, exchanges, gaming, meme coins, and more. We pull crypto news for the projects you choose." },
+  { q: ['portfolio','tracker','bot-detail','my portfolio','dashboard'], a: "Your portfolio page shows: your coin holdings with live P&L, pie chart breakdown, bot signals on each coin, curated crypto news for your picks, and a live leaderboard of all 5 bots competing on your exact coin list." },
+  { q: ['news','articles','sources'], a: "We pull from 80+ sources via NewsAPI, dedupe, and filter to the crypto topics your coins cover. Updated every night." },
+  { q: ['bot','bots','strategy','strategies'], a: "5 strategies race on YOUR coin list: BOT13 (daily intraday), ORACLE (weekly Monday rebalance), WIZARD (monthly hold), EQUALIZER (equal-weight baseline), TITAN (cap-weighted baseline)." },
   { q: ['signals','buy','sell','hold'], a: "Every trading day we score every coin on your list — momentum, RSI, MACD, volume, volatility — and label it Strong Buy / Buy / Hold / Sell / Strong Sell." },
-  { q: ['report','reports','sunday','weekly'], a: "Every Sunday you get an auto-generated report: each fund's grade, what they bought/sold, why, and what's coming up." },
-  { q: ['real money','live trade','execute','broker','exchange'], a: "Nope — these are paper portfolios for research and signals. We don't touch an exchange account. You see what the bots WOULD do, then decide for yourself." },
-  { q: ['data','privacy','share','sell my'], a: "Your data stays yours. We don't share or sell. Your tracker runs on a private endpoint — only you see it." },
+  { q: ['report','reports','sunday','weekly'], a: "Every Sunday you get an auto-generated report: each bot's grade, what they bought/sold, why, and what's coming next." },
+  { q: ['real money','live trade','execute','broker','exchange'], a: "No — these are paper portfolios for research and signals only. We never touch an exchange account. You see what the bots would do, then decide for yourself." },
+  { q: ['mobile','phone','app','iphone','android'], a: "Fully mobile-optimized. Open it in your phone's browser — no app download needed. Your dashboard, portfolio, and all bot data work on any screen size." },
+  { q: ['24/7','always on','market hours','crypto market'], a: "Crypto never sleeps — and neither do the bots. BOT13 evaluates intraday signals around the clock, not just stock-market hours." },
+  { q: ['data','privacy','share','sell my'], a: "Your data stays yours. We don't share or sell it. Your tracker runs on a private endpoint — only you see it." },
   { q: ['contact','support','help','email'], a: "Email info@bitbot13.tech anytime. Built and supported directly by the operator." },
-  { q: ['how long','setup','time','when'], a: "Tracker is live within 24 hours of checkout. You'll get an email with your private dashboard link." },
-  { q: ['24/7','always on','market hours','crypto market'], a: "Crypto never sleeps — and neither do the bots. BOT13 evaluates intraday signals around the clock, not just during stock market hours." },
+  { q: ['how long','setup','time','when'], a: "Your tracker is live within 24 hours of checkout. You'll get an email with your private dashboard link." },
 ];
 function botAnswer(input) {
   const q = (input || '').toLowerCase().trim();
