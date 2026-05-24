@@ -60,4 +60,21 @@ jobs:
           git diff --staged --quiet || git commit -m "auto: bitbot13 data refresh [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push
 
-      # Email dispatch removed — consolidated daily email is sent by refresh-wallstbots.yml only.
+      - name: Send weekend daily email (Sat + Sun only)
+        # On weekdays, wallstbots.yml fires the consolidated email at 14:xx UTC.
+        # On weekends wallstbots never runs, so bitbot13 picks up the duty here.
+        # Guard: only fire once per day — at the 14:00 UTC run (9am-ish ET).
+        env:
+          RESEND_API_KEY:   ${{ secrets.RESEND_API_KEY }}
+          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+          BACKEND_URL:      ${{ secrets.BACKEND_URL }}
+        run: |
+          DOW=$(date -u +%u)   # 1=Mon … 6=Sat 7=Sun
+          HOUR=$(date -u +%H)
+          if [ "$DOW" -ge "6" ] && [ "$HOUR" = "14" ]; then
+            echo "=== Weekend email dispatch (DOW=$DOW, HOUR=$HOUR) ==="
+            python -m pip install --quiet requests
+            python Project/scripts/send_emails.py
+          else
+            echo "=== Skipping email (DOW=$DOW, HOUR=$HOUR — weekday or wrong hour) ==="
+          fi
