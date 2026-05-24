@@ -4,12 +4,17 @@ email_service.py
 Resend-based email service for WallStBots / BitBot13 / Level XIII.
 Sends daily signals, Bot13 trade alerts, weekly picks, monthly picks.
 
+Design matches the site exactly:
+  bg=#06080d  panel=#0d1117  panel2=#141b27  border=#1e2633
+  text=#e6edf3  muted=#7d8590  blue=#00d4ff  green=#3fb950
+  red=#f85149  pink=#ec4899  purple=#a855f7  emerald=#10b981
+  orange=#ff8c00  gold=#facc15
+
 Requires env var: RESEND_API_KEY
 Sends from: info@lvl13.tech (verified Resend domain)
 """
 
 import os
-import json
 import requests
 from datetime import datetime, date
 from typing import Optional
@@ -18,10 +23,11 @@ RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 FROM_EMAIL     = "Wall St. Bots <info@lvl13.tech>"
 API_URL        = "https://api.resend.com/emails"
 
+# ── Site config ────────────────────────────────────────────────────────────────
 SITE_NAMES = {
     "wallstbots": "Wall St. Bots",
     "bitbot13":   "BitBot13",
-    "lvl13":      "Level XIII Tech",
+    "lvl13":      "Level XIII",
 }
 SITE_URLS = {
     "wallstbots": "https://wallstbots.tech",
@@ -32,6 +38,24 @@ ASSET_LABEL = {
     "wallstbots": "stocks",
     "bitbot13":   "coins",
     "lvl13":      "stocks",
+}
+
+# ── Bot colours (matches style.css fund-icon classes) ─────────────────────────
+BOT_COLORS = {
+    "bot13":     {"bg": "#ec4899", "border": "#ec4899", "grad_start": "rgba(236,72,153,0.12)", "grad_end": "rgba(236,72,153,0.02)", "label": "BOT13",     "abbr": "B13"},
+    "oracle":    {"bg": "#a855f7", "border": "#a855f7", "grad_start": "rgba(168,85,247,0.12)",  "grad_end": "rgba(168,85,247,0.02)",  "label": "ORACLE",    "abbr": "OR"},
+    "wizard":    {"bg": "#10b981", "border": "#10b981", "grad_start": "rgba(16,185,129,0.12)",  "grad_end": "rgba(16,185,129,0.02)",  "label": "WIZARD",    "abbr": "WZ"},
+    "equalizer": {"bg": "#00d4ff", "border": "#00d4ff", "grad_start": "rgba(0,212,255,0.12)",   "grad_end": "rgba(0,212,255,0.02)",   "label": "EQUALIZER", "abbr": "EQ"},
+    "titan":     {"bg": "#ff8c00", "border": "#ff8c00", "grad_start": "rgba(255,140,0,0.12)",   "grad_end": "rgba(255,140,0,0.02)",   "label": "TITAN",     "abbr": "TI"},
+}
+
+# ── Signal pill styling (matches .signal-* classes) ───────────────────────────
+SIGNAL_STYLES = {
+    "STRONG BUY":  {"bg": "rgba(63,185,80,0.18)",  "color": "#4ade80", "border": "#3fb950"},
+    "BUY":         {"bg": "rgba(63,185,80,0.08)",  "color": "#86efac", "border": "rgba(63,185,80,0.5)"},
+    "HOLD":        {"bg": "rgba(125,133,144,0.15)","color": "#d1d5db", "border": "#4b5563"},
+    "SELL":        {"bg": "rgba(248,81,73,0.10)",  "color": "#fca5a5", "border": "rgba(248,81,73,0.5)"},
+    "STRONG SELL": {"bg": "rgba(248,81,73,0.20)",  "color": "#fb7185", "border": "#f85149"},
 }
 
 
@@ -56,7 +80,6 @@ def send_email(to: str, subject: str, html: str) -> bool:
 def send_batch(recipients: list[dict], subject: str, html_fn) -> dict:
     """
     Send to a list of recipients using a per-recipient HTML builder.
-    recipients: list of dicts with at least {"email": str}
     html_fn: callable(recipient_dict) -> html string
     Returns {"sent": n, "failed": n}
     """
@@ -65,108 +88,190 @@ def send_batch(recipients: list[dict], subject: str, html_fn) -> dict:
         try:
             html = html_fn(r)
             ok = send_email(r["email"], subject, html)
-            if ok:
-                sent += 1
-            else:
-                failed += 1
+            sent += 1 if ok else 0
+            failed += 0 if ok else 1
         except Exception as e:
             print(f"[email] Exception for {r.get('email')}: {e}")
             failed += 1
     return {"sent": sent, "failed": failed}
 
 
-# ── Shared HTML shell ──────────────────────────────────────────────────────────
+# ── HTML helpers ───────────────────────────────────────────────────────────────
+def _logo_html(platform: str) -> str:
+    logos = {
+        "wallstbots": "Wall St. <span style='color:#00d4ff;'>Bots</span>",
+        "bitbot13":   "Bit<span style='color:#00d4ff;'>Bot13</span>",
+        "lvl13":      "Level <span style='color:#00d4ff;'>XIII</span>",
+    }
+    return logos.get(platform, "WallStBots")
+
+
+def _signal_pill(action: str) -> str:
+    """Render a signal pill that matches the .signal-* classes exactly."""
+    s = SIGNAL_STYLES.get(action.upper(), SIGNAL_STYLES["HOLD"])
+    return (
+        f'<span style="display:inline-block;padding:3px 9px;border-radius:999px;'
+        f'background:{s["bg"]};color:{s["color"]};border:1px solid {s["border"]};'
+        f'font-size:9px;font-weight:800;letter-spacing:0.5px;white-space:nowrap;'
+        f'text-transform:uppercase;">{action.upper()}</span>'
+    )
+
+
+def _fund_icon(bot_key: str) -> str:
+    """Render a coloured fund icon square matching .fund-icon classes."""
+    c = BOT_COLORS.get(bot_key.lower(), BOT_COLORS["bot13"])
+    return (
+        f'<span style="display:inline-flex;align-items:center;justify-content:center;'
+        f'width:28px;height:28px;border-radius:7px;background:{c["bg"]};'
+        f'font-weight:800;font-size:11px;color:#06080d;flex-shrink:0;">'
+        f'{c["abbr"]}</span>'
+    )
+
+
+def _strategy_card(bot_key: str, label: str, decision: str, rationale: str, extra_html: str = "") -> str:
+    """Render a strategy panel matching .strategy-panel.{bot} with gradient border."""
+    c = BOT_COLORS.get(bot_key.lower(), BOT_COLORS["bot13"])
+    decision_color = "#00d4ff" if decision == "TRADE" else "#f85149" if decision in ("SELL","STRONG SELL") else c["bg"]
+    return f"""
+<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid {c['border']};border-radius:14px;overflow:hidden;margin-bottom:20px;">
+  <tr>
+    <td style="background:linear-gradient(135deg,{c['grad_start']},{c['grad_end']});padding:18px 20px;">
+      <!-- label row -->
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
+        <tr>
+          <td>{_fund_icon(bot_key)}</td>
+          <td style="padding-left:10px;">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:{c['bg']};line-height:1;">{label}</div>
+            <div style="font-size:18px;font-weight:800;color:{decision_color};margin-top:4px;letter-spacing:-0.3px;">{decision}</div>
+          </td>
+        </tr>
+      </table>
+      <!-- rationale -->
+      <p style="font-size:13px;color:#adb8c6;line-height:1.65;margin:0 0 0;">{rationale}</p>
+      {extra_html}
+    </td>
+  </tr>
+</table>"""
+
+
+def _signal_row(symbol: str, action: str, reason: str, price: Optional[float] = None) -> str:
+    price_str = f"${price:,.2f}" if price else "—"
+    return f"""
+<tr>
+  <td style="padding:9px 12px;border-bottom:1px solid #1e2633;font-weight:800;font-size:14px;color:#e6edf3;white-space:nowrap;">{symbol}</td>
+  <td style="padding:9px 12px;border-bottom:1px solid #1e2633;white-space:nowrap;">{_signal_pill(action)}</td>
+  <td style="padding:9px 12px;border-bottom:1px solid #1e2633;color:#00d4ff;font-size:12px;font-weight:600;text-align:right;white-space:nowrap;">{price_str}</td>
+  <td style="padding:9px 12px;border-bottom:1px solid #1e2633;font-size:11px;color:#7d8590;max-width:220px;">{reason[:90] if reason else ""}</td>
+</tr>"""
+
+
+def _pick_row(symbol: str, weight_pct: str, rationale: str, bot_key: str = "bot13") -> str:
+    c = BOT_COLORS.get(bot_key.lower(), BOT_COLORS["bot13"])
+    return f"""
+<tr>
+  <td style="padding:10px 14px;border-bottom:1px solid #1e2633;font-weight:800;font-size:15px;color:#e6edf3;white-space:nowrap;">{symbol}</td>
+  <td style="padding:10px 14px;border-bottom:1px solid #1e2633;font-weight:700;font-size:13px;color:{c['bg']};text-align:right;white-space:nowrap;">{weight_pct}</td>
+  <td style="padding:10px 14px;border-bottom:1px solid #1e2633;font-size:11px;color:#7d8590;">{rationale[:110] if rationale else ""}</td>
+</tr>"""
+
+
+def _section_label(text: str) -> str:
+    """Uppercase section header matching h3 from style.css."""
+    return f'<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.7px;color:#7d8590;margin:24px 0 10px;">{text}</div>'
+
+
+def _cta_button(url: str, text: str) -> str:
+    return f"""
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
+  <tr>
+    <td align="center">
+      <a href="{url}" style="display:inline-block;background:#003d47;border:1px solid #00d4ff;color:#00d4ff;border-radius:8px;padding:12px 28px;font-size:14px;font-weight:700;text-decoration:none;letter-spacing:0.2px;">{text} →</a>
+    </td>
+  </tr>
+</table>"""
+
+
+def _eyebrow(text: str, color: str = "#00d4ff") -> str:
+    """Styled eyebrow tag matching .hero-eyebrow."""
+    return (
+        f'<div style="display:inline-block;padding:4px 12px;'
+        f'background:rgba(0,212,255,0.10);border:1px solid {color};'
+        f'color:{color};border-radius:999px;font-size:10px;font-weight:800;'
+        f'letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;">{text}</div>'
+    )
+
+
+# ── Shell wrapper ──────────────────────────────────────────────────────────────
 def _wrap(platform: str, preheader: str, body_html: str) -> str:
     site_name = SITE_NAMES.get(platform, "WallStBots")
     site_url  = SITE_URLS.get(platform, "https://wallstbots.tech")
     year      = datetime.now().year
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="color-scheme" content="dark"/>
 <title>{site_name}</title>
 </head>
-<body style="margin:0;padding:0;background:#06080d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#e6edf3;">
-<span style="display:none;max-height:0;overflow:hidden;">{preheader}</span>
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#06080d;padding:24px 0;">
-  <tr><td align="center">
+<body style="margin:0;padding:0;background:#06080d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,system-ui,sans-serif;color:#e6edf3;-webkit-font-smoothing:antialiased;">
+
+<!-- preheader -->
+<span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</span>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#06080d;padding:28px 0 48px;">
+  <tr><td align="center" style="padding:0 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
 
-      <!-- HEADER -->
-      <tr><td style="background:#0d1117;border-bottom:1px solid #1e2633;padding:20px 28px;border-radius:12px 12px 0 0;">
-        <a href="{site_url}" style="text-decoration:none;font-size:1.2rem;font-weight:700;color:#e6edf3;letter-spacing:-0.5px;">
-          {_logo_html(platform)}
-        </a>
-      </td></tr>
+      <!-- ── HEADER ── -->
+      <tr>
+        <td style="background:#0d1117;border:1px solid #1e2633;border-bottom:2px solid #00d4ff;padding:18px 24px;border-radius:12px 12px 0 0;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td>
+                <a href="{site_url}" style="text-decoration:none;font-size:20px;font-weight:800;color:#e6edf3;letter-spacing:-0.5px;">
+                  {_logo_html(platform)}
+                </a>
+                <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#7d8590;margin-top:3px;">AI-Powered Trading Signals</div>
+              </td>
+              <td align="right">
+                <a href="{site_url}/dashboard.html" style="display:inline-block;background:#003d47;border:1px solid #00d4ff;color:#00d4ff;border-radius:6px;padding:7px 14px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">Dashboard</a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
 
-      <!-- BODY -->
-      <tr><td style="background:#0d1117;padding:28px;">
-        {body_html}
-      </td></tr>
+      <!-- ── BODY ── -->
+      <tr>
+        <td style="background:#0d1117;border-left:1px solid #1e2633;border-right:1px solid #1e2633;padding:28px 24px;">
+          {body_html}
+        </td>
+      </tr>
 
-      <!-- FOOTER -->
-      <tr><td style="background:#0a0e16;border-top:1px solid #1e2633;padding:20px 28px;border-radius:0 0 12px 12px;text-align:center;">
-        <p style="font-size:0.75rem;color:#7d8590;margin:0 0 8px;">
-          You're receiving this because you signed up for {site_name}.
-        </p>
-        <p style="font-size:0.75rem;color:#7d8590;margin:0;">
-          <a href="{site_url}/dashboard.html" style="color:#00d4ff;text-decoration:none;">Dashboard</a>
-          &nbsp;·&nbsp;
-          <a href="{site_url}/dashboard.html#email-prefs" style="color:#7d8590;text-decoration:none;">Email preferences</a>
-          &nbsp;·&nbsp;
-          <span style="color:#555;">&copy; {year} {site_name}</span>
-        </p>
-      </td></tr>
+      <!-- ── FOOTER ── -->
+      <tr>
+        <td style="background:#0a0e16;border:1px solid #1e2633;border-top:none;padding:20px 24px;border-radius:0 0 12px 12px;text-align:center;">
+          <p style="font-size:11px;color:#7d8590;margin:0 0 8px;">
+            You're receiving this because you're subscribed to {site_name}.
+          </p>
+          <p style="font-size:11px;margin:0;">
+            <a href="{site_url}/dashboard.html" style="color:#00d4ff;text-decoration:none;">Dashboard</a>
+            &nbsp;<span style="color:#1e2633;">·</span>&nbsp;
+            <a href="{site_url}/dashboard.html#email-prefs" style="color:#7d8590;text-decoration:none;">Email Preferences</a>
+            &nbsp;<span style="color:#1e2633;">·</span>&nbsp;
+            <span style="color:#4b5563;">&copy; {year} {site_name}</span>
+          </p>
+        </td>
+      </tr>
 
     </table>
   </td></tr>
 </table>
+
 </body>
 </html>"""
-
-
-def _logo_html(platform: str) -> str:
-    logos = {
-        "wallstbots": "Wall St. <span style='color:#00d4ff;'>Bots</span>",
-        "bitbot13":   "Bit<span style='color:#00d4ff;'>Bot13</span>",
-        "lvl13":      "Level XIII <span style='color:#00d4ff;'>Tech</span>",
-    }
-    return logos.get(platform, "WallStBots")
-
-
-def _signal_badge(action: str) -> str:
-    colors = {
-        "STRONG BUY":  ("#00d4ff", "#003d47"),
-        "BUY":         ("#34d399", "#064e3b"),
-        "HOLD":        ("#7d8590", "#1e2633"),
-        "SELL":        ("#f97316", "#431407"),
-        "STRONG SELL": ("#f85149", "#450a0a"),
-    }
-    fg, bg = colors.get(action.upper(), ("#7d8590", "#1e2633"))
-    return (f'<span style="background:{bg};color:{fg};border:1px solid {fg}33;'
-            f'border-radius:4px;padding:2px 8px;font-size:0.72rem;font-weight:700;'
-            f'letter-spacing:0.5px;white-space:nowrap;">{action}</span>')
-
-
-def _pick_row(symbol: str, weight_pct: str, rationale: str) -> str:
-    return f"""
-<tr>
-  <td style="padding:10px 14px;border-bottom:1px solid #1e2633;font-weight:700;font-size:0.9rem;white-space:nowrap;">{symbol}</td>
-  <td style="padding:10px 14px;border-bottom:1px solid #1e2633;color:#00d4ff;font-weight:600;text-align:right;white-space:nowrap;">{weight_pct}</td>
-  <td style="padding:10px 14px;border-bottom:1px solid #1e2633;font-size:0.8rem;color:#7d8590;">{rationale}</td>
-</tr>"""
-
-
-def _signal_row(symbol: str, action: str, reason: str, price: Optional[float] = None) -> str:
-    price_str = f"${price:,.2f}" if price else ""
-    return f"""
-<tr>
-  <td style="padding:9px 14px;border-bottom:1px solid #1e2633;font-weight:700;font-size:0.88rem;">{symbol}</td>
-  <td style="padding:9px 14px;border-bottom:1px solid #1e2633;text-align:center;">{_signal_badge(action)}</td>
-  <td style="padding:9px 14px;border-bottom:1px solid #1e2633;color:#00d4ff;font-size:0.82rem;text-align:right;">{price_str}</td>
-  <td style="padding:9px 14px;border-bottom:1px solid #1e2633;font-size:0.78rem;color:#7d8590;">{reason}</td>
-</tr>"""
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -174,120 +279,116 @@ def _signal_row(symbol: str, action: str, reason: str, price: Optional[float] = 
 # ═══════════════════════════════════════════════════════════════════
 def build_daily_signals_email(
     platform: str,
-    site_signals: list[dict],          # from signals.json recommendations
-    bot13_strategy: dict,              # from state.json funds.bot13.current_strategy
-    leaderboard: list[dict],           # from state.json leaderboards.week
-    recipient: dict,                   # {email, first_name, tier, portfolio_signals:[]}
+    site_signals: list[dict],
+    bot13_strategy: dict,
+    leaderboard: list[dict],
+    recipient: dict,
 ) -> str:
-    """
-    Daily email: top signals from the site's list + (for paid) personal portfolio signals.
-    """
-    name       = recipient.get("first_name") or "Trader"
-    tier       = recipient.get("tier", "free")
-    source     = recipient.get("email_source", "both")  # site | portfolio | both
-    asset      = ASSET_LABEL.get(platform, "stocks")
-    site_name  = SITE_NAMES[platform]
-    site_url   = SITE_URLS[platform]
-    today      = date.today().strftime("%B %d, %Y")
+    name      = recipient.get("first_name") or "Trader"
+    tier      = recipient.get("tier", "free")
+    source    = recipient.get("email_source", "both")
+    asset     = ASSET_LABEL.get(platform, "stocks")
+    site_name = SITE_NAMES[platform]
+    site_url  = SITE_URLS[platform]
+    today_str = date.today().strftime("%B %d, %Y")
 
-    # Bot13 decision line
-    b13_decision = bot13_strategy.get("decision", "HOLD")
-    b13_rationale = bot13_strategy.get("rationale", "")
-    b13_picks = bot13_strategy.get("picks", [])
+    b13_decision  = bot13_strategy.get("decision", "HOLD")
+    b13_rationale = bot13_strategy.get("rationale", "BOT13 is holding cash today.")
+    b13_picks     = bot13_strategy.get("picks", [])
 
-    b13_color = "#00d4ff" if b13_decision == "TRADE" else "#f97316" if b13_decision == "SELL" else "#7d8590"
-    b13_block = f"""
-<div style="background:#0a0e16;border:1px solid #1e2633;border-radius:10px;padding:16px 20px;margin-bottom:20px;">
-  <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#7d8590;margin-bottom:8px;">BOT13 · TODAY</div>
-  <div style="font-size:1.1rem;font-weight:700;color:{b13_color};margin-bottom:6px;">{b13_decision}</div>
-  <div style="font-size:0.82rem;color:#adb8c6;line-height:1.6;">{b13_rationale}</div>
-</div>"""
+    # ── Greeting ──────────────────────────────────────────────────
+    greeting = f"""
+<p style="font-size:15px;color:#adb8c6;margin:0 0 22px;line-height:1.6;">
+  Hey <strong style="color:#e6edf3;">{name}</strong> — here's your daily update for <strong style="color:#e6edf3;">{today_str}</strong>.
+</p>"""
 
-    # Top site signals (top 10, exclude HOLD)
-    strong_sigs = [s for s in site_signals if s.get("action","").upper() in ("STRONG BUY","BUY","STRONG SELL","SELL")][:10]
-    sig_rows = "".join(_signal_row(
-        s["symbol"], s["action"], s.get("reason","")[:80], s.get("price")
-    ) for s in strong_sigs)
+    # ── BOT13 strategy card ────────────────────────────────────────
+    picks_extra = ""
+    if b13_picks and b13_decision == "TRADE":
+        picks_rows = "".join(_pick_row(p["symbol"], f"{p['weight']*100:.0f}%", p.get("rationale",""), "bot13") for p in b13_picks[:6])
+        picks_extra = f"""
+<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1e2633;border-radius:10px;overflow:hidden;border-collapse:collapse;margin-top:14px;">
+  <thead>
+    <tr style="background:#141b27;">
+      <th style="padding:8px 14px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Symbol</th>
+      <th style="padding:8px 14px;text-align:right;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Alloc.</th>
+      <th style="padding:8px 14px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Thesis</th>
+    </tr>
+  </thead>
+  <tbody>{picks_rows}</tbody>
+</table>"""
 
-    site_signals_block = ""
-    if source in ("site", "both") and sig_rows:
-        site_signals_block = f"""
-<h3 style="font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#7d8590;margin:24px 0 12px;">
-  Today's Top Signals — {site_name}'s {asset.title()} List
-</h3>
+    bot13_block = _strategy_card("bot13", "BOT13 · TODAY", b13_decision, b13_rationale, picks_extra)
+
+    # ── Top signals table ──────────────────────────────────────────
+    actionable = [s for s in site_signals if s.get("action","").upper() in ("STRONG BUY","BUY","STRONG SELL","SELL")][:10]
+    signals_block = ""
+    if source in ("site", "both") and actionable:
+        sig_rows = "".join(_signal_row(s["symbol"], s["action"], s.get("reason",""), s.get("price")) for s in actionable)
+        signals_block = f"""
+{_section_label(f"Today's Top Signals — {asset.title()}s")}
 <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1e2633;border-radius:10px;overflow:hidden;border-collapse:collapse;">
   <thead>
     <tr style="background:#141b27;">
-      <th style="padding:9px 14px;text-align:left;font-size:0.7rem;color:#7d8590;text-transform:uppercase;letter-spacing:0.6px;">Symbol</th>
-      <th style="padding:9px 14px;text-align:center;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Signal</th>
-      <th style="padding:9px 14px;text-align:right;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Price</th>
-      <th style="padding:9px 14px;text-align:left;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Reason</th>
+      <th style="padding:8px 12px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Ticker</th>
+      <th style="padding:8px 12px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Signal</th>
+      <th style="padding:8px 12px;text-align:right;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Price</th>
+      <th style="padding:8px 12px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Reason</th>
     </tr>
   </thead>
   <tbody>{sig_rows}</tbody>
 </table>"""
 
-    # Personal portfolio signals (paid only)
+    # ── Personal portfolio signals (paid only) ─────────────────────
     portfolio_block = ""
     port_signals = recipient.get("portfolio_signals", [])
     if tier != "free" and source in ("portfolio", "both") and port_signals:
-        port_rows = "".join(_signal_row(
-            s["symbol"], s["action"], s.get("reason","")[:80], s.get("price")
-        ) for s in port_signals[:20])
+        port_rows = "".join(_signal_row(s["symbol"], s["action"], s.get("reason",""), s.get("price")) for s in port_signals[:15])
         portfolio_block = f"""
-<h3 style="font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#7d8590;margin:28px 0 12px;">
-  Your Portfolio Signals
-</h3>
+{_section_label("Your Portfolio Signals")}
 <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1e2633;border-radius:10px;overflow:hidden;border-collapse:collapse;">
   <thead>
     <tr style="background:#141b27;">
-      <th style="padding:9px 14px;text-align:left;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Symbol</th>
-      <th style="padding:9px 14px;text-align:center;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Signal</th>
-      <th style="padding:9px 14px;text-align:right;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Price</th>
-      <th style="padding:9px 14px;text-align:left;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Reason</th>
+      <th style="padding:8px 12px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Ticker</th>
+      <th style="padding:8px 12px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Signal</th>
+      <th style="padding:8px 12px;text-align:right;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Price</th>
+      <th style="padding:8px 12px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Reason</th>
     </tr>
   </thead>
   <tbody>{port_rows}</tbody>
 </table>"""
 
-    # Leaderboard mini strip
-    lb_cells = ""
-    for entry in leaderboard[:5]:
-        pct = entry.get("week_pct", 0)
-        clr = "#00d4ff" if pct >= 0 else "#f85149"
-        lb_cells += f"""
-<td style="text-align:center;padding:10px 12px;border-right:1px solid #1e2633;">
-  <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:#7d8590;">{entry['fund'].upper()}</div>
-  <div style="font-size:0.95rem;font-weight:700;color:{clr};margin-top:4px;">{'+' if pct >= 0 else ''}{pct:.1f}%</div>
-  <div style="font-size:0.68rem;color:#555;">{entry.get('week_grade','—')}</div>
+    # ── Leaderboard strip ──────────────────────────────────────────
+    lb_block = ""
+    if leaderboard:
+        # Map fund names to bot keys
+        fund_key_map = {"bot13":"bot13","oracle":"oracle","wizard":"wizard","equalizer":"equalizer","titan":"titan"}
+        cols = ""
+        for entry in leaderboard[:5]:
+            fund   = entry.get("fund","").lower()
+            bkey   = fund_key_map.get(fund, "bot13")
+            c      = BOT_COLORS.get(bkey, BOT_COLORS["bot13"])
+            pct    = entry.get("week_pct", 0)
+            pct_color = "#3fb950" if pct >= 0 else "#f85149"
+            grade  = entry.get("week_grade", "—")
+            cols += f"""
+<td style="text-align:center;padding:10px 8px;border-right:1px solid #1e2633;min-width:0;">
+  <div style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;background:{c['bg']};font-weight:800;font-size:10px;color:#06080d;margin:0 auto 6px;">{c['abbr']}</div>
+  <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#7d8590;letter-spacing:0.5px;">{entry.get('fund','').upper()}</div>
+  <div style="font-size:16px;font-weight:800;color:{pct_color};margin-top:3px;font-variant-numeric:tabular-nums;">{'+' if pct >= 0 else ''}{pct:.1f}%</div>
+  <div style="font-size:10px;color:#555;margin-top:2px;">{grade}</div>
 </td>"""
 
-    body = f"""
-<p style="font-size:0.95rem;color:#adb8c6;margin:0 0 20px;">
-  Hey {name} — here's your daily update for <strong style="color:#e6edf3;">{today}</strong>.
-</p>
-
-{b13_block}
-
-{site_signals_block}
-
-{portfolio_block}
-
-<!-- Leaderboard strip -->
-<h3 style="font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#7d8590;margin:28px 0 12px;">
-  This Week's Bot Leaderboard
-</h3>
+        lb_block = f"""
+{_section_label("This Week's Leaderboard")}
 <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1e2633;border-radius:10px;overflow:hidden;border-collapse:collapse;">
-  <tr style="background:#141b27;">{lb_cells}</tr>
-</table>
+  <tr style="background:#141b27;">{cols}</tr>
+</table>"""
 
-<div style="text-align:center;margin-top:28px;">
-  <a href="{site_url}/dashboard.html" style="background:#003d47;border:1px solid #00d4ff;color:#00d4ff;border-radius:8px;padding:10px 24px;font-size:0.875rem;font-weight:600;text-decoration:none;display:inline-block;">
-    Open My Dashboard →
-  </a>
-</div>"""
+    body = greeting + bot13_block + signals_block + portfolio_block + lb_block + _cta_button(f"{site_url}/dashboard.html", "Open My Dashboard")
 
-    return _wrap(platform, f"BOT13: {b13_decision} · {len(strong_sigs)} signals today", body)
+    preheader = f"BOT13: {b13_decision} · {len(actionable)} signals today · {today_str}"
+    return _wrap(platform, preheader, body)
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -295,67 +396,60 @@ def build_daily_signals_email(
 # ═══════════════════════════════════════════════════════════════════
 def build_bot13_alert_email(
     platform: str,
-    strategy: dict,   # bot13 current_strategy dict
+    strategy: dict,
     recipient: dict,
 ) -> str:
-    name     = recipient.get("first_name") or "Trader"
-    site_url = SITE_URLS[platform]
-    decision = strategy.get("decision", "HOLD")
+    name      = recipient.get("first_name") or "Trader"
+    site_url  = SITE_URLS[platform]
+    decision  = strategy.get("decision", "HOLD")
     rationale = strategy.get("rationale", "")
-    picks    = strategy.get("picks", [])
-    today    = date.today().strftime("%B %d, %Y")
+    picks     = strategy.get("picks", [])
+    today_str = date.today().strftime("%B %d, %Y")
 
-    if decision == "HOLD":
-        action_line = '<span style="color:#7d8590;font-size:1.5rem;font-weight:700;">HOLDING CASH</span>'
-        sub = "BOT13 is sitting out today"
-    elif decision == "TRADE":
-        action_line = '<span style="color:#00d4ff;font-size:1.5rem;font-weight:700;">TRADE ENTERED ↑</span>'
-        sub = f"BOT13 entered {len(picks)} position{'s' if len(picks)!=1 else ''}"
+    if decision == "TRADE":
+        eyebrow_text  = "⚡ TRADE ALERT"
+        eyebrow_color = "#ec4899"
+        sub_line      = f"BOT13 entered {len(picks)} position{'s' if len(picks) != 1 else ''} today"
+        preheader     = f"BOT13 TRADE: {len(picks)} position{'s' if len(picks)!=1 else ''} entered — {today_str}"
+    elif decision == "SELL":
+        eyebrow_text  = "📉 SELL ALERT"
+        eyebrow_color = "#f85149"
+        sub_line      = "BOT13 is exiting positions"
+        preheader     = f"BOT13 SELL signal — {today_str}"
     else:
-        action_line = f'<span style="color:#f97316;font-size:1.5rem;font-weight:700;">{decision}</span>'
-        sub = f"BOT13 action: {decision}"
+        eyebrow_text  = "💤 HOLDING CASH"
+        eyebrow_color = "#7d8590"
+        sub_line      = "BOT13 is sitting out today"
+        preheader     = f"BOT13 is holding cash — {today_str}"
 
-    picks_rows = ""
+    picks_table = ""
     if picks:
-        picks_rows = "".join(_pick_row(
-            p["symbol"],
-            f"{p['weight']*100:.1f}%",
-            p.get("rationale", "")[:100]
-        ) for p in picks)
+        picks_rows = "".join(_pick_row(p["symbol"], f"{p['weight']*100:.0f}%", p.get("rationale",""), "bot13") for p in picks)
         picks_table = f"""
-<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1e2633;border-radius:10px;overflow:hidden;border-collapse:collapse;margin-top:16px;">
+{_section_label("Positions Entered")}
+<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1e2633;border-radius:10px;overflow:hidden;border-collapse:collapse;">
   <thead>
     <tr style="background:#141b27;">
-      <th style="padding:9px 14px;text-align:left;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Symbol</th>
-      <th style="padding:9px 14px;text-align:right;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Allocation</th>
-      <th style="padding:9px 14px;text-align:left;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Rationale</th>
+      <th style="padding:8px 14px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Symbol</th>
+      <th style="padding:8px 14px;text-align:right;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Allocation</th>
+      <th style="padding:8px 14px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Rationale</th>
     </tr>
   </thead>
   <tbody>{picks_rows}</tbody>
 </table>"""
-    else:
-        picks_table = ""
 
-    body = f"""
-<p style="font-size:0.9rem;color:#7d8590;margin:0 0 16px;">BOT13 · {today}</p>
+    # eyebrow pill
+    eyebrow_html = f'<div style="display:inline-block;padding:4px 12px;background:rgba(236,72,153,0.10);border:1px solid {eyebrow_color};color:{eyebrow_color};border-radius:999px;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;">{eyebrow_text}</div>'
 
-<div style="text-align:center;margin-bottom:24px;">
-  {action_line}
-</div>
+    greeting = f"""
+<p style="font-size:15px;color:#adb8c6;margin:0 0 18px;line-height:1.6;">
+  Hey <strong style="color:#e6edf3;">{name}</strong> — {sub_line}.
+</p>"""
 
-<div style="background:#0a0e16;border:1px solid #1e2633;border-radius:10px;padding:16px 20px;margin-bottom:20px;">
-  <p style="font-size:0.85rem;color:#adb8c6;line-height:1.7;margin:0;">{rationale}</p>
-</div>
+    bot13_block = _strategy_card("bot13", f"BOT13 · {today_str}", decision, rationale)
 
-{picks_table}
-
-<div style="text-align:center;margin-top:28px;">
-  <a href="{site_url}/dashboard.html" style="background:#003d47;border:1px solid #00d4ff;color:#00d4ff;border-radius:8px;padding:10px 24px;font-size:0.875rem;font-weight:600;text-decoration:none;display:inline-block;">
-    View Full Dashboard →
-  </a>
-</div>"""
-
-    return _wrap(platform, sub, body)
+    body = eyebrow_html + greeting + bot13_block + picks_table + _cta_button(f"{site_url}/dashboard.html", "View Full Dashboard")
+    return _wrap(platform, preheader, body)
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -367,48 +461,44 @@ def build_weekly_email(
     leaderboard: list[dict],
     recipient: dict,
 ) -> str:
-    name     = recipient.get("first_name") or "Trader"
-    site_url = SITE_URLS[platform]
-    week     = oracle_strategy.get("week", str(date.today()))
-    decision = oracle_strategy.get("decision", "HOLD")
+    name      = recipient.get("first_name") or "Trader"
+    site_url  = SITE_URLS[platform]
+    week      = oracle_strategy.get("week", str(date.today()))
+    decision  = oracle_strategy.get("decision", "HOLD")
     rationale = oracle_strategy.get("rationale", "")
-    picks    = oracle_strategy.get("picks", [])
+    picks     = oracle_strategy.get("picks", [])
+    today_str = date.today().strftime("%B %d, %Y")
 
-    picks_rows = "".join(_pick_row(
-        p["symbol"], f"{p['weight']*100:.1f}%", p.get("rationale","")[:120]
-    ) for p in picks)
+    eyebrow_html = '<div style="display:inline-block;padding:4px 12px;background:rgba(168,85,247,0.10);border:1px solid #a855f7;color:#a855f7;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;">📅 WEEKLY PICKS</div>'
 
-    picks_block = f"""
+    greeting = f"""
+<p style="font-size:15px;color:#adb8c6;margin:0 0 18px;line-height:1.6;">
+  Hey <strong style="color:#e6edf3;">{name}</strong> — here are Oracle's picks for the week of <strong style="color:#e6edf3;">{week}</strong>.
+</p>"""
+
+    oracle_block = _strategy_card("oracle", f"ORACLE · WEEK OF {week.upper()}", decision, rationale)
+
+    picks_table = ""
+    if picks:
+        picks_rows = "".join(_pick_row(p["symbol"], f"{p['weight']*100:.0f}%", p.get("rationale",""), "oracle") for p in picks)
+        picks_table = f"""
+{_section_label("This Week's Positions")}
 <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1e2633;border-radius:10px;overflow:hidden;border-collapse:collapse;">
   <thead>
     <tr style="background:#141b27;">
-      <th style="padding:9px 14px;text-align:left;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Symbol</th>
-      <th style="padding:9px 14px;text-align:right;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Weight</th>
-      <th style="padding:9px 14px;text-align:left;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Thesis</th>
+      <th style="padding:8px 14px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Symbol</th>
+      <th style="padding:8px 14px;text-align:right;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Weight</th>
+      <th style="padding:8px 14px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Thesis</th>
     </tr>
   </thead>
   <tbody>{picks_rows}</tbody>
-</table>""" if picks_rows else "<p style='color:#7d8590;font-size:0.85rem;'>No new positions this week — Oracle is in cash.</p>"
+</table>"""
+    else:
+        picks_table = '<p style="font-size:13px;color:#7d8590;margin:16px 0 0;">Oracle is holding cash this week — no new positions.</p>'
 
-    body = f"""
-<p style="font-size:0.9rem;color:#7d8590;margin:0 0 4px;">ORACLE — Weekly Picks</p>
-<h2 style="font-size:1.3rem;font-weight:700;margin:0 0 20px;">Week of {week}</h2>
-
-<p style="font-size:0.9rem;color:#adb8c6;line-height:1.7;margin:0 0 20px;">{rationale}</p>
-
-<h3 style="font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#7d8590;margin:0 0 12px;">
-  This Week's Positions
-</h3>
-
-{picks_block}
-
-<div style="text-align:center;margin-top:28px;">
-  <a href="{site_url}/dashboard.html" style="background:#003d47;border:1px solid #00d4ff;color:#00d4ff;border-radius:8px;padding:10px 24px;font-size:0.875rem;font-weight:600;text-decoration:none;display:inline-block;">
-    Track Performance →
-  </a>
-</div>"""
-
-    return _wrap(platform, f"Oracle's weekly picks — {len(picks)} positions", body)
+    body = eyebrow_html + greeting + oracle_block + picks_table + _cta_button(f"{site_url}/dashboard.html", "Track Performance")
+    preheader = f"Oracle's weekly picks — {len(picks)} positions · {today_str}"
+    return _wrap(platform, preheader, body)
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -420,44 +510,40 @@ def build_monthly_email(
     leaderboard: list[dict],
     recipient: dict,
 ) -> str:
-    name     = recipient.get("first_name") or "Trader"
-    site_url = SITE_URLS[platform]
+    name      = recipient.get("first_name") or "Trader"
+    site_url  = SITE_URLS[platform]
     rationale = wizard_strategy.get("rationale", "")
-    picks    = wizard_strategy.get("picks", [])
-    month    = date.today().strftime("%B %Y")
+    picks     = wizard_strategy.get("picks", [])
+    month     = date.today().strftime("%B %Y")
+    today_str = date.today().strftime("%B %d, %Y")
 
-    picks_rows = "".join(_pick_row(
-        p["symbol"], f"{p['weight']*100:.1f}%", p.get("rationale","")[:120]
-    ) for p in picks)
+    eyebrow_html = '<div style="display:inline-block;padding:4px 12px;background:rgba(16,185,129,0.10);border:1px solid #10b981;color:#10b981;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;">🧙 MONTHLY PORTFOLIO</div>'
 
-    picks_block = f"""
+    greeting = f"""
+<p style="font-size:15px;color:#adb8c6;margin:0 0 18px;line-height:1.6;">
+  Hey <strong style="color:#e6edf3;">{name}</strong> — here is Wizard's portfolio strategy for <strong style="color:#e6edf3;">{month}</strong>.
+</p>"""
+
+    wizard_block = _strategy_card("wizard", f"WIZARD · {month.upper()}", wizard_strategy.get("decision","HOLD"), rationale)
+
+    picks_table = ""
+    if picks:
+        picks_rows = "".join(_pick_row(p["symbol"], f"{p['weight']*100:.0f}%", p.get("rationale",""), "wizard") for p in picks)
+        picks_table = f"""
+{_section_label("This Month's Positions")}
 <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1e2633;border-radius:10px;overflow:hidden;border-collapse:collapse;">
   <thead>
     <tr style="background:#141b27;">
-      <th style="padding:9px 14px;text-align:left;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Symbol</th>
-      <th style="padding:9px 14px;text-align:right;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Weight</th>
-      <th style="padding:9px 14px;text-align:left;font-size:0.7rem;color:#7d8590;text-transform:uppercase;">Thesis</th>
+      <th style="padding:8px 14px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Symbol</th>
+      <th style="padding:8px 14px;text-align:right;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Weight</th>
+      <th style="padding:8px 14px;text-align:left;font-size:9px;color:#7d8590;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;">Thesis</th>
     </tr>
   </thead>
   <tbody>{picks_rows}</tbody>
-</table>""" if picks_rows else "<p style='color:#7d8590;font-size:0.85rem;'>Wizard is holding current positions this month.</p>"
+</table>"""
+    else:
+        picks_table = '<p style="font-size:13px;color:#7d8590;margin:16px 0 0;">Wizard is holding current positions this month — no changes.</p>'
 
-    body = f"""
-<p style="font-size:0.9rem;color:#7d8590;margin:0 0 4px;">WIZARD — Monthly Portfolio</p>
-<h2 style="font-size:1.3rem;font-weight:700;margin:0 0 20px;">{month} Picks</h2>
-
-<p style="font-size:0.9rem;color:#adb8c6;line-height:1.7;margin:0 0 20px;">{rationale}</p>
-
-<h3 style="font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#7d8590;margin:0 0 12px;">
-  This Month's Positions
-</h3>
-
-{picks_block}
-
-<div style="text-align:center;margin-top:28px;">
-  <a href="{site_url}/dashboard.html" style="background:#003d47;border:1px solid #00d4ff;color:#00d4ff;border-radius:8px;padding:10px 24px;font-size:0.875rem;font-weight:600;text-decoration:none;display:inline-block;">
-    View Full Report →
-  </a>
-</div>"""
-
-    return _wrap(platform, f"Wizard's monthly picks for {month}", body)
+    body = eyebrow_html + greeting + wizard_block + picks_table + _cta_button(f"{site_url}/dashboard.html", "View Full Report")
+    preheader = f"Wizard's monthly portfolio for {month} — {len(picks)} positions"
+    return _wrap(platform, preheader, body)
