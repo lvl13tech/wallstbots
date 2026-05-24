@@ -2037,16 +2037,27 @@ async def webmaster_member_detail(user_id: str, _wm: dict = Depends(require_webm
 async def webmaster_system_status(_wm: dict = Depends(require_webmaster)):
     """Platform health: DB connectivity, total users, last data refreshes."""
     conn = get_db_connection()
+    cursor = None
     try:
         cursor = conn.cursor(row_factory=dict_row)
         cursor.execute("SELECT COUNT(*) AS total FROM users")
         total_users = cursor.fetchone()["total"]
 
-        cursor.execute("""
-            SELECT platform, MAX(updated_at) AS last_refresh, COUNT(*) AS record_count
-            FROM tracker_live_data GROUP BY platform
-        """)
-        tracker_rows = cursor.fetchall()
+        # tracker_live_data may not exist yet — handle gracefully without poisoning the pool
+        tracker_rows = []
+        try:
+            cursor.execute("""
+                SELECT platform, MAX(updated_at) AS last_refresh, COUNT(*) AS record_count
+                FROM tracker_live_data GROUP BY platform
+            """)
+            tracker_rows = cursor.fetchall()
+        except Exception:
+            # Roll back the aborted transaction so the connection stays usable
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+            tracker_rows = []
 
         db_status = "healthy"
         db_latency_ms = None
@@ -2068,8 +2079,18 @@ async def webmaster_system_status(_wm: dict = Depends(require_webmaster)):
                 for r in tracker_rows
             ],
         }
+    except Exception as e:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
-        cursor.close()
+        if cursor:
+            try:
+                cursor.close()
+            except Exception:
+                pass
         return_db_connection(conn)
 
 

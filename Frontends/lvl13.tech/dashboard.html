@@ -1695,7 +1695,8 @@
       _wmLoaded.system = true;
     } catch(e) {
       console.error("wmLoadSystem", e);
-      const errHtml = `<div style="color:#f87171;font-size:12px;padding:8px 0">⚠ ${e.message||"Load failed"} — <a href="#" onclick="wmLoadSystem();return false" style="color:#22d3ae">Retry</a></div>`;
+      const msg = e.message === "Failed to fetch" ? "Backend unreachable" : (e.message || "Load failed");
+      const errHtml = `<div style="color:#f87171;font-size:12px;padding:8px 0">⚠ ${msg} — <a href="#" onclick="wmLoadSystem();return false" style="color:#22d3ae">Retry</a></div>`;
       document.getElementById("wmSysStatus").innerHTML = errHtml;
       document.getElementById("wmDataFresh").innerHTML = errHtml;
       document.getElementById("wmSysStats").innerHTML = errHtml;
