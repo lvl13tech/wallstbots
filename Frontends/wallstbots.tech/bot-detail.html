@@ -90,39 +90,12 @@
     /* ── Signals note ── */
     .signals-note { font-size: 0.72rem; color: var(--muted); margin-top: 8px; font-style: italic; }
 
-    /* ── Portfolio Holdings chips ── */
-    .holdings-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 16px 18px;
-    }
-    .holding-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--panel2);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 5px 12px;
-      font-size: 0.82rem;
-      transition: border-color 0.15s;
-    }
-    .holding-chip:hover { border-color: var(--blue); }
-    .holding-chip strong { font-weight: 700; font-size: 0.85rem; }
-    .holding-chip small { color: var(--muted); font-size: 0.72rem; }
-    .holding-chip-remove {
-      background: none; border: none; color: var(--muted);
-      cursor: pointer; padding: 0 0 0 2px; font-size: 1rem;
-      line-height: 1; transition: color 0.15s; display: flex; align-items: center;
-    }
-    .holding-chip-remove:hover { color: var(--red); }
-    .holdings-footer {
-      padding: 10px 18px 14px;
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
-      border-top: 1px solid var(--border);
-    }
-    .holdings-footer-label { font-size: 0.72rem; color: var(--muted); }
+    /* ── Portfolio Holdings table ── */
+    .btn-add-holding { background: var(--blue); border: none; color: var(--bg); border-radius: 8px; padding: 8px 16px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+    .btn-add-holding:hover { background: #00b8e0; }
+    .btn-del-portfolio { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 8px 14px; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .btn-del-portfolio:hover { border-color: var(--red); color: var(--red); }
+    .empty-holdings { padding: 40px; text-align: center; color: var(--muted); font-size: 0.9rem; }
 
     /* ── Account Drawer ── */
     .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 400; }
@@ -338,7 +311,16 @@
     <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading leaderboard…</div>
   </div>
 
-  <!-- 3. Signals — Today -->
+  <!-- 3. Bot Analysis — Portfolio Holdings -->
+  <div class="section-head" style="margin-top:28px">
+    <h3>Bot Analysis — Your Holdings</h3>
+    <span style="font-size:0.72rem;color:var(--muted)">How each strategy applies to this portfolio</span>
+  </div>
+  <div class="grid grid-5" id="botAnalysisGrid">
+    <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading bot analysis…</div>
+  </div>
+
+  <!-- 4. Signals — Today -->
   <div class="section-head" style="margin-top:28px">
     <h3>Signals — Today</h3>
   </div>
@@ -371,20 +353,17 @@
     </div>
   </div>
 
-  <!-- 7. Portfolio Holdings (chips) -->
+  <!-- 7. Portfolio Holdings -->
   <div class="section-head" style="margin-top:32px">
     <h3>Portfolio Holdings &nbsp;<span id="holdingsCount" style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:0.78rem"></span></h3>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn-del-portfolio" onclick="openDeleteModal()">Delete Portfolio</button>
+      <button class="btn-add-holding" onclick="openSearchModal()">+ Add Holding</button>
+    </div>
   </div>
   <div class="panel" style="padding:0;overflow:hidden">
-    <div id="holdingsChips">
-      <div style="padding:16px;color:var(--muted);font-size:0.82rem">Loading holdings…</div>
-    </div>
-    <div class="holdings-footer">
-      <span class="holdings-footer-label" id="holdingsFooterLabel"></span>
-      <div style="display:flex;gap:8px">
-        <button class="btn-cancel" onclick="openDeleteModal()">Delete Portfolio</button>
-        <button style="background:var(--blue);border:none;color:var(--bg);border-radius:8px;padding:7px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;transition:background 0.15s" onmouseenter="this.style.background='#00b8e0'" onmouseleave="this.style.background='var(--blue)'" onclick="openSearchModal()">+ Add Holding</button>
-      </div>
+    <div id="holdingsWrap">
+      <div class="empty-holdings">Loading your holdings…</div>
     </div>
   </div>
 
@@ -571,27 +550,49 @@ function renderHero() {
   document.getElementById('hsHoldings').textContent = holdings.length + ' / 50';
 }
 
-// ── Holdings chips ────────────────────────────────────────────────────────────
+// ── Holdings table ────────────────────────────────────────────────────────────
 function renderHoldings() {
-  const wrap = document.getElementById('holdingsChips');
+  const wrap = document.getElementById('holdingsWrap');
   const countEl = document.getElementById('holdingsCount');
-  const footerLabel = document.getElementById('holdingsFooterLabel');
   if (countEl) countEl.textContent = '(' + holdings.length + ' of 50)';
-  if (footerLabel) footerLabel.textContent = holdings.length + ' of 50 holdings';
-
   if (!holdings.length) {
-    wrap.innerHTML = '<div style="padding:16px 18px;color:var(--muted);font-size:0.82rem">No holdings yet. Click <strong>+ Add Holding</strong> to get started.</div>';
+    wrap.innerHTML = '<div class="empty-holdings">No holdings yet. Click <strong>+ Add Holding</strong> to get started.</div>';
     return;
   }
-  wrap.innerHTML = '<div class="holdings-chips">'
-    + holdings.map(h =>
-        '<div class="holding-chip">'
-        + '<strong>' + escHtml(h.symbol) + '</strong>'
-        + (h.name ? '<small>' + escHtml(h.name) + '</small>' : '')
-        + '<button class="holding-chip-remove" onclick="removeHolding(\'' + h.id + '\',\'' + escHtml(h.symbol) + '\')" title="Remove ' + escHtml(h.symbol) + '">×</button>'
-        + '</div>'
-      ).join('')
-    + '</div>';
+  wrap.innerHTML =
+    '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'
+    + '<table style="min-width:600px;width:100%;border-collapse:collapse;font-size:0.82rem">'
+    + '<thead><tr>'
+    + '<th style="padding:10px 16px;text-align:left;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Symbol</th>'
+    + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Allocated</th>'
+    + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Entry</th>'
+    + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Current</th>'
+    + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Return</th>'
+    + '<th style="padding:10px 16px;border-bottom:1px solid var(--border)"></th>'
+    + '</tr></thead>'
+    + '<tbody>'
+    + holdings.map(h => {
+        const alloc   = h.weight || 1000;
+        const entry   = h.entry_price   != null ? '$' + parseFloat(h.entry_price).toFixed(2)   : '—';
+        const current = h.current_price != null ? '$' + parseFloat(h.current_price).toFixed(2) : '—';
+        let retPct = '—', retClass = '';
+        if (h.entry_price != null && h.current_price != null && h.entry_price > 0) {
+          const pct = ((h.current_price - h.entry_price) / h.entry_price) * 100;
+          retPct    = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+          retClass  = pct >= 0 ? 'pos' : 'neg';
+        }
+        return '<tr style="border-bottom:1px solid var(--border)">'
+          + '<td style="padding:11px 16px"><strong style="font-size:0.88rem">' + escHtml(h.symbol) + '</strong>'
+          + (h.name ? '<div style="font-size:0.72rem;color:var(--muted);margin-top:1px">' + escHtml(h.name) + '</div>' : '')
+          + '</td>'
+          + '<td style="padding:11px 16px;text-align:right">$' + alloc.toLocaleString() + '</td>'
+          + '<td style="padding:11px 16px;text-align:right">' + entry + '</td>'
+          + '<td style="padding:11px 16px;text-align:right">' + current + '</td>'
+          + '<td style="padding:11px 16px;text-align:right" class="' + retClass + '">' + retPct + '</td>'
+          + '<td style="padding:11px 16px;text-align:right"><button onclick="removeHolding(\'' + h.id + '\',\'' + escHtml(h.symbol) + '\')" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:3px 9px;font-size:0.72rem;cursor:pointer">Remove</button></td>'
+          + '</tr>';
+      }).join('')
+    + '</tbody></table></div>';
 }
 
 // ── Site data ─────────────────────────────────────────────────────────────────
@@ -607,10 +608,31 @@ async function loadSiteData() {
     STATE.signals = sigr.status === 'fulfilled' ? sigr.value : { recommendations: [], summary: {} };
   } catch(e) {}
   try { renderLeaderboard(); } catch(e) {}
+  try { renderPortfolioBotAnalysis(); } catch(e) {}
   try { renderSignals();     } catch(e) {}
   try { renderNews();        } catch(e) {}
   try { renderRace();        } catch(e) {}
   drawPortfolioChart();
+}
+
+// ── Bot Analysis grid (portfolio-scoped) ─────────────────────────────────────
+function renderPortfolioBotAnalysis() {
+  const grid = document.getElementById('botAnalysisGrid');
+  if (!grid) return;
+  const tickers = holdings.map(h => h.symbol).join(', ') || 'your holdings';
+  // NOTE: Performance numbers are NOT pulled from the global tracker.
+  // Portfolio-specific P&L is tracked from the next trading day onward.
+  const cards = FUND_ORDER.map(fid => {
+    const meta = FUND_META[fid];
+    return '<a class="card clickable fund-card" href="portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid + '">'
+      + '<div class="fund-head"><span class="fund-icon ' + fid + '">' + meta.icon + '</span>'
+      + '<div style="min-width:0"><div class="fund-name">' + meta.name + '</div>'
+      + '<div class="fund-kind" style="color:' + meta.color + '">' + meta.kind + '</div></div></div>'
+      + '<div class="fund-tag">' + meta.tagline + '</div>'
+      + '<div style="font-size:0.72rem;color:var(--muted);margin-top:6px">Tracking: <strong style="color:var(--text)">' + tickers + '</strong></div>'
+      + '</a>';
+  }).join('');
+  grid.innerHTML = cards;
 }
 
 // ── Leaderboard ───────────────────────────────────────────────────────────────
