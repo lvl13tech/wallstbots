@@ -373,7 +373,10 @@
   <!-- 8. Your Holdings -->
   <div class="section-head" style="margin-top:32px">
     <h3>Your Holdings &nbsp;<span id="holdingsCount" style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:0.78rem"></span></h3>
-    <button class="btn-add-holding" onclick="openSearchModal()">+ Add Holding</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn-del-portfolio" onclick="openDeleteModal()">Delete Portfolio</button>
+      <button class="btn-add-holding" onclick="openSearchModal()">+ Add Holding</button>
+    </div>
   </div>
   <div class="panel" style="padding:0;overflow:hidden">
     <div id="holdingsWrap">
@@ -647,16 +650,17 @@ function renderPortfolioBotAnalysis() {
   grid.innerHTML = cards;
 }
 
-// ── Leaderboard strip (exact same as homepage) ───────────────────────────────
+// ── Leaderboard strip (portfolio-scoped — zeros until first trading day) ─────
 function renderLeaderboard() {
+  // Portfolio-specific daily P&L isn't computed until the first trading day runs.
+  // Always show +0.00% so a brand-new portfolio doesn't display misleading
+  // global platform numbers from STATE.funds.
   const strip = FUND_ORDER.map(fid => {
-    const data = STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null;
-    const v = data && data.value ? data.value : { day_pct: 0, day_pnl: 0 };
     const m = FUND_META[fid];
     return '<a class="card clickable" href="/#/fund/' + fid + '">'
       + '<span class="fund-icon ' + fid + '">' + m.icon + '</span>'
       + '<div class="lb-name"><strong>' + m.name + '</strong><small>' + m.kind + '</small></div>'
-      + '<div class="lb-pct ' + cls(v.day_pnl) + '">' + fmtPct(v.day_pct) + '</div></a>';
+      + '<div class="lb-pct">+0.00%</div></a>';
   }).join('');
   const lbEl = document.getElementById('lbStrip');
   if (lbEl) lbEl.innerHTML = strip;
