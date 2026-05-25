@@ -49,14 +49,20 @@ async function apiFetch(path, opts) {
   return j;
 }
 
+function fetchWithTimeout(url, opts = {}, ms = 8000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(t));
+}
+
 async function loadAll() {
   if (location.protocol === 'file:') { showFileProtocolWarning(); return; }
   try {
     const r = await Promise.allSettled([
-      fetch(`${TRACKER_API}/state`,   { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
-      fetch(`${TRACKER_API}/news`,    { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
-      fetch(`${TRACKER_API}/signals`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
-      fetch(`${TRACKER_API}/reports`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/state?platform=lvl13`,   { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/news?platform=lvl13`,    { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/signals?platform=lvl13`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
+      fetchWithTimeout(`${TRACKER_API}/reports?platform=lvl13`, { cache: 'no-store' }).then(r => r.json()).then(r => r.data),
     ]);
     STATE.funds   = r[0].status === 'fulfilled' ? r[0].value : null;
     STATE.news    = r[1].status === 'fulfilled' ? r[1].value : { items: [] };
