@@ -1140,9 +1140,17 @@ def main():
             pnl_pct  = (pnl / sc * 100) if sc else 0
             day_pnl  = sum(p["day_pnl"] for p in enriched)
             day_pct  = (day_pnl / (total - day_pnl)) * 100 if (total - day_pnl) else 0
+
+            # holding_cash for oracle: true on weekends (no active management until Monday)
+            _utc_or  = dt.datetime.utcnow()
+            _off_or  = -4 if 3 <= _utc_or.month <= 11 else -5
+            _et_or   = _utc_or + dt.timedelta(hours=_off_or)
+            oracle_holding_cash = _et_or.weekday() >= 5  # Sat=5, Sun=6
+
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
-                        "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2), "positions": enriched}
+                        "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2),
+                        "holding_cash": oracle_holding_cash, "positions": enriched}
 
         elif fid == "wizard":
             if wizard_new_positions:
@@ -1302,4 +1310,4 @@ def main():
     print(f"[wallstbots] signals — {n_sig} signals")
     push_to_api("signals", signals_data, secrets)
 
-    # ── News ────────────────────────────────────────────────�
+    # ── News ────────────────────────────────────────────────�
