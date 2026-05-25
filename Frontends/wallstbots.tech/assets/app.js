@@ -194,7 +194,7 @@ function renderHome() {
   const stockCount = (STATE.signals && STATE.signals.recommendations && STATE.signals.recommendations.length) || 55;
 
   $('app').innerHTML =
-    '<section class="hero"><img src="assets/robot.svg" alt="" class="hero-robot">'
+    '<section class="hero"><img src="assets/logo.svg" alt="" class="hero-robot">'
     + '<div class="hero-content"><span class="hero-eyebrow">Sector Stock Tracker</span>'
     + '<h1>5 strategies. '+stockCount+' stocks. Watch them race.</h1>'
     + '<p>Three bots — daily, weekly, monthly — trading head-to-head against two passive strategies on the top 3 stocks per S&amp;P 500 sector plus the hottest IPOs since 2024. '+fmt$0(cap)+' starting capital. Daily Buy/Sell/Hold signals on every name. Sector news, filtered to what matters. <strong>Welcome to Wall St. Bots.</strong></p>'
@@ -555,7 +555,7 @@ function renderGetYours() {
               || new URLSearchParams(location.hash.split('?')[1] || '').get('ref') || '';
 
   $('app').innerHTML =
-    '<section class="hero" style="margin-bottom:24px"><img src="assets/robot.svg" alt="" class="hero-robot">'
+    '<section class="hero" style="margin-bottom:24px"><img src="assets/logo.svg" alt="" class="hero-robot">'
     + '<div class="hero-content"><span class="hero-eyebrow">Master the Market — Without the Risk</span>'
     + '<h1>You\'ve seen what it does. Now make it yours.</h1>'
     + '<p>Up to 50 stocks. 5 AI-powered strategies. Daily signals, custom news feed, Sunday auto-reports. <strong style="color:var(--blue)">Wall St. Bots</strong> runs the research so you can make the call.</p></div></section>'

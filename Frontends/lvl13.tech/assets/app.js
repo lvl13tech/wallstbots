@@ -214,7 +214,7 @@ function renderHome() {
     fundCard(fid, STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null)).join('');
 
   $('app').innerHTML =
-    '<section class="hero"><img src="assets/robot.svg" alt="" class="hero-robot">'
+    '<section class="hero"><img src="assets/logo.svg" alt="" class="hero-robot">'
     + '<div class="hero-content"><span class="hero-eyebrow">AI &amp; Quantum Stock Tracker</span>'
     + '<h1>5 AI strategies. One universe. Watch them race.</h1>'
     + '<p>Three Claude-built bots — daily, weekly, monthly — trading head-to-head against two passive strategies on the same 43 AI/Quantum stocks. Daily Buy/Sell/Hold signals on every name. AI &amp; Quantum news, filtered to what matters. <strong>Welcome to Level 13.</strong></p>'
@@ -576,7 +576,7 @@ function renderGetYours() {
               || new URLSearchParams(location.hash.split('?')[1] || '').get('ref') || '';
 
   $('app').innerHTML =
-    '<section class="hero" style="margin-bottom:24px"><img src="assets/robot.svg" alt="" class="hero-robot">'
+    '<section class="hero" style="margin-bottom:24px"><img src="assets/logo.svg" alt="" class="hero-robot">'
     + '<div class="hero-content"><span class="hero-eyebrow">Master the Market — Without the Risk</span>'
     + '<h1>You\'ve seen what it does. Now make it yours.</h1>'
     + '<p>Build, test, and refine your AI &amp; Quantum portfolio. Track 50 stocks with daily Buy/Sell/Hold signals, personalized news, and Sunday auto-reports. <strong style="color:var(--blue)">Level XIII</strong> runs the research so you can make the call.</p></div></section>'

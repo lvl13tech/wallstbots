@@ -194,7 +194,7 @@ function renderHome() {
   const coinCount = (STATE.signals && STATE.signals.universe_size) || 50;
 
   $('app').innerHTML =
-    '<section class="hero"><img src="assets/robot.svg" alt="" class="hero-robot">'
+    '<section class="hero"><img src="assets/logo.svg" alt="" class="hero-robot">'
     + '<div class="hero-content"><span class="hero-eyebrow">Crypto Trading Bot Tracker</span>'
     + '<h1>5 strategies. '+coinCount+' coins. Watch them race.</h1>'
     + '<p>Three bots — daily, weekly, monthly — trading head-to-head against two passive strategies on the top 50 crypto by market cap. No stablecoins. 24/7 markets. '+fmt$0(cap)+' starting capital. Daily Buy/Sell/Hold signals on every coin. Crypto news, filtered to what matters. <strong>Welcome to BitBot13.</strong></p>'
@@ -555,7 +555,7 @@ function renderGetYours() {
               || new URLSearchParams(location.hash.split('?')[1] || '').get('ref') || '';
 
   $('app').innerHTML =
-    '<section class="hero" style="margin-bottom:24px"><img src="assets/robot.svg" alt="" class="hero-robot">'
+    '<section class="hero" style="margin-bottom:24px"><img src="assets/logo.svg" alt="" class="hero-robot">'
     + '<div class="hero-content"><span class="hero-eyebrow">Master Crypto — Without the Risk</span>'
     + '<h1>You\'ve seen what it does. Now make it yours.</h1>'
     + '<p>Up to 50 coins. 5 AI-powered strategies. Daily signals, custom crypto news, Sunday auto-reports. <strong style="color:var(--blue)">BitBot13</strong> runs 24/7 so you never miss a move.</p></div></section>'
