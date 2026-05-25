@@ -157,11 +157,13 @@
       width: 420px;
       max-width: 95vw;
       height: 100vh;
+      height: 100dvh;
       background: var(--panel);
       border-left: 1px solid var(--border);
       z-index: 500;
       transition: right 0.3s cubic-bezier(0.4,0,0.2,1);
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       display: flex;
       flex-direction: column;
     }
@@ -412,11 +414,13 @@
       letter-spacing: 0.7px; color: var(--muted); margin: 16px 0 6px;
     }
     .email-save-btn {
-      width: 100%; margin-top: 14px; padding: 9px;
+      width: 100%; margin-top: 14px; padding: 12px 9px;
       background: var(--accent-dim); border: 1px solid var(--accent);
       color: var(--accent); border-radius: 8px;
       font-size: 0.85rem; font-weight: 600;
       cursor: pointer; transition: all 0.15s;
+      position: sticky; bottom: 0;
+      padding-bottom: max(env(safe-area-inset-bottom), 12px);
     }
     .email-save-btn:hover { background: var(--accent); color: var(--bg); }
 
