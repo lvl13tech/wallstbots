@@ -276,7 +276,7 @@ def _fetch_coingecko(symbols, prices, prev_closes):
 def enrich_position(pos, prices, prev_closes):
     sym        = pos["symbol"]
     shares     = float(pos.get("shares") or 0)
-    entry      = float(pos.get("entry_price") or 0)
+    entry      = float(pos.get("entry_price") or pos.get("entry") or 0)
     cost_basis = shares * entry  # always recompute; stored cost_basis may be stale after inception reset
     price      = prices.get(sym, entry)
     prev       = prev_closes.get(sym, price)
@@ -1145,6 +1145,8 @@ def main():
                 "day":           today_iso,
                 "decision":      b13_decision,
                 "picks":         b13_picks,
+                "stop_pct":      -1.5,
+                "target_pct":    3.0,
                 "window_open":   window_open,
                 "last_updated":  now_iso,
             }
