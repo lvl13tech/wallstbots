@@ -248,6 +248,9 @@ def main():
         push_to_api(secrets, "signals", recs)
     push_to_api(secrets, "reports", reports_payload)
 
+    # ── Portfolio performance snapshots ──────────────────────────────────────────
+    trigger_portfolio_snapshots(secrets)
+
 
 def grade(pct):
     if pct >= 5:   return "A+"
@@ -266,6 +269,36 @@ def grade_overall(pct, inception_iso, today):
         return grade(pct / weeks)
     except Exception:
         return grade(pct)
+
+
+def trigger_portfolio_snapshots(secrets):
+    """
+    After pushing global state, tell the backend to compute and store
+    per-portfolio daily performance snapshots for all active lvl13 portfolios.
+    """
+    if _requests is None:
+        print("  [snapshots] requests not installed — skipping portfolio snapshots")
+        return
+    api_url      = secrets.get("api_url", "")
+    internal_key = secrets.get("internal_api_key", "")
+    if not api_url or not internal_key:
+        print("  [snapshots] api_url/internal_api_key not in secrets.json — skipping portfolio snapshots")
+        return
+    try:
+        r = _requests.post(
+            f"{api_url.rstrip('/')}/internal/portfolio-fund-snapshots/refresh",
+            json={"platform": "lvl13"},
+            headers={"X-Internal-Key": internal_key},
+            timeout=30,
+        )
+        if r.status_code == 200:
+            result = r.json()
+            print(f"  [snapshots] ✓ {result.get('portfolios_updated', 0)} portfolios updated, "
+                  f"{result.get('prices_available', 0)} prices used")
+        else:
+            print(f"  [snapshots] ✗ HTTP {r.status_code}: {r.text[:120]}")
+    except Exception as e:
+        print(f"  [snapshots] ✗ error: {e}")
 
 
 def push_to_api(secrets, data_type, payload):

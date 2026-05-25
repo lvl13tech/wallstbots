@@ -14,7 +14,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Any
 from decimal import Decimal
 
-from fastapi import FastAPI, Depends, HTTPException, status, Header, Query
+from fastapi import FastAPI, Depends, HTTPException, status, Header, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
@@ -1163,6 +1163,110 @@ async def tracker_push(
         }
     finally:
         cursor.close()
+        return_db_connection(conn)
+
+
+@app.post("/internal/portfolio-fund-snapshots/refresh")
+async def refresh_portfolio_fund_snapshots(
+    request: Request,
+    _: None = Depends(verify_internal_key)
+):
+    """
+    Compute and store daily portfolio value snapshots for all active portfolios.
+    Called by each platform's refresh script after pushing global state.
+
+    Logic per portfolio:
+      entry_cost  = number_of_holdings × $1,000
+      total_value = Σ ($1,000 × current_price / holding_entry_price) per holding
+      gain_loss   = total_value − entry_cost
+    Prices come from the latest global state already stored in tracker_live_data.
+    """
+    body = await request.json()
+    platform = body.get("platform", "wallstbots")
+    today_str = datetime.utcnow().strftime("%Y-%m-%d")
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+
+        # ── 1. Build a price map from the most-recent global state for this platform ──
+        cursor.execute(
+            "SELECT data FROM tracker_live_data WHERE data_type = 'state' AND platform = %s",
+            (platform,)
+        )
+        state_row = cursor.fetchone()
+        prices = {}
+        if state_row:
+            state_data = state_row["data"]
+            if isinstance(state_data, str):
+                state_data = json.loads(state_data)
+            for fund in (state_data.get("funds") or {}).values():
+                for pos in ((fund.get("value") or {}).get("positions") or []):
+                    sym = (pos.get("symbol") or pos.get("ticker") or "").upper()
+                    price = pos.get("current_price") or pos.get("price")
+                    if sym and price:
+                        prices[sym] = float(price)
+
+        # ── 2. Fetch all active portfolios with holdings ─────────────────────────────
+        cursor.execute("""
+            SELECT b.id AS bot_id,
+                   h.symbol, h.entry_price
+            FROM bots b
+            JOIN bots_holdings h
+                ON h.bot_id = b.id AND h.deleted_at IS NULL
+            WHERE b.status != 'deleted'
+            ORDER BY b.id
+        """)
+        rows = cursor.fetchall()
+
+        # Group holdings by portfolio id
+        portfolios: dict = {}
+        for row in rows:
+            bid = str(row["bot_id"])
+            portfolios.setdefault(bid, []).append(row)
+
+        updated = 0
+        for bot_id, holdings in portfolios.items():
+            entry_cost  = len(holdings) * 1000.0
+            total_value = 0.0
+            for h in holdings:
+                sym   = (h["symbol"] or "").upper()
+                entry = float(h["entry_price"] or 0)
+                curr  = prices.get(sym, entry)
+                # If no price available, treat as flat ($1,000 unchanged)
+                total_value += (curr / entry * 1000.0) if entry > 0 and curr > 0 else 1000.0
+
+            gain_loss     = total_value - entry_cost
+            gain_loss_pct = (gain_loss / entry_cost * 100.0) if entry_cost > 0 else 0.0
+
+            # Upsert: delete today's row then insert fresh (avoids needing UNIQUE constraint)
+            cursor.execute(
+                "DELETE FROM bot_performance_snapshots WHERE bot_id = %s AND snapshot_date = %s",
+                (bot_id, today_str)
+            )
+            cursor.execute("""
+                INSERT INTO bot_performance_snapshots
+                    (bot_id, snapshot_date, total_value, entry_cost, gain_loss, gain_loss_pct)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (bot_id, today_str,
+                  round(total_value, 2), round(entry_cost, 2),
+                  round(gain_loss, 2), round(gain_loss_pct, 4)))
+            updated += 1
+
+        conn.commit()
+        return {
+            "success":            True,
+            "date":               today_str,
+            "platform":           platform,
+            "portfolios_updated": updated,
+            "prices_available":   len(prices),
+        }
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
         return_db_connection(conn)
 
 
