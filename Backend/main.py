@@ -704,12 +704,12 @@ async def create_bot(bot: BotCreate, current_user: dict = Depends(get_current_us
         tier = (user_row["subscription_tier"] or "free").lower() if user_row else "free"
         if tier == "webmaster":
             portfolio_limit = 99
-        elif tier in ("insider", "elite", "premium", "syndicate"):
-            portfolio_limit = 50
-        elif tier == "pro":
+        elif tier == "syndicate":
             portfolio_limit = 10
-        else:
+        elif tier == "insider":
             portfolio_limit = 3
+        else:
+            portfolio_limit = 1
         cursor.execute(
             "SELECT COUNT(*) AS cnt FROM bots WHERE user_id = %s AND status != 'deleted'",
             (current_user["user_id"],)
@@ -782,6 +782,46 @@ async def get_bot(bot_id: str, current_user: dict = Depends(get_current_user)):
                 for h in holdings
             ]
         }}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/bots/{bot_id}/performance")
+async def get_bot_performance(bot_id: str, days: int = 90, current_user: dict = Depends(get_current_user)):
+    """Return daily performance snapshots for a user portfolio, ordered oldest→newest."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        # Verify ownership
+        cursor.execute(
+            "SELECT id FROM bots WHERE id = %s AND user_id = %s AND status != 'deleted'",
+            (bot_id, current_user["user_id"])
+        )
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Bot not found")
+
+        cursor.execute("""
+            SELECT snapshot_date, total_value, entry_cost, gain_loss, gain_loss_pct
+            FROM bot_performance_snapshots
+            WHERE bot_id = %s
+            ORDER BY snapshot_date ASC
+            LIMIT %s
+        """, (bot_id, days))
+        rows = cursor.fetchall()
+        return {
+            "success": True,
+            "snapshots": [
+                {
+                    "date":          str(r["snapshot_date"]),
+                    "total_value":   float(r["total_value"]   or 0),
+                    "entry_cost":    float(r["entry_cost"]    or 0),
+                    "gain_loss":     float(r["gain_loss"]     or 0),
+                    "gain_loss_pct": float(r["gain_loss_pct"] or 0),
+                }
+                for r in rows
+            ]
+        }
     finally:
         cursor.close()
         return_db_connection(conn)
