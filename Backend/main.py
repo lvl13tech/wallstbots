@@ -705,10 +705,12 @@ async def create_bot(bot: BotCreate, current_user: dict = Depends(get_current_us
         if tier == "webmaster":
             portfolio_limit = 99
         elif tier == "syndicate":
-            portfolio_limit = 10
+            portfolio_limit = 25
         elif tier == "insider":
-            portfolio_limit = 3
-        else:
+            portfolio_limit = 10
+        elif tier == "member":
+            portfolio_limit = 5
+        else:  # free
             portfolio_limit = 1
         cursor.execute(
             "SELECT COUNT(*) AS cnt FROM bots WHERE user_id = %s AND status != 'deleted'",
@@ -1459,10 +1461,12 @@ async def get_current_subscription(current_user: dict = Depends(get_current_user
         if tier_lower == "webmaster":
             max_portfolios = 99
         elif tier_lower == "syndicate":
-            max_portfolios = 10
+            max_portfolios = 25
         elif tier_lower == "insider":
-            max_portfolios = 3
-        else:
+            max_portfolios = 10
+        elif tier_lower == "member":
+            max_portfolios = 5
+        else:  # free
             max_portfolios = 1
 
         # Format expiry timestamp as ISO string or None
@@ -1486,7 +1490,7 @@ async def get_current_subscription(current_user: dict = Depends(get_current_user
             "plan":           "Member",
             "plan_name":      "Member Plan",
             "status":         "active",
-            "max_portfolios": 1,
+            "max_portfolios": 5,
             "tier_expires_at": None,
             "current_period_end": None,
         }

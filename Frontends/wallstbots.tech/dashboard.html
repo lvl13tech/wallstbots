@@ -1474,7 +1474,7 @@
   const VALUE_PER_SECURITY = 1000;
 
   let allBots = [], perfMap = {}, userProfile = null, subscription = null;
-  let tickers = [], maxPortfolios = 3;
+  let tickers = [], maxPortfolios = 3, totalBotCount = 0;
 
   async function init() {
     try { await Promise.all([loadProfile(), loadSubscription()]); } catch(e) {}
@@ -1504,9 +1504,10 @@
       ((userProfile?.tier||"").toLowerCase().includes("webmaster")) ||
       ((userProfile?.role||"").toLowerCase() === "admin");
     if (isWM) maxPortfolios = 99;
-    else if (planLower.includes("syndicate")) maxPortfolios = 10;
-    else if (planLower.includes("insider")) maxPortfolios = 3;
-    else maxPortfolios = 1;
+    else if (planLower.includes("syndicate")) maxPortfolios = 25;
+    else if (planLower.includes("insider")) maxPortfolios = 10;
+    else if (planLower.includes("member")) maxPortfolios = 5;
+    else maxPortfolios = 1; // free
     let badgeClass = "member";
     if (isWM) badgeClass = "webmaster";
     else if (planLower.includes("syndicate")) badgeClass = "syndicate";
@@ -1549,8 +1550,10 @@
   async function loadPortfolios() {
     try {
       const data = await api.getBots();
-      allBots = ((data?.bots || data) || []).filter(b => b.platform === PLATFORM);
-      updateUsageDisplay(allBots.length);
+      const allBotsAll = ((data?.bots || data) || []).filter(b => b.status !== 'deleted');
+      totalBotCount = allBotsAll.length;
+      allBots = allBotsAll.filter(b => b.platform === PLATFORM);
+      updateUsageDisplay(totalBotCount); // total across all platforms
       await loadPerformance();
       sortAndRender();
     } catch(e) {
@@ -1869,7 +1872,7 @@
     }
   });
   function openCreateModal(){
-    if(allBots.length>=maxPortfolios){showToast("Portfolio limit reached. Upgrade your plan.","error");return;}
+    if(totalBotCount>=maxPortfolios){showToast("Portfolio limit reached. Upgrade your plan.","error");return;}
     tickers=[];
     document.getElementById("createName").value="";
     document.getElementById("createDesc").value="";
