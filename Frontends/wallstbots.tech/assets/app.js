@@ -639,7 +639,7 @@ function renderGetYours() {
          + '<p style="color:var(--muted);font-size:13px;margin:0">'+p[1]+'</p></div>').join('')
     + '</div>'
     + '<div class="panel" style="margin-top:24px">'
-    + '<p style="color:var(--muted);font-size:13px;margin:0 0 8px 0">Built by an operator who runs the same system on his own portfolio. Cancel anytime from your PayPal account. Questions? <a href="mailto:info@wallstbots.tech" style="color:var(--blue)">info@wallstbots.tech</a></p>'
+    + '<p style="color:var(--muted);font-size:13px;margin:0 0 8px 0">Built by an operator who runs the same system on his own portfolio. Cancel anytime from your PayPal account. Questions? <a href="#" onclick="chatbotOpen();return false;" style="color:var(--blue)">Open a support ticket ↓</a></p>'
     + '<p style="font-size:13px;margin:0">Refer a friend → they get <strong style="color:var(--blue)">50% off their first month</strong> or <strong style="color:var(--blue)">$100 off annual</strong> and you earn a <strong style="color:var(--blue)">$35 bill credit</strong>. <a href="#/referral" style="color:var(--blue)">Learn more →</a></p>'
     + '</div>';
 
@@ -679,7 +679,7 @@ async function gyFreeSignup() {
       msg.innerHTML = '<span style="color:#10b981;font-weight:700">✓ You\'re in! Check your inbox for your first signal.</span>';
       inp.value = '';
     } else {
-      msg.innerHTML = '<span style="color:var(--muted)">Something went wrong — try again or email info@wallstbots.tech</span>';
+      msg.innerHTML = '<span style="color:var(--muted)">Something went wrong — try again or <a href="#" onclick="chatbotOpen();return false;" style="color:var(--blue)">open a support ticket</a></span>';
     }
   } catch (_) {
     msg.innerHTML = '<span style="color:var(--muted)">Could not connect — check your connection.</span>';
@@ -1076,7 +1076,7 @@ const FAQS = [
   { q: ['real money','live trade','execute','broker'], a: "No — these are paper portfolios for research and signals only. We never touch a brokerage account. You see what the bots would do, then decide for yourself." },
   { q: ['mobile','phone','app','iphone','android'], a: "The site is fully mobile-optimized. Open it in your phone's browser — no app download needed. The dashboard, portfolio tracker, and all bot data work on any screen size." },
   { q: ['data','privacy','share','sell my'], a: "Your data stays yours. We don't share or sell it. Your tracker runs on a private endpoint — only you see it." },
-  { q: ['contact','support','help','email'], a: "Open a support ticket right here — type 'support ticket' or click the Support button. Or email info@wallstbots.tech anytime." },
+  { q: ['contact','support','help','email','reach'], a: "Use this chat to open a support ticket anytime — just type 'support ticket' or click the Support button above." },
   { q: ['how long','setup','time','when'], a: "Your tracker is live within 24 hours of checkout. You'll get an email with your private dashboard link." },
 ];
 function botAnswer(input) {
@@ -1085,7 +1085,7 @@ function botAnswer(input) {
   for (const item of FAQS) {
     if (item.q.some(k => q.includes(k))) return item.a;
   }
-  return "I don't have an answer for that yet — but the operator does. Email info@wallstbots.tech and you'll get a real reply, fast.";
+  return "I don't have an answer for that one yet — type 'support ticket' to reach the team directly. We'll get back to you within 24 hours.";
 }
 function chatbotAddMsg(text, who) {
   const body = $('chatbotBody'); if (!body) return;
@@ -1124,10 +1124,10 @@ async function _ticketSubmit(email, name, issue) {
     if (r.ok && d.ticket_number) {
       chatbotAddMsg('✓ Ticket ' + d.ticket_number + ' opened. A confirmation is on its way to your email — our team will reach out within 24 hours.', 'bot');
     } else {
-      chatbotAddMsg('Could not create the ticket right now. Please email info@wallstbots.tech directly.', 'bot');
+      chatbotAddMsg('Could not create the ticket right now — please try again in a moment.', 'bot');
     }
   } catch {
-    chatbotAddMsg('Connection error. Please email info@wallstbots.tech directly.', 'bot');
+    chatbotAddMsg('Connection error — please try again in a moment.', 'bot');
   }
   _ticketState = null;
   _ticketIssue = '';
