@@ -1104,8 +1104,8 @@ def main():
                 total     = b13_day_open + sum_pnl              # day_open + receipts = true total
                 cash      = 0.0
             else:
-                # HOLD: preserve last session's receipts for display — don't wipe positions
-                enriched  = list(funds.get("bot13", {}).get("value", {}).get("positions", []))
+                # HOLD/CASH: no positions — empty holdings, today's P&L = 0
+                enriched  = []
                 pos_val   = 0.0
                 total     = b13_day_open
                 cash      = b13_day_open
@@ -1115,7 +1115,7 @@ def main():
             day_pnl_total = total - b13_day_open                   # full day's accumulated gain
             day_pct       = (day_pnl_total / b13_day_open * 100) if b13_day_open else 0
 
-            # holding_cash: true when no active positions (HOLD day or outside market hours)
+            # holding_cash: true whenever bot13 is not actively in positions
             h_et, m_et   = et_hour()
             # NYSE hours: 9:30am-4:00pm ET, Mon-Fri only
             _utc_now     = dt.datetime.utcnow()
@@ -1123,7 +1123,7 @@ def main():
             _et_now      = _utc_now + dt.timedelta(hours=_offset)
             _is_weekday  = _et_now.weekday() < 5  # Mon=0..Fri=4
             window_open  = _is_weekday and ((h_et == 9 and m_et >= 30) or (10 <= h_et <= 15))
-            holding_cash = (b13_decision == "HOLD") or not window_open
+            holding_cash = (b13_decision != "TRADE") or not window_open
 
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
