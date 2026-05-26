@@ -1076,7 +1076,7 @@ const FAQS = [
   { q: ['real money','live trade','execute','broker'], a: "No — these are paper portfolios for research and signals only. We never touch a brokerage account. You see what the bots would do, then decide for yourself." },
   { q: ['mobile','phone','app','iphone','android'], a: "The site is fully mobile-optimized. Open it in your phone's browser — no app download needed. The dashboard, portfolio tracker, and all bot data work on any screen size." },
   { q: ['data','privacy','share','sell my'], a: "Your data stays yours. We don't share or sell it. Your tracker runs on a private endpoint — only you see it." },
-  { q: ['contact','support','help','email'], a: "Email info@wallstbots.tech anytime. Built and supported directly by the operator." },
+  { q: ['contact','support','help','email'], a: "Open a support ticket right here — type 'support ticket' or click the Support button. Or email info@wallstbots.tech anytime." },
   { q: ['how long','setup','time','when'], a: "Your tracker is live within 24 hours of checkout. You'll get an email with your private dashboard link." },
 ];
 function botAnswer(input) {
@@ -1095,15 +1095,71 @@ function chatbotAddMsg(text, who) {
   body.appendChild(div);
   body.scrollTop = body.scrollHeight;
 }
+
+// ── Support ticket chatbot flow ───────────────────────────────────────────────
+let _ticketState = null;
+let _ticketIssue = '';
+function _ticketEmail() {
+  const tok = localStorage.getItem('auth_token') || localStorage.getItem('lvl13_jwt');
+  if (!tok) return null;
+  try { return JSON.parse(atob(tok.split('.')[1])).email || null; } catch { return null; }
+}
+function _ticketName() {
+  const tok = localStorage.getItem('auth_token') || localStorage.getItem('lvl13_jwt');
+  if (!tok) return null;
+  try {
+    const p = JSON.parse(atob(tok.split('.')[1]));
+    return (p.user_metadata && (p.user_metadata.full_name || p.user_metadata.name)) || null;
+  } catch { return null; }
+}
+async function _ticketSubmit(email, name, issue) {
+  chatbotAddMsg('Opening your ticket…', 'bot');
+  try {
+    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/support/ticket', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim(), name: name || null, issue, platform: PLATFORM })
+    });
+    const d = await r.json();
+    if (r.ok && d.ticket_number) {
+      chatbotAddMsg('✓ Ticket ' + d.ticket_number + ' opened. A confirmation is on its way to your email — our team will reach out within 24 hours.', 'bot');
+    } else {
+      chatbotAddMsg('Could not create the ticket right now. Please email info@wallstbots.tech directly.', 'bot');
+    }
+  } catch {
+    chatbotAddMsg('Connection error. Please email info@wallstbots.tech directly.', 'bot');
+  }
+  _ticketState = null;
+  _ticketIssue = '';
+}
+const TICKET_TRIGGERS = ['support ticket','open ticket','submit ticket','create ticket','file a ticket','contact support','tech support','speak to someone','talk to someone','real person','human support','support'];
+function chatHandleInput(q) {
+  const ql = q.toLowerCase().trim();
+  if (_ticketState === 'awaiting_issue') {
+    _ticketIssue = q;
+    const email = _ticketEmail();
+    if (email) { _ticketSubmit(email, _ticketName(), q); }
+    else { _ticketState = 'awaiting_email'; chatbotAddMsg('Got it. What email address can our team reach you at?', 'bot'); }
+    return;
+  }
+  if (_ticketState === 'awaiting_email') { _ticketSubmit(q, null, _ticketIssue); return; }
+  if (TICKET_TRIGGERS.some(t => ql.includes(t))) {
+    _ticketState = 'awaiting_issue';
+    chatbotAddMsg('I'll open a support ticket right now. Briefly describe the issue you're experiencing:', 'bot');
+    return;
+  }
+  chatbotAddMsg(botAnswer(q), 'bot');
+}
+
 function chatbotRenderQuick() {
   const wrap = $('chatbotQuick'); if (!wrap) return;
-  const quick = ['Pricing', 'Stocks', 'Bots', 'Cancel', 'Contact'];
+  const quick = ['Pricing', 'Stocks', 'Bots', 'Cancel', 'Support'];
   wrap.innerHTML = quick.map(q => '<button data-q="'+q+'">'+q+'</button>').join('');
   wrap.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => {
       const q = btn.getAttribute('data-q');
       chatbotAddMsg(q, 'user');
-      chatbotAddMsg(botAnswer(q), 'bot');
+      setTimeout(() => chatHandleInput(q), 250);
     });
   });
 }
@@ -1162,7 +1218,7 @@ function wireUI() {
     const q = inp.value.trim();
     chatbotAddMsg(q, 'user');
     inp.value = '';
-    chatbotAddMsg(botAnswer(q) || "Email info@wallstbots.tech for help!", 'bot');
+    setTimeout(() => chatHandleInput(q), 250);
   });
   chatbotRenderQuick();
   document.addEventListener('keydown', (e) => {

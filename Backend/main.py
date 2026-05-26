@@ -44,6 +44,10 @@ POLYGON_API_KEY          = os.getenv("POLYGON_API_KEY", "")
 # Internal key used by GitHub Actions to push tracker data — never exposed publicly
 INTERNAL_API_KEY         = os.getenv("INTERNAL_API_KEY", "")
 
+RESEND_API_KEY           = os.getenv("RESEND_API_KEY", "")
+SUPPORT_FROM_EMAIL       = "Wall St. Bots Support <info@lvl13.tech>"
+SUPPORT_NOTIFY_EMAIL     = "info@lvl13.tech"
+
 # Admin codes: grant free lifetime SYNDICATE access — case-insensitive
 ADMIN_CODES = {'adminm13'}
 
@@ -185,6 +189,13 @@ class AdminCodeClaimRequest(BaseModel):
     email: EmailStr
     password: str
     full_name: Optional[str] = None
+
+class SupportTicketCreate(BaseModel):
+    email: str
+    name: Optional[str] = None
+    issue: str
+    platform: Optional[str] = None
+    tier: Optional[str] = None
 
 # ============================================================================
 # AUTH HELPERS
@@ -2440,6 +2451,195 @@ async def get_email_subscribers(
     finally:
         cursor.close()
         return_db_connection(conn)
+
+
+# ============================================================================
+# SUPPORT TICKETS
+# ============================================================================
+
+PLATFORM_NAMES = {
+    "wallstbots": "Wall St. Bots",
+    "bitbot13":   "BitBot13",
+    "lvl13":      "Level XIII",
+}
+
+def _send_resend_email(to: str, subject: str, html: str) -> bool:
+    """Send a single email via Resend. Returns True on success."""
+    if not RESEND_API_KEY:
+        return False
+    try:
+        r = requests.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={"from": SUPPORT_FROM_EMAIL, "to": [to], "subject": subject, "html": html},
+            timeout=10,
+        )
+        return r.status_code in (200, 201)
+    except Exception:
+        return False
+
+
+def _ticket_user_email(ticket_number: str, name: str, issue: str, platform: str) -> str:
+    site = PLATFORM_NAMES.get(platform, "Wall St. Bots")
+    display_name = name or "there"
+    return f"""<!DOCTYPE html><html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#06080d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#06080d;padding:32px 16px">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
+
+      <!-- Header -->
+      <tr><td style="background:#0d1117;border:1px solid #1e2633;border-radius:12px 12px 0 0;padding:28px 32px;text-align:center">
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#7d8590;text-transform:uppercase;margin-bottom:8px">{site}</div>
+        <div style="font-size:22px;font-weight:800;color:#e6edf3">Support Ticket Opened</div>
+      </td></tr>
+
+      <!-- Body -->
+      <tr><td style="background:#0d1117;border:1px solid #1e2633;border-top:none;border-bottom:none;padding:28px 32px">
+        <p style="color:#e6edf3;font-size:15px;margin:0 0 20px 0">Hi {display_name},</p>
+        <p style="color:#7d8590;font-size:14px;line-height:1.7;margin:0 0 24px 0">
+          We received your support request and opened a ticket. Our team will reach out to you at this email address within <strong style="color:#e6edf3">24 hours</strong>.
+        </p>
+
+        <!-- Ticket card -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#141b27;border:1px solid #1e2633;border-radius:10px;margin-bottom:24px">
+          <tr><td style="padding:20px 24px">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7d8590;text-transform:uppercase;margin-bottom:6px">Ticket Number</div>
+            <div style="font-size:22px;font-weight:800;color:#00d4ff;letter-spacing:1px">{ticket_number}</div>
+          </td></tr>
+          <tr><td style="border-top:1px solid #1e2633;padding:16px 24px">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7d8590;text-transform:uppercase;margin-bottom:6px">Your Issue</div>
+            <div style="font-size:14px;color:#e6edf3;line-height:1.6">{issue}</div>
+          </td></tr>
+          <tr><td style="border-top:1px solid #1e2633;padding:16px 24px">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7d8590;text-transform:uppercase;margin-bottom:6px">Status</div>
+            <div style="display:inline-block;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;color:#00d4ff">OPEN</div>
+          </td></tr>
+        </table>
+
+        <p style="color:#7d8590;font-size:13px;margin:0">
+          In the meantime, you can reply to this email or reach us directly at
+          <a href="mailto:info@lvl13.tech" style="color:#00d4ff;text-decoration:none">info@lvl13.tech</a>.
+        </p>
+      </td></tr>
+
+      <!-- Footer -->
+      <tr><td style="background:#06080d;border:1px solid #1e2633;border-top:none;border-radius:0 0 12px 12px;padding:20px 32px;text-align:center">
+        <p style="color:#7d8590;font-size:12px;margin:0">{site} &mdash; AI-powered trading intelligence &mdash; <a href="https://lvl13.tech" style="color:#7d8590">lvl13.tech</a></p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</body></html>"""
+
+
+def _ticket_support_email(ticket_number: str, email: str, name: str, issue: str, platform: str, tier: str) -> str:
+    site      = PLATFORM_NAMES.get(platform, platform or "unknown")
+    display   = name or "(not provided)"
+    tier_disp = tier or "unknown"
+    ts        = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    return f"""<!DOCTYPE html><html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#06080d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#06080d;padding:32px 16px">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
+      <tr><td style="background:#0d1117;border:1px solid #ff8c00;border-radius:12px 12px 0 0;padding:20px 32px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#ff8c00;text-transform:uppercase">New Support Ticket</div>
+        <div style="font-size:20px;font-weight:800;color:#e6edf3;margin-top:4px">{ticket_number}</div>
+      </td></tr>
+      <tr><td style="background:#0d1117;border:1px solid #ff8c00;border-top:none;border-bottom:none;padding:24px 32px">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#141b27;border:1px solid #1e2633;border-radius:10px">
+          <tr><td style="padding:14px 20px;border-bottom:1px solid #1e2633">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1px;color:#7d8590;text-transform:uppercase">From</span>
+            <span style="float:right;color:#e6edf3;font-size:14px">{email}</span>
+          </td></tr>
+          <tr><td style="padding:14px 20px;border-bottom:1px solid #1e2633">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1px;color:#7d8590;text-transform:uppercase">Name</span>
+            <span style="float:right;color:#e6edf3;font-size:14px">{display}</span>
+          </td></tr>
+          <tr><td style="padding:14px 20px;border-bottom:1px solid #1e2633">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1px;color:#7d8590;text-transform:uppercase">Platform</span>
+            <span style="float:right;color:#e6edf3;font-size:14px">{site}</span>
+          </td></tr>
+          <tr><td style="padding:14px 20px;border-bottom:1px solid #1e2633">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1px;color:#7d8590;text-transform:uppercase">Tier</span>
+            <span style="float:right;color:#e6edf3;font-size:14px">{tier_disp}</span>
+          </td></tr>
+          <tr><td style="padding:14px 20px;border-bottom:1px solid #1e2633">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1px;color:#7d8590;text-transform:uppercase">Submitted</span>
+            <span style="float:right;color:#e6edf3;font-size:14px">{ts}</span>
+          </td></tr>
+          <tr><td style="padding:14px 20px">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#7d8590;text-transform:uppercase;margin-bottom:8px">Issue</div>
+            <div style="font-size:14px;color:#e6edf3;line-height:1.7;white-space:pre-wrap">{issue}</div>
+          </td></tr>
+        </table>
+        <p style="color:#7d8590;font-size:13px;margin:16px 0 0 0">Reply directly to this email to respond to the member.</p>
+      </td></tr>
+      <tr><td style="background:#06080d;border:1px solid #ff8c00;border-top:none;border-radius:0 0 12px 12px;padding:16px 32px;text-align:center">
+        <p style="color:#7d8590;font-size:12px;margin:0">Wall St. Bots Admin Notification</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>"""
+
+
+@app.post("/support/ticket")
+async def create_support_ticket(payload: SupportTicketCreate):
+    """
+    Open a support ticket from the chatbot widget.
+    Stores ticket in Supabase, emails user confirmation, emails support inbox.
+    No auth required — works for free users and visitors too.
+    """
+    import random, string as _string
+    suffix        = ''.join(random.choices(_string.ascii_uppercase + _string.digits, k=6))
+    date_str      = datetime.now(timezone.utc).strftime('%Y%m%d')
+    ticket_number = f"WSB-{date_str}-{suffix}"
+
+    email   = (payload.email or '').strip().lower()
+    name    = (payload.name or '').strip() or None
+    issue   = (payload.issue or '').strip()
+    platform = (payload.platform or '').strip() or None
+    tier     = (payload.tier or '').strip() or None
+
+    if not email or not issue:
+        raise HTTPException(status_code=422, detail="email and issue are required")
+
+    # Store in database
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO support_tickets (ticket_number, email, name, platform, tier, issue, status)
+            VALUES (%s, %s, %s, %s, %s, %s, 'open')
+        """, (ticket_number, email, name, platform, tier, issue))
+        conn.commit()
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+    # Send confirmation to user
+    _send_resend_email(
+        email,
+        f"Support Ticket {ticket_number} — Wall St. Bots",
+        _ticket_user_email(ticket_number, name or '', issue, platform or ''),
+    )
+
+    # Notify support inbox (reply-to set to user so you can reply directly)
+    _send_resend_email(
+        SUPPORT_NOTIFY_EMAIL,
+        f"[Support Ticket] {ticket_number} from {email}",
+        _ticket_support_email(ticket_number, email, name or '', issue, platform or '', tier or ''),
+    )
+
+    return {"ticket_number": ticket_number, "status": "open"}
 
 
 # ============================================================================
