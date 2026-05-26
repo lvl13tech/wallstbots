@@ -1145,7 +1145,7 @@ function chatHandleInput(q) {
   if (_ticketState === 'awaiting_email') { _ticketSubmit(q, null, _ticketIssue); return; }
   if (TICKET_TRIGGERS.some(t => ql.includes(t))) {
     _ticketState = 'awaiting_issue';
-    chatbotAddMsg('I'll open a support ticket right now. Briefly describe the issue you're experiencing:', 'bot');
+    chatbotAddMsg('I\'ll open a support ticket right now. Briefly describe the issue you\'re experiencing:', 'bot');
     return;
   }
   chatbotAddMsg(botAnswer(q), 'bot');
@@ -1240,4 +1240,4 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', boot);
 } else {
   boot();
-});
+}
