@@ -421,6 +421,16 @@ function renderStrategyPanel(fid, strat) {
   const label  = fid==='bot13' ? "TODAY'S STRATEGY"
                : fid==='oracle' ? "THIS WEEK'S STRATEGY"
                : "THIS MONTH'S STRATEGY";
+  const projLabel = fid==='bot13' ? 'Projected Return'
+                  : fid==='oracle' ? 'Projected Week Return'
+                  : 'Projected Month Return';
+  const projRet = strat.projected_return;
+  const projHtml = (projRet != null)
+    ? '<div style="margin:6px 0 10px;font-size:13px">'
+      + '<span style="color:var(--muted)">'+projLabel+': </span>'
+      + '<span style="font-weight:700;color:'+(projRet > 0 ? 'var(--green)' : 'var(--red)')+'">'
+      + (projRet > 0 ? '+' : '')+projRet.toFixed(2)+'%</span></div>'
+    : '';
   let picks = '';
   if (strat.decision === 'CASH') {
     picks = '<div class="pick-card"><div class="pick-head"><div class="pick-sym">100% CASH</div><div class="pick-meta">No trade</div></div>'
@@ -444,6 +454,7 @@ function renderStrategyPanel(fid, strat) {
   }
   return '<div class="strategy-panel '+fid+'"><h3>'+label+'</h3>'
     + '<div class="strategy-meta">'+escapeHtml(period)+' · '+escapeHtml(strat.decision||'')+'</div>'
+    + projHtml
     + '<p class="strategy-rationale">'+escapeHtml(strat.rationale||'')+'</p>'+picks+'</div>';
 }
 

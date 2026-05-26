@@ -469,6 +469,8 @@ def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_s
     total_rw    = sum(raw_w)
     weights     = [w / total_rw for w in raw_w]
 
+    oracle_proj = round(sum(w * ret5 for (_, _, ret5, *_), w in zip(picks_raw, weights)), 2)
+
     positions, picks = [], []
     for i, (sym, score, ret5, ret20, rsi, vol_r) in enumerate(picks_raw):
         w      = weights[i]
@@ -492,12 +494,13 @@ def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_s
         })
 
     rationale = (
+        f"Projected week return: +{oracle_proj:.2f}%. "
         f"Top {len(picks)} coins by composite momentum. "
         f"Score-weighted (not equal weight). "
         f"Sector cap enforced (max 2 per category). "
         f"Quality gate: 20d momentum positive required."
     )
-    return positions, picks, rationale
+    return positions, picks, rationale, oracle_proj
 
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
@@ -580,6 +583,8 @@ def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_
     total_rw = sum(raw_w)
     weights  = [w / total_rw for w in raw_w]
 
+    wizard_proj = round(sum(w * ret20 for (_, _, ret20, *_), w in zip(picks_raw, weights)), 2)
+
     positions, picks = [], []
     for i, (sym, score, ret20, ret60, sharpe, dist) in enumerate(picks_raw):
         w      = weights[i]
@@ -603,12 +608,13 @@ def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_
         })
 
     rationale = (
+        f"Projected month return: +{wizard_proj:.2f}%. "
         f"Top {len(picks)} quality coins for the month. "
         f"Quartile-weighted (top coins get largest allocation). "
         f"60d quality filter applied — no negative long-term trends. "
         f"Sector cap enforced. Stop flag at -12% intra-month."
     )
-    return positions, picks, rationale
+    return positions, picks, rationale, wizard_proj
 
 
 # ── BOT13 crypto session decision ─────────────────────────────────────────────
@@ -678,7 +684,16 @@ def run_bot13_decision(prices, prev_closes, starting_capital, intraday_data=None
     top_picks = scored[:5]
 
     if not top_picks:
-        return "CASH", [], []
+        return "CASH", [], [], 0.0
+
+    # ── Projected portfolio return gate ──────────────────────────────────────
+    # Equal-weight avg of 24h momentum across top picks (entry = prev_close).
+    PROJ_RETURN_THRESHOLD = 1.74
+    projected_return = round(
+        sum(mom_24h for _, _, _, _, mom_24h, _ in top_picks) / len(top_picks), 2
+    )
+    if projected_return <= PROJ_RETURN_THRESHOLD:
+        return "CASH", [], [], 0.0
 
     per = starting_capital / len(top_picks)
     positions, picks = [], []
@@ -721,7 +736,7 @@ def run_bot13_decision(prices, prev_closes, starting_capital, intraday_data=None
             ),
         })
 
-    return "TRADE", positions, picks
+    return "TRADE", positions, picks, projected_return
 
 # ── Signals ────────────────────────────────────────────────────────────────────
 def generate_signals(prices, prev_closes):
@@ -1033,7 +1048,7 @@ def main():
     )
 
     if b13_inception > today_iso:
-        b13_decision, b13_positions, b13_picks = "HOLD", [], []
+        b13_decision, b13_positions, b13_picks, b13_proj = "HOLD", [], [], 0.0
         prev_b13_total = sc_global
         print(f"  BOT13: HOLD (pre-inception, starts {b13_inception})")
     elif not window_open:
@@ -1041,6 +1056,7 @@ def main():
         b13_decision  = "HOLD"
         b13_positions = stored_positions  # preserve for receipt display
         b13_picks     = b13_prev_strategy.get("picks", [])
+        b13_proj      = float(b13_prev_strategy.get("projected_return", 0.0))
         print(f"  BOT13: HOLD (outside trading window {TRADING_WINDOW_START}am-{TRADING_WINDOW_END-12}pm ET)")
     elif stops_triggered:
         # Stop-loss triggered — mark stopped positions and open fresh picks
@@ -1055,7 +1071,7 @@ def main():
                     p["exit_reason"]    = f"stop_loss (>{STOP_LOSS_PCT}% loss)"
                     p["exit_time"]      = now_exit
         print(f"  BOT13: stop-loss triggered — closing stopped positions, re-picking...")
-        b13_decision, b13_positions, b13_picks = run_bot13_decision(
+        b13_decision, b13_positions, b13_picks, b13_proj = run_bot13_decision(
             prices, prev_closes, b13_day_open, intraday_data=intraday_data
         )
         print(f"  BOT13: re-entered with {len(b13_picks)} new picks after stop-loss")
@@ -1064,10 +1080,11 @@ def main():
         b13_positions = stored_positions
         b13_decision  = "TRADE"
         b13_picks     = b13_prev_strategy.get("picks", [])
+        b13_proj      = float(b13_prev_strategy.get("projected_return", 0.0))
         print(f"  BOT13: same-session re-price ({len(b13_positions)} existing positions)")
     else:
         # New session — run fresh decision
-        b13_decision, b13_positions, b13_picks = run_bot13_decision(
+        b13_decision, b13_positions, b13_picks, b13_proj = run_bot13_decision(
             prices, prev_closes, b13_day_open, intraday_data=intraday_data
         )
         print(f"  BOT13: {b13_decision} ({len(b13_picks)} picks)")
@@ -1076,9 +1093,10 @@ def main():
     oracle_new_positions = None
     oracle_new_picks     = None
     oracle_new_rationale = None
+    oracle_new_proj      = 0.0
     if (is_monday or oracle_needs_seed) and hist_data:
         print(f"[bitbot13] {'Monday' if is_monday else 'first run'} -- running ORACLE recompute...")
-        oracle_new_positions, oracle_new_picks, oracle_new_rationale = run_oracle_decision(
+        oracle_new_positions, oracle_new_picks, oracle_new_rationale, oracle_new_proj = run_oracle_decision(
             prices, prev_closes, hist_data, sc_global, week_str
         )
         if oracle_new_picks:
@@ -1090,9 +1108,10 @@ def main():
     wizard_new_positions = None
     wizard_new_picks     = None
     wizard_new_rationale = None
+    wizard_new_proj      = 0.0
     if (is_month_start or wizard_needs_seed) and hist_data:
         print(f"[bitbot13] {'Month start' if is_month_start else 'first run'} ({today_iso}) -- running WIZARD recompute...")
-        wizard_new_positions, wizard_new_picks, wizard_new_rationale = run_wizard_decision(
+        wizard_new_positions, wizard_new_picks, wizard_new_rationale, wizard_new_proj = run_wizard_decision(
             prices, prev_closes, hist_data, sc_global, month_str
         )
         if wizard_new_picks:
@@ -1142,13 +1161,14 @@ def main():
                         "session_close_et": f"{TRADING_WINDOW_END}:00",
                         "positions": enriched}
             strategy = {
-                "day":           today_iso,
-                "decision":      b13_decision,
-                "picks":         b13_picks,
-                "stop_pct":      -1.5,
-                "target_pct":    3.0,
-                "window_open":   window_open,
-                "last_updated":  now_iso,
+                "day":              today_iso,
+                "decision":         b13_decision,
+                "picks":            b13_picks,
+                "stop_pct":         -1.5,
+                "target_pct":       3.0,
+                "window_open":      window_open,
+                "last_updated":     now_iso,
+                "projected_return": round(b13_proj, 2),
             }
 
         elif fid == "oracle":
@@ -1158,10 +1178,11 @@ def main():
                 fund_copy["value"]["positions"] = oracle_new_positions
                 fund = fund_copy
                 strategy = {
-                    "week":      today_iso,
-                    "decision":  "TRADE",
-                    "rationale": oracle_new_rationale,
-                    "picks":     oracle_new_picks,
+                    "week":             today_iso,
+                    "decision":         "TRADE",
+                    "rationale":        oracle_new_rationale,
+                    "picks":            oracle_new_picks,
+                    "projected_return": round(oracle_new_proj, 2),
                 }
             else:
                 strategy = fund.get("current_strategy")
@@ -1189,10 +1210,11 @@ def main():
                 fund_copy["value"]["positions"] = wizard_new_positions
                 fund = fund_copy
                 strategy = {
-                    "month":     month_str,
-                    "decision":  "TRADE",
-                    "rationale": wizard_new_rationale,
-                    "picks":     wizard_new_picks,
+                    "month":            month_str,
+                    "decision":         "TRADE",
+                    "rationale":        wizard_new_rationale,
+                    "picks":            wizard_new_picks,
+                    "projected_return": round(wizard_new_proj, 2),
                 }
             else:
                 strategy = fund.get("current_strategy")
