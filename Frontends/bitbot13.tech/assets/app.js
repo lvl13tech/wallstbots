@@ -538,11 +538,11 @@ const PRICING = {
 };
 const TIER_META = {
   member:    { label:'MEMBER',    color:'#00d4ff', popular:false,
-               features:['1 portfolio','Stocks or crypto','Full bot signal history','Daily alerts'] },
+               features:['5 portfolios','Stocks or crypto','Full bot signal history','Daily alerts'] },
   insider:   { label:'INSIDER',   color:'#a855f7', popular:false,
-               features:['3 portfolios','Mix stocks &amp; crypto','Priority signals','Analytics dashboard'] },
+               features:['10 portfolios','Mix stocks &amp; crypto','Priority signals','Analytics dashboard'] },
   syndicate: { label:'SYNDICATE', color:'#ff8c00', popular:true,
-               features:['Up to 10 portfolios','All 5 bots active','All 3 platforms','Max signal coverage','First access to features'] },
+               features:['Up to 25 portfolios','All 5 bots active','All 3 platforms','Max signal coverage','First access to features'] },
 };
 let GY_CYCLE      = 'monthly';
 let GY_TIER       = 'member';
@@ -573,7 +573,9 @@ function renderGetYours() {
     + '<div style="flex:1 1 240px">'
     + '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">FREE</div>'
     + '<div style="font-size:26px;font-weight:800;color:var(--fg)">$0</div>'
-    + '<div style="font-size:13px;color:var(--muted);margin-top:4px">Follow a real AI trading bot for free. Get daily Buy/Hold/Sell signals straight to your inbox and see exactly how Bot13 trades every market day.</div>'
+    + '<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);border-radius:6px;padding:4px 10px;margin:8px 0 6px 0">'
+    + '<span style="color:#10b981;font-weight:700;font-size:13px">✓ 1 Portfolio Included</span></div>'
+    + '<div style="font-size:13px;color:var(--muted);margin-top:4px">Start free with your own portfolio tracker. Get daily Buy/Hold/Sell signals straight to your inbox and see exactly how Bot13 trades every market day.</div>'
     + '</div>'
     + '<div style="flex:1 1 240px;min-width:0">'
     + '<input id="freeEmail" type="email" placeholder="Enter your email" '
@@ -945,7 +947,7 @@ async function loadReferralDashboard() {
 // CHATBOT — FAQ engine
 // ================================================================
 const FAQS = [
-  { q: ['price','cost','how much','pricing','member','insider','syndicate'], a: "MEMBER: $49.99/mo or $499/yr (1 portfolio). INSIDER: $69.99/mo or $699/yr (3 portfolios). SYNDICATE: $99.99/mo or $899/yr (up to 10 portfolios, all 3 platforms). FREE tier available — daily signals by email at no cost." },
+  { q: ['price','cost','how much','pricing','member','insider','syndicate'], a: "MEMBER: $49.99/mo or $499/yr (5 portfolios). INSIDER: $69.99/mo or $699/yr (10 portfolios). SYNDICATE: $99.99/mo or $899/yr (up to 25 portfolios, all 3 platforms). FREE tier: 1 portfolio included + daily signals by email at no cost." },
   { q: ['referral','refer','code','discount'], a: "Share your referral code and earn $35 credit per friend who subscribes — automatically applied to your next bill. Your friend gets 50% off their first month or 20% off annual. No cap on referrals." },
   { q: ['cancel','refund','stop'], a: "Cancel anytime from your PayPal account → Settings → Automatic Payments. No further charges after cancellation." },
   { q: ['coin','coins','tickers','how many','add','holding','what can i add'], a: "Add any tradeable crypto — BTC, ETH, altcoins, DeFi, Layer 2, gaming tokens, meme coins, and more. Search by name or ticker symbol. Excludes stablecoins. Up to 50 coins per portfolio. Each coin gets a $1,000 paper allocation." },
