@@ -79,6 +79,9 @@ SECTORS = {
 
 FUND_ORDER = ["bot13", "oracle", "wizard", "equalizer", "titan"]
 
+# ── Risk controls ───────────────────────────────────────────────────────────────
+STOP_LOSS_PCT = 1.5  # exit individual position if down >1.5% from entry during session
+
 # ── Helpers ─────────────────────────────────────────────────────────────────────
 def load_secrets():
     if SECRETS.exists():
@@ -1034,20 +1037,48 @@ def main():
         else prev_b13_total   # new day: yesterday's close becomes today's open
     )
     # Respect inception date: do not trade before bot13's inception day
-    b13_inception = funds.get("bot13", {}).get("inception", today_iso)
-    # Guard: if positions already exist for today, just re-price — don't create new ones
+    b13_inception    = funds.get("bot13", {}).get("inception", today_iso)
+    stored_positions = funds.get("bot13", {}).get("value", {}).get("positions", [])
+
+    # Check if any held position has triggered stop-loss (>STOP_LOSS_PCT% down from entry)
+    stops_triggered = any(
+        float(p.get("entry_price") or 0) > 0 and
+        (float(prices.get(p["symbol"], float(p.get("entry_price", 0)))) /
+         float(p.get("entry_price", 1)) - 1) * 100 < -STOP_LOSS_PCT
+        for p in stored_positions if p.get("symbol")
+    )
+
+    # Guard: if positions already exist for today AND no stops hit, just re-price
     same_day_trade = (
         (prev_b13_strategy or {}).get("day") == today_iso
         and (prev_b13_strategy or {}).get("decision") == "TRADE"
-        and bool(funds.get("bot13", {}).get("value", {}).get("positions"))
+        and bool(stored_positions)
+        and not stops_triggered
     )
     if b13_inception > today_iso:
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log = "HOLD", [], [], "Pre-inception hold", []
         prev_b13_total = sc_global  # reset to SC so tomorrow starts clean
         print(f"  BOT13: HOLD (pre-inception, starts {b13_inception})")
+    elif stops_triggered:
+        # Stop-loss triggered — mark stopped positions, then re-enter fresh picks
+        now_exit = __import__("datetime").datetime.utcnow().isoformat(timespec="seconds") + "Z"
+        for p in stored_positions:
+            sym = p.get("symbol")
+            if sym:
+                cur = prices.get(sym, float(p.get("entry_price", 0)))
+                ep  = float(p.get("entry_price") or 0)
+                if ep > 0 and (cur / ep - 1) * 100 < -STOP_LOSS_PCT:
+                    p["stop_triggered"] = True
+                    p["exit_reason"]    = f"stop_loss (>{STOP_LOSS_PCT}% loss)"
+                    p["exit_time"]      = now_exit
+        print(f"  BOT13: stop-loss triggered — closing stopped positions, re-picking...")
+        b13_decision, b13_positions, b13_picks, b13_rationale, b13_log = run_bot13_decision(
+            prices, prev_closes, b13_day_open, today_iso, prev_b13_strategy
+        )
+        print(f"  BOT13: re-entered with {len(b13_picks)} new picks after stop-loss")
     elif same_day_trade:
         # Re-use existing positions — only re-price, don't resize
-        b13_positions = funds.get("bot13", {}).get("value", {}).get("positions", [])
+        b13_positions = stored_positions
         b13_decision  = "TRADE"
         b13_picks     = (prev_b13_strategy or {}).get("picks", [])
         b13_rationale = (prev_b13_strategy or {}).get("rationale", "")
@@ -1211,8 +1242,8 @@ def main():
             enriched = []
             for p in raw_pos:
                 ep = enrich_position(p, prices, prev_closes)
-                # Flag any position beyond -12% stop
-                if ep["pnl_pct"] < -12.0:
+                # Flag any position beyond stop-loss threshold
+                if ep["pnl_pct"] < -STOP_LOSS_PCT:
                     ep["stop_triggered"] = True
                 enriched.append(ep)
             pos_val  = sum(p["value"]   for p in enriched)

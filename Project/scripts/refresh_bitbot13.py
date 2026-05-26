@@ -40,7 +40,7 @@ import os   # used to read NEWSAPI_KEY env var in GitHub Actions
 # ── Trading window (ET) ────────────────────────────────────────────────────────
 TRADING_WINDOW_START = 9   # 9am ET — open
 TRADING_WINDOW_END   = 21  # 9pm ET — close
-STOP_LOSS_PCT        = 5.0 # exit individual position if down >5% from entry during session
+STOP_LOSS_PCT        = 1.5 # exit individual position if down >1.5% from entry during session
 
 
 def et_hour():
@@ -1204,7 +1204,7 @@ def main():
             enriched = []
             for p in raw_pos:
                 ep = enrich_position(p, prices, prev_closes)
-                if ep["pnl_pct"] < -12.0:
+                if ep["pnl_pct"] < -STOP_LOSS_PCT:
                     ep["stop_triggered"] = True
                 enriched.append(ep)
             pos_val  = sum(p["value"]   for p in enriched)
