@@ -1111,11 +1111,19 @@ function chatbotClose() { const p=$('chatbotPanel'); if(p) p.classList.remove('o
 // ================================================================
 // AUTH-AWARE NAV — show Dashboard if logged in, Log In if not
 // ================================================================
+function updateNavAuth() {
+  // Remove any stale "My Tracker" link — Dashboard is the members entry point
+  const nav = document.getElementById('siteNav');
+  if (!nav) return;
+  const existing = nav.querySelector('[data-route="/my-tracker"]');
+  if (existing) existing.remove();
+}
+
 function updateNavAuthState() {
   const loginBtn = document.getElementById('navLoginBtn');
   const dashBtn  = document.getElementById('navDashBtn');
   if (!loginBtn || !dashBtn) return;
-  const loggedIn = !!localStorage.getItem('auth_token');
+  const loggedIn = !!(localStorage.getItem('auth_token') || localStorage.getItem('lvl13_jwt'));
   loginBtn.style.display = loggedIn ? 'none' : '';
   dashBtn.style.display  = loggedIn ? ''     : 'none';
 }
@@ -1155,11 +1163,23 @@ function wireUI() {
     chatbotAddMsg(botAnswer(q) || "Email info@wallstbots.tech for help!", 'bot');
   });
   chatbotRenderQuick();
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { closeMenu(); chatbotClose(); }
+  });
+  window.addEventListener('hashchange', () => {
+    try { route(); } catch(e) { console.error('Route error', e); }
+  });
 }
 
-window.addEventListener('hashchange', route);
-document.addEventListener('DOMContentLoaded', () => {
+function boot() {
   wireUI();
+  updateNavAuth();
   updateNavAuthState();
   loadAll();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
 });

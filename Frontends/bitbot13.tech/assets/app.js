@@ -1009,7 +1009,9 @@ function wireUI() {
   });
   document.addEventListener('click', (e) => {
     const nav = $('siteNav');
-    if (nav && nav.classList.contains('open') && !nav.contains(e.target) && e.target !== $('menuToggle')) {
+    const tog = $('menuToggle');
+    if (!nav || !tog) return;
+    if (nav.classList.contains('open') && !nav.contains(e.target) && !tog.contains(e.target)) {
       closeMenu();
     }
   });
@@ -1027,22 +1029,40 @@ function wireUI() {
     inp.value = '';
     chatbotAddMsg(botAnswer(q) || "Email info@bitbot13.tech for help!", 'bot');
   });
-  // Populate quick-reply chips (was defined but never called)
   chatbotRenderQuick();
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { closeMenu(); chatbotClose(); }
+  });
+  window.addEventListener('hashchange', () => {
+    try { route(); } catch(e) { console.error('Route error', e); }
+  });
+}
+
+function updateNavAuth() {
+  const nav = document.getElementById('siteNav');
+  if (!nav) return;
+  const existing = nav.querySelector('[data-route="/my-tracker"]');
+  if (existing) existing.remove();
 }
 
 function updateNavAuthState() {
   const loginBtn = document.getElementById('navLoginBtn');
   const dashBtn  = document.getElementById('navDashBtn');
   if (!loginBtn || !dashBtn) return;
-  const loggedIn = !!localStorage.getItem('auth_token');
+  const loggedIn = !!(localStorage.getItem('auth_token') || localStorage.getItem('lvl13_jwt'));
   loginBtn.style.display = loggedIn ? 'none' : '';
   dashBtn.style.display  = loggedIn ? ''     : 'none';
 }
 
-window.addEventListener('hashchange', route);
-document.addEventListener('DOMContentLoaded', () => {
+function boot() {
   wireUI();
+  updateNavAuth();
   updateNavAuthState();
   loadAll();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
 });

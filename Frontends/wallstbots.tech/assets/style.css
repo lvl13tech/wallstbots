@@ -77,16 +77,6 @@ img, svg {
   margin-left: 8px; padding: 8px 16px;
 }
 .site-nav a.cta:hover { background: #00b8e0; color: var(--bg); }
-.site-nav a.nav-login {
-  border: 1px solid var(--border); color: var(--text); font-weight: 600;
-  margin-left: 4px; padding: 7px 14px;
-}
-.site-nav a.nav-login:hover { border-color: var(--green); color: var(--green); background: transparent; }
-.site-nav a.nav-dashboard {
-  background: var(--green); color: #000; font-weight: 700;
-  margin-left: 4px; padding: 8px 16px;
-}
-.site-nav a.nav-dashboard:hover { background: #4dcb60; color: #000; }
 
 .menu-toggle {
   display: none; background: transparent; border: none;
@@ -485,7 +475,7 @@ td.num, th.num { text-align: right; }
   max-height: calc(70vh - 50px);
 }
 .chatbot-msg { padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; max-width: 90%; word-wrap: break-word; }
-.cha.chatbot-msg.bot  { background: var(--panel2); border: 1px solid var(--border); align-self: flex-start; }
+.chatbot-msg.bot  { background: var(--panel2); border: 1px solid var(--border); align-self: flex-start; }
 .chatbot-msg.user { background: var(--blue); color: var(--bg); align-self: flex-end; font-weight: 600; }
 .chatbot-quick { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 4px; }
 .chatbot-quick button {
@@ -584,10 +574,7 @@ td.num, th.num { text-align: right; }
     gap: 10px;
   }
 
-  .lb-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
+  .lb-strip { grid-template-columns: 1fr; gap: 8px; }
   .lb-strip a.card { padding: 12px; }
   .lb-strip .fund-icon { width: 28px; height: 28px; font-size: 11px; }
   .lb-strip .lb-name strong { font-size: 13px; }
