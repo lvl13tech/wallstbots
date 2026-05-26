@@ -406,14 +406,14 @@ def run_bot13_decision(prices, prev_closes, starting_capital, today_iso, prev_st
         log_entry = {
             "time":   time_label,
             "phase":  phase.upper(),
-            "action": f"CASH — LOW PROJECTED RETURN ({projected_return:.2f}%)",
+            "action": f"HOLD — LOW PROJECTED RETURN ({projected_return:.2f}%)",
             "detail": (f"Weighted projected return {projected_return:.2f}% ≤ "
                        f"{PROJ_RETURN_THRESHOLD}% threshold. "
-                       "Not enough edge to justify risk today. Sitting out."),
+                       "Not enough edge to justify risk today. Holding for the day."),
         }
         session_log = _append_log(prev_strategy, today_iso, log_entry)
-        return "CASH", [], [], (
-            f"CASH — projected return {projected_return:.2f}% ≤ "
+        return "HOLD", [], [], (
+            f"HOLD — projected return {projected_return:.2f}% ≤ "
             f"{PROJ_RETURN_THRESHOLD}% threshold. Not enough edge today."
         ), session_log, 0.0
 

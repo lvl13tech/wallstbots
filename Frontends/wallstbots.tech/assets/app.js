@@ -432,8 +432,8 @@ function renderStrategyPanel(fid, strat) {
       + (projRet > 0 ? '+' : '')+projRet.toFixed(2)+'%</span></div>'
     : '';
   let picks = '';
-  if (strat.decision === 'CASH') {
-    picks = '<div class="pick-card"><div class="pick-head"><div class="pick-sym">100% CASH</div><div class="pick-meta">No trade</div></div>'
+  if (strat.decision === 'CASH' || strat.decision === 'HOLD') {
+    picks = '<div class="pick-card"><div class="pick-head"><div class="pick-sym">100% CASH</div><div class="pick-meta">No positions — holding cash</div></div>'
       + '<div class="pick-rationale" style="color:var(--muted)">'+escapeHtml(strat.rationale||'')+'</div></div>';
   } else {
     picks = '<div class="pick-grid">' + (strat.picks||[]).map(p => {

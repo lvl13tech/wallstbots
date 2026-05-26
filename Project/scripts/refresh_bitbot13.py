@@ -684,7 +684,7 @@ def run_bot13_decision(prices, prev_closes, starting_capital, intraday_data=None
     top_picks = scored[:5]
 
     if not top_picks:
-        return "CASH", [], [], 0.0
+        return "HOLD", [], [], 0.0
 
     # ── Projected portfolio return gate ──────────────────────────────────────
     # Equal-weight avg of 24h momentum across top picks (entry = prev_close).
@@ -693,7 +693,7 @@ def run_bot13_decision(prices, prev_closes, starting_capital, intraday_data=None
         sum(mom_24h for _, _, _, _, mom_24h, _ in top_picks) / len(top_picks), 2
     )
     if projected_return <= PROJ_RETURN_THRESHOLD:
-        return "CASH", [], [], 0.0
+        return "HOLD", [], [], 0.0
 
     per = starting_capital / len(top_picks)
     positions, picks = [], []
