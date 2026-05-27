@@ -2671,4 +2671,32 @@ async def health_check():
     return {"status": "ok", "service": "Wall St. Bots API", "version": "2.0.0"}
 
 
-@app.get(
+@app.get("/health/db")
+async def health_check_db():
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")
+        cursor.fetchone()
+        return {
+            "status":    "healthy",
+            "database":  "connected",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+# ============================================================================
+# SHUTDOWN
+# ============================================================================
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    if db_pool:
+        db_pool.close()
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
