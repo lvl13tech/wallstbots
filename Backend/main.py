@@ -2408,7 +2408,7 @@ async def get_email_subscribers(
 
     conn = get_db_connection()
     try:
-        cursor = conn.cursor()
+        cursor = conn.cursor(row_factory=dict_row)
         cursor.execute("""
             SELECT u.id, u.email, u.full_name, u.role,
                    u.email_enabled, u.email_daily, u.email_bot13_alerts,

@@ -79,9 +79,10 @@ jobs:
           INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
           BACKEND_URL:      ${{ secrets.BACKEND_URL }}
           EVENT_NAME:       ${{ github.event_name }}
+          FORCE_SEND:       ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
         run: |
           HOUR=$(date -u +%H)
-          echo "=== Email dispatch check: event=$EVENT_NAME hour=${HOUR}UTC ==="
+          echo "=== Email dispatch check: event=$EVENT_NAME hour=${HOUR}UTC force=$FORCE_SEND ==="
           echo "=== Secrets present: RESEND=$([ -n "$RESEND_API_KEY" ] && echo YES || echo MISSING) BACKEND=$([ -n "$BACKEND_URL" ] && echo YES || echo MISSING) APIKEY=$([ -n "$INTERNAL_API_KEY" ] && echo YES || echo MISSING) ==="
           if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$HOUR" = "14" ]; then
             echo "=== Dispatching consolidated daily email ==="
