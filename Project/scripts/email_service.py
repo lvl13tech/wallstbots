@@ -212,21 +212,44 @@ def _wrap(platform: str, preheader: str, body_html: str) -> str:
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<meta name="color-scheme" content="dark"/>
+<meta name="color-scheme" content="dark light"/>
+<meta name="supported-color-schemes" content="dark light"/>
 <title>{site_name}</title>
+<style type="text/css">
+  /* Force dark across all email clients */
+  body, .em-body {{
+    background-color: #06080d !important;
+    color: #e6edf3 !important;
+  }}
+  /* Gmail web client targeting */
+  u + .em-body {{ background-color: #06080d !important; }}
+  /* Outlook dark mode */
+  [data-ogsc] .em-body {{ background-color: #06080d !important; }}
+  [data-ogsb] .em-body {{ background-color: #06080d !important; }}
+  /* Wrapper table */
+  .em-wrap {{ background-color: #06080d !important; }}
+  .em-center {{ background-color: #06080d !important; }}
+  /* Card sections */
+  .em-header {{ background-color: #0d1117 !important; }}
+  .em-content {{ background-color: #0d1117 !important; }}
+  .em-footer {{ background-color: #0a0e16 !important; }}
+  /* Inner tables (signal rows, picks, etc.) */
+  .em-table-head {{ background-color: #141b27 !important; }}
+  .em-table-row {{ background-color: #0d1117 !important; }}
+</style>
 </head>
-<body bgcolor="#06080d" style="margin:0;padding:0;background:#06080d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,system-ui,sans-serif;color:#e6edf3;-webkit-font-smoothing:antialiased;">
+<body class="em-body" bgcolor="#06080d" style="margin:0;padding:0;background-color:#06080d !important;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,system-ui,sans-serif;color:#e6edf3;-webkit-font-smoothing:antialiased;">
 
 <!-- preheader -->
 <span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</span>
 
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#06080d" style="background:#06080d;padding:28px 0 48px;">
-  <tr><td align="center" bgcolor="#06080d" style="background:#06080d;padding:0 16px;">
+<table class="em-wrap" width="100%" cellpadding="0" cellspacing="0" bgcolor="#06080d" style="background-color:#06080d !important;padding:28px 0 48px;">
+  <tr><td class="em-center" align="center" bgcolor="#06080d" style="background-color:#06080d !important;padding:0 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
 
       <!-- ── HEADER ── -->
       <tr>
-        <td bgcolor="#0d1117" style="background:#0d1117;border:1px solid #1e2633;border-bottom:2px solid #00d4ff;padding:18px 24px;border-radius:12px 12px 0 0;">
+        <td class="em-header" bgcolor="#0d1117" style="background-color:#0d1117 !important;border:1px solid #1e2633;border-bottom:2px solid #00d4ff;padding:18px 24px;border-radius:12px 12px 0 0;">
           <a href="{site_url}" style="text-decoration:none;font-size:20px;font-weight:800;color:#e6edf3;letter-spacing:-0.5px;">
             {_logo_html(platform)}
           </a>
@@ -236,14 +259,14 @@ def _wrap(platform: str, preheader: str, body_html: str) -> str:
 
       <!-- ── BODY ── -->
       <tr>
-        <td bgcolor="#0d1117" style="background:#0d1117;border-left:1px solid #1e2633;border-right:1px solid #1e2633;padding:28px 24px;">
+        <td class="em-content" bgcolor="#0d1117" style="background-color:#0d1117 !important;border-left:1px solid #1e2633;border-right:1px solid #1e2633;padding:28px 24px;">
           {body_html}
         </td>
       </tr>
 
       <!-- ── FOOTER ── -->
       <tr>
-        <td bgcolor="#0a0e16" style="background:#0a0e16;border:1px solid #1e2633;border-top:none;padding:20px 24px;border-radius:0 0 12px 12px;text-align:center;">
+        <td class="em-footer" bgcolor="#0a0e16" style="background-color:#0a0e16 !important;border:1px solid #1e2633;border-top:none;padding:20px 24px;border-radius:0 0 12px 12px;text-align:left;">
           <p style="font-size:11px;color:#7d8590;margin:0 0 8px;">
             You're receiving this because you're subscribed to {site_name}.
           </p>
@@ -548,21 +571,44 @@ def _wrap_consolidated(preheader: str, body_html: str) -> str:
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<meta name="color-scheme" content="dark"/>
+<meta name="color-scheme" content="dark light"/>
+<meta name="supported-color-schemes" content="dark light"/>
 <title>Wall St. Bots — Daily Report</title>
+<style type="text/css">
+  /* Force dark across all email clients */
+  body, .em-body {{
+    background-color: #06080d !important;
+    color: #e6edf3 !important;
+  }}
+  /* Gmail web client targeting */
+  u + .em-body {{ background-color: #06080d !important; }}
+  /* Outlook dark mode */
+  [data-ogsc] .em-body {{ background-color: #06080d !important; }}
+  [data-ogsb] .em-body {{ background-color: #06080d !important; }}
+  /* Wrapper tables */
+  .em-wrap {{ background-color: #06080d !important; }}
+  .em-center {{ background-color: #06080d !important; }}
+  /* Card sections */
+  .em-header {{ background-color: #0d1117 !important; }}
+  .em-content {{ background-color: #0d1117 !important; }}
+  .em-footer {{ background-color: #0a0e16 !important; }}
+  /* Inner tables */
+  .em-table-head {{ background-color: #141b27 !important; }}
+  .em-table-row {{ background-color: #0d1117 !important; }}
+</style>
 </head>
-<body bgcolor="#06080d" style="margin:0;padding:0;background:#06080d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,system-ui,sans-serif;color:#e6edf3;-webkit-font-smoothing:antialiased;">
+<body class="em-body" bgcolor="#06080d" style="margin:0;padding:0;background-color:#06080d !important;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,system-ui,sans-serif;color:#e6edf3;-webkit-font-smoothing:antialiased;">
 
 <!-- preheader -->
 <span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</span>
 
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#06080d" style="background:#06080d;padding:28px 0 48px;">
-  <tr><td align="center" bgcolor="#06080d" style="background:#06080d;padding:0 16px;">
+<table class="em-wrap" width="100%" cellpadding="0" cellspacing="0" bgcolor="#06080d" style="background-color:#06080d !important;padding:28px 0 48px;">
+  <tr><td class="em-center" align="center" bgcolor="#06080d" style="background-color:#06080d !important;padding:0 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
 
       <!-- ── HEADER ── -->
       <tr>
-        <td bgcolor="#0d1117" style="background:#0d1117;border:1px solid #1e2633;border-bottom:2px solid #00d4ff;padding:18px 24px;border-radius:12px 12px 0 0;">
+        <td class="em-header" bgcolor="#0d1117" style="background-color:#0d1117 !important;border:1px solid #1e2633;border-bottom:2px solid #00d4ff;padding:18px 24px;border-radius:12px 12px 0 0;">
           <a href="https://wallstbots.tech" style="text-decoration:none;font-size:20px;font-weight:800;color:#e6edf3;letter-spacing:-0.5px;">
             Wall St. <span style="color:#00d4ff;">Bots</span>
           </a>
@@ -572,14 +618,14 @@ def _wrap_consolidated(preheader: str, body_html: str) -> str:
 
       <!-- ── BODY ── -->
       <tr>
-        <td bgcolor="#0d1117" style="background:#0d1117;border-left:1px solid #1e2633;border-right:1px solid #1e2633;padding:28px 24px;">
+        <td class="em-content" bgcolor="#0d1117" style="background-color:#0d1117 !important;border-left:1px solid #1e2633;border-right:1px solid #1e2633;padding:28px 24px;">
           {body_html}
         </td>
       </tr>
 
       <!-- ── FOOTER ── -->
       <tr>
-        <td bgcolor="#0a0e16" style="background:#0a0e16;border:1px solid #1e2633;border-top:none;padding:20px 24px;border-radius:0 0 12px 12px;text-align:center;">
+        <td class="em-footer" bgcolor="#0a0e16" style="background-color:#0a0e16 !important;border:1px solid #1e2633;border-top:none;padding:20px 24px;border-radius:0 0 12px 12px;text-align:left;">
           <p style="font-size:11px;color:#7d8590;margin:0 0 6px;">
             You're receiving this because you're subscribed to Wall St. Bots.
           </p>
@@ -670,9 +716,8 @@ def _portfolio_section(recipient: dict) -> str:
         signals = recipient.get(f"portfolio_signals_{plat}", [])
         if not signals:
             continue
-        pill = f'<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:rgba(0,0,0,0.3);border:1px solid {color};color:{color};font-size:9px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;margin-left:8px;">{label}</span>'
         blocks.append(
-            f'<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.7px;color:#7d8590;margin:16px 0 8px;">Your Portfolio{pill}</div>'
+            f'<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.7px;color:{color};margin:16px 0 8px;text-align:left;">{label} Signals</div>'
             + _compact_signals_table(signals, max_rows=10)
         )
 
