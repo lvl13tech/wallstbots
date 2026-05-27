@@ -2312,7 +2312,7 @@ class EmailPrefsUpdate(BaseModel):
 async def get_email_prefs(current_user: dict = Depends(get_current_user)):
     conn = get_db_connection()
     try:
-        cursor = conn.cursor()
+        cursor = conn.cursor(row_factory=dict_row)
         cursor.execute("""
             SELECT email_enabled, email_daily, email_bot13_alerts,
                    email_weekly, email_monthly,
@@ -2321,7 +2321,18 @@ async def get_email_prefs(current_user: dict = Depends(get_current_user)):
         """, (current_user["user_id"],))
         row = cursor.fetchone()
         if not row:
-            raise HTTPException(status_code=404, detail="User not found")
+            # User exists in auth but not yet in users table — return defaults
+            return {
+                "email_enabled":      True,
+                "email_daily":        True,
+                "email_bot13_alerts": True,
+                "email_weekly":       True,
+                "email_monthly":      True,
+                "email_portfolio":    True,
+                "email_wallstbots":   True,
+                "email_bitbot13":     True,
+                "email_lvl13":        True,
+            }
         return {
             "email_enabled":      row["email_enabled"],
             "email_daily":        row["email_daily"],
@@ -2357,13 +2368,22 @@ async def update_email_prefs(
     if not fields:
         raise HTTPException(status_code=400, detail="No fields to update")
 
-    values.append(current_user["user_id"])
+    user_id = current_user["user_id"]
+    user_email = current_user.get("email") or ""
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
+        # Ensure the user row exists before updating prefs
+        # (handles users who exist in auth.users but not yet in public.users)
+        cursor.execute("""
+            INSERT INTO users (id, email)
+            VALUES (%s, %s)
+            ON CONFLICT (id) DO NOTHING
+        """, (user_id, user_email))
+
         cursor.execute(
             f"UPDATE users SET {', '.join(fields)}, updated_at = NOW() WHERE id = %s",
-            values
+            values + [user_id]
         )
         conn.commit()
         return {"success": True}
@@ -2651,32 +2671,4 @@ async def health_check():
     return {"status": "ok", "service": "Wall St. Bots API", "version": "2.0.0"}
 
 
-@app.get("/health/db")
-async def health_check_db():
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT 1")
-        cursor.fetchone()
-        return {
-            "status":    "healthy",
-            "database":  "connected",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-    finally:
-        cursor.close()
-        return_db_connection(conn)
-
-# ============================================================================
-# SHUTDOWN
-# ============================================================================
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    if db_pool:
-        db_pool.close()
-
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+@app.get(
