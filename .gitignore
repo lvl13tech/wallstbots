@@ -1,5 +1,5 @@
-".env" 
-"supabase.env" 
+".env"
+"supabase.env"
 
 Backend/.env
 *.env
@@ -11,3 +11,31 @@ secrets.json
 # Admin utility — reads creds from Backend/.env, must not be committed
 reset_admin.py
 reset-admin-result.txt
+
+# ── Deploy/push scripts (local use only, not source) ──────────────────────────
+*.bat
+
+# ── Local notes & docs ────────────────────────────────────────────────────────
+LVL13-CLOUDFLARE-SETUP.txt
+TESTER_GUIDE.txt
+PROJECT.md
+upload-lvl13-result.txt
+
+# ── Junk artifacts from bat script mis-fires ──────────────────────────────────
+'Open
+'type
+-STOP_LOSS_PCT
+1.5
+10
+25
+5
+BOT13
+ORACLE
+New
+Support
+chatbotOpen()
+directs
+retry
+logo.svg
+lvl13.tech/
+wallstbots/
