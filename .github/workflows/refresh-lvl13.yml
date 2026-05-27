@@ -71,6 +71,25 @@ jobs:
           git diff --staged --quiet || git commit -m "auto: lvl13 data refresh [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push
 
-      # Email dispatch removed — consolidated daily email is sent by refresh-wallstbots.yml only.
+      - name: Send daily email notifications
+        # Scheduled: only sends at 14:xx UTC to avoid duplicates with wallstbots.yml.
+        # Manual (workflow_dispatch): always sends — useful for testing.
+        env:
+          RESEND_API_KEY:   ${{ secrets.RESEND_API_KEY }}
+          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+          BACKEND_URL:      ${{ secrets.BACKEND_URL }}
+          EVENT_NAME:       ${{ github.event_name }}
+        run: |
+          HOUR=$(date -u +%H)
+          echo "=== Email dispatch check: event=$EVENT_NAME hour=${HOUR}UTC ==="
+          echo "=== Secrets present: RESEND=$([ -n "$RESEND_API_KEY" ] && echo YES || echo MISSING) BACKEND=$([ -n "$BACKEND_URL" ] && echo YES || echo MISSING) APIKEY=$([ -n "$INTERNAL_API_KEY" ] && echo YES || echo MISSING) ==="
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$HOUR" = "14" ]; then
+            echo "=== Dispatching consolidated daily email ==="
+            python -m pip install --quiet requests
+            python Project/scripts/send_emails.py
+          else
+            echo "=== Skipping email dispatch (scheduled run at hour=$HOUR, not 14:xx UTC) ==="
+          fi
+
       # Deploy note: lvl13.tech is on Cloudflare Pages (migrated May 2026).
       # Pushing Frontends/lvl13.tech/data/ here auto-deploys via Cloudflare — no FTP needed.
