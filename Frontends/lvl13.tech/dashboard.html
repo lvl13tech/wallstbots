@@ -1328,7 +1328,7 @@
     } catch(e){document.getElementById("newsList").innerHTML=`<p style="color:var(--muted);font-size:0.85rem">Could not load news.</p>`;}
   }
 
-  function openDrawer(){document.getElementById("accountDrawer").classList.add("open");document.getElementById("drawerOverlay").classList.add("open");document.body.style.overflow="hidden";}
+  function openDrawer(){document.getElementById("accountDrawer").classList.add("open");document.getElementById("drawerOverlay").classList.add("open");document.body.style.overflow="hidden"; loadEmailPrefs();}
   function closeDrawer(){document.getElementById("accountDrawer").classList.remove("open");document.getElementById("drawerOverlay").classList.remove("open");document.body.style.overflow="";}
   function openPwModal(){
     document.getElementById("pwModal").classList.add("open");
