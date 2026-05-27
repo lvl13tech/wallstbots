@@ -1044,7 +1044,6 @@ def main():
         and b13_prev_strategy.get("decision") == "TRADE"
         and bool(stored_positions)
         and not stops_triggered
-        and window_open
     )
 
     if b13_inception > today_iso:
@@ -1052,12 +1051,12 @@ def main():
         prev_b13_total = sc_global
         print(f"  BOT13: HOLD (pre-inception, starts {b13_inception})")
     elif not window_open:
-        # Outside 9am-9pm ET — hold cash, keep last session's positions for display
-        b13_decision  = "HOLD"
+        # Outside trading window — carry forward last session's decision and positions
+        b13_decision  = b13_prev_strategy.get("decision", "HOLD")
         b13_positions = stored_positions  # preserve for receipt display
         b13_picks     = b13_prev_strategy.get("picks", [])
         b13_proj      = float(b13_prev_strategy.get("projected_return", 0.0))
-        print(f"  BOT13: HOLD (outside trading window {TRADING_WINDOW_START}am-{TRADING_WINDOW_END-12}pm ET)")
+        print(f"  BOT13: {b13_decision} (outside trading window {TRADING_WINDOW_START}am-{TRADING_WINDOW_END-12}pm ET — carrying forward last session)")
     elif stops_triggered:
         # Stop-loss triggered — mark stopped positions and open fresh picks
         now_exit = dt.datetime.utcnow().isoformat(timespec="seconds") + "Z"

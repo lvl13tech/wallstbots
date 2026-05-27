@@ -366,7 +366,10 @@ function renderFund(fid) {
   }
 
   const holdingCash = v.holding_cash === true;
-  const cashRow = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>';
+  const windowOpen = v.window_open !== false;
+  const cashRow = windowOpen
+    ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
+    : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>';
   const positionRows = (v.positions || []).length
     ? v.positions.map(p => {
         const entry  = p.entry_price || p.entry || 0;
