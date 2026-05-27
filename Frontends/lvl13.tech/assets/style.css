@@ -419,6 +419,12 @@ td.num, th.num { text-align: right; }
 }
 .footer-fine .dot { opacity: 0.5; }
 .footer-fine a { color: var(--blue); }
+.footer-network { width: 100%; padding-top: 14px; border-top: 1px solid var(--border); }
+.footer-network-label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.footer-network-links { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.footer-network-links a { font-size: 13px; font-weight: 600; color: var(--blue); text-decoration: none; transition: opacity 0.2s; }
+.footer-network-links a:hover { opacity: 0.75; }
+.footer-network-current { font-size: 13px; font-weight: 600; color: var(--muted); }
 
 /* ============ CHATBOT WIDGET ============ */
 .chatbot-toggle {
@@ -552,7 +558,7 @@ td.num, th.num { text-align: right; }
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
-  .lb-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .lb-strip { grid-template-columns: 1fr; gap: 8px; }
   .lb-strip a.card { padding: 12px; }
   .lb-strip .fund-icon { width: 28px; height: 28px; font-size: 11px; }
   .lb-strip .lb-name strong { font-size: 13px; }
@@ -600,17 +606,4 @@ td.num, th.num { text-align: right; }
 
 /* ================================================================
    MOBILE — TINY PHONES (≤380px)
-   ================================================================ */
-@media (max-width: 380px) {
-  .grid-2, .grid-3, .grid-4, .grid-5, .lb-strip { grid-template-columns: 1fr; }
-  .hero h1 { font-size: 20px; }
-  .fund-value { font-size: 17px; }
-}
-
-/* ================================================================
-   ACCESSIBILITY — reduced motion
-   ================================================================ */
-@media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; animation: none !important; }
-  .card.clickable:hover, .btn:hover, .chatbot-toggle:hover { transform: none; }
-}
+   ========

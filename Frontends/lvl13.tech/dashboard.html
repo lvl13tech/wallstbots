@@ -533,8 +533,6 @@
     <a href="/" class="logo">Level XIII <span>Tech</span></a>
     <nav>
       <a href="dashboard.html" class="active">Portfolios</a>
-      <a href="/#/race">Markets</a>
-      <a href="/#/signals">News</a>
       <a href="#" id="wmNavLink" style="display:none;color:#a78bfa" onclick="toggleWmSection(event)">⚡ Command</a>
     </nav>
 
@@ -584,8 +582,6 @@
 <!-- ─── MOBILE NAV ─── -->
 <div class="mob-nav" id="mobNav">
   <a href="dashboard.html" class="active">Portfolios</a>
-  <a href="/#/race">Markets</a>
-  <a href="/#/signals">News</a>
   <hr class="mob-nav-sep">
   <a href="#" id="wmNavLinkMob" style="display:none;color:#a78bfa" onclick="closeMobNav();toggleWmSection(event)">⚡ Command Center</a>
 </div>
@@ -856,35 +852,6 @@
     </div>
   </div>
 
-  <!-- Live Bot Session -->
-  <div class="section-title">📡 Live Bot Session</div>
-  <div id="botSessionBanner" class="session-banner">
-    <div class="session-banner-dot"></div>
-    <span class="session-banner-label" style="color:var(--muted)">Loading session…</span>
-  </div>
-  <div class="session-summary" id="botSessionSummary" style="display:none">
-  </div>
-  <div id="botPosContainer" style="margin-bottom:32px">
-    <div class="bot-pos-empty">Loading positions…</div>
-  </div>
-
-  <div class="section-title">Tech &amp; AI News</div>
-  <div class="news-list" id="newsList">
-    <div class="news-item">
-      <div class="skeleton" style="width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0"></div>
-      <div class="news-content">
-        <div class="skeleton" style="width:90%;height:16px;margin-bottom:6px"></div>
-        <div class="skeleton" style="width:40%;height:12px"></div>
-      </div>
-    </div>
-    <div class="news-item">
-      <div class="skeleton" style="width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0"></div>
-      <div class="news-content">
-        <div class="skeleton" style="width:80%;height:16px;margin-bottom:6px"></div>
-        <div class="skeleton" style="width:35%;height:12px"></div>
-      </div>
-    </div>
-  </div>
 </main>
 
 <!-- ─── WEBMASTER COMMAND CENTER ─── -->
@@ -1063,8 +1030,6 @@
     checkWebmaster();
     renderSubscription();
     await loadPortfolios();
-    loadNews();
-    loadBotSession();
   }
 
   async function loadProfile() {

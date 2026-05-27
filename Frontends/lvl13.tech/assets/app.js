@@ -373,6 +373,36 @@ function drawTrajectory() {
   });
 }
 
+// ── Oracle cash-window helper ─────────────────────────────────────────────────
+// Returns true only during the weekend gap: Sat 3:01 AM → Mon market open ET.
+function oracleInCashWindow() {
+  const etDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/New_York"}));
+  const day = etDate.getDay();
+  const minuteOfDay = etDate.getHours() * 60 + etDate.getMinutes();
+  const CUTOFF = 3 * 60 + 1;   // 3:01 AM
+  const OPEN   = 9 * 60 + 30;  // 9:30 AM
+  if (day === 0) return true;                  // Sunday: always cash
+  if (day === 6) return minuteOfDay >= CUTOFF; // Sat: cash after 3:01 AM
+  if (day === 1) return minuteOfDay < OPEN;    // Mon: cash before market open
+  return false;                                // Tue–Fri: show positions
+}
+
+// ── Bot13 cash-window helper ──────────────────────────────────────────────────
+// Returns true when bot13 holdings should be hidden and "Holding cash" shown.
+// Active display window: trade time → 3:00 AM ET (Mon–Sat morning)
+// Cash window: 3:01 AM ET → next trade (and all weekend)
+function bot13InCashWindow() {
+  const etDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/New_York"}));
+  const day = etDate.getDay();                          // 0=Sun 1=Mon … 6=Sat
+  const minuteOfDay = etDate.getHours() * 60 + etDate.getMinutes();
+  const CUTOFF = 3 * 60 + 1;                           // 3:01 AM = 181 min
+  const OPEN   = 9 * 60 + 30;                          // 9:30 AM = 570 min
+  if (day === 0) return true;                           // Sunday: always cash
+  if (day === 6) return minuteOfDay >= CUTOFF;          // Sat: cash after 3:01 AM
+  if (day === 1) return minuteOfDay < OPEN;             // Mon: cash before market open
+  return (minuteOfDay >= CUTOFF && minuteOfDay < OPEN); // Tue–Fri: cash 3:01–9:29 AM
+}
+
 // ============ PAGE: INDIVIDUAL FUND ============
 function renderFund(fid) {
   const data = STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null;
@@ -386,10 +416,16 @@ function renderFund(fid) {
   }
 
   // Holdings table — graceful fallback for missing price/value
-  const holdingCash = v.holding_cash === true;
-  const cashRow = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>';
-  const positionRows = (v.positions || []).length
-    ? v.positions.map(p => {
+  // Bot13: use time-based cash window to control display (not just the backend flag)
+  const inCashWindow    = ((fid === 'bot13') && bot13InCashWindow()) ||
+                          ((fid === 'oracle') && oracleInCashWindow());
+  const displayPositions = !inCashWindow ? (v.positions || []) : [];
+  const windowOpen = v.window_open !== false;
+  const cashRow = windowOpen
+    ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
+    : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>';
+  const positionRows = displayPositions.length
+    ? displayPositions.map(p => {
         const entry  = p.entry_price || p.entry || 0;
         const price  = p.price || entry;  // fall back to entry if live price missing
         const shares = p.shares || 0;
@@ -407,7 +443,7 @@ function renderFund(fid) {
           + '<td class="num '+cls(dayPnl)+'">'+fmtPct(dayPct)+'</td>'
           + '<td class="num '+cls(pnl)+'">'+fmt$0(pnl)+'</td>'
           + '<td class="num '+cls(pnlPct)+'">'+fmtPct(pnlPct)+'</td></tr>';
-      }).join('') + (holdingCash ? cashRow : '')
+      }).join('')
     : cashRow;
 
   $('app').innerHTML =
@@ -442,9 +478,19 @@ function renderStrategyPanel(fid, strat) {
   const label  = fid==='bot13' ? "TODAY'S STRATEGY"
                : fid==='oracle' ? "THIS WEEK'S STRATEGY"
                : "THIS MONTH'S STRATEGY";
+  const projLabel = fid==='bot13' ? 'Projected Return'
+                  : fid==='oracle' ? 'Projected Week Return'
+                  : 'Projected Month Return';
+  const projRet = strat.projected_return;
+  const projHtml = (projRet != null)
+    ? '<div style="margin:6px 0 10px;font-size:13px">'
+      + '<span style="color:var(--muted)">'+projLabel+': </span>'
+      + '<span style="font-weight:700;color:'+(projRet > 0 ? 'var(--green)' : 'var(--red)')+'">'
+      + (projRet > 0 ? '+' : '')+projRet.toFixed(2)+'%</span></div>'
+    : '';
   let picks = '';
-  if (strat.decision === 'CASH') {
-    picks = '<div class="pick-card"><div class="pick-head"><div class="pick-sym">100% CASH</div><div class="pick-meta">No trade</div></div>'
+  if (strat.decision === 'CASH' || strat.decision === 'HOLD') {
+    picks = '<div class="pick-card"><div class="pick-head"><div class="pick-sym">100% CASH</div><div class="pick-meta">No positions — holding cash</div></div>'
       + '<div class="pick-rationale" style="color:var(--muted)">'+escapeHtml(strat.rationale||'')+'</div></div>';
   } else {
     picks = '<div class="pick-grid">' + (strat.picks||[]).map(p => {
@@ -465,6 +511,7 @@ function renderStrategyPanel(fid, strat) {
   }
   return '<div class="strategy-panel '+fid+'"><h3>'+label+'</h3>'
     + '<div class="strategy-meta">'+escapeHtml(period)+' · '+escapeHtml(strat.decision||'')+'</div>'
+    + projHtml
     + '<p class="strategy-rationale">'+escapeHtml(strat.rationale||'')+'</p>'+picks+'</div>';
 }
 
@@ -559,11 +606,11 @@ const PRICING = {
 };
 const TIER_META = {
   member:    { label:'MEMBER',    color:'#00d4ff', popular:false,
-               features:['1 portfolio','Stocks or crypto','Full bot signal history','Daily alerts'] },
+               features:['5 portfolios','Stocks or crypto','Full bot signal history','Daily alerts'] },
   insider:   { label:'INSIDER',   color:'#a855f7', popular:false,
-               features:['3 portfolios','Mix stocks &amp; crypto','Priority signals','Analytics dashboard'] },
+               features:['10 portfolios','Mix stocks &amp; crypto','Priority signals','Analytics dashboard'] },
   syndicate: { label:'SYNDICATE', color:'#ff8c00', popular:true,
-               features:['Up to 10 portfolios','All 5 bots active','All 3 platforms','Max signal coverage','First access to features'] },
+               features:['Up to 25 portfolios','All 5 bots active','All 3 platforms','Max signal coverage','First access to features'] },
 };
 let GY_CYCLE      = 'monthly';
 let GY_TIER       = 'member';
@@ -594,7 +641,9 @@ function renderGetYours() {
     + '<div style="flex:1 1 240px">'
     + '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">FREE</div>'
     + '<div style="font-size:26px;font-weight:800;color:var(--fg)">$0</div>'
-    + '<div style="font-size:13px;color:var(--muted);margin-top:4px">Follow a real AI trading bot for free. Get daily Buy/Hold/Sell signals straight to your inbox and see exactly how Bot13 trades every market day.</div>'
+    + '<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);border-radius:6px;padding:4px 10px;margin:8px 0 6px 0">'
+    + '<span style="color:#10b981;font-weight:700;font-size:13px">✓ 1 Portfolio Included</span></div>'
+    + '<div style="font-size:13px;color:var(--muted);margin-top:4px">Start free with your own portfolio tracker. Get daily Buy/Hold/Sell signals straight to your inbox and see exactly how Bot13 trades every market day.</div>'
     + '</div>'
     + '<div style="flex:1 1 240px;min-width:0">'
     + '<input id="freeEmail" type="email" placeholder="Enter your email" '
@@ -1182,7 +1231,7 @@ function renderThanks() {
 // CHATBOT — FAQ engine
 // ================================================================
 const FAQS = [
-  { q: ['price','cost','how much','pricing','member','insider','syndicate'], a: "MEMBER: $49.99/mo or $499/yr (1 portfolio). INSIDER: $69.99/mo or $699/yr (3 portfolios). SYNDICATE: $99.99/mo or $899/yr (up to 10 portfolios, all 3 platforms). FREE tier available — daily signals by email at no cost." },
+  { q: ['price','cost','how much','pricing','member','insider','syndicate'], a: "MEMBER: $49.99/mo or $499/yr (5 portfolios). INSIDER: $69.99/mo or $699/yr (10 portfolios). SYNDICATE: $99.99/mo or $899/yr (up to 25 portfolios, all 3 platforms). FREE tier: 1 portfolio included + daily signals by email at no cost." },
   { q: ['referral','refer','code','discount'], a: "Share your referral code and earn $35 credit per friend who subscribes — automatically applied to your next bill. Your friend gets 50% off their first month or $100 off an annual plan. No cap on referrals." },
   { q: ['cancel','refund','stop'], a: "Cancel anytime from your PayPal account → Settings → Automatic Payments. No further charges after cancellation." },
   { q: ['stocks','tickers','how many','add','holding','what can i add'], a: "Add any Nasdaq/NYSE-listed stock — with a focus on AI, quantum computing, semiconductors, and emerging tech. You can also add any other U.S.-listed ticker. Up to 50 holdings per portfolio. Each gets a $1,000 paper allocation." },
@@ -1214,6 +1263,62 @@ function chatbotAddMsg(text, who) {
   body.appendChild(div);
   body.scrollTop = body.scrollHeight;
 }
+
+// ── Support ticket chatbot flow ───────────────────────────────────────────────
+let _ticketState = null; // null | 'awaiting_issue' | 'awaiting_email'
+let _ticketIssue = '';
+function _ticketEmail() {
+  const tok = localStorage.getItem('auth_token') || localStorage.getItem('lvl13_jwt');
+  if (!tok) return null;
+  try { return JSON.parse(atob(tok.split('.')[1])).email || null; } catch { return null; }
+}
+function _ticketName() {
+  const tok = localStorage.getItem('auth_token') || localStorage.getItem('lvl13_jwt');
+  if (!tok) return null;
+  try {
+    const p = JSON.parse(atob(tok.split('.')[1]));
+    return (p.user_metadata && (p.user_metadata.full_name || p.user_metadata.name)) || null;
+  } catch { return null; }
+}
+async function _ticketSubmit(email, name, issue) {
+  chatbotAddMsg('Opening your ticket…', 'bot');
+  try {
+    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/support/ticket', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim(), name: name || null, issue, platform: PLATFORM })
+    });
+    const d = await r.json();
+    if (r.ok && d.ticket_number) {
+      chatbotAddMsg('✓ Ticket ' + d.ticket_number + ' opened. A confirmation is on its way to your email — our team will reach out within 24 hours.', 'bot');
+    } else {
+      chatbotAddMsg('Could not create the ticket right now — please try again in a moment.', 'bot');
+    }
+  } catch {
+    chatbotAddMsg('Connection error — please try again in a moment.', 'bot');
+  }
+  _ticketState = null;
+  _ticketIssue = '';
+}
+const TICKET_TRIGGERS = ['support ticket','open ticket','submit ticket','create ticket','file a ticket','contact support','tech support','speak to someone','talk to someone','real person','human support','support'];
+function chatHandleInput(q) {
+  const ql = q.toLowerCase().trim();
+  if (_ticketState === 'awaiting_issue') {
+    _ticketIssue = q;
+    const email = _ticketEmail();
+    if (email) { _ticketSubmit(email, _ticketName(), q); }
+    else { _ticketState = 'awaiting_email'; chatbotAddMsg('Got it. What email address can our team reach you at?', 'bot'); }
+    return;
+  }
+  if (_ticketState === 'awaiting_email') { _ticketSubmit(q, null, _ticketIssue); return; }
+  if (TICKET_TRIGGERS.some(t => ql.includes(t))) {
+    _ticketState = 'awaiting_issue';
+    chatbotAddMsg('I’ll open a support ticket right now. Briefly describe the issue you’re experiencing:', 'bot');
+    return;
+  }
+  chatbotAddMsg(botAnswer(q), 'bot');
+}
+
 function chatbotRenderQuick() {
   const wrap = $('chatbotQuick'); if (!wrap) return;
   const quick = ['Pricing', 'Stocks', 'Bots', 'Cancel', 'Support'];
@@ -1222,7 +1327,7 @@ function chatbotRenderQuick() {
     btn.addEventListener('click', () => {
       const q = btn.getAttribute('data-q');
       chatbotAddMsg(q, 'user');
-      chatbotAddMsg(botAnswer(q), 'bot');
+      setTimeout(() => chatHandleInput(q), 250);
     });
   });
 }
@@ -1263,11 +1368,11 @@ function wireUI() {
   if (cf) cf.addEventListener('submit', (e) => {
     e.preventDefault();
     const inp = $('chatbotInput');
-    const q = inp ? inp.value : '';
-    if (!q.trim()) return;
+    const q = inp ? inp.value.trim() : '';
+    if (!q) return;
     chatbotAddMsg(q, 'user');
-    setTimeout(() => chatbotAddMsg(botAnswer(q), 'bot'), 250);
     if (inp) inp.value = '';
+    setTimeout(() => chatHandleInput(q), 250);
   });
 
   chatbotRenderQuick();
@@ -1282,25 +1387,11 @@ function wireUI() {
 }
 
 function updateNavAuth() {
-  // Insert "My Tracker" link in nav if logged in, remove if not
+  // Remove any stale "My Tracker" link — Dashboard is the members entry point
   const nav = document.getElementById('siteNav');
   if (!nav) return;
   const existing = nav.querySelector('[data-route="/my-tracker"]');
-  if (isLoggedIn()) {
-    if (!existing) {
-      const a = document.createElement('a');
-      a.href = '#/my-tracker';
-      a.setAttribute('data-route', '/my-tracker');
-      a.textContent = 'My Tracker';
-      a.style.color = 'var(--blue)';
-      // Insert before the "Get Yours" CTA
-      const cta = nav.querySelector('.cta');
-      nav.insertBefore(a, cta || null);
-      a.addEventListener('click', () => closeMenu());
-    }
-  } else {
-    if (existing) existing.remove();
-  }
+  if (existing) existing.remove();
 }
 
 // Mirror bitbot13/wallstbots nav toggle for the static Log In / Dashboard buttons in index.html

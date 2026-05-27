@@ -68,9 +68,6 @@
       .hero-ctas { flex-wrap: wrap; gap: 8px; }
       .hero-ctas .btn { flex: 1; min-width: 140px; text-align: center; justify-content: center; }
       .section-head { flex-wrap: wrap; gap: 8px; }
-      .btn-add-holding, .btn-del-portfolio { width: 100%; text-align: center; }
-      .panel[style*="overflow:hidden"] { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
-      .holdings-head { flex-wrap: wrap; gap: 8px; padding: 12px 14px; }
       .search-box { padding: 16px; max-width: 100%; }
       .search-actions { flex-direction: column-reverse; gap: 8px; }
       .search-actions button { width: 100%; }
@@ -90,25 +87,42 @@
     /* ── Chart ── */
     .chart-wrap { min-height: 280px; position: relative; }
 
-    /* ── Holdings table wrapper ── */
-    .holdings-section { margin-top: 12px; }
-    .holdings-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); }
-    .holdings-title { font-size: 0.9rem; font-weight: 600; }
-    .status-dot { display: inline-flex; align-items: center; gap: 5px; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: rgba(0,212,255,0.1); border: 1px solid var(--blue); color: var(--blue); }
-    .btn-add-holding { background: var(--blue); border: none; color: var(--bg); border-radius: 8px; padding: 8px 16px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
-    .btn-add-holding:hover { background: #00b8e0; }
-    .btn-del-portfolio { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 8px 14px; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-    .btn-del-portfolio:hover { border-color: var(--red); color: var(--red); }
-    .empty-holdings { padding: 40px; text-align: center; color: var(--muted); font-size: 0.9rem; }
-
     /* ── Signals note ── */
     .signals-note { font-size: 0.72rem; color: var(--muted); margin-top: 8px; font-style: italic; }
 
-    /* ── Bot Analysis cards ── */
-    .bot-pick-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; font-size: 0.82rem; border-bottom: 1px solid var(--border); }
-    .bot-pick-row:last-child { border-bottom: none; }
-    .bot-pick-tag { font-weight: 700; font-size: 0.82rem; }
-    .bot-coverage-picks { margin-top: 4px; }
+    /* ── Portfolio Holdings chips ── */
+    .holdings-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 16px 18px;
+    }
+    .holding-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 0.82rem;
+      transition: border-color 0.15s;
+    }
+    .holding-chip:hover { border-color: var(--blue); }
+    .holding-chip strong { font-weight: 700; font-size: 0.85rem; }
+    .holding-chip small { color: var(--muted); font-size: 0.72rem; }
+    .holding-chip-remove {
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; padding: 0 0 0 2px; font-size: 1rem;
+      line-height: 1; transition: color 0.15s; display: flex; align-items: center;
+    }
+    .holding-chip-remove:hover { color: var(--red); }
+    .holdings-footer {
+      padding: 10px 18px 14px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .holdings-footer-label { font-size: 0.72rem; color: var(--muted); }
 
     /* ── Account Drawer ── */
     .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 400; }
@@ -316,10 +330,9 @@
     </div>
   </section>
 
-  <!-- 2. Live Leaderboard — Today (same as homepage) -->
+  <!-- 2. Live Leaderboard — Today -->
   <div class="section-head">
     <h3>Live Leaderboard — Today</h3>
-    <a class="more" href="/#/race">View all →</a>
   </div>
   <div class="lb-strip" id="lbStrip">
     <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading leaderboard…</div>
@@ -334,45 +347,42 @@
     <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading bot analysis…</div>
   </div>
 
-  <!-- 4. Signals on Your Holdings -->
+  <!-- 4. Signals — Today -->
   <div class="section-head" style="margin-top:28px">
-    <h3>Signals on Your Holdings — Today</h3>
-    <a class="more" href="/#/signals">View all signals →</a>
+    <h3>Signals — Today</h3>
   </div>
   <div class="signals-today" id="signalsToday">
     <div class="card" style="color:var(--muted);font-size:0.82rem">Loading signals…</div>
   </div>
   <div class="signals-note" id="signalsNote"></div>
 
-  <!-- 5. News on Your Holdings -->
+  <!-- 4. News — Today -->
   <div class="section-head" style="margin-top:28px">
-    <h3>News on Your Holdings</h3>
-    <a class="more" href="/#/news-all">More news →</a>
+    <h3>News — Today</h3>
   </div>
   <div class="news-grid" id="newsGrid">
     <div class="card" style="color:var(--muted);font-size:0.82rem">Loading news…</div>
   </div>
 
-  <!-- 6. The Race -->
+  <!-- 5. The Race -->
   <div class="section-head" style="margin-top:28px">
     <h3>The Race</h3>
-    <a class="more" href="/#/race">Full standings →</a>
   </div>
   <div class="grid grid-5" id="raceGrid">
     <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading race…</div>
   </div>
 
-  <!-- 7. Portfolio Performance Chart -->
+  <!-- 6. Performance Trajectory — All 5 Strategies -->
   <div class="panel" style="margin-top:18px">
-    <h3 id="chartTitle">Portfolio Performance</h3>
+    <h3 id="chartTitle">Performance Trajectory — All 5 Strategies</h3>
     <div class="chart-wrap" style="min-height:240px" id="chartWrap">
       <canvas id="chartPortfolio"></canvas>
     </div>
   </div>
 
-  <!-- 8. Your Holdings -->
+  <!-- 8. Portfolio Holdings -->
   <div class="section-head" style="margin-top:32px">
-    <h3>Your Holdings &nbsp;<span id="holdingsCount" style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:0.78rem"></span></h3>
+    <h3>Portfolio Holdings &nbsp;<span id="holdingsCount" style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:0.78rem"></span></h3>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="btn-del-portfolio" onclick="openDeleteModal()">Delete Portfolio</button>
       <button class="btn-add-holding" onclick="openSearchModal()">+ Add Holding</button>
@@ -431,7 +441,6 @@ if (!BOT_ID) { window.location.href = "dashboard.html"; }
 // ── Shared state ─────────────────────────────────────────────────────────────
 let botData = null, holdings = [], userProfile = null;
 let selectedSymbol = null, searchTimer = null;
-let allocChart = null;
 const CHARTS_BD = {};
 const STATE = { funds: null, news: null, signals: null };
 
@@ -480,7 +489,6 @@ async function init() {
   try { userProfile = await api.getUserProfile(); renderProfile(); } catch(e) {}
   try { loadReferralCode(); } catch(e) {}
   try { loadSubscriptionInfo(); } catch(e) {}
-  // loadBot first so holdings are available before bot analysis renders
   await loadBot();
   await loadSiteData();
 }
@@ -568,8 +576,11 @@ function renderHero() {
   document.getElementById('hsHoldings').textContent = holdings.length + ' / 50';
 }
 
+// ── Holdings table ────────────────────────────────────────────────────────────
 function renderHoldings() {
   const wrap = document.getElementById('holdingsWrap');
+  const countEl = document.getElementById('holdingsCount');
+  if (countEl) countEl.textContent = '(' + holdings.length + ' of 50)';
   if (!holdings.length) {
     wrap.innerHTML = '<div class="empty-holdings">No holdings yet. Click <strong>+ Add Holding</strong> to get started.</div>';
     return;
@@ -583,28 +594,27 @@ function renderHoldings() {
     + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Entry</th>'
     + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Current</th>'
     + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Return</th>'
-    + '<th style="padding:10px 16px;border-bottom:1px solid var(--border)"></th>'
-    + '</tr></thead>'
-    + '<tbody>'
+    + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)"></th>'
+    + '</tr></thead><tbody>'
     + holdings.map(h => {
-        const alloc   = h.weight || 1000;
-        const entry   = h.entry_price   != null ? '$' + parseFloat(h.entry_price).toFixed(2)   : '—';
-        const current = h.current_price != null ? '$' + parseFloat(h.current_price).toFixed(2) : '—';
-        let retPct = '—', retClass = '';
-        if (h.entry_price != null && h.current_price != null && h.entry_price > 0) {
-          const pct = ((h.current_price - h.entry_price) / h.entry_price) * 100;
-          retPct    = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
-          retClass  = pct >= 0 ? 'pos' : 'neg';
-        }
+        const ep = parseFloat(h.entry_price) || 0;
+        const cp = parseFloat(h.current_price) || ep;
+        const alloc = parseFloat(h.allocated) || 1000;
+        const ret = ep > 0 ? ((cp - ep) / ep * 100) : 0;
+        const pos = ret >= 0;
         return '<tr style="border-bottom:1px solid var(--border)">'
-          + '<td style="padding:11px 16px"><strong style="font-size:0.88rem">' + escHtml(h.symbol) + '</strong>'
-          + (h.name ? '<div style="font-size:0.72rem;color:var(--muted);margin-top:1px">' + escHtml(h.name) + '</div>' : '')
-          + '</td>'
-          + '<td style="padding:11px 16px;text-align:right">$' + alloc.toLocaleString() + '</td>'
-          + '<td style="padding:11px 16px;text-align:right">' + entry + '</td>'
-          + '<td style="padding:11px 16px;text-align:right">' + current + '</td>'
-          + '<td style="padding:11px 16px;text-align:right" class="' + retClass + '">' + retPct + '</td>'
-          + '<td style="padding:11px 16px;text-align:right"><button onclick="removeHolding(\'' + h.id + '\',\'' + escHtml(h.symbol) + '\')" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:3px 9px;font-size:0.72rem;cursor:pointer">Remove</button></td>'
+          + '<td style="padding:12px 16px"><strong>' + escHtml(h.symbol) + '</strong>'
+          + (h.name ? '<div style="font-size:0.72rem;color:var(--muted)">' + escHtml(h.name) + '</div>' : '') + '</td>'
+          + '<td style="padding:12px 16px;text-align:right">' + fmt$(alloc) + '</td>'
+          + '<td style="padding:12px 16px;text-align:right">' + (ep ? fmt$(ep) : '—') + '</td>'
+          + '<td style="padding:12px 16px;text-align:right">' + (cp ? fmt$(cp) : '—') + '</td>'
+          + '<td style="padding:12px 16px;text-align:right;color:' + (pos ? 'var(--green)' : 'var(--red)') + '">'
+          + (pos ? '+' : '') + ret.toFixed(2) + '%</td>'
+          + '<td style="padding:12px 16px;text-align:right">'
+          + '<button onclick="removeHolding(\'' + h.id + '\',\'' + escHtml(h.symbol) + '\')" '
+          + 'style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer" '
+          + 'onmouseenter="this.style.borderColor=\'var(--red)\';this.style.color=\'var(--red)\'" '
+          + 'onmouseleave="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--muted)\'">Remove</button></td>'
           + '</tr>';
       }).join('')
     + '</tbody></table></div>';
@@ -622,11 +632,11 @@ async function loadSiteData() {
     STATE.news    = nr.status   === 'fulfilled' ? nr.value   : { items: [] };
     STATE.signals = sigr.status === 'fulfilled' ? sigr.value : { recommendations: [], summary: {} };
   } catch(e) {}
-  try { renderLeaderboard(); } catch(e) {}
+  try { renderLeaderboard();           } catch(e) {}
   try { renderPortfolioBotAnalysis(); } catch(e) {}
-  try { renderSignals(); } catch(e) {}
-  try { renderNews(); } catch(e) {}
-  try { renderRace(); } catch(e) {}
+  try { renderSignals();              } catch(e) {}
+  try { renderNews();                 } catch(e) {}
+  try { renderRace();                 } catch(e) {}
   drawPortfolioChart();
 }
 
@@ -635,11 +645,9 @@ function renderPortfolioBotAnalysis() {
   const grid = document.getElementById('botAnalysisGrid');
   if (!grid) return;
   const tickers = holdings.map(h => h.symbol).join(', ') || 'your holdings';
-  // NOTE: Performance numbers are NOT pulled from the global tracker.
-  // Portfolio-specific P&L is tracked from the next trading day onward.
   const cards = FUND_ORDER.map(fid => {
     const meta = FUND_META[fid];
-    return '<a class="card clickable fund-card" href="/#/fund/' + fid + '">'
+    return '<a class="card clickable fund-card" href="portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid + '">'
       + '<div class="fund-head"><span class="fund-icon ' + fid + '">' + meta.icon + '</span>'
       + '<div style="min-width:0"><div class="fund-name">' + meta.name + '</div>'
       + '<div class="fund-kind" style="color:' + meta.color + '">' + meta.kind + '</div></div></div>'
@@ -650,36 +658,37 @@ function renderPortfolioBotAnalysis() {
   grid.innerHTML = cards;
 }
 
-// ── Leaderboard strip (portfolio-scoped — zeros until first trading day) ─────
+// ── Leaderboard strip ─────────────────────────────────────────────────────────
+// Portfolio-specific daily P&L starts at zero on day 1.
+// Links go to portfolio-scoped bot pages, not global homepage.
 function renderLeaderboard() {
-  // Portfolio-specific daily P&L isn't computed until the first trading day runs.
-  // Always show +0.00% so a brand-new portfolio doesn't display misleading
-  // global platform numbers from STATE.funds.
   const strip = FUND_ORDER.map(fid => {
     const m = FUND_META[fid];
-    return '<a class="card clickable" href="/#/fund/' + fid + '">'
+    // Use portfolio P&L from STATE if available, otherwise show +0.00%
+    const funds = STATE.funds || {};
+    const fd    = funds[fid] || {};
+    const pnlPct = (fd.day_pct != null) ? fd.day_pct : 0;
+    return '<a class="card clickable" href="portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid + '">'
       + '<span class="fund-icon ' + fid + '">' + m.icon + '</span>'
       + '<div class="lb-name"><strong>' + m.name + '</strong><small>' + m.kind + '</small></div>'
-      + '<div class="lb-pct">+0.00%</div></a>';
+      + '<div class="lb-pct ' + cls(pnlPct) + '">' + fmtPct(pnlPct) + '</div></a>';
   }).join('');
   const lbEl = document.getElementById('lbStrip');
   if (lbEl) lbEl.innerHTML = strip;
 }
 
-// ── Signals (filtered to user's holdings only — no global fallback) ──────────
+// ── Signals (filtered to user's holdings only) ───────────────────────────────
 function renderSignals() {
   const allSigs  = (STATE.signals && STATE.signals.recommendations) || [];
   const holdingTickers = holdings.map(h => h.symbol);
 
-  // Filter strictly to the user's holdings — never fall back to global signals
   const filtered = holdingTickers.length
     ? allSigs.filter(r => holdingTickers.includes(r.symbol))
     : [];
 
-  // Update note
   const note = document.getElementById('signalsNote');
   if (!holdingTickers.length) {
-    note.textContent = 'Add holdings above to see signals filtered to your portfolio.';
+    note.textContent = 'Add holdings to see signals filtered to your portfolio.';
   } else if (filtered.length === 0) {
     note.textContent = 'No signals today for your ' + holdingTickers.length + ' holding' + (holdingTickers.length !== 1 ? 's' : '') + '. Check back after the next refresh.';
   } else {
@@ -689,7 +698,6 @@ function renderSignals() {
   const topByAction = (action, n) => filtered.filter(r => r.action === action).slice(0, n);
   const sigCol = (label, action, n) => {
     const items = topByAction(action, n);
-    // Count is portfolio-specific — never show global totals
     const count = filtered.filter(r => r.action === action).length;
     const rows = items.length
       ? items.map(r => '<div class="row"><strong>' + escHtml(r.symbol) + '</strong>'
@@ -705,9 +713,9 @@ function renderSignals() {
   };
 
   document.getElementById('signalsToday').innerHTML =
-    sigCol('STRONG BUY', 'STRONG BUY', 4)
-    + sigCol('HOLD',       'HOLD',       4)
-    + sigCol('STRONG SELL','STRONG SELL',4);
+    sigCol('TOP BUYS',  'STRONG BUY',  4)
+    + sigCol('HOLDS',   'HOLD',        4)
+    + sigCol('TOP SELLS','STRONG SELL',4);
 }
 
 // ── News (filtered to user's holdings) ───────────────────────────────────────
@@ -727,28 +735,27 @@ function renderNews() {
 
   let filtered = allNews;
   if (holdingTickers.length) {
-    // Match by explicit ticker field, or by ticker appearing in the headline
     filtered = allNews.filter(item => {
-      if (item.ticker && holdingTickers.includes(item.ticker.toUpperCase())) return true;
-      if (item.symbol && holdingTickers.includes(item.symbol.toUpperCase())) return true;
+      if (item.ticker  && holdingTickers.includes(item.ticker.toUpperCase()))  return true;
+      if (item.symbol  && holdingTickers.includes(item.symbol.toUpperCase()))  return true;
       if (item.tickers && item.tickers.some(t => holdingTickers.includes(t.toUpperCase()))) return true;
       const title = (item.title || '').toUpperCase();
       return holdingTickers.some(t => title.includes(t));
     });
-    // No fallback — only show news relevant to user's holdings
   }
 
   const cards = filtered.slice(0, 6).map(newsCard).join('');
-  document.getElementById('newsGrid').innerHTML = cards || '<p style="color:var(--muted);font-size:0.9rem">No headlines yet — the fetcher runs nightly.</p>';
+  document.getElementById('newsGrid').innerHTML = cards || '<p style="color:var(--muted);font-size:0.9rem">No headlines yet for your holdings — the fetcher runs nightly.</p>';
 }
 
-// ── Race grid — portfolio-scoped (zeros on day 1, updates next trading day) ───
+// ── The Race — fundCards (portfolio-scoped) ───────────────────────────────────
+// Shows allocated capital as starting value. P&L is $0 on day 1.
+// Links go to portfolio-scoped bot pages.
 function fundCard(fid) {
   const meta = FUND_META[fid];
   const cap  = holdings.length * 1000 || 0;
-  // Always show $0 P&L — portfolio-specific tracking starts next trading day
   const v    = { total: cap, pnl: 0, pnl_pct: 0, day_pnl: 0, day_pct: 0 };
-  return '<a class="card clickable fund-card" href="/#/fund/' + fid + '">'
+  return '<a class="card clickable fund-card" href="portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid + '">'
     + '<div class="fund-head"><span class="fund-icon ' + fid + '">' + meta.icon + '</span>'
     + '<div style="min-width:0"><div class="fund-name">' + meta.name + '</div><div class="fund-kind" style="color:' + meta.color + '">' + meta.kind + '</div></div></div>'
     + '<div class="fund-tag">' + meta.tagline + '</div>'
@@ -763,7 +770,7 @@ function renderRace() {
   if (el) el.innerHTML = FUND_ORDER.map(fid => fundCard(fid)).join('');
 }
 
-// ── Portfolio performance chart (portfolio-specific, starts day 1) ──────────
+// ── Performance Trajectory chart ──────────────────────────────────────────────
 async function drawPortfolioChart() {
   const wrap = document.getElementById('chartWrap');
   const ctx  = document.getElementById('chartPortfolio');
@@ -780,7 +787,7 @@ async function drawPortfolioChart() {
     const created = botData?.created_at
       ? new Date(botData.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
       : 'today';
-    wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.6">Portfolio started ' + created + '.<br>Performance history will appear after the first trading day.</div>';
+    wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.8">Portfolio started ' + created + '.<br>Performance history appears after the first trading day.<br><span style="font-size:0.78rem;color:var(--muted);opacity:0.7">All 5 strategy lines will plot here as data comes in.</span></div>';
     return;
   }
 
@@ -791,7 +798,7 @@ async function drawPortfolioChart() {
   const color  = retPct >= 0 ? '#00d4ff' : '#ef4444';
 
   const titleEl = document.getElementById('chartTitle');
-  if (titleEl) titleEl.innerHTML = 'Portfolio Performance &nbsp;<span style="font-size:0.85rem;font-weight:600;color:' + color + '">' + (retPct >= 0 ? '+' : '') + retPct.toFixed(2) + '%</span>';
+  if (titleEl) titleEl.innerHTML = 'Performance Trajectory — All 5 Strategies &nbsp;<span style="font-size:0.85rem;font-weight:600;color:' + color + '">' + (retPct >= 0 ? '+' : '') + retPct.toFixed(2) + '%</span>';
 
   CHARTS_BD.portfolio = new Chart(ctx, {
     type: 'line',
@@ -852,7 +859,7 @@ async function confirmDeletePortfolio() {
 // ── Add Holding (Search Modal) ────────────────────────────────────────────────
 function openSearchModal() {
   if (holdings.length >= 50) {
-    showToast('This portfolio is full (50/50). Create another portfolio to track more, or upgrade your plan.', 'error');
+    showToast('This portfolio is full (50/50). Create another portfolio to track more.', 'error');
     return;
   }
   selectedSymbol = null;
@@ -1010,8 +1017,7 @@ function showToast(msg, type = 'success') {
   t._timer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ── Explicit window bindings for inline onclick handlers ──────────────────────
-// Ensures functions are globally accessible regardless of script evaluation order
+// ── Explicit window bindings ──────────────────────────────────────────────────
 window.toggleMobNav           = toggleMobNav;
 window.closeMobNav            = closeMobNav;
 window.togglePlatformMenu     = togglePlatformMenu;

@@ -243,38 +243,4 @@
       document.getElementById("errorMsg").style.display = "none";
     }
     function setLoading(loading) {
-      const btn = document.getElementById("submitBtn");
-      btn.disabled = loading;
-      btn.innerHTML = loading ? '<span class="spinner"></span>Creating account…' : "Create Account";
-    }
-
-    document.addEventListener("keydown", e => { if (e.key === "Enter") handleSignup(); });
-
-    async function handleSignup() {
-      const name     = document.getElementById("fullName").value.trim();
-      const email    = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      const confirm  = document.getElementById("confirmPassword").value;
-      const promo    = document.getElementById("promoCode").value.trim();
-
-      if (!email || !password) { showError("Email and password are required."); return; }
-      if (password.length < 8) { showError("Password must be at least 8 characters."); return; }
-      if (password !== confirm) { showError("Passwords do not match."); return; }
-
-      setLoading(true);
-
-      try {
-        const result = await auth.signup(email, password, name || null, promo || null);
-        showSuccess(result.message || "Account created! Check your email to confirm, then log in.");
-        setLoading(false);
-        if (auth.isAuthenticated()) {
-          setTimeout(() => { window.location.href = "/dashboard.html"; }, 1500);
-        }
-      } catch (err) {
-        showError(err.message || "Signup failed. This email may already be registered.");
-        setLoading(false);
-      }
-    }
-  </script>
-</body>
-</html>
+      const btn = document.getElementBy

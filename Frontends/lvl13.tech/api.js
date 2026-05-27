@@ -14,13 +14,7 @@ class WallStBotsAPI {
    */
   async request(endpoint, options = {}) {
     // Ensure token is fresh
-    const refreshed = await this.auth.refreshTokenIfNeeded();
-    if (!refreshed) {
-      // refreshTokenIfNeeded already called logout() and cleared token
-      console.warn("[API] Token refresh failed — redirecting to login");
-      window.location.href = "/login.html";
-      throw new Error("Session expired. Please log in again.");
-    }
+    await this.auth.refreshTokenIfNeeded();
 
     const url = `${this.baseUrl}${endpoint}`;
     const headers = {
@@ -29,13 +23,10 @@ class WallStBotsAPI {
       ...options.headers,
     };
 
-    let response;
-    try {
-      response = await fetch(url, { ...options, headers });
-    } catch(netErr) {
-      console.error("[API] Network error on", endpoint, netErr);
-      throw new Error("Network error: " + (netErr.message || "Could not reach server"));
-    }
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
 
     // Handle 401 (unauthorized) - token likely expired
     if (response.status === 401) {
@@ -45,12 +36,8 @@ class WallStBotsAPI {
     }
 
     if (!response.ok) {
-      let errorText = "";
-      try { errorText = await response.text(); } catch(_) {}
-      let msg = errorText || `HTTP ${response.status}`;
-      try { const j = JSON.parse(errorText); msg = j.detail || j.error || msg; } catch(_) {}
-      console.error("[API] Error on", endpoint, response.status, msg);
-      throw new Error(msg);
+      const error = await response.text();
+      throw new Error(error || `API error: ${response.status}`);
     }
 
     // Some endpoints return empty responses
