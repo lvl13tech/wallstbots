@@ -1192,12 +1192,20 @@ function updateNavAuth() {
 }
 
 function updateNavAuthState() {
-  const loginBtn = document.getElementById('navLoginBtn');
-  const dashBtn  = document.getElementById('navDashBtn');
+  const loginBtn   = document.getElementById('navLoginBtn');
+  const dashBtn    = document.getElementById('navDashBtn');
+  const signOutBtn = document.getElementById('navSignOutBtn');
   if (!loginBtn || !dashBtn) return;
-  const loggedIn = !!(localStorage.getItem('auth_token') || localStorage.getItem('lvl13_jwt'));
-  loginBtn.style.display = loggedIn ? 'none' : '';
-  dashBtn.style.display  = loggedIn ? ''     : 'none';
+  const loggedIn = !!(localStorage.getItem('wallstbots_jwt') || localStorage.getItem('auth_token'));
+  loginBtn.style.display   = loggedIn ? 'none' : '';
+  dashBtn.style.display    = loggedIn ? ''     : 'none';
+  if (signOutBtn) signOutBtn.style.display = loggedIn ? '' : 'none';
+}
+
+function navSignOut() {
+  ['wallstbots_jwt','auth_token','lvl13_jwt','bitbot13_jwt',
+   'wallstbots_refresh','wallstbots_user'].forEach(k => localStorage.removeItem(k));
+  window.location.href = '/';
 }
 
 // ================================================================

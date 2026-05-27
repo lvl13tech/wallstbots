@@ -1118,12 +1118,20 @@ function updateNavAuth() {
 }
 
 function updateNavAuthState() {
-  const loginBtn = document.getElementById('navLoginBtn');
-  const dashBtn  = document.getElementById('navDashBtn');
+  const loginBtn   = document.getElementById('navLoginBtn');
+  const dashBtn    = document.getElementById('navDashBtn');
+  const signOutBtn = document.getElementById('navSignOutBtn');
   if (!loginBtn || !dashBtn) return;
-  const loggedIn = !!(localStorage.getItem('auth_token') || localStorage.getItem('lvl13_jwt'));
-  loginBtn.style.display = loggedIn ? 'none' : '';
-  dashBtn.style.display  = loggedIn ? ''     : 'none';
+  const loggedIn = !!(localStorage.getItem('bitbot13_jwt') || localStorage.getItem('auth_token'));
+  loginBtn.style.display   = loggedIn ? 'none' : '';
+  dashBtn.style.display    = loggedIn ? ''     : 'none';
+  if (signOutBtn) signOutBtn.style.display = loggedIn ? '' : 'none';
+}
+
+function navSignOut() {
+  ['bitbot13_jwt','auth_token','lvl13_jwt','wallstbots_jwt',
+   'wallstbots_refresh','wallstbots_user'].forEach(k => localStorage.removeItem(k));
+  window.location.href = '/';
 }
 
 function boot() {

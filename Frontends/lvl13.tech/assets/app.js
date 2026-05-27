@@ -1396,12 +1396,20 @@ function updateNavAuth() {
 
 // Mirror bitbot13/wallstbots nav toggle for the static Log In / Dashboard buttons in index.html
 function updateNavAuthState() {
-  const loginBtn = document.getElementById('navLoginBtn');
-  const dashBtn  = document.getElementById('navDashBtn');
+  const loginBtn   = document.getElementById('navLoginBtn');
+  const dashBtn    = document.getElementById('navDashBtn');
+  const signOutBtn = document.getElementById('navSignOutBtn');
   if (!loginBtn || !dashBtn) return;
   const loggedIn = !!(localStorage.getItem('lvl13_jwt') || localStorage.getItem('auth_token'));
-  loginBtn.style.display = loggedIn ? 'none' : '';
-  dashBtn.style.display  = loggedIn ? ''     : 'none';
+  loginBtn.style.display   = loggedIn ? 'none' : '';
+  dashBtn.style.display    = loggedIn ? ''     : 'none';
+  if (signOutBtn) signOutBtn.style.display = loggedIn ? '' : 'none';
+}
+
+function navSignOut() {
+  ['lvl13_jwt','auth_token','wallstbots_jwt','bitbot13_jwt',
+   'wallstbots_refresh','wallstbots_user'].forEach(k => localStorage.removeItem(k));
+  window.location.href = '/';
 }
 
 function boot() {
