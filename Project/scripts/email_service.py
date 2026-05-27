@@ -215,50 +215,39 @@ def _wrap(platform: str, preheader: str, body_html: str) -> str:
 <meta name="color-scheme" content="dark"/>
 <title>{site_name}</title>
 </head>
-<body style="margin:0;padding:0;background:#06080d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,system-ui,sans-serif;color:#e6edf3;-webkit-font-smoothing:antialiased;">
+<body bgcolor="#06080d" style="margin:0;padding:0;background:#06080d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,system-ui,sans-serif;color:#e6edf3;-webkit-font-smoothing:antialiased;">
 
 <!-- preheader -->
 <span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</span>
 
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#06080d;padding:28px 0 48px;">
-  <tr><td align="center" style="padding:0 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#06080d" style="background:#06080d;padding:28px 0 48px;">
+  <tr><td align="center" bgcolor="#06080d" style="background:#06080d;padding:0 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
 
       <!-- ── HEADER ── -->
       <tr>
-        <td style="background:#0d1117;border:1px solid #1e2633;border-bottom:2px solid #00d4ff;padding:18px 24px;border-radius:12px 12px 0 0;">
-          <table width="100%" cellpadding="0" cellspacing="0">
-            <tr>
-              <td>
-                <a href="{site_url}" style="text-decoration:none;font-size:20px;font-weight:800;color:#e6edf3;letter-spacing:-0.5px;">
-                  {_logo_html(platform)}
-                </a>
-                <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#7d8590;margin-top:3px;">AI-Powered Trading Signals</div>
-              </td>
-              <td align="right">
-                <a href="{site_url}/dashboard.html" style="display:inline-block;background:#003d47;border:1px solid #00d4ff;color:#00d4ff;border-radius:6px;padding:7px 14px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">Dashboard</a>
-              </td>
-            </tr>
-          </table>
+        <td bgcolor="#0d1117" style="background:#0d1117;border:1px solid #1e2633;border-bottom:2px solid #00d4ff;padding:18px 24px;border-radius:12px 12px 0 0;">
+          <a href="{site_url}" style="text-decoration:none;font-size:20px;font-weight:800;color:#e6edf3;letter-spacing:-0.5px;">
+            {_logo_html(platform)}
+          </a>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#7d8590;margin-top:3px;">AI-Powered Trading Signals</div>
         </td>
       </tr>
 
       <!-- ── BODY ── -->
       <tr>
-        <td style="background:#0d1117;border-left:1px solid #1e2633;border-right:1px solid #1e2633;padding:28px 24px;">
+        <td bgcolor="#0d1117" style="background:#0d1117;border-left:1px solid #1e2633;border-right:1px solid #1e2633;padding:28px 24px;">
           {body_html}
         </td>
       </tr>
 
       <!-- ── FOOTER ── -->
       <tr>
-        <td style="background:#0a0e16;border:1px solid #1e2633;border-top:none;padding:20px 24px;border-radius:0 0 12px 12px;text-align:center;">
+        <td bgcolor="#0a0e16" style="background:#0a0e16;border:1px solid #1e2633;border-top:none;padding:20px 24px;border-radius:0 0 12px 12px;text-align:center;">
           <p style="font-size:11px;color:#7d8590;margin:0 0 8px;">
             You're receiving this because you're subscribed to {site_name}.
           </p>
           <p style="font-size:11px;margin:0;">
-            <a href="{site_url}/dashboard.html" style="color:#00d4ff;text-decoration:none;">Dashboard</a>
-            &nbsp;<span style="color:#1e2633;">·</span>&nbsp;
             <a href="{site_url}/dashboard.html#email-prefs" style="color:#7d8590;text-decoration:none;">Email Preferences</a>
             &nbsp;<span style="color:#1e2633;">·</span>&nbsp;
             <span style="color:#4b5563;">&copy; {year} {site_name}</span>
@@ -562,53 +551,44 @@ def _wrap_consolidated(preheader: str, body_html: str) -> str:
 <meta name="color-scheme" content="dark"/>
 <title>Wall St. Bots — Daily Report</title>
 </head>
-<body style="margin:0;padding:0;background:#06080d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,system-ui,sans-serif;color:#e6edf3;-webkit-font-smoothing:antialiased;">
+<body bgcolor="#06080d" style="margin:0;padding:0;background:#06080d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,system-ui,sans-serif;color:#e6edf3;-webkit-font-smoothing:antialiased;">
 
 <!-- preheader -->
 <span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</span>
 
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#06080d;padding:28px 0 48px;">
-  <tr><td align="center" style="padding:0 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#06080d" style="background:#06080d;padding:28px 0 48px;">
+  <tr><td align="center" bgcolor="#06080d" style="background:#06080d;padding:0 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
 
       <!-- ── HEADER ── -->
       <tr>
-        <td style="background:#0d1117;border:1px solid #1e2633;border-bottom:2px solid #00d4ff;padding:18px 24px;border-radius:12px 12px 0 0;">
-          <table width="100%" cellpadding="0" cellspacing="0">
-            <tr>
-              <td>
-                <a href="https://wallstbots.tech" style="text-decoration:none;font-size:20px;font-weight:800;color:#e6edf3;letter-spacing:-0.5px;">
-                  Wall St. <span style="color:#00d4ff;">Bots</span>
-                </a>
-                <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#7d8590;margin-top:3px;">AI-Powered Trading Signals — Daily Report</div>
-              </td>
-              <td align="right">
-                <a href="https://wallstbots.tech/dashboard.html" style="display:inline-block;background:#003d47;border:1px solid #00d4ff;color:#00d4ff;border-radius:6px;padding:7px 14px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">Dashboard</a>
-              </td>
-            </tr>
-          </table>
+        <td bgcolor="#0d1117" style="background:#0d1117;border:1px solid #1e2633;border-bottom:2px solid #00d4ff;padding:18px 24px;border-radius:12px 12px 0 0;">
+          <a href="https://wallstbots.tech" style="text-decoration:none;font-size:20px;font-weight:800;color:#e6edf3;letter-spacing:-0.5px;">
+            Wall St. <span style="color:#00d4ff;">Bots</span>
+          </a>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#7d8590;margin-top:3px;">AI-Powered Trading Signals — Daily Report</div>
         </td>
       </tr>
 
       <!-- ── BODY ── -->
       <tr>
-        <td style="background:#0d1117;border-left:1px solid #1e2633;border-right:1px solid #1e2633;padding:28px 24px;">
+        <td bgcolor="#0d1117" style="background:#0d1117;border-left:1px solid #1e2633;border-right:1px solid #1e2633;padding:28px 24px;">
           {body_html}
         </td>
       </tr>
 
       <!-- ── FOOTER ── -->
       <tr>
-        <td style="background:#0a0e16;border:1px solid #1e2633;border-top:none;padding:20px 24px;border-radius:0 0 12px 12px;text-align:center;">
+        <td bgcolor="#0a0e16" style="background:#0a0e16;border:1px solid #1e2633;border-top:none;padding:20px 24px;border-radius:0 0 12px 12px;text-align:center;">
           <p style="font-size:11px;color:#7d8590;margin:0 0 6px;">
             You're receiving this because you're subscribed to Wall St. Bots.
           </p>
           <p style="font-size:11px;margin:0 0 8px;">
-            <a href="https://wallstbots.tech/dashboard.html" style="color:#00d4ff;text-decoration:none;">WallStBots</a>
+            <a href="https://wallstbots.tech" style="color:#00d4ff;text-decoration:none;">WallStBots</a>
             &nbsp;<span style="color:#1e2633;">·</span>&nbsp;
-            <a href="https://bitbot13.tech/dashboard.html" style="color:#00d4ff;text-decoration:none;">BitBot13</a>
+            <a href="https://bitbot13.tech" style="color:#00d4ff;text-decoration:none;">BitBot13</a>
             &nbsp;<span style="color:#1e2633;">·</span>&nbsp;
-            <a href="https://lvl13.tech/dashboard.html" style="color:#00d4ff;text-decoration:none;">Level XIII</a>
+            <a href="https://lvl13.tech" style="color:#00d4ff;text-decoration:none;">Level XIII</a>
           </p>
           <p style="font-size:11px;margin:0;">
             <a href="https://wallstbots.tech/dashboard.html#email-prefs" style="color:#7d8590;text-decoration:none;">Email Preferences</a>
