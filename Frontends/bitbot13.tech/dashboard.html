@@ -2207,7 +2207,7 @@
   async function loadEmailPrefs() {
     try {
       const token = auth.getToken ? auth.getToken() : (auth._token || localStorage.getItem("auth_token") || "");
-      const resp = await fetch((window.API_BASE || "") + "/user/email-prefs", {
+      const resp = await fetch(BACKEND_URL + "/user/email-prefs", {
         headers: { "Authorization": "Bearer " + token }
       });
       if (!resp.ok) return;
@@ -2245,7 +2245,7 @@
         email_bitbot13:     document.getElementById("epSiteBitbot13").checked,
         email_lvl13:        document.getElementById("epSiteLvl13").checked,
       };
-      const resp = await fetch((window.API_BASE || "") + "/user/email-prefs", {
+      const resp = await fetch(BACKEND_URL + "/user/email-prefs", {
         method: "PUT",
         headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
         body: JSON.stringify(body),

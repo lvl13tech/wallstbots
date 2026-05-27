@@ -72,16 +72,21 @@ jobs:
           git push
 
       - name: Send daily email notifications
-        # Only send once per day — guard to the 14:xx UTC run (9:35am ET, market open)
+        # Scheduled: only sends at 14:xx UTC (9:35am ET market open) to avoid duplicates.
+        # Manual (workflow_dispatch): always sends — useful for testing.
         env:
           RESEND_API_KEY:   ${{ secrets.RESEND_API_KEY }}
           INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
           BACKEND_URL:      ${{ secrets.BACKEND_URL }}
+          EVENT_NAME:       ${{ github.event_name }}
+          FORCE_SEND:       ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
         run: |
           HOUR=$(date -u +%H)
-          if [ "$HOUR" = "14" ]; then
+          echo "=== Email dispatch check: event=$EVENT_NAME hour=${HOUR}UTC force=$FORCE_SEND ==="
+          echo "=== Secrets present: RESEND=$([ -n "$RESEND_API_KEY" ] && echo YES || echo MISSING) BACKEND=$([ -n "$BACKEND_URL" ] && echo YES || echo MISSING) APIKEY=$([ -n "$INTERNAL_API_KEY" ] && echo YES || echo MISSING) ==="
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$HOUR" = "14" ]; then
             echo "=== Dispatching consolidated daily email ==="
             python Project/scripts/send_emails.py
           else
-            echo "=== Skipping email dispatch (hour=$HOUR, only runs at 14:xx UTC) ==="
+            echo "=== Skipping email dispatch (scheduled run at hour=$HOUR, not 14:xx UTC) ==="
           fi

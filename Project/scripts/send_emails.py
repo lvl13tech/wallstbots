@@ -36,6 +36,7 @@ from email_service import (
 
 BACKEND_URL      = os.environ.get("BACKEND_URL", "").rstrip("/")
 INTERNAL_API_KEY = os.environ.get("INTERNAL_API_KEY", "")
+FORCE_SEND       = os.environ.get("FORCE_SEND", "").lower() in ("1", "true", "yes")
 
 PLATFORM_DATA_PATHS = {
     "wallstbots": Path("Frontends/wallstbots.tech/data"),
@@ -71,7 +72,11 @@ def load_platform_data(platform: str) -> dict:
         except Exception:
             pass
     if not is_fresh:
-        print(f"[send_emails] {platform}: data is stale (last updated {ts_str}) — section will be suppressed")
+        if FORCE_SEND:
+            is_fresh = True  # override staleness on manual/forced runs
+            print(f"[send_emails] {platform}: data is stale but FORCE_SEND=true — sending anyway")
+        else:
+            print(f"[send_emails] {platform}: data is stale (last updated {ts_str}) — section will be suppressed")
 
     return {
         "funds":        state.get("funds", {}),
