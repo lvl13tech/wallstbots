@@ -37,8 +37,22 @@ SECTOR_QUERIES = {
     "Finance":      '(JPMorgan OR Goldman OR "Bank of America" OR Visa OR Mastercard OR "Federal Reserve" OR "interest rate" OR earnings OR "S&P 500") AND (stock OR market OR earnings OR investor)',
 }
 
-# Domains to exclude from all news results
-EXCLUDE_DOMAINS = 'pypi.org,github.com,stackoverflow.com,reddit.com,medium.com,dev.to,hackernews.com,npmjs.com'
+# Domains to exclude — NewsAPI free tier ignores excludeDomains param,
+# so we filter post-fetch by URL and source name.
+EXCLUDE_DOMAINS_LIST = [
+    "pypi.org", "github.com", "stackoverflow.com", "reddit.com",
+    "medium.com", "dev.to", "hackernews.com", "npmjs.com",
+    "ycombinator.com", "news.ycombinator.com", "lobste.rs",
+]
+
+def _is_excluded(article: dict) -> bool:
+    """Return True if this article should be filtered out."""
+    url = (article.get("url") or "").lower()
+    source = (article.get("source") or {}).get("name", "").lower()
+    for domain in EXCLUDE_DOMAINS_LIST:
+        if domain in url or domain.split(".")[0] in source:
+            return True
+    return False
 
 def load_secrets():
     if not SECRETS_PATH.exists():
@@ -54,19 +68,19 @@ def fetch_sector(api_key, sector, query, page_size=8):
     params = {
         "q": query, "from": from_date, "language": "en",
         "sortBy": "publishedAt", "pageSize": page_size, "apiKey": api_key,
-        "excludeDomains": EXCLUDE_DOMAINS,
     }
     try:
         r = requests.get(url, params=params, timeout=15)
         if r.status_code == 200:
             data = r.json()
+            articles = [a for a in data.get("articles", []) if a.get("title") and not _is_excluded(a)]
             return [{
                 "title":        a.get("title", "").split(" - ")[0],
                 "source":       (a.get("source") or {}).get("name", ""),
                 "sector":       sector,
                 "published_at": a.get("publishedAt"),
                 "url":          a.get("url", "#"),
-            } for a in data.get("articles", []) if a.get("title")]
+            } for a in articles]
         else:
             print(f"  [{sector}] HTTP {r.status_code}: {r.text[:200]}")
     except Exception as e:
