@@ -72,3 +72,5 @@ jobs:
           git push
 
       # Email dispatch removed — consolidated daily email is sent by refresh-wallstbots.yml only.
+      # Deploy note: lvl13.tech is on Cloudflare Pages (migrated May 2026).
+      # Pushing Frontends/lvl13.tech/data/ here auto-deploys via Cloudflare — no FTP needed.
