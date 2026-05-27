@@ -2686,3 +2686,17 @@ async def health_check_db():
     finally:
         cursor.close()
         return_db_connection(conn)
+
+# ============================================================================
+# SHUTDOWN
+# ============================================================================
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    if db_pool:
+        db_pool.close()
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
