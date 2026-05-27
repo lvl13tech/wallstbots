@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-05-26T22:25:26",
+    "last_refresh": "2026-05-27T02:11:26",
     "snapshots": [
       {
         "date": "2026-05-21",
@@ -34,6 +34,14 @@
         "wizard": 57086.67,
         "equalizer": 55646.09,
         "titan": 55407.51
+      },
+      {
+        "date": "2026-05-27",
+        "bot13": 63052.73,
+        "oracle": 57051.37,
+        "wizard": 57086.67,
+        "equalizer": 55646.09,
+        "titan": 55407.51
       }
     ],
     "funds": {
@@ -46,157 +54,158 @@
         "inception": "2026-05-22",
         "starting_capital": 55000.0,
         "value": {
-          "total": 59944.04,
+          "total": 63052.73,
           "cash": 0.0,
-          "pos_val": 59944.05,
-          "pnl": 4944.04,
-          "pnl_pct": 8.99,
-          "day_pnl": 2419.47,
-          "day_pct": 4.21,
-          "day_open": 57524.57,
+          "pos_val": 63052.74,
+          "pnl": 8052.73,
+          "pnl_pct": 14.64,
+          "day_pnl": 3108.69,
+          "day_pct": 5.19,
+          "day_open": 59944.04,
           "holding_cash": true,
           "window_open": false,
           "session_open_et": "9:30",
           "session_close_et": "16:00",
           "positions": [
             {
-              "symbol": "OKLO",
-              "shares": 207.783352,
-              "entry_price": 65.88,
-              "current_price": 68.7,
-              "cost_basis": 13688.77,
-              "price": 68.7,
-              "value": 14274.72,
-              "pnl": 585.95,
-              "pnl_pct": 4.28,
-              "day_pnl": 585.95,
-              "day_pct": 4.28,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-05-26T17:45:41",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "GRAL",
-              "shares": 189.165045,
-              "entry_price": 67.19,
-              "current_price": 68.96,
-              "cost_basis": 12710.0,
-              "price": 68.96,
-              "value": 13044.82,
-              "pnl": 334.82,
-              "pnl_pct": 2.63,
-              "day_pnl": 334.82,
-              "day_pct": 2.63,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-05-26T17:45:41",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
               "symbol": "AFRM",
-              "shares": 168.670937,
+              "shares": 203.225034,
               "entry_price": 65.22,
               "current_price": 69.27,
-              "cost_basis": 11000.72,
+              "cost_basis": 13254.34,
               "price": 69.27,
-              "value": 11683.84,
-              "pnl": 683.12,
+              "value": 14077.4,
+              "pnl": 823.06,
               "pnl_pct": 6.21,
-              "day_pnl": 683.12,
+              "day_pnl": 823.06,
               "day_pct": 6.21,
               "stop_pct": -1.5,
               "target_pct": 3.0,
-              "entry_time": "2026-05-26T17:45:41",
+              "entry_time": "2026-05-27T02:11:31",
+              "stop_triggered": false,
+              "exit_reason": null
+            },
+            {
+              "symbol": "ARM",
+              "shares": 41.775068,
+              "entry_price": 306.51,
+              "current_price": 321.22,
+              "cost_basis": 12804.48,
+              "price": 321.22,
+              "value": 13418.99,
+              "pnl": 614.51,
+              "pnl_pct": 4.8,
+              "day_pnl": 614.51,
+              "day_pct": 4.8,
+              "stop_pct": -1.5,
+              "target_pct": 3.0,
+              "entry_time": "2026-05-27T02:11:31",
+              "stop_triggered": false,
+              "exit_reason": null
+            },
+            {
+              "symbol": "OKLO",
+              "shares": 173.354736,
+              "entry_price": 65.88,
+              "current_price": 68.7,
+              "cost_basis": 11420.61,
+              "price": 68.7,
+              "value": 11909.47,
+              "pnl": 488.86,
+              "pnl_pct": 4.28,
+              "day_pnl": 488.86,
+              "day_pct": 4.28,
+              "stop_pct": -1.5,
+              "target_pct": 3.0,
+              "entry_time": "2026-05-27T02:11:31",
               "stop_triggered": false,
               "exit_reason": null
             },
             {
               "symbol": "VST",
-              "shares": 69.532479,
+              "shares": 72.458123,
               "entry_price": 156.27,
               "current_price": 164.56,
-              "cost_basis": 10865.84,
+              "cost_basis": 11323.03,
               "price": 164.56,
-              "value": 11442.26,
-              "pnl": 576.42,
+              "value": 11923.71,
+              "pnl": 600.68,
               "pnl_pct": 5.3,
-              "day_pnl": 576.42,
+              "day_pnl": 600.68,
               "day_pct": 5.3,
               "stop_pct": -1.5,
               "target_pct": 3.0,
-              "entry_time": "2026-05-26T17:45:41",
+              "entry_time": "2026-05-27T02:11:31",
               "stop_triggered": false,
               "exit_reason": null
             },
             {
-              "symbol": "RBRK",
-              "shares": 139.048571,
-              "entry_price": 66.59,
-              "current_price": 68.31,
-              "cost_basis": 9259.24,
-              "price": 68.31,
-              "value": 9498.41,
-              "pnl": 239.16,
-              "pnl_pct": 2.58,
-              "day_pnl": 239.16,
-              "day_pct": 2.58,
+              "symbol": "BIRK",
+              "shares": 269.250519,
+              "entry_price": 41.38,
+              "current_price": 43.54,
+              "cost_basis": 11141.59,
+              "price": 43.54,
+              "value": 11723.17,
+              "pnl": 581.58,
+              "pnl_pct": 5.22,
+              "day_pnl": 581.58,
+              "day_pct": 5.22,
               "stop_pct": -1.5,
               "target_pct": 3.0,
-              "entry_time": "2026-05-26T17:45:41",
+              "entry_time": "2026-05-27T02:11:31",
               "stop_triggered": false,
               "exit_reason": null
             }
           ]
         },
         "current_strategy": {
-          "day": "2026-05-26",
+          "day": "2026-05-27",
           "decision": "TRADE",
-          "rationale": "Deployed into 5 high-conviction names (OKLO +6.87%, GRAL +6.38%, AFRM +5.52%, VST +5.45%, RBRK +3.72%). Market breadth: 25/55 green. Weighted by signal strength. Stop -1.5% | Target +3.0%.",
+          "rationale": "Projected return: +5.19%. Deployed into 5 high-conviction names (AFRM +6.21%, ARM +4.80%, OKLO +4.28%, VST +5.30%, BIRK +5.22%). Market breadth: 26/55 green. Weighted by signal strength. Stop -1.5% | Target +3.0%.",
           "picks": [
             {
-              "symbol": "OKLO",
-              "weight": 0.238,
-              "score": 54.9,
-              "rationale": "OKLO: STRONG momentum +6.87% \u2014 24% allocation ($13,689). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "GRAL",
-              "weight": 0.2209,
-              "score": 51.0,
-              "rationale": "GRAL: STRONG momentum +6.38% \u2014 22% allocation ($12,710). Stop: -1.5% | Target: +3.0%."
-            },
-            {
               "symbol": "AFRM",
-              "weight": 0.1912,
-              "score": 44.2,
-              "rationale": "AFRM: STRONG momentum +5.52% \u2014 19% allocation ($11,001). Stop: -1.5% | Target: +3.0%."
+              "weight": 0.2211,
+              "score": 49.7,
+              "rationale": "AFRM: STRONG momentum +6.21% \u2014 22% allocation ($13,254). Stop: -1.5% | Target: +3.0%."
+            },
+            {
+              "symbol": "ARM",
+              "weight": 0.2136,
+              "score": 48.0,
+              "rationale": "ARM: solid momentum +4.80% \u2014 21% allocation ($12,804). Stop: -1.5% | Target: +3.0%."
+            },
+            {
+              "symbol": "OKLO",
+              "weight": 0.1905,
+              "score": 42.8,
+              "rationale": "OKLO: solid momentum +4.28% \u2014 19% allocation ($11,421). Stop: -1.5% | Target: +3.0%."
             },
             {
               "symbol": "VST",
               "weight": 0.1889,
-              "score": 43.6,
-              "rationale": "VST: STRONG momentum +5.45% \u2014 19% allocation ($10,866). Stop: -1.5% | Target: +3.0%."
+              "score": 42.4,
+              "rationale": "VST: STRONG momentum +5.30% \u2014 19% allocation ($11,323). Stop: -1.5% | Target: +3.0%."
             },
             {
-              "symbol": "RBRK",
-              "weight": 0.161,
-              "score": 37.2,
-              "rationale": "RBRK: solid momentum +3.72% \u2014 16% allocation ($9,259). Stop: -1.5% | Target: +3.0%."
+              "symbol": "BIRK",
+              "weight": 0.1859,
+              "score": 41.8,
+              "rationale": "BIRK: STRONG momentum +5.22% \u2014 19% allocation ($11,142). Stop: -1.5% | Target: +3.0%."
             }
           ],
           "stop_pct": -1.5,
           "target_pct": 3.0,
           "session_log": [
             {
-              "time": "13:45 PM",
-              "phase": "MIDDAY",
-              "action": "MIDDAY CHECK \u2014 positions reviewed",
-              "detail": "Current positions: OKLO +6.87%, GRAL +6.38%, AFRM +5.52%, VST +5.45%, RBRK +3.72%. Breadth: 25/55 green. Monitoring for stop/target triggers. Any position through -1.5% would be exited immediately."
+              "time": "22:11 PM",
+              "phase": "CLOSE",
+              "action": "CLOSE \u2014 session complete",
+              "detail": "Final session positions: AFRM +6.21%, ARM +4.80%, OKLO +4.28%, VST +5.30%, BIRK +5.22%. Day P&L: $+3,109. Breadth: 26/55 green. All positions conceptually closed at 3:50 PM."
             }
-          ]
+          ],
+          "projected_return": 5.19
         },
         "top10": null,
         "per_top_dollars": null,
@@ -524,8 +533,8 @@
           "pos_val": 55646.09,
           "pnl": 646.09,
           "pnl_pct": 1.17,
-          "day_pnl": 352.38,
-          "day_pct": 0.64,
+          "day_pnl": 358.16,
+          "day_pct": 0.65,
           "positions": [
             {
               "symbol": "XOM",
@@ -875,8 +884,8 @@
               "value": 993.31,
               "pnl": -6.69,
               "pnl_pct": -0.67,
-              "day_pnl": -17.95,
-              "day_pct": -1.78
+              "day_pnl": -12.17,
+              "day_pct": -1.21
             },
             {
               "symbol": "UNH",
@@ -1263,8 +1272,8 @@
           "pos_val": 55407.45,
           "pnl": 407.51,
           "pnl_pct": 0.74,
-          "day_pnl": 193.77,
-          "day_pct": 0.35,
+          "day_pnl": 197.3,
+          "day_pct": 0.36,
           "positions": [
             {
               "symbol": "NVDA",
@@ -1718,8 +1727,8 @@
               "value": 607.02,
               "pnl": -4.09,
               "pnl_pct": -0.67,
-              "day_pnl": -10.97,
-              "day_pct": -1.78
+              "day_pnl": -7.44,
+              "day_pct": -1.21
             },
             {
               "symbol": "UNH",
@@ -2004,9 +2013,9 @@
       "week": [
         {
           "fund": "bot13",
-          "week_pnl": 2419.47,
-          "week_pct": 4.21,
-          "week_grade": "A"
+          "week_pnl": 5528.16,
+          "week_pct": 9.61,
+          "week_grade": "A+"
         },
         {
           "fund": "oracle",
@@ -2036,8 +2045,8 @@
       "all": [
         {
           "fund": "bot13",
-          "all_pnl": 4944.04,
-          "all_pct": 8.99,
+          "all_pnl": 8052.73,
+          "all_pct": 14.64,
           "overall_grade": "A+"
         },
         {
