@@ -455,10 +455,11 @@ function renderStrategyPanel(fid, strat) {
         + '<div class="pick-indicators">'+parts.join(' · ')+'</div></div>';
     }).join('') + '</div>';
   }
+  const cleanRationale = (strat.rationale||'').replace(/^Projected return:[^.]*\.\s*/i, '');
   return '<div class="strategy-panel '+fid+'"><h3>'+label+'</h3>'
     + '<div class="strategy-meta">'+escapeHtml(period)+' · '+escapeHtml(strat.decision||'')+'</div>'
     + projHtml
-    + '<p class="strategy-rationale">'+escapeHtml(strat.rationale||'')+'</p>'+picks+'</div>';
+    + '<p class="strategy-rationale">'+escapeHtml(cleanRationale)+'</p>'+picks+'</div>';
 }
 
 // ============ PAGE: SIGNALS ============
