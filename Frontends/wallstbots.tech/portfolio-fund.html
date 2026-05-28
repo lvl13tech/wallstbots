@@ -189,6 +189,14 @@
     .comment-del-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; }
     .comment-del-btn:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
     .comments-empty { text-align: center; padding: 28px; color: var(--muted); font-size: 0.875rem; }
+    .shared-user-row { display:flex; align-items:center; justify-content:space-between; padding:7px 10px; background:var(--card); border:1px solid var(--border); border-radius:8px; margin-bottom:6px; font-size:0.82rem; }
+    .shared-user-handle { color:var(--blue); font-weight:500; }
+    .revoke-btn { background:rgba(255,85,85,0.1); border:1px solid rgba(255,85,85,0.25); color:#ff5555; border-radius:6px; padding:3px 8px; font-size:0.75rem; cursor:pointer; }
+    .revoke-btn:hover { background:rgba(255,85,85,0.22); }
+    .private-wall { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; text-align:center; }
+    .private-wall-icon { font-size:3rem; margin-bottom:16px; }
+    .private-wall h2 { font-size:1.3rem; margin-bottom:8px; }
+    .private-wall p { color:var(--muted); font-size:0.9rem; max-width:320px; line-height:1.6; }
     .no-handle-notice { background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.2); border-radius: 10px; padding: 12px 16px; font-size: 0.82rem; color: var(--muted); margin-bottom: 14px; }
     .no-handle-notice a { color: var(--blue); text-decoration: none; }
     .no-handle-notice a:hover { text-decoration: underline; }
@@ -280,7 +288,19 @@
   </div>
   <div class="drawer-section" id="drawerPortfolioSection" style="display:none">
     <div class="drawer-section-title">Portfolio Settings</div>
-    <div class="toggle-row">
+    <!-- Privacy toggle -->
+    <div class="toggle-row" style="margin-bottom:12px">
+      <div>
+        <div style="font-size:0.85rem;font-weight:500;margin-bottom:2px">Private Portfolio</div>
+        <div style="font-size:0.75rem;color:var(--muted)">Only you + shared users can view</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="privacyToggle" onchange="togglePrivacy(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <!-- Leaderboard toggle -->
+    <div class="toggle-row" style="margin-bottom:16px">
       <div>
         <div style="font-size:0.85rem;font-weight:500;margin-bottom:2px">Show on Leaderboard</div>
         <div style="font-size:0.75rem;color:var(--muted)">Qualify at 21 days + 10% gain</div>
@@ -290,6 +310,17 @@
         <span class="toggle-slider"></span>
       </label>
     </div>
+    <!-- Share with user -->
+    <div style="margin-bottom:10px">
+      <div style="font-size:0.8rem;font-weight:600;margin-bottom:8px;color:var(--text)">Share With</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="text" id="shareHandleInput" placeholder="@username" maxlength="50"
+          style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:0.82rem;color:var(--text);outline:none">
+        <button class="btn-copy" onclick="addShare()" id="addShareBtn" style="white-space:nowrap;padding:7px 12px;font-size:0.8rem">Add</button>
+      </div>
+    </div>
+    <!-- Shared-with list -->
+    <div id="sharedWithList" style="margin-top:4px"></div>
   </div>
   <div class="drawer-section">
     <a href="https://www.paypal.com/myaccount/autopay/" target="_blank" class="manage-link">Manage Subscription on PayPal →</a>
@@ -478,7 +509,7 @@ async function init() {
     document.getElementById('shareBtn').style.display = 'flex';
     document.getElementById('drawerPortfolioSection').style.display = 'block';
     document.getElementById('commentsSection').style.display = 'block';
-    loadLeaderboardSetting();
+    loadPrivacySettings();
     await Promise.allSettled([loadPortfolio(), loadSiteData()]);
   }
   loadComments();
@@ -644,11 +675,11 @@ function renderNews() {
     });
   }
   const cards = filtered.slice(0,6).map(it => {
-    const cat  = sectorClass(it.sector);
-    const url  = it.url && it.url !== '#' ? it.url : null;
+    const cat = sectorClass(it.sector);
+    const url = it.url && it.url !== '#' ? it.url : null;
     return '<a class="news-card cat-' + cat + '" href="' + escHtml(url||'javascript:void(0)') + '"' + (url?' target="_blank" rel="noopener noreferrer"':'') + '><div class="news-title">' + escHtml(it.title||'') + '</div><div class="news-meta">' + escHtml(it.source||it.sector||'Source') + ' · ' + relTime(it.published_at) + '</div></a>';
   }).join('');
-  document.getElementById('newsGrid').innerHTML = cards || '<p style="color:var(--muted);font-size:0.9rem">No headlines yet for your stocks — the fetcher runs nightly.</p>';
+  document.getElementById('newsGrid').innerHTML = cards || '<p style="color:var(--muted);font-size:0.9rem">No headlines yet for your stocks.</p>';
 }
 
 async function drawFundChart() {
@@ -662,191 +693,270 @@ async function drawFundChart() {
   const created = botData?.created_at ? new Date(botData.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'today';
   if (!snapshots.length) {
     const titleEl = document.getElementById('chartTitle');
-    if (titleEl) titleEl.textContent = 'Performance Trajectory — ' + meta.name;
-    wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.8">Portfolio started ' + created + '.<br>Performance history appears after the first trading day.<br><span style="font-size:0.78rem;opacity:0.7">' + meta.name + ' strategy lines will plot here as data comes in.</span></div>';
+    if (titleEl) titleEl.textContent = 'Performance Trajectory — ' + (meta ? meta.name : '');
+    wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.8">Portfolio started ' + created + '.<br>Performance history appears after the first trading day.</div>';
     return;
   }
   const labels = snapshots.map(s => s.date);
   const values = snapshots.map(s => s.total_value);
   const retPct = snapshots[snapshots.length-1].gain_loss_pct || 0;
   const titleEl = document.getElementById('chartTitle');
-  if (titleEl) titleEl.innerHTML = 'Performance Trajectory — ' + meta.name + ' &nbsp;<span style="font-size:0.85rem;font-weight:600;color:' + meta.color + '">' + (retPct >= 0 ? '+' : '') + retPct.toFixed(2) + '%</span>';
+  if (titleEl && meta) titleEl.innerHTML = 'Performance Trajectory — ' + meta.name + ' &nbsp;<span style="font-size:0.85rem;font-weight:600;color:' + meta.color + '">' + (retPct >= 0 ? '+' : '') + retPct.toFixed(2) + '%</span>';
+  const color = (meta && meta.color) || '#00d4ff';
   CHARTS_F.fund = new Chart(ctx, {
-    type:'line', data:{ labels, datasets:[{ label:meta.name, data:values, borderColor:meta.color, backgroundColor:meta.color+'20', tension:0.3, borderWidth:2, fill:true, pointRadius:values.length>30?0:3 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ticks:{color:'#7d8590',maxTicksLimit:8},grid:{color:'#1e2633'}}, y:{ticks:{color:'#7d8590',callback:v=>'$'+v.toLocaleString()},grid:{color:'#1e2633'}} } }
+    type: 'line',
+    data: { labels, datasets: [{ label: 'Portfolio Value', data: values, borderColor: color, backgroundColor: color + '22', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '$' + ctx.parsed.y.toLocaleString() } } }, scales: { x: { ticks: { maxTicksLimit: 6, color: '#6b7280', font: { size: 11 } }, grid: { color: '#1f2937' } }, y: { ticks: { color: '#6b7280', font: { size: 11 }, callback: v => '$' + v.toLocaleString() }, grid: { color: '#1f2937' } } } }
   });
 }
 
-function renderProfile() { document.getElementById('drawerEmail').textContent = userProfile?.email || userProfile?.user?.email || '—'; }
-async function loadSubscriptionInfo() {
-  try {
-    const sub = await api.getSubscription(); if (!sub) return;
-    const tier = sub.tier || sub.plan || 'Free';
-    const tl = tier.toLowerCase(); let bc = '';
-    if (tl.includes('insider')||tl.includes('elite')||tl.includes('premium')) bc='elite'; else if (tl.includes('pro')) bc='pro';
-    const tb = document.getElementById('drawerTierBadge'); tb.textContent = tier.charAt(0).toUpperCase()+tier.slice(1); if (bc) tb.className='tier-badge '+bc;
-    document.getElementById('drawerTierName').textContent = sub.plan_name||tier+' Plan';
-    document.getElementById('drawerStatus').textContent = (sub.status||'active').charAt(0).toUpperCase()+(sub.status||'active').slice(1);
-    if (sub.current_period_end||sub.tier_expires_at) { const d=new Date((sub.current_period_end||sub.tier_expires_at)*1000||(sub.current_period_end||sub.tier_expires_at)); document.getElementById('drawerBillDate').textContent=d.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}); }
-  } catch(e) {}
-}
-async function loadReferralCode() {
-  try { const r = await api.getReferralStats(); document.getElementById('drawerRefCode').textContent=r?.referral_code||'—'; document.getElementById('drawerRefCount').textContent=r?.referred_count||r?.referral_count||0; } catch(e) {}
-}
-function toggleMobNav() { const nav=document.getElementById('mobNav'),ov=document.getElementById('mobNavOverlay'),o=nav.classList.toggle('open'); ov.classList.toggle('open',o); document.body.style.overflow=o?'hidden':''; }
-function closeMobNav() { document.getElementById('mobNav').classList.remove('open'); document.getElementById('mobNavOverlay').classList.remove('open'); document.body.style.overflow=''; }
-function togglePlatformMenu() { const btn=document.getElementById('platformBtn'),menu=document.getElementById('platformMenu'),open=menu.classList.toggle('open'); btn.classList.toggle('open',open); if(open){const c=e=>{if(!btn.contains(e.target)&&!menu.contains(e.target)){menu.classList.remove('open');btn.classList.remove('open');document.removeEventListener('click',c);}};setTimeout(()=>document.addEventListener('click',c),0);} }
-function openDrawer() { document.getElementById('accountDrawer').classList.add('open'); document.getElementById('drawerOverlay').classList.add('open'); document.body.style.overflow='hidden'; }
-function closeDrawer() { document.getElementById('accountDrawer').classList.remove('open'); document.getElementById('drawerOverlay').classList.remove('open'); document.body.style.overflow=''; }
-function openPwModal() { document.getElementById('pwModal').classList.add('open'); document.getElementById('pwModalText').textContent="We'll send a reset link to your email address."; const btn=document.getElementById('pwConfirmBtn'); btn.disabled=false; btn.textContent='Send Reset Link'; }
-function closePwModal() { document.getElementById('pwModal').classList.remove('open'); }
-async function sendPasswordReset() { const btn=document.getElementById('pwConfirmBtn'); btn.disabled=true; btn.textContent='Sending…'; try { const email=userProfile?.email||userProfile?.user?.email; if(!email) throw new Error('No email on file'); await api.requestPasswordReset(email); document.getElementById('pwModalText').textContent='Reset link sent! Check your inbox.'; btn.textContent='Sent ✓'; } catch(e) { document.getElementById('pwModalText').textContent=e.message||'Failed.'; btn.disabled=false; btn.textContent='Try Again'; } }
-function copyReferral() { const code=document.getElementById('drawerRefCode').textContent; if(code&&code!=='———'){navigator.clipboard.writeText(code).then(()=>showToast('Referral code copied!','success')).catch(()=>showToast('Copy failed','error'));} }
-function logout() { auth.logout(); window.location.href='login.html'; }
-function showToast(msg,type='success') { const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show '+type; clearTimeout(t._timer); t._timer=setTimeout(()=>t.classList.remove('show'),3000); }
+// ── SOCIAL: Privacy, Sharing, Comments ───────────────────────────────────────
 
-// ── Public portfolio loader ──────────────────────────────────────────────────
 async function loadPublicPortfolio() {
   try {
-    const data = await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/public`).then(r => r.json());
-    botData  = data.bot || data;
-    holdings = botData.holdings || [];
-    BOT_SLUG = (botData.strategy_name || botData.fund || 'bot13').toLowerCase();
-    if (!FUND_META[BOT_SLUG]) BOT_SLUG = 'bot13';
-    renderFundHero();
-    document.title = (botData.name || 'Portfolio') + ' — ' + SITE_TITLE;
-    // Show simplified stats (no holdings filter)
-    document.getElementById('fsHoldings').closest('.fstat').style.display = 'none';
-    document.getElementById('fsPositions').closest('.fstat').style.display = 'none';
-    const fd = botData.fund_stats || {};
-    document.getElementById('fsDay').textContent       = fmtPct(fd.day_pct  || 0);
-    document.getElementById('fsDay').className         = 'fstat-val ' + cls(fd.day_pct || 0);
-    document.getElementById('fsInception').textContent = fmtPct(fd.gain_loss_pct || botData.total_return || 0);
-    document.getElementById('fsInception').className   = 'fstat-val ' + cls(fd.gain_loss_pct || botData.total_return || 0);
-    document.getElementById('fsValue').textContent     = fmt$0(botData.total_value || botData.allocated || 0);
-    drawFundChart();
+    const token = await auth.getToken();
+    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/public', { headers });
+    if (res.status === 403) {
+      // Private portfolio — show wall
+      document.querySelector('main.app').innerHTML = '<div class="private-wall"><div class="private-wall-icon">🔒</div><h2>Private Portfolio</h2><p>This portfolio is private. Ask the owner to share it with your @handle.</p></div>';
+      return;
+    }
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    BOT_SLUG = data.fund || data.strategy || 'bot13';
+    if (FUND_META[BOT_SLUG]) renderFundHero();
+    document.getElementById('fundHeroName').textContent = data.portfolio_name || 'Portfolio';
+    const fsInc = document.getElementById('fsInception');
+    if (fsInc && data.gain_loss_pct != null) {
+      fsInc.textContent = (data.gain_loss_pct >= 0 ? '+' : '') + data.gain_loss_pct.toFixed(2) + '%';
+      fsInc.className = 'fstat-val ' + (data.gain_loss_pct >= 0 ? 'pos' : 'neg');
+    }
+    if (data.performance_curve && data.performance_curve.length) {
+      const wrap = document.getElementById('chartWrap');
+      const ctx  = document.getElementById('chartFund');
+      if (wrap && ctx) {
+        const meta  = FUND_META[BOT_SLUG] || {};
+        const color = meta.color || '#00d4ff';
+        const labels = data.performance_curve.map(p => p.date);
+        const values = data.performance_curve.map(p => p.total_value);
+        if (CHARTS_F.fund) CHARTS_F.fund.destroy();
+        CHARTS_F.fund = new Chart(ctx, {
+          type: 'line',
+          data: { labels, datasets: [{ data: values, borderColor: color, backgroundColor: color + '22', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: 6, color: '#6b7280', font: { size: 11 } }, grid: { color: '#1f2937' } }, y: { ticks: { color: '#6b7280', font: { size: 11 }, callback: v => '$' + v.toLocaleString() }, grid: { color: '#1f2937' } } } }
+        });
+      }
+    }
   } catch(e) { showToast('Could not load portfolio', 'error'); }
 }
 
-// ── Leaderboard toggle ───────────────────────────────────────────────────────
-async function loadLeaderboardSetting() {
+async function loadPrivacySettings() {
   try {
-    const data = await api.getBot(BOT_ID);
-    const bot  = data?.bot || data;
-    document.getElementById('lbToggle').checked = bot.public_leaderboard !== false;
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/public', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const privToggle = document.getElementById('privacyToggle');
+    const lbToggle   = document.getElementById('lbToggle');
+    if (privToggle) privToggle.checked = !!data.is_private;
+    if (lbToggle) {
+      lbToggle.checked   = !!data.public_leaderboard;
+      lbToggle.disabled  = !!data.is_private;
+      lbToggle.parentElement.style.opacity = data.is_private ? '0.4' : '1';
+    }
   } catch(e) {}
+  loadShares();
 }
+
+async function togglePrivacy(checked) {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/settings', {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_private: checked })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    const lbToggle = document.getElementById('lbToggle');
+    if (lbToggle) {
+      if (checked) { lbToggle.checked = false; lbToggle.disabled = true; lbToggle.parentElement.style.opacity = '0.4'; }
+      else { lbToggle.disabled = false; lbToggle.parentElement.style.opacity = '1'; }
+    }
+    showToast(checked ? 'Portfolio set to private' : 'Portfolio set to public', 'success');
+  } catch(e) { showToast('Could not update privacy setting', 'error'); document.getElementById('privacyToggle').checked = !checked; }
+}
+
 async function toggleLeaderboard(checked) {
   try {
-    await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/settings`, {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/settings', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + auth.getToken() },
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ public_leaderboard: checked })
     });
-    showToast(checked ? 'Portfolio added to leaderboard ✓' : 'Portfolio hidden from leaderboard', 'success');
-  } catch(e) { showToast('Failed to update setting', 'error'); }
+    if (!res.ok) throw new Error(await res.text());
+    showToast(checked ? 'Added to leaderboard' : 'Removed from leaderboard', 'success');
+  } catch(e) { showToast('Could not update leaderboard setting', 'error'); document.getElementById('lbToggle').checked = !checked; }
 }
 
-// ── Share ────────────────────────────────────────────────────────────────────
 function sharePortfolio() {
-  const url = window.location.origin + '/portfolio-fund.html?id=' + BOT_ID + '&public=1';
-  navigator.clipboard.writeText(url)
-    .then(() => showToast('Link copied! Share it with anyone.', 'success'))
-    .catch(() => { prompt('Copy this link:', url); });
+  const url = window.location.origin + '/portfolio-fund.html?id=' + encodeURIComponent(BOT_ID) + '&public=1';
+  if (navigator.share) {
+    navigator.share({ title: 'Check out my portfolio', url }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(url).then(() => showToast('Portfolio link copied!', 'success')).catch(() => showToast('Could not copy link', 'error'));
+  }
 }
 
-// ── Comments ─────────────────────────────────────────────────────────────────
+async function loadShares() {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/shares', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    renderSharedWith(data.shares || []);
+  } catch(e) {}
+}
+
+function renderSharedWith(shares) {
+  const wrap = document.getElementById('sharedWithList');
+  if (!wrap) return;
+  if (!shares.length) {
+    wrap.innerHTML = '<div style="font-size:0.75rem;color:var(--muted);text-align:center;padding:8px 0">Not shared with anyone yet</div>';
+    return;
+  }
+  wrap.innerHTML = shares.map(s =>
+    '<div class="shared-user-row">'
+    + '<span class="shared-user-handle">@' + escHtml(s.handle) + '</span>'
+    + '<button class="revoke-btn" onclick="revokeShare(\'' + s.share_id + '\', \'' + escHtml(s.handle) + '\')">Remove</button>'
+    + '</div>'
+  ).join('');
+}
+
+async function addShare() {
+  const input = document.getElementById('shareHandleInput');
+  const handle = (input.value || '').trim().replace(/^@/, '');
+  if (!handle) { showToast('Enter a @handle to share with', 'error'); return; }
+  const btn = document.getElementById('addShareBtn');
+  btn.textContent = '…'; btn.disabled = true;
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/share', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ handle })
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Error'); }
+    input.value = '';
+    showToast('@' + handle + ' can now view this portfolio', 'success');
+    loadShares();
+  } catch(e) { showToast(e.message || 'Could not share portfolio', 'error'); }
+  finally { btn.textContent = 'Add'; btn.disabled = false; }
+}
+
+async function revokeShare(shareId, handle) {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/share/' + shareId, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('Failed');
+    showToast('@' + handle + ' access removed', 'success');
+    loadShares();
+  } catch(e) { showToast('Could not revoke access', 'error'); }
+}
+
 async function loadComments() {
   try {
-    const data = await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/comments`).then(r => r.json());
-    renderComments(data.comments || []);
-  } catch(e) {
-    document.getElementById('commentsList').innerHTML = '<div class="comments-empty">Could not load comments.</div>';
-  }
-  renderCommentForm();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/comments?limit=50');
+    const data = await res.json();
+    const comments = data.comments || [];
+    const token = await auth.getToken().catch(() => null);
+    let myUserId = null;
+    if (token) { try { myUserId = JSON.parse(atob(token.split('.')[1])).user_id; } catch(e) {} }
+    renderCommentForm();
+    renderComments(comments, myUserId);
+  } catch(e) { document.getElementById('commentsList').innerHTML = '<div class="comments-empty">Could not load comments.</div>'; }
 }
 
 function renderCommentForm() {
   const wrap = document.getElementById('commentFormWrap');
-  if (!auth.isAuthenticated()) {
-    wrap.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;margin-bottom:14px">Log in to leave a comment.</p>';
-    return;
-  }
-  const handle = userProfile?.display_name || userProfile?.user?.display_name;
+  if (!wrap) return;
+  const handle = userProfile?.display_name;
   if (!handle) {
-    wrap.innerHTML = '<div class="no-handle-notice">Set a <strong>@handle</strong> in your account settings to leave comments. <a href="dashboard.html">Go to settings →</a></div>';
+    wrap.innerHTML = '<div style="font-size:0.85rem;color:var(--muted);padding:10px 0;text-align:center">Set a <a href="dashboard.html" style="color:var(--blue)">@handle in your dashboard</a> to post comments.</div>';
     return;
   }
-  wrap.innerHTML = `
-    <div class="comment-form">
-      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">Commenting as <strong style="color:var(--blue)">@${escHtml(handle)}</strong></div>
-      <textarea id="commentBody" placeholder="Share your thoughts on this portfolio…" maxlength="1000" oninput="document.getElementById('commentChars').textContent=this.value.length"></textarea>
-      <div class="comment-form-footer">
-        <span class="comment-chars"><span id="commentChars">0</span>/1000</span>
-        <button class="btn-post" onclick="postComment()">Post Comment</button>
-      </div>
-    </div>`;
+  wrap.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">'
+    + '<textarea id="commentBody" maxlength="1000" rows="3" placeholder="Write a comment…" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:var(--text);resize:vertical;outline:none;font-family:inherit"></textarea>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center">'
+    + '<span style="font-size:0.75rem;color:var(--muted)">Posting as <strong style="color:var(--blue)">@' + escHtml(handle) + '</strong></span>'
+    + '<button class="btn-copy" onclick="postComment()" style="padding:7px 16px;font-size:0.8rem">Post</button>'
+    + '</div></div>';
 }
 
-function renderComments(comments) {
+function renderComments(comments, myUserId) {
   const list = document.getElementById('commentsList');
-  const myId = userProfile?.id || userProfile?.user?.id;
-  if (!comments.length) {
-    list.innerHTML = '<div class="comments-empty">No comments yet — be the first!</div>';
-    return;
-  }
-  list.innerHTML = comments.map(c => `
-    <div class="comment-card" id="cmt-${c.id}">
-      <div class="comment-header">
-        <span class="comment-handle">@${escHtml(c.display_name)}</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="comment-time">${relTime(c.created_at)}</span>
-          ${myId === c.user_id ? `<button class="comment-del-btn" onclick="deleteComment('${c.id}')">✕</button>` : ''}
-        </div>
-      </div>
-      <div class="comment-body-text">${escHtml(c.body)}</div>
-    </div>`).join('');
+  if (!comments.length) { list.innerHTML = '<div class="comments-empty">No comments yet. Be the first!</div>'; return; }
+  list.innerHTML = comments.map(c => {
+    const isOwn = myUserId && c.user_id === myUserId;
+    const ts = c.created_at ? new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    return '<div class="comment-card">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+      + '<span class="comment-handle">@' + escHtml(c.display_name) + '</span>'
+      + '<span style="display:flex;gap:10px;align-items:center">'
+      + '<span style="font-size:0.72rem;color:var(--muted)">' + ts + '</span>'
+      + (isOwn ? '<button class="revoke-btn" onclick="deleteComment(\'' + c.id + '\')">Delete</button>' : '')
+      + '</span></div>'
+      + '<div style="font-size:0.875rem;line-height:1.55;color:var(--text)">' + escHtml(c.body) + '</div>'
+      + '</div>';
+  }).join('');
 }
 
 async function postComment() {
   const body = (document.getElementById('commentBody')?.value || '').trim();
   if (!body) return;
-  const btn = document.querySelector('.btn-post');
-  if (btn) { btn.disabled = true; btn.textContent = 'Posting…'; }
+  if (!userProfile?.display_name) { showToast('Set a @handle first', 'error'); return; }
   try {
-    await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/comments`, {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/comments', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + auth.getToken() },
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ body })
     });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Error'); }
     document.getElementById('commentBody').value = '';
-    document.getElementById('commentChars').textContent = '0';
-    await loadComments();
-    showToast('Comment posted!', 'success');
-  } catch(e) { showToast('Failed to post comment', 'error'); }
-  finally { if (btn) { btn.disabled = false; btn.textContent = 'Post Comment'; } }
+    loadComments();
+  } catch(e) { showToast(e.message || 'Could not post comment', 'error'); }
 }
 
-async function deleteComment(id) {
+async function deleteComment(commentId) {
   try {
-    await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/comments/${id}`, {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/comments/' + commentId, {
       method: 'DELETE',
-      headers: { 'Authorization': 'Bearer ' + auth.getToken() }
+      headers: { 'Authorization': 'Bearer ' + token }
     });
-    document.getElementById('cmt-' + id)?.remove();
-    const remaining = document.querySelectorAll('[id^="cmt-"]').length;
-    if (!remaining) document.getElementById('commentsList').innerHTML = '<div class="comments-empty">No comments yet — be the first!</div>';
-    showToast('Comment deleted', 'success');
-  } catch(e) { showToast('Failed to delete comment', 'error'); }
+    if (!res.ok) throw new Error('Failed');
+    loadComments();
+  } catch(e) { showToast('Could not delete comment', 'error'); }
 }
 
-window.toggleMobNav=toggleMobNav; window.closeMobNav=closeMobNav; window.togglePlatformMenu=togglePlatformMenu;
-window.openDrawer=openDrawer; window.closeDrawer=closeDrawer; window.openPwModal=openPwModal;
-window.closePwModal=closePwModal; window.sendPasswordReset=sendPasswordReset; window.copyReferral=copyReferral; window.logout=logout;
-window.toggleLeaderboard=toggleLeaderboard; window.sharePortfolio=sharePortfolio;
-window.postComment=postComment; window.deleteComment=deleteComment;
+window.togglePrivacy     = togglePrivacy;
+window.toggleLeaderboard = toggleLeaderboard;
+window.sharePortfolio    = sharePortfolio;
+window.addShare          = addShare;
+window.revokeShare       = revokeShare;
+window.postComment       = postComment;
+window.deleteComment     = deleteComment;
 
-document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>

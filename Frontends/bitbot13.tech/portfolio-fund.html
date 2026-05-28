@@ -165,6 +165,14 @@
     .no-handle-notice { background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.2); border-radius: 10px; padding: 12px 16px; font-size: 0.82rem; color: var(--muted); margin-bottom: 14px; }
     .no-handle-notice a { color: var(--blue); text-decoration: none; }
     .no-handle-notice a:hover { text-decoration: underline; }
+    .shared-user-row { display:flex; align-items:center; justify-content:space-between; padding:7px 10px; background:var(--card); border:1px solid var(--border); border-radius:8px; margin-bottom:6px; font-size:0.82rem; }
+    .shared-user-handle { color:var(--blue); font-weight:500; }
+    .revoke-btn { background:rgba(255,85,85,0.1); border:1px solid rgba(255,85,85,0.25); color:#ff5555; border-radius:6px; padding:3px 8px; font-size:0.75rem; cursor:pointer; }
+    .revoke-btn:hover { background:rgba(255,85,85,0.22); }
+    .private-wall { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; text-align:center; }
+    .private-wall-icon { font-size:3rem; margin-bottom:16px; }
+    .private-wall h2 { font-size:1.3rem; margin-bottom:8px; }
+    .private-wall p { color:var(--muted); font-size:0.9rem; max-width:320px; line-height:1.6; }
   </style>
 </head>
 <body>
@@ -253,11 +261,40 @@
   </div>
   <div class="drawer-section" id="drawerPortfolioSection" style="display:none">
     <div class="drawer-section-title">Portfolio Settings</div>
-    <div class="toggle-row">
+    <!-- Privacy toggle -->
+    <div class="toggle-row" style="margin-bottom:12px">
+      <div>
+        <div style="font-size:0.85rem;font-weight:500;margin-bottom:2px">Private Portfolio</div>
+        <div style="font-size:0.75rem;color:var(--muted)">Only you + shared users can view</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="privacyToggle" onchange="togglePrivacy(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <!-- Leaderboard toggle -->
+    <div class="toggle-row" style="margin-bottom:16px">
       <div>
         <div style="font-size:0.85rem;font-weight:500;margin-bottom:2px">Show on Leaderboard</div>
         <div style="font-size:0.75rem;color:var(--muted)">Qualify at 21 days + 10% gain</div>
       </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="lbToggle" onchange="toggleLeaderboard(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <!-- Share with user -->
+    <div style="margin-bottom:10px">
+      <div style="font-size:0.8rem;font-weight:600;margin-bottom:8px;color:var(--text)">Share With</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="text" id="shareHandleInput" placeholder="@username" maxlength="50"
+          style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:0.82rem;color:var(--text);outline:none">
+        <button class="btn-copy" onclick="addShare()" id="addShareBtn" style="white-space:nowrap;padding:7px 12px;font-size:0.8rem">Add</button>
+      </div>
+    </div>
+    <!-- Shared-with list -->
+    <div id="sharedWithList" style="margin-top:4px"></div>
+  </div>
       <label class="toggle-switch">
         <input type="checkbox" id="lbToggle" onchange="toggleLeaderboard(this.checked)">
         <span class="toggle-slider"></span>
@@ -439,7 +476,7 @@ async function init() {
     document.getElementById('shareBtn').style.display = 'flex';
     document.getElementById('drawerPortfolioSection').style.display = 'block';
     document.getElementById('commentsSection').style.display = 'block';
-    loadLeaderboardSetting();
+    loadPrivacySettings();
     await Promise.allSettled([loadPortfolio(), loadSiteData()]);
   }
   loadComments();
@@ -635,82 +672,253 @@ async function loadPublicPortfolio() {
   } catch(e) { showToast('Could not load portfolio', 'error'); }
 }
 
-async function loadLeaderboardSetting() {
+
+// ── SOCIAL: Privacy, Sharing, Comments ───────────────────────────────────────
+
+async function loadPublicPortfolio() {
   try {
-    const data = await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/public`).then(r => r.ok ? r.json() : null);
-    if (data) { const tog = document.getElementById('lbToggle'); if (tog) tog.checked = !!data.public_leaderboard; }
+    const token = await auth.getToken();
+    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/public', { headers });
+    if (res.status === 403) {
+      document.querySelector('main.app').innerHTML = '<div class="private-wall"><div class="private-wall-icon">🔒</div><h2>Private Portfolio</h2><p>This portfolio is private. Ask the owner to share it with your @handle.</p></div>';
+      return;
+    }
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    BOT_SLUG = data.fund || data.strategy || 'bot13';
+    if (FUND_META[BOT_SLUG]) renderFundHero();
+    document.getElementById('fundHeroName').textContent = data.portfolio_name || 'Portfolio';
+    const fsInc = document.getElementById('fsInception');
+    if (fsInc && data.gain_loss_pct != null) {
+      fsInc.textContent = (data.gain_loss_pct >= 0 ? '+' : '') + data.gain_loss_pct.toFixed(2) + '%';
+      fsInc.className = 'fstat-val ' + (data.gain_loss_pct >= 0 ? 'pos' : 'neg');
+    }
+    if (data.performance_curve && data.performance_curve.length) {
+      const wrap = document.getElementById('chartWrap');
+      const ctx  = document.getElementById('chartFund');
+      if (wrap && ctx) {
+        const meta  = FUND_META[BOT_SLUG] || {};
+        const color = meta.color || '#00d4ff';
+        const labels = data.performance_curve.map(p => p.date);
+        const values = data.performance_curve.map(p => p.total_value);
+        if (CHARTS_F.fund) CHARTS_F.fund.destroy();
+        CHARTS_F.fund = new Chart(ctx, {
+          type: 'line',
+          data: { labels, datasets: [{ data: values, borderColor: color, backgroundColor: color + '22', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: 6, color: '#6b7280', font: { size: 11 } }, grid: { color: '#1f2937' } }, y: { ticks: { color: '#6b7280', font: { size: 11 }, callback: v => '$' + v.toLocaleString() }, grid: { color: '#1f2937' } } } }
+        });
+      }
+    }
+  } catch(e) { showToast('Could not load portfolio', 'error'); }
+}
+
+async function loadPrivacySettings() {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/public', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const privToggle = document.getElementById('privacyToggle');
+    const lbToggle   = document.getElementById('lbToggle');
+    if (privToggle) privToggle.checked = !!data.is_private;
+    if (lbToggle) {
+      lbToggle.checked   = !!data.public_leaderboard;
+      lbToggle.disabled  = !!data.is_private;
+      lbToggle.parentElement.style.opacity = data.is_private ? '0.4' : '1';
+    }
   } catch(e) {}
+  loadShares();
+}
+
+async function togglePrivacy(checked) {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/settings', {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_private: checked })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    const lbToggle = document.getElementById('lbToggle');
+    if (lbToggle) {
+      if (checked) { lbToggle.checked = false; lbToggle.disabled = true; lbToggle.parentElement.style.opacity = '0.4'; }
+      else { lbToggle.disabled = false; lbToggle.parentElement.style.opacity = '1'; }
+    }
+    showToast(checked ? 'Portfolio set to private' : 'Portfolio set to public', 'success');
+  } catch(e) { showToast('Could not update privacy setting', 'error'); document.getElementById('privacyToggle').checked = !checked; }
 }
 
 async function toggleLeaderboard(checked) {
   try {
     const token = await auth.getToken();
-    await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/settings`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ public_leaderboard: checked }) });
-    showToast(checked ? 'Added to leaderboard!' : 'Removed from leaderboard', 'success');
-  } catch(e) { showToast('Could not update setting', 'error'); }
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/settings', {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ public_leaderboard: checked })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    showToast(checked ? 'Added to leaderboard' : 'Removed from leaderboard', 'success');
+  } catch(e) { showToast('Could not update leaderboard setting', 'error'); document.getElementById('lbToggle').checked = !checked; }
 }
 
 function sharePortfolio() {
-  const url = window.location.origin + '/portfolio-fund.html?id=' + BOT_ID + '&public=1';
-  if (navigator.share) { navigator.share({ title: 'My Portfolio', url }); }
-  else { navigator.clipboard.writeText(url).then(() => showToast('Link copied!', 'success')).catch(() => showToast('Copy failed', 'error')); }
+  const url = window.location.origin + '/portfolio-fund.html?id=' + encodeURIComponent(BOT_ID) + '&public=1';
+  if (navigator.share) {
+    navigator.share({ title: 'Check out my portfolio', url }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(url).then(() => showToast('Portfolio link copied!', 'success')).catch(() => showToast('Could not copy link', 'error'));
+  }
+}
+
+async function loadShares() {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/shares', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    renderSharedWith(data.shares || []);
+  } catch(e) {}
+}
+
+function renderSharedWith(shares) {
+  const wrap = document.getElementById('sharedWithList');
+  if (!wrap) return;
+  if (!shares.length) {
+    wrap.innerHTML = '<div style="font-size:0.75rem;color:var(--muted);text-align:center;padding:8px 0">Not shared with anyone yet</div>';
+    return;
+  }
+  wrap.innerHTML = shares.map(s =>
+    '<div class="shared-user-row">'
+    + '<span class="shared-user-handle">@' + escHtml(s.handle) + '</span>'
+    + '<button class="revoke-btn" onclick="revokeShare(\'' + s.share_id + '\', \'' + escHtml(s.handle) + '\')">Remove</button>'
+    + '</div>'
+  ).join('');
+}
+
+async function addShare() {
+  const input = document.getElementById('shareHandleInput');
+  const handle = (input.value || '').trim().replace(/^@/, '');
+  if (!handle) { showToast('Enter a @handle to share with', 'error'); return; }
+  const btn = document.getElementById('addShareBtn');
+  btn.textContent = '…'; btn.disabled = true;
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/share', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ handle })
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Error'); }
+    input.value = '';
+    showToast('@' + handle + ' can now view this portfolio', 'success');
+    loadShares();
+  } catch(e) { showToast(e.message || 'Could not share portfolio', 'error'); }
+  finally { btn.textContent = 'Add'; btn.disabled = false; }
+}
+
+async function revokeShare(shareId, handle) {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/share/' + shareId, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('Failed');
+    showToast('@' + handle + ' access removed', 'success');
+    loadShares();
+  } catch(e) { showToast('Could not revoke access', 'error'); }
 }
 
 async function loadComments() {
   try {
-    const res = await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/comments`);
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/comments?limit=50');
     const data = await res.json();
+    const comments = data.comments || [];
+    const token = await auth.getToken().catch(() => null);
+    let myUserId = null;
+    if (token) { try { myUserId = JSON.parse(atob(token.split('.')[1])).user_id; } catch(e) {} }
     renderCommentForm();
-    renderComments(data.comments || []);
+    renderComments(comments, myUserId);
   } catch(e) { document.getElementById('commentsList').innerHTML = '<div class="comments-empty">Could not load comments.</div>'; }
 }
 
 function renderCommentForm() {
   const wrap = document.getElementById('commentFormWrap');
-  if (!auth.isAuthenticated()) { wrap.innerHTML = ''; return; }
-  const handle = userProfile?.display_name || userProfile?.user?.display_name || '';
+  if (!wrap) return;
+  const handle = userProfile?.display_name;
   if (!handle) {
-    wrap.innerHTML = '<div class="no-handle-notice">Set a <a href="dashboard.html#account">display name</a> to leave comments.</div>';
+    wrap.innerHTML = '<div style="font-size:0.85rem;color:var(--muted);padding:10px 0;text-align:center">Set a <a href="dashboard.html" style="color:var(--blue)">@handle in your dashboard</a> to post comments.</div>';
     return;
   }
-  wrap.innerHTML = `<div class="comment-form"><textarea id="commentText" placeholder="Share your thoughts on this portfolio…" maxlength="500" oninput="document.getElementById('commentChars').textContent=this.value.length+'/500'"></textarea><div class="comment-form-footer"><span class="comment-chars" id="commentChars">0/500</span><button class="btn-post" onclick="postComment()">Post</button></div></div>`;
+  wrap.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">'
+    + '<textarea id="commentBody" maxlength="1000" rows="3" placeholder="Write a comment…" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:var(--text);resize:vertical;outline:none;font-family:inherit"></textarea>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center">'
+    + '<span style="font-size:0.75rem;color:var(--muted)">Posting as <strong style="color:var(--blue)">@' + escHtml(handle) + '</strong></span>'
+    + '<button class="btn-copy" onclick="postComment()" style="padding:7px 16px;font-size:0.8rem">Post</button>'
+    + '</div></div>';
 }
 
-function renderComments(comments) {
+function renderComments(comments, myUserId) {
   const list = document.getElementById('commentsList');
   if (!comments.length) { list.innerHTML = '<div class="comments-empty">No comments yet. Be the first!</div>'; return; }
-  const myId = userProfile?.id || userProfile?.user?.id || '';
   list.innerHTML = comments.map(c => {
-    const canDel = myId && (c.user_id === myId);
-    return `<div class="comment-card"><div class="comment-header"><span class="comment-handle">@${escHtml(c.display_name)}</span><div style="display:flex;align-items:center;gap:8px"><span class="comment-time">${relTime(c.created_at)}</span>${canDel ? `<button class="comment-del-btn" onclick="deleteComment('${c.id}')">Delete</button>` : ''}</div></div><div class="comment-body-text">${escHtml(c.body)}</div></div>`;
+    const isOwn = myUserId && c.user_id === myUserId;
+    const ts = c.created_at ? new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    return '<div class="comment-card">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+      + '<span class="comment-handle">@' + escHtml(c.display_name) + '</span>'
+      + '<span style="display:flex;gap:10px;align-items:center">'
+      + '<span style="font-size:0.72rem;color:var(--muted)">' + ts + '</span>'
+      + (isOwn ? '<button class="revoke-btn" onclick="deleteComment(\'' + c.id + '\')">Delete</button>' : '')
+      + '</span></div>'
+      + '<div style="font-size:0.875rem;line-height:1.55;color:var(--text)">' + escHtml(c.body) + '</div>'
+      + '</div>';
   }).join('');
 }
 
 async function postComment() {
-  const ta = document.getElementById('commentText');
-  const body = (ta?.value || '').trim();
+  const body = (document.getElementById('commentBody')?.value || '').trim();
   if (!body) return;
+  if (!userProfile?.display_name) { showToast('Set a @handle first', 'error'); return; }
   try {
     const token = await auth.getToken();
-    await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/comments`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ body }) });
-    ta.value = ''; document.getElementById('commentChars').textContent = '0/500';
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/comments', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ body })
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Error'); }
+    document.getElementById('commentBody').value = '';
     loadComments();
-  } catch(e) { showToast('Could not post comment', 'error'); }
+  } catch(e) { showToast(e.message || 'Could not post comment', 'error'); }
 }
 
 async function deleteComment(commentId) {
   try {
     const token = await auth.getToken();
-    await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/comments/${commentId}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/comments/' + commentId, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('Failed');
     loadComments();
   } catch(e) { showToast('Could not delete comment', 'error'); }
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
-window.toggleMobNav=toggleMobNav;window.closeMobNav=closeMobNav;window.togglePlatformMenu=togglePlatformMenu;
-window.openDrawer=openDrawer;window.closeDrawer=closeDrawer;window.openPwModal=openPwModal;
-window.closePwModal=closePwModal;window.sendPasswordReset=sendPasswordReset;window.copyReferral=copyReferral;window.logout=logout;
-window.toggleLeaderboard=toggleLeaderboard;window.sharePortfolio=sharePortfolio;window.postComment=postComment;window.deleteComment=deleteComment;
+window.togglePrivacy     = togglePrivacy;
+window.toggleLeaderboard = toggleLeaderboard;
+window.sharePortfolio    = sharePortfolio;
+window.addShare          = addShare;
+window.revokeShare       = revokeShare;
+window.postComment       = postComment;
+window.deleteComment     = deleteComment;
+
 
 document.addEventListener('DOMContentLoaded', init);
 </script>

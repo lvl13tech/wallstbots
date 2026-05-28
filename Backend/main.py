@@ -2673,7 +2673,11 @@ class CommentCreate(BaseModel):
     body: str
 
 class LeaderboardSettings(BaseModel):
-    public_leaderboard: bool
+    public_leaderboard: Optional[bool] = None
+    is_private: Optional[bool] = None
+
+class ShareCreate(BaseModel):
+    handle: str   # @handle of user to share with
 
 
 @app.patch("/user/profile")
@@ -2772,25 +2776,60 @@ async def get_leaderboard(
 
 
 @app.get("/portfolio/{bot_id}/public")
-async def get_public_portfolio(bot_id: str):
-    """Public read-only portfolio view — no auth required."""
+async def get_public_portfolio(
+    bot_id: str,
+    request: Request,
+    authorization: Optional[str] = Header(None),
+):
+    """
+    Portfolio view — enforces privacy.
+    - Public (is_private=FALSE): anyone can view.
+    - Private (is_private=TRUE): owner + explicitly shared users only.
+    """
+    # Attempt to identify caller (optional auth — don't 401 on missing token)
+    caller_user_id: Optional[str] = None
+    try:
+        token = None
+        if authorization and authorization.startswith("Bearer "):
+            token = authorization.split(" ", 1)[1]
+        if token:
+            import jwt as pyjwt
+            payload = pyjwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+            caller_user_id = payload.get("user_id") or payload.get("sub")
+    except Exception:
+        pass
+
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
         cursor.execute("""
             SELECT
                 b.id, b.name, b.platform, b.created_at, b.public_leaderboard,
+                b.is_private, b.user_id AS owner_id,
                 COALESCE(u.display_name, 'Trader #' || SUBSTRING(u.id::text, 1, 6)) AS handle,
                 lp.strategy_name AS fund,
                 lp.gain_loss_pct, lp.total_value, lp.entry_cost, lp.snapshot_date
             FROM bots b
             JOIN users u ON b.user_id = u.id
             LEFT JOIN bot_latest_performance lp ON lp.bot_id = b.id
-            WHERE b.id = %s AND b.public_leaderboard = TRUE AND b.status = 'active'
+            WHERE b.id = %s AND b.status = 'active'
         """, (bot_id,))
         bot = cursor.fetchone()
         if not bot:
-            raise HTTPException(status_code=404, detail="Portfolio not found or not public")
+            raise HTTPException(status_code=404, detail="Portfolio not found")
+
+        # Privacy enforcement
+        if bot["is_private"]:
+            if not caller_user_id:
+                raise HTTPException(status_code=403, detail="This portfolio is private")
+            if str(bot["owner_id"]) != caller_user_id:
+                # Check if caller is in shares
+                cursor.execute("""
+                    SELECT id FROM portfolio_shares
+                    WHERE bot_id = %s AND shared_with_user_id = %s
+                """, (bot_id, caller_user_id))
+                if not cursor.fetchone():
+                    raise HTTPException(status_code=403, detail="This portfolio is private")
 
         cursor.execute("""
             SELECT symbol, fund_name, weight, entry_price FROM bot_holdings
@@ -2816,6 +2855,9 @@ async def get_public_portfolio(bot_id: str):
             "entry_cost":        float(bot["entry_cost"] or 0),
             "created_at":        bot["created_at"].isoformat() if bot["created_at"] else None,
             "snapshot_date":     str(bot["snapshot_date"]) if bot["snapshot_date"] else None,
+            "is_private":        bool(bot["is_private"]),
+            "public_leaderboard": bool(bot["public_leaderboard"]),
+            "is_owner":          caller_user_id == str(bot["owner_id"]),
             "holdings":          [dict(h) for h in holdings],
             "performance_curve": [
                 {"date": str(r["snapshot_date"]), "gain_loss_pct": float(r["gain_loss_pct"] or 0), "total_value": float(r["total_value"] or 0)}
@@ -2829,13 +2871,13 @@ async def get_public_portfolio(bot_id: str):
 
 @app.get("/portfolio/{bot_id}/comments")
 async def get_comments(bot_id: str, limit: int = Query(50, le=100), offset: int = 0):
-    """Public — anyone can read comments."""
+    """Read comments — available on any non-private portfolio."""
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-        cursor.execute("SELECT id FROM bots WHERE id = %s AND public_leaderboard = TRUE", (bot_id,))
+        cursor.execute("SELECT id FROM bots WHERE id = %s AND status = 'active'", (bot_id,))
         if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Portfolio not found or not public")
+            raise HTTPException(status_code=404, detail="Portfolio not found")
         cursor.execute("""
             SELECT id, display_name, body, created_at
             FROM portfolio_comments
@@ -2866,9 +2908,9 @@ async def post_comment(
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-        cursor.execute("SELECT id FROM bots WHERE id = %s AND public_leaderboard = TRUE", (bot_id,))
+        cursor.execute("SELECT id FROM bots WHERE id = %s AND status = 'active'", (bot_id,))
         if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Portfolio not found or not public")
+            raise HTTPException(status_code=404, detail="Portfolio not found")
 
         cursor.execute("SELECT display_name, full_name FROM users WHERE id = %s", (current_user["user_id"],))
         user = cursor.fetchone()
@@ -2919,20 +2961,138 @@ async def update_portfolio_settings(
     body: LeaderboardSettings,
     current_user: dict = Depends(get_current_user),
 ):
-    """Toggle public_leaderboard flag — owner only."""
+    """Update portfolio privacy settings — owner only.
+    Accepts is_private and/or public_leaderboard. Forcing private also disables leaderboard."""
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-        cursor.execute("""
-            UPDATE bots SET public_leaderboard = %s, updated_at = NOW()
-            WHERE id = %s AND user_id = %s
-            RETURNING id, public_leaderboard
-        """, (body.public_leaderboard, bot_id, current_user["user_id"]))
+        # Build dynamic SET clause
+        updates = []
+        params = []
+        if body.is_private is not None:
+            updates.append("is_private = %s")
+            params.append(body.is_private)
+            if body.is_private:
+                # Private portfolio can't be on leaderboard
+                updates.append("public_leaderboard = FALSE")
+        if body.public_leaderboard is not None and body.is_private is not True:
+            updates.append("public_leaderboard = %s")
+            params.append(body.public_leaderboard)
+        if not updates:
+            raise HTTPException(status_code=400, detail="No settings provided")
+        updates.append("updated_at = NOW()")
+        params.extend([bot_id, current_user["user_id"]])
+        cursor.execute(
+            f"UPDATE bots SET {', '.join(updates)} WHERE id = %s AND user_id = %s RETURNING id, public_leaderboard, is_private",
+            params
+        )
         row = cursor.fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Portfolio not found or not yours")
         conn.commit()
-        return {"bot_id": str(row["id"]), "public_leaderboard": row["public_leaderboard"]}
+        return {
+            "bot_id": str(row["id"]),
+            "public_leaderboard": row["public_leaderboard"],
+            "is_private": row["is_private"],
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/portfolio/{bot_id}/shares")
+async def get_portfolio_shares(
+    bot_id: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """List users this portfolio has been shared with — owner only."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("SELECT id FROM bots WHERE id = %s AND user_id = %s", (bot_id, current_user["user_id"]))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=403, detail="Not your portfolio")
+        cursor.execute("""
+            SELECT ps.id AS share_id, ps.shared_with_user_id,
+                   COALESCE(u.display_name, 'Trader #' || SUBSTRING(u.id::text, 1, 6)) AS handle,
+                   ps.created_at
+            FROM portfolio_shares ps
+            JOIN users u ON u.id = ps.shared_with_user_id
+            WHERE ps.bot_id = %s
+            ORDER BY ps.created_at DESC
+        """, (bot_id,))
+        rows = cursor.fetchall()
+        return {"shares": [
+            {
+                "share_id":  str(r["share_id"]),
+                "user_id":   str(r["shared_with_user_id"]),
+                "handle":    r["handle"],
+                "shared_at": r["created_at"].isoformat(),
+            }
+            for r in rows
+        ]}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.post("/portfolio/{bot_id}/share")
+async def share_portfolio(
+    bot_id: str,
+    body: ShareCreate,
+    current_user: dict = Depends(get_current_user),
+):
+    """Share a portfolio with another user by their @handle — owner only."""
+    handle = body.handle.strip().lstrip("@")
+    if not handle:
+        raise HTTPException(status_code=400, detail="Handle is required")
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        # Must own the portfolio
+        cursor.execute("SELECT id FROM bots WHERE id = %s AND user_id = %s", (bot_id, current_user["user_id"]))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=403, detail="Not your portfolio")
+        # Find target user by handle
+        cursor.execute("SELECT id, display_name FROM users WHERE display_name = %s", (handle,))
+        target = cursor.fetchone()
+        if not target:
+            raise HTTPException(status_code=404, detail=f"No user found with handle @{handle}")
+        if str(target["id"]) == current_user["user_id"]:
+            raise HTTPException(status_code=400, detail="You can't share a portfolio with yourself")
+        # Insert share (ignore duplicate)
+        cursor.execute("""
+            INSERT INTO portfolio_shares (bot_id, shared_by_user_id, shared_with_user_id)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (bot_id, shared_with_user_id) DO NOTHING
+            RETURNING id
+        """, (bot_id, current_user["user_id"], str(target["id"])))
+        conn.commit()
+        return {"shared_with": f"@{handle}", "user_id": str(target["id"])}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.delete("/portfolio/{bot_id}/share/{share_id}")
+async def revoke_portfolio_share(
+    bot_id: str,
+    share_id: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """Revoke a portfolio share — owner only."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("""
+            DELETE FROM portfolio_shares
+            WHERE id = %s AND bot_id = %s AND shared_by_user_id = %s
+            RETURNING id
+        """, (share_id, bot_id, current_user["user_id"]))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Share not found or not yours")
+        conn.commit()
+        return {"revoked": True}
     finally:
         cursor.close()
         return_db_connection(conn)
