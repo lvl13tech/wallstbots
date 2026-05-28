@@ -91,14 +91,7 @@ jobs:
             echo "=== Dispatching morning daily email ==="
             python Project/scripts/send_emails.py
           else
-            DECISION=$(python -c "
-import json, sys
-try:
-    d = json.load(open('Frontends/wallstbots.tech/data/state.json'))
-    print(d.get('data',d).get('funds',{}).get('bot13',{}).get('current_strategy',{}).get('decision','HOLD'))
-except Exception:
-    print('HOLD')
-" 2>/dev/null || echo "HOLD")
+            DECISION=$(python3 -c "import json,sys; d=json.load(open('Frontends/wallstbots.tech/data/state.json')); print(d.get('data',d).get('funds',{}).get('bot13',{}).get('current_strategy',{}).get('decision','HOLD'))" 2>/dev/null || echo "HOLD")
             echo "=== BOT13 decision at hour $HOUR: $DECISION ==="
             if [ "$DECISION" = "TRADE" ]; then
               echo "=== BOT13 entered TRADE — sending trade-alert email ==="
