@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-05-28T22:19:44",
+    "last_refresh": "2026-05-28T18:42:50",
     "snapshots": [
       {
         "date": "2026-05-21",
@@ -21,7 +21,7 @@
       },
       {
         "date": "2026-05-28",
-        "bot13": 66318.32,
+        "bot13": 55000.0,
         "oracle": 61909.72,
         "wizard": 59936.48,
         "equalizer": 56345.09,
@@ -38,158 +38,33 @@
         "inception": "2026-05-22",
         "starting_capital": 55000.0,
         "value": {
-          "total": 66318.32,
-          "cash": 0.0,
-          "pos_val": 66318.32,
-          "pnl": 11318.32,
-          "pnl_pct": 20.58,
-          "day_pnl": 11318.32,
-          "day_pct": 20.58,
+          "total": 55000.0,
+          "cash": 55000.0,
+          "pos_val": 0.0,
+          "pnl": 0.0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0.0,
+          "day_pct": 0.0,
           "day_open": 55000.0,
           "holding_cash": true,
           "window_open": false,
           "session_open_et": "9:30",
           "session_close_et": "16:00",
-          "positions": [
-            {
-              "symbol": "SNOW",
-              "shares": 115.470334,
-              "entry_price": 175.26,
-              "current_price": 239.2,
-              "cost_basis": 20237.33,
-              "price": 239.2,
-              "value": 27620.5,
-              "pnl": 7383.17,
-              "pnl_pct": 36.48,
-              "day_pnl": 7383.17,
-              "day_pct": 36.48,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-05-28T22:19:50",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "LUNR",
-              "shares": 239.813349,
-              "entry_price": 40.34,
-              "current_price": 45.7,
-              "cost_basis": 9674.07,
-              "price": 45.7,
-              "value": 10959.47,
-              "pnl": 1285.4,
-              "pnl_pct": 13.29,
-              "day_pnl": 1285.4,
-              "day_pct": 13.29,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-05-28T22:19:50",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "BBAI",
-              "shares": 2173.16316,
-              "entry_price": 4.37,
-              "current_price": 4.94,
-              "cost_basis": 9496.72,
-              "price": 4.94,
-              "value": 10735.43,
-              "pnl": 1238.7,
-              "pnl_pct": 13.04,
-              "day_pnl": 1238.7,
-              "day_pct": 13.04,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-05-28T22:19:50",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "ARM",
-              "shares": 25.870881,
-              "entry_price": 302.71,
-              "current_price": 335.27,
-              "cost_basis": 7831.37,
-              "price": 335.27,
-              "value": 8673.73,
-              "pnl": 842.36,
-              "pnl_pct": 10.76,
-              "day_pnl": 842.36,
-              "day_pct": 10.76,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-05-28T22:19:50",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "ALAB",
-              "shares": 23.854245,
-              "entry_price": 325.33,
-              "current_price": 349.17,
-              "cost_basis": 7760.5,
-              "price": 349.17,
-              "value": 8329.19,
-              "pnl": 568.69,
-              "pnl_pct": 7.33,
-              "day_pnl": 568.69,
-              "day_pct": 7.33,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-05-28T22:19:50",
-              "stop_triggered": false,
-              "exit_reason": null
-            }
-          ]
+          "positions": []
         },
         "current_strategy": {
           "day": "2026-05-28",
-          "decision": "TRADE",
-          "rationale": "Deployed into 5 high-conviction names (SNOW +36.48%, LUNR +13.29%, BBAI +13.04%, ARM +10.76%, ALAB +7.33%). Market breadth: 35/43 green. Weighted by signal strength. Stop -1.5% | Target +3.0%.",
-          "picks": [
-            {
-              "symbol": "SNOW",
-              "weight": 0.368,
-              "score": 200.7,
-              "rationale": "SNOW: STRONG momentum +36.48% \u2014 37% allocation ($20,237). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "LUNR",
-              "weight": 0.1759,
-              "score": 73.1,
-              "rationale": "LUNR: STRONG momentum +13.29% \u2014 18% allocation ($9,674). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "BBAI",
-              "weight": 0.1727,
-              "score": 71.7,
-              "rationale": "BBAI: STRONG momentum +13.04% \u2014 17% allocation ($9,497). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "ARM",
-              "weight": 0.1424,
-              "score": 59.2,
-              "rationale": "ARM: STRONG momentum +10.76% \u2014 14% allocation ($7,831). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "ALAB",
-              "weight": 0.1411,
-              "score": 58.6,
-              "rationale": "ALAB: STRONG momentum +7.33% \u2014 14% allocation ($7,761). Stop: -1.5% | Target: +3.0%."
-            }
-          ],
-          "stop_pct": -1.5,
-          "target_pct": 3.0,
+          "decision": "HOLD",
+          "rationale": "Market closed \u2014 holding cash. Waiting for next valid trading session.",
+          "picks": [],
           "session_log": [
             {
-              "time": "18:19 PM",
+              "time": "16:00 PM",
               "phase": "CLOSE",
-              "action": "CLOSE \u2014 session complete",
-              "detail": "Final session positions: SNOW +36.48%, LUNR +13.29%, BBAI +13.04%, ARM +10.76%, ALAB +7.33%. Day P&L: $+11,318. Breadth: 35/43 green. All positions conceptually closed at session end."
+              "action": "HOLD \u2014 no positions entered",
+              "detail": "BOT13 held cash today. No valid market-hours signal."
             }
-          ],
-          "projected_return": 20.58
+          ]
         },
         "top10": null,
         "per_top_dollars": null,
@@ -1997,9 +1872,9 @@
       "week": [
         {
           "fund": "bot13",
-          "week_pnl": 11318.32,
-          "week_pct": 20.58,
-          "week_grade": "A+"
+          "week_pnl": 0.0,
+          "week_pct": 0.0,
+          "week_grade": "C"
         },
         {
           "fund": "oracle",
@@ -2029,9 +1904,9 @@
       "all": [
         {
           "fund": "bot13",
-          "all_pnl": 11318.32,
-          "all_pct": 20.58,
-          "overall_grade": "A+"
+          "all_pnl": 0.0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
         },
         {
           "fund": "oracle",

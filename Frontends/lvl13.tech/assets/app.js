@@ -395,12 +395,10 @@ function bot13InCashWindow() {
   const etDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/New_York"}));
   const day = etDate.getDay();                          // 0=Sun 1=Mon … 6=Sat
   const minuteOfDay = etDate.getHours() * 60 + etDate.getMinutes();
-  const CUTOFF = 3 * 60 + 1;                           // 3:01 AM = 181 min
-  const OPEN   = 9 * 60 + 30;                          // 9:30 AM = 570 min
-  if (day === 0) return true;                           // Sunday: always cash
-  if (day === 6) return minuteOfDay >= CUTOFF;          // Sat: cash after 3:01 AM
-  if (day === 1) return minuteOfDay < OPEN;             // Mon: cash before market open
-  return (minuteOfDay >= CUTOFF && minuteOfDay < OPEN); // Tue–Fri: cash 3:01–9:29 AM
+  const OPEN  = 9 * 60 + 30;                           // 9:30 AM = 570 min
+  const CLOSE = 16 * 60;                               // 4:00 PM = 960 min
+  if (day === 0 || day === 6) return true;              // Weekend: always cash
+  return minuteOfDay < OPEN || minuteOfDay >= CLOSE;   // Weekday: cash before open or after close
 }
 
 // ============ PAGE: INDIVIDUAL FUND ============

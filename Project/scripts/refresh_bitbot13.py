@@ -959,6 +959,15 @@ def main():
         b13_log       = b13_prev_strategy.get("session_log", [])
         b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
         print(f"  BOT13: same-session re-price ({len(b13_positions)} existing positions)")
+    elif not _engine_window_open(CRYPTO_CFG):
+        # Market closed on a new day — don't enter positions retroactively
+        b13_decision  = "HOLD"
+        b13_positions = []
+        b13_picks     = []
+        b13_rationale = "Market closed — waiting for next trading session."
+        b13_log       = (b13_prev_strategy or {}).get("session_log", [])
+        b13_proj      = 0.0
+        print("  BOT13: HOLD (market closed — no new positions after hours)")
     else:
         # New session — run fresh decision
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = run_bot13_crypto(
