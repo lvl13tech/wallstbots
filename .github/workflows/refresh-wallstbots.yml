@@ -74,7 +74,8 @@ jobs:
           git push
 
       - name: Send daily email notifications
-        # Scheduled: only sends at 14:xx UTC (9:35am ET market open) to avoid duplicates.
+        # Hour 14 UTC (9:35am ET): always send morning digest.
+        # Hour 16 + 21 UTC (midday/close): only send if BOT13 entered TRADE — "trading began" alert.
         # Manual (workflow_dispatch): always sends — useful for testing.
         env:
           RESEND_API_KEY:   ${{ secrets.RESEND_API_KEY }}
@@ -87,8 +88,22 @@ jobs:
           echo "=== Email dispatch check: event=$EVENT_NAME hour=${HOUR}UTC force=$FORCE_SEND ==="
           echo "=== Secrets present: RESEND=$([ -n "$RESEND_API_KEY" ] && echo YES || echo MISSING) BACKEND=$([ -n "$BACKEND_URL" ] && echo YES || echo MISSING) APIKEY=$([ -n "$INTERNAL_API_KEY" ] && echo YES || echo MISSING) ==="
           if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$HOUR" = "14" ]; then
-            echo "=== Dispatching consolidated daily email ==="
+            echo "=== Dispatching morning daily email ==="
             python Project/scripts/send_emails.py
           else
-            echo "=== Skipping email dispatch (scheduled run at hour=$HOUR, not 14:xx UTC) ==="
+            DECISION=$(python -c "
+import json, sys
+try:
+    d = json.load(open('Frontends/wallstbots.tech/data/state.json'))
+    print(d.get('data',d).get('funds',{}).get('bot13',{}).get('current_strategy',{}).get('decision','HOLD'))
+except Exception:
+    print('HOLD')
+" 2>/dev/null || echo "HOLD")
+            echo "=== BOT13 decision at hour $HOUR: $DECISION ==="
+            if [ "$DECISION" = "TRADE" ]; then
+              echo "=== BOT13 entered TRADE — sending trade-alert email ==="
+              python Project/scripts/send_emails.py
+            else
+              echo "=== Skipping email (hour=$HOUR, BOT13=$DECISION — no trade alert needed) ==="
+            fi
           fi

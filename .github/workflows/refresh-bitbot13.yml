@@ -61,8 +61,10 @@ jobs:
           git push
 
       - name: Send daily email notifications
-        # Scheduled: weekends only at 14:xx UTC (wallstbots handles weekdays).
+        # Hour 14 UTC (9-10am ET): morning digest — all days (crypto trades 7 days).
+        # Hour 17 UTC (~noon ET): trade-alert only if BOT13 entered TRADE — catches mid-session entries.
         # Manual (workflow_dispatch): always sends — useful for testing.
+        # (Other hours skipped to avoid flooding — bitbot13 runs every 30 min.)
         env:
           RESEND_API_KEY:   ${{ secrets.RESEND_API_KEY }}
           INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
@@ -70,14 +72,29 @@ jobs:
           EVENT_NAME:       ${{ github.event_name }}
           FORCE_SEND:       ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
         run: |
-          DOW=$(date -u +%u)   # 1=Mon … 6=Sat 7=Sun
           HOUR=$(date -u +%H)
-          echo "=== Email dispatch check: event=$EVENT_NAME DOW=$DOW hour=${HOUR}UTC force=$FORCE_SEND ==="
+          echo "=== Email dispatch check: event=$EVENT_NAME hour=${HOUR}UTC force=$FORCE_SEND ==="
           echo "=== Secrets present: RESEND=$([ -n "$RESEND_API_KEY" ] && echo YES || echo MISSING) BACKEND=$([ -n "$BACKEND_URL" ] && echo YES || echo MISSING) APIKEY=$([ -n "$INTERNAL_API_KEY" ] && echo YES || echo MISSING) ==="
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] || ([ "$DOW" -ge "6" ] && [ "$HOUR" = "14" ]); then
-            echo "=== Dispatching consolidated daily email ==="
-            python -m pip install --quiet requests
+          python -m pip install --quiet requests
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$HOUR" = "14" ]; then
+            echo "=== Dispatching morning daily email ==="
             python Project/scripts/send_emails.py
+          elif [ "$HOUR" = "17" ]; then
+            DECISION=$(python -c "
+import json, sys
+try:
+    d = json.load(open('Frontends/bitbot13.tech/data/state.json'))
+    print(d.get('data',d).get('funds',{}).get('bot13',{}).get('current_strategy',{}).get('decision','HOLD'))
+except Exception:
+    print('HOLD')
+" 2>/dev/null || echo "HOLD")
+            echo "=== BOT13 decision at hour $HOUR: $DECISION ==="
+            if [ "$DECISION" = "TRADE" ]; then
+              echo "=== BOT13 entered TRADE — sending trade-alert email ==="
+              python Project/scripts/send_emails.py
+            else
+              echo "=== Skipping email (BOT13=$DECISION at hour $HOUR — no trade alert needed) ==="
+            fi
           else
-            echo "=== Skipping email (scheduled run: DOW=$DOW, hour=$HOUR — not weekend 14:xx UTC) ==="
+            echo "=== Skipping email (hour=$HOUR — not a scheduled email window) ==="
           fi
