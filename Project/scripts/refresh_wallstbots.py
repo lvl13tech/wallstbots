@@ -25,6 +25,15 @@ import subprocess
 import sys
 from pathlib import Path
 
+# ── Bot13 unified engine ─────────────────────────────────────────────────────────
+sys.path.insert(0, str(Path(__file__).parent))
+from bot13_engine import (
+    run_bot13_equity, check_drawdown,
+    EQUITY_CFG,
+    grade, grade_overall, et_now, window_open as _engine_window_open,
+    session_phase as _engine_session_phase, enrich_position as _engine_enrich,
+)
+
 try:
     import yfinance as yf
 except ImportError:
@@ -80,53 +89,14 @@ SECTORS = {
 FUND_ORDER = ["bot13", "oracle", "wizard", "equalizer", "titan"]
 
 # ── Risk controls ───────────────────────────────────────────────────────────────
-STOP_LOSS_PCT = 1.5  # exit individual position if down >1.5% from entry during session
+# Display value shown to users; internal trigger is EQUITY_CFG["stop_internal"] = 1.35%
+STOP_LOSS_PCT = EQUITY_CFG["stop_display"]   # 1.5 — used for Wizard stop-flag check
 
 # ── Helpers ─────────────────────────────────────────────────────────────────────
 def load_secrets():
     if SECRETS.exists():
         return json.loads(SECRETS.read_text())
     return {}
-
-
-def grade(pct):
-    if pct >= 5:   return "A+"
-    if pct >= 3:   return "A"
-    if pct >= 1.5: return "B"
-    if pct >= 0:   return "C"
-    if pct >= -2:  return "D"
-    return "F"
-
-
-def grade_overall(pct, inception_iso, today):
-    try:
-        inception = dt.date.fromisoformat(str(inception_iso)[:10])
-        weeks = max((today - inception).days / 7, 1)
-        return grade(pct / weeks)
-    except Exception:
-        return grade(pct)
-
-
-def et_hour():
-    """Return current hour in US Eastern time (EDT = UTC-4, EST = UTC-5)."""
-    now_utc = dt.datetime.utcnow()
-    # Simple DST approximation: EDT (UTC-4) March-Nov, EST (UTC-5) Nov-Mar
-    if 3 <= now_utc.month <= 11:
-        offset = -4
-    else:
-        offset = -5
-    et = now_utc + dt.timedelta(hours=offset)
-    return et.hour, et.minute
-
-
-def session_phase():
-    """Return 'morning' | 'midday' | 'close' based on ET time."""
-    h, m = et_hour()
-    if h < 11:
-        return "morning"
-    if h < 14:
-        return "midday"
-    return "close"
 
 
 def compute_rsi(closes, period=14):
@@ -238,7 +208,7 @@ def get_hist_data(symbols):
     return hist
 
 
-# ── Position enrichment ──────────────────────────────────────────────────────────
+# ── Position enrichment (equity — delegates to engine) ───────────────────────────
 def enrich_position(pos, prices, prev_closes):
     sym        = pos["symbol"]
     shares     = float(pos.get("shares") or 0)
@@ -276,241 +246,7 @@ def enrich_position(pos, prices, prev_closes):
     return result
 
 
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  BOT13 — Precision Intraday Momentum                                        ║
-# ║                                                                              ║
-# ║  Philosophy: Strike fast on confirmed intraday leadership. Only trade when   ║
-# ║  conditions are clearly favorable. When in doubt — stay in cash.             ║
-# ║                                                                              ║
-# ║  Entry Rules:                                                                ║
-# ║  - Stock must be up >1.0% from previous close (confirmed strength, not noise)║
-# ║  - At least 3 qualifying candidates required (breadth confirmation)          ║
-# ║  - Market health check: no more than 33% of universe down >2%               ║
-# ║                                                                              ║
-# ║  Sizing: Proportional to signal strength — stronger move = larger position   ║
-# ║          Min 12% per name, max 33% per name. Top 5 names only.              ║
-# ║                                                                              ║
-# ║  Risk Management (embedded in each pick):                                   ║
-# ║  - Hard stop-loss: -1.5% from entry (protects capital on reversals)         ║
-# ║  - Profit target: +3.0% from entry (locks in gains before fade)             ║
-# ║                                                                              ║
-# ║  Overextension guard: stocks up >8% are heavily penalized in scoring        ║
-# ║  (buying into a parabola is how you get caught at the top)                  ║
-# ║                                                                              ║
-# ║  Cash conditions: <3 qualified names, OR broad selling pressure >33%         ║
-# ║  Bot13 never holds overnight — all positions conceptually close at 3:50 PM  ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
-
-def run_bot13_decision(prices, prev_closes, starting_capital, today_iso, prev_strategy=None):
-    """
-    Compute BOT13's intraday position or cash decision.
-    Incorporates session-phase awareness and cumulative session logging.
-    """
-    phase = session_phase()
-    h, mn = et_hour()
-    time_label = f"{h}:{mn:02d} {'AM' if h < 12 else 'PM'}"
-
-    # ── Market health check ──────────────────────────────────────────────────
-    n_green  = 0  # up >0.5%
-    n_red    = 0  # down >2%  (selling pressure signal)
-    n_priced = 0
-    for sym in UNIVERSE:
-        p  = prices.get(sym, 0)
-        pc = prev_closes.get(sym, p)
-        if p <= 0:
-            continue
-        n_priced += 1
-        pct = (p / pc - 1) * 100 if pc > 0 else 0
-        if pct >= 0.5:
-            n_green += 1
-        if pct <= -2.0:
-            n_red += 1
-
-    breadth_pct  = n_green / n_priced if n_priced else 0
-    sell_pressure = n_red / n_priced if n_priced else 0
-
-    # Cash condition: broad selling pressure
-    if sell_pressure > 0.33:
-        log_entry = {
-            "time":   time_label,
-            "phase":  phase.upper(),
-            "action": "CASH — MARKET HEALTH FAIL",
-            "detail": (f"{int(sell_pressure*100)}% of universe down >2%. "
-                       "Broad selling pressure detected — protecting capital."),
-        }
-        session_log = _append_log(prev_strategy, today_iso, log_entry)
-        return "CASH", [], [], (
-            f"CASH — broad selling pressure ({int(sell_pressure*100)}% of stocks down >2%). "
-            "No trades today."
-        ), session_log, 0.0
-
-    # ── Score each candidate ─────────────────────────────────────────────────
-    scored = []
-    for sym in UNIVERSE:
-        p  = prices.get(sym, 0)
-        pc = prev_closes.get(sym, p)
-        if p <= 0 or pc <= 0:
-            continue
-        day_pct = (p / pc - 1) * 100
-
-        # Must be up >1.0% to qualify
-        if day_pct < 1.0:
-            continue
-
-        # Signal strength — reward clean momentum, penalize parabolic gaps
-        if day_pct > 8.0:
-            strength = day_pct * 0.55   # heavily overextended — reversal risk high
-        elif day_pct > 5.0:
-            strength = day_pct * 0.80   # strong but watch for fade
-        else:
-            strength = day_pct          # clean momentum zone
-
-        scored.append((sym, day_pct, strength))
-
-    # Need at least 3 to have a tradeable session
-    if len(scored) < 3:
-        log_entry = {
-            "time":   time_label,
-            "phase":  phase.upper(),
-            "action": "CASH — INSUFFICIENT BREADTH",
-            "detail": (f"Only {len(scored)} stock(s) up >1.0%. "
-                       "Need minimum 3 qualified names. Sitting out."),
-        }
-        session_log = _append_log(prev_strategy, today_iso, log_entry)
-        return "CASH", [], [], (
-            f"CASH — only {len(scored)} stock(s) cleared the 1.0% entry hurdle. "
-            "Need at least 3 qualified names for a tradeable session."
-        ), session_log, 0.0
-
-    # Sort by signal strength, cap at 5 picks
-    scored.sort(key=lambda x: -x[2])
-    top_picks = scored[:5]
-
-    # ── Size proportionally to signal strength ───────────────────────────────
-    total_strength = sum(s for _, _, s in top_picks)
-    raw_weights = [s / total_strength for _, _, s in top_picks]
-
-    # Clamp 12% min / 33% max, then renormalize
-    clamped = [max(0.12, min(0.33, w)) for w in raw_weights]
-    total_c = sum(clamped)
-    weights = [c / total_c for c in clamped]
-
-    # ── Projected portfolio return gate ──────────────────────────────────────
-    # Weighted average of each pick's day_pct (entry = prev_close, so this is
-    # the actual return already in motion).  Sit out if edge is too thin.
-    PROJ_RETURN_THRESHOLD = 1.74
-    projected_return = round(
-        sum(w * day_pct for (_, day_pct, _), w in zip(top_picks, weights)), 2
-    )
-    if projected_return <= PROJ_RETURN_THRESHOLD:
-        log_entry = {
-            "time":   time_label,
-            "phase":  phase.upper(),
-            "action": f"HOLD — LOW PROJECTED RETURN ({projected_return:.2f}%)",
-            "detail": (f"Weighted projected return {projected_return:.2f}% ≤ "
-                       f"{PROJ_RETURN_THRESHOLD}% threshold. "
-                       "Not enough edge to justify risk today. Holding for the day."),
-        }
-        session_log = _append_log(prev_strategy, today_iso, log_entry)
-        return "HOLD", [], [], (
-            f"HOLD — projected return {projected_return:.2f}% ≤ "
-            f"{PROJ_RETURN_THRESHOLD}% threshold. Not enough edge today."
-        ), session_log, 0.0
-
-    positions, picks = [], []
-    for i, (sym, day_pct, strength) in enumerate(top_picks):
-        w      = weights[i]
-        alloc  = starting_capital * w
-        price  = prices.get(sym, 0)
-        prev   = prev_closes.get(sym, price)
-        # Use prev_close as entry so the full intraday move registers as P&L
-        entry  = prev if prev > 0 else price
-        shares = alloc / entry
-        pnl    = shares * price - alloc
-        pnl_pct = (price / entry - 1) * 100 if entry > 0 else 0
-        day_pnl = shares * (price - entry)
-
-        if day_pct >= 5.0:
-            intensity = "STRONG momentum"
-        elif day_pct >= 2.5:
-            intensity = "solid momentum"
-        else:
-            intensity = "emerging momentum"
-
-        positions.append({
-            "symbol":        sym,
-            "shares":        round(shares, 6),
-            "entry_price":   round(entry, 4),
-            "current_price": round(price, 4),
-            "cost_basis":    round(alloc, 2),
-            "price":         round(price, 4),
-            "value":         round(shares * price, 2),
-            "pnl":           round(pnl, 2),
-            "pnl_pct":       round(pnl_pct, 2),
-            "day_pnl":       round(day_pnl, 2),
-            "day_pct":       round(day_pct, 2),
-            "stop_pct":      -1.5,
-            "target_pct":    3.0,
-            "entry_time":    dt.datetime.now().isoformat(timespec="seconds"),
-            "stop_triggered": False,
-            "exit_reason":   None,
-        })
-        picks.append({
-            "symbol":    sym,
-            "weight":    round(w, 4),
-            "score":     round(strength * 10, 1),
-            "rationale": (f"{sym}: {intensity} +{day_pct:.2f}% — "
-                          f"{w*100:.0f}% allocation (${alloc:,.0f}). "
-                          f"Stop: -1.5% | Target: +3.0%."),
-        })
-
-    # ── Build session log entry ──────────────────────────────────────────────
-    pos_summary = ", ".join(
-        f"{sym} {day_pct:+.2f}%" for sym, day_pct, _ in top_picks
-    )
-    breadth_label = f"{n_green}/{n_priced} green"
-    if phase == "morning":
-        action = f"ENTERED {len(picks)} position{'s' if len(picks) > 1 else ''}"
-        detail = (f"{pos_summary}. "
-                  f"Breadth: {breadth_label}. "
-                  f"Stops at -1.5%, targets at +3.0%. Capital deployed.")
-    elif phase == "midday":
-        action = "MIDDAY CHECK — positions reviewed"
-        detail = (f"Current positions: {pos_summary}. "
-                  f"Breadth: {breadth_label}. "
-                  "Monitoring for stop/target triggers. "
-                  "Any position through -1.5% would be exited immediately.")
-    else:
-        action = "CLOSE — session complete"
-        day_total = sum(p["day_pnl"] for p in positions)
-        detail = (f"Final session positions: {pos_summary}. "
-                  f"Day P&L: ${day_total:+,.0f}. "
-                  f"Breadth: {breadth_label}. "
-                  "All positions conceptually closed at 3:50 PM.")
-
-    log_entry = {"time": time_label, "phase": phase.upper(), "action": action, "detail": detail}
-    session_log = _append_log(prev_strategy, today_iso, log_entry)
-
-    rationale = (
-        f"Projected return: +{projected_return:.2f}%. "
-        f"Deployed into {len(picks)} high-conviction names ({pos_summary}). "
-        f"Market breadth: {breadth_label}. "
-        f"Weighted by signal strength. Stop -1.5% | Target +3.0%."
-    )
-    return "TRADE", positions, picks, rationale, session_log, projected_return
-
-
-def _append_log(prev_strategy, today_iso, new_entry):
-    """Carry forward today's session log and append a new entry."""
-    existing = []
-    if prev_strategy and isinstance(prev_strategy, dict):
-        if prev_strategy.get("day") == today_iso:
-            existing = list(prev_strategy.get("session_log") or [])
-    # Replace any entry for same phase
-    phase = new_entry["phase"]
-    existing = [e for e in existing if e.get("phase") != phase]
-    existing.append(new_entry)
-    return existing
+# ── (run_bot13_decision, _append_log, session_phase, et_hour removed — now in bot13_engine.py)
 
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
@@ -1057,7 +793,8 @@ def main():
     hist_data = get_hist_data(list(need_syms))
 
     # ── BOT13 decision ───────────────────────────────────────────────────────
-    print(f"[wallstbots] running BOT13 decision (phase: {session_phase()})...")
+    _phase_label = _engine_session_phase(EQUITY_CFG)
+    print(f"[wallstbots] running BOT13 decision (phase: {_phase_label})...")
     prev_b13_strategy = funds.get("bot13", {}).get("current_strategy")
     # Use the fund's current running total so gains compound day-over-day
     prev_b13_total = float(funds.get("bot13", {}).get("value", {}).get("total") or sc_global)
@@ -1071,40 +808,58 @@ def main():
     b13_inception    = funds.get("bot13", {}).get("inception", today_iso)
     stored_positions = funds.get("bot13", {}).get("value", {}).get("positions", [])
 
-    # Check if any held position has triggered stop-loss (>STOP_LOSS_PCT% down from entry)
+    # Check if any held position has triggered internal stop-loss
+    _stop_internal = EQUITY_CFG["stop_internal"]
     stops_triggered = any(
         float(p.get("entry_price") or 0) > 0 and
         (float(prices.get(p["symbol"], float(p.get("entry_price", 0)))) /
-         float(p.get("entry_price", 1)) - 1) * 100 < -STOP_LOSS_PCT
+         float(p.get("entry_price", 1)) - 1) * 100 < -_stop_internal
         for p in stored_positions if p.get("symbol")
     )
 
-    # Guard: if positions already exist for today AND no stops hit, just re-price
+    # Account-level daily drawdown kill switch
+    drawdown_hit = check_drawdown(EQUITY_CFG, b13_day_open, stored_positions, prices)
+
+    # Guard: if positions already exist for today AND no stops/drawdown, just re-price
     same_day_trade = (
         (prev_b13_strategy or {}).get("day") == today_iso
         and (prev_b13_strategy or {}).get("decision") == "TRADE"
         and bool(stored_positions)
         and not stops_triggered
+        and not drawdown_hit
     )
     if b13_inception > today_iso:
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = "HOLD", [], [], "Pre-inception hold", [], 0.0
         prev_b13_total = sc_global  # reset to SC so tomorrow starts clean
         print(f"  BOT13: HOLD (pre-inception, starts {b13_inception})")
+    elif drawdown_hit:
+        _dd_pct = round((b13_day_open - sum(
+            prices.get(p["symbol"], float(p.get("entry_price", 0))) * float(p.get("shares", 0))
+            for p in stored_positions if p.get("symbol")
+        )) / b13_day_open * 100, 2) if stored_positions else 0
+        b13_decision  = "HOLD"
+        b13_positions = []
+        b13_picks     = []
+        b13_rationale = (f"HOLD — daily drawdown limit reached ({_dd_pct:.2f}% account loss). "
+                         "Capital protection activated. No new trades today.")
+        b13_log       = (prev_b13_strategy or {}).get("session_log", [])
+        b13_proj      = 0.0
+        print(f"  BOT13: HOLD (daily drawdown kill switch — {_dd_pct:.2f}% loss vs {EQUITY_CFG['max_daily_drawdown']*100:.1f}% limit)")
     elif stops_triggered:
         # Stop-loss triggered — mark stopped positions, then re-enter fresh picks
-        now_exit = __import__("datetime").datetime.utcnow().isoformat(timespec="seconds") + "Z"
+        now_exit = dt.datetime.utcnow().isoformat(timespec="seconds") + "Z"
         for p in stored_positions:
             sym = p.get("symbol")
             if sym:
                 cur = prices.get(sym, float(p.get("entry_price", 0)))
                 ep  = float(p.get("entry_price") or 0)
-                if ep > 0 and (cur / ep - 1) * 100 < -STOP_LOSS_PCT:
+                if ep > 0 and (cur / ep - 1) * 100 < -_stop_internal:
                     p["stop_triggered"] = True
-                    p["exit_reason"]    = f"stop_loss (>{STOP_LOSS_PCT}% loss)"
+                    p["exit_reason"]    = f"stop_loss (>{EQUITY_CFG['stop_display']}% loss)"
                     p["exit_time"]      = now_exit
         print(f"  BOT13: stop-loss triggered — closing stopped positions, re-picking...")
-        b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = run_bot13_decision(
-            prices, prev_closes, b13_day_open, today_iso, prev_b13_strategy
+        b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = run_bot13_equity(
+            EQUITY_CFG, UNIVERSE, prices, prev_closes, hist_data, b13_day_open, today_iso, prev_b13_strategy
         )
         print(f"  BOT13: re-entered with {len(b13_picks)} new picks after stop-loss")
     elif same_day_trade:
@@ -1117,8 +872,8 @@ def main():
         b13_proj      = float((prev_b13_strategy or {}).get("projected_return", 0.0))
         print(f"  BOT13: same-day re-price ({len(b13_positions)} existing positions)")
     else:
-        b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = run_bot13_decision(
-            prices, prev_closes, b13_day_open, today_iso, prev_b13_strategy
+        b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = run_bot13_equity(
+            EQUITY_CFG, UNIVERSE, prices, prev_closes, hist_data, b13_day_open, today_iso, prev_b13_strategy
         )
         print(f"  BOT13: {b13_decision} ({len(b13_picks)} picks)")
 
@@ -1180,13 +935,7 @@ def main():
             day_pct       = (day_pnl_total / b13_day_open * 100) if b13_day_open else 0
 
             # holding_cash: true whenever bot13 is not actively in positions
-            h_et, m_et   = et_hour()
-            # NYSE hours: 9:30am-4:00pm ET, Mon-Fri only
-            _utc_now     = dt.datetime.utcnow()
-            _offset      = -4 if 3 <= _utc_now.month <= 11 else -5
-            _et_now      = _utc_now + dt.timedelta(hours=_offset)
-            _is_weekday  = _et_now.weekday() < 5  # Mon=0..Fri=4
-            window_open  = _is_weekday and ((h_et == 9 and m_et >= 30) or (10 <= h_et <= 15))
+            window_open  = _engine_window_open(EQUITY_CFG)
             holding_cash = (b13_decision != "TRADE") or not window_open
 
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
@@ -1241,10 +990,7 @@ def main():
             day_pct  = (day_pnl / (total - day_pnl)) * 100 if (total - day_pnl) else 0
 
             # holding_cash for oracle: true on weekends (no active management until Monday)
-            _utc_or  = dt.datetime.utcnow()
-            _off_or  = -4 if 3 <= _utc_or.month <= 11 else -5
-            _et_or   = _utc_or + dt.timedelta(hours=_off_or)
-            oracle_holding_cash = _et_or.weekday() >= 5  # Sat=5, Sun=6
+            oracle_holding_cash = et_now().weekday() >= 5  # Sat=5, Sun=6
 
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),

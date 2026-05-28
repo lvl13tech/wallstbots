@@ -25,6 +25,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+# ── Bot13 unified engine ─────────────────────────────────────────────────────────
+sys.path.insert(0, str(Path(__file__).parent))
+from bot13_engine import (
+    run_bot13_crypto, check_drawdown,
+    CRYPTO_CFG,
+    grade, grade_overall, et_now, window_open as _engine_window_open,
+)
+
 try:
     import yfinance as yf
 except ImportError:
@@ -38,32 +46,14 @@ except ImportError:
 import os   # used to read NEWSAPI_KEY env var in GitHub Actions
 
 # ── Trading window (ET) ────────────────────────────────────────────────────────
-TRADING_WINDOW_START = 9   # 9am ET — open
-TRADING_WINDOW_END   = 21  # 9pm ET — close
-STOP_LOSS_PCT        = 1.5 # exit individual position if down >1.5% from entry during session
-
-
-def et_hour():
-    """Return (hour, minute) in US/Eastern time using stdlib only (no pytz needed).
-    Handles DST: second Sunday in March → first Sunday in November."""
-    utc_now = dt.datetime.utcnow()
-    year    = utc_now.year
-    # Second Sunday in March
-    march1    = dt.date(year, 3, 1)
-    dst_start = march1 + dt.timedelta(days=(6 - march1.weekday()) % 7 + 7)
-    # First Sunday in November
-    nov1    = dt.date(year, 11, 1)
-    dst_end = nov1 + dt.timedelta(days=(6 - nov1.weekday()) % 7)
-    is_dst  = dst_start <= utc_now.date() < dst_end
-    offset  = -4 if is_dst else -5
-    et_now  = utc_now + dt.timedelta(hours=offset)
-    return et_now.hour, et_now.minute
+TRADING_WINDOW_START = CRYPTO_CFG["session_start"][0]   # 9
+TRADING_WINDOW_END   = CRYPTO_CFG["session_end"][0]     # 21
+STOP_LOSS_PCT        = CRYPTO_CFG["stop_display"]       # 1.5 — shown to users
 
 
 def in_trading_window():
-    """True if current ET time is within TRADING_WINDOW_START..TRADING_WINDOW_END."""
-    h, _ = et_hour()
-    return TRADING_WINDOW_START <= h < TRADING_WINDOW_END
+    """True if current ET time is within the crypto trading session."""
+    return _engine_window_open(CRYPTO_CFG)
 
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
@@ -157,22 +147,7 @@ def load_secrets():
         return json.loads(SECRETS.read_text())
     return {}
 
-# ── Grading ────────────────────────────────────────────────────────────────────
-def grade(pct):
-    if pct >= 5:   return "A+"
-    if pct >= 3:   return "A"
-    if pct >= 1.5: return "B"
-    if pct >= 0:   return "C"
-    if pct >= -2:  return "D"
-    return "F"
-
-def grade_overall(pct, inception_iso, today):
-    try:
-        inception = dt.date.fromisoformat(str(inception_iso)[:10])
-        weeks = max((today - inception).days / 7, 1)
-        return grade(pct / weeks)
-    except Exception:
-        return grade(pct)
+# grade() and grade_overall() imported from bot13_engine
 
 # ── Live prices ────────────────────────────────────────────────────────────────
 def get_live_prices(state_symbols):
@@ -617,126 +592,7 @@ def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_
     return positions, picks, rationale, wizard_proj
 
 
-# ── BOT13 crypto session decision ─────────────────────────────────────────────
-def run_bot13_decision(prices, prev_closes, starting_capital, intraday_data=None):
-    """
-    Crypto BOT13 v2: 7-day trading, 9am-9pm ET sessions.
-    Scores universe using 1h + 4h + 24h momentum with volume confirmation.
-    Filters out low-volume fakeouts. Adds rich receipt fields for full transparency.
-    """
-    now_iso   = dt.datetime.utcnow().isoformat(timespec="seconds") + "Z"
-    scored    = []
-
-    for sym in UNIVERSE:
-        p  = prices.get(sym, 0)
-        pc = prev_closes.get(sym, p)
-        if p <= 0:
-            continue
-
-        # 24h baseline momentum
-        mom_24h = (p / pc - 1) * 100 if pc > 0 else 0
-
-        # 1h and 4h momentum from intraday candles
-        mom_1h     = 0.0
-        mom_4h     = 0.0
-        vol_signal = "neutral"
-        intra      = (intraday_data or {}).get(sym, {})
-        closes_1h  = intra.get("closes", [])
-        volumes_1h = intra.get("volumes", [])
-
-        if len(closes_1h) >= 2:
-            mom_1h = (closes_1h[-1] / closes_1h[-2] - 1) * 100 if closes_1h[-2] > 0 else 0
-        if len(closes_1h) >= 5:
-            mom_4h = (closes_1h[-1] / closes_1h[-5] - 1) * 100 if closes_1h[-5] > 0 else 0
-
-        # Volume confirmation: current 1h vol vs avg of prior 6 periods
-        if len(volumes_1h) >= 7:
-            avg_vol   = sum(volumes_1h[-7:-1]) / 6
-            cur_vol   = volumes_1h[-1]
-            vol_ratio = cur_vol / avg_vol if avg_vol > 0 else 1.0
-            if vol_ratio >= 1.5:
-                vol_signal = "high"
-            elif vol_ratio >= 0.8:
-                vol_signal = "normal"
-            else:
-                vol_signal = "low"   # likely thin/fake — skip
-
-        # Skip confirmed low-volume moves (fakeouts)
-        if vol_signal == "low":
-            continue
-
-        # Composite: weight recent momentum more heavily
-        # If intraday data unavailable, fall back to 24h only
-        if closes_1h:
-            composite = mom_1h * 0.45 + mom_4h * 0.35 + mom_24h * 0.20
-        else:
-            composite = mom_24h   # fallback — same as before
-
-        # Must be net positive and have positive 1h momentum (or no intraday data)
-        if composite <= 0.3:
-            continue
-        if closes_1h and mom_1h < 0:
-            continue
-
-        scored.append((sym, composite, mom_1h, mom_4h, mom_24h, vol_signal))
-
-    scored.sort(key=lambda x: -x[1])
-    top_picks = scored[:5]
-
-    if not top_picks:
-        return "HOLD", [], [], 0.0
-
-    # ── Projected portfolio return gate ──────────────────────────────────────
-    # Equal-weight avg of 24h momentum across top picks (entry = prev_close).
-    PROJ_RETURN_THRESHOLD = 1.74
-    projected_return = round(
-        sum(mom_24h for _, _, _, _, mom_24h, _ in top_picks) / len(top_picks), 2
-    )
-    if projected_return <= PROJ_RETURN_THRESHOLD:
-        return "HOLD", [], [], 0.0
-
-    per = starting_capital / len(top_picks)
-    positions, picks = [], []
-    for sym, composite, mom_1h, mom_4h, mom_24h, vol_signal in top_picks:
-        price = prices.get(sym, 0)
-        prev  = prev_closes.get(sym, price)
-        if price <= 0:
-            continue
-        entry    = prev if prev > 0 else price
-        shares   = per / entry
-        pnl      = shares * price - per
-        pnl_pct  = (price / entry - 1) * 100 if entry > 0 else 0
-        day_pnl  = shares * (price - entry)
-        price_dp = 8 if price < 0.01 else (4 if price < 1 else 2)
-        positions.append({
-            "symbol":        sym,
-            "shares":        round(shares, 6),
-            "entry_price":   round(entry, price_dp),
-            "cost_basis":    round(per, 2),
-            "price":         round(price, price_dp),
-            "value":         round(shares * price, 2),
-            "pnl":           round(pnl, 2),
-            "pnl_pct":       round(pnl_pct, 2),
-            "day_pnl":       round(day_pnl, 2),
-            "day_pct":       round(mom_24h, 2),
-            "entry_time":    now_iso,
-            "momentum_1h":   round(mom_1h, 2),
-            "momentum_4h":   round(mom_4h, 2),
-            "volume_signal": vol_signal,
-            "stop_triggered": False,
-            "exit_reason":   None,
-        })
-        picks.append({
-            "symbol":    sym,
-            "weight":    round(1.0 / len(top_picks), 4),
-            "score":     round(composite, 1),
-            "rationale": (
-                f"{sym}: 1h {mom_1h:+.2f}% | 4h {mom_4h:+.2f}% | "
-                f"24h {mom_24h:+.2f}% | Vol: {vol_signal}"
-            ),
-        })
-
-    return "TRADE", positions, picks, projected_return
+# ── BOT13 crypto decision now handled by bot13_engine.run_bot13_crypto() ─────
 
 # ── Signals ────────────────────────────────────────────────────────────────────
 def generate_signals(prices, prev_closes):
@@ -1029,32 +885,52 @@ def main():
     b13_inception  = funds.get("bot13", {}).get("inception", today_iso)
     stored_positions = funds.get("bot13", {}).get("value", {}).get("positions", [])
 
-    # Check if any held position has triggered stop-loss (>STOP_LOSS_PCT% down from entry)
-    stops_triggered = any(
+    # Check internal stop-loss trigger
+    _stop_internal   = CRYPTO_CFG["stop_internal"]
+    stops_triggered  = any(
         float(p.get("entry_price") or 0) > 0 and
         (float(prices.get(p["symbol"], float(p.get("entry_price", 0)))) /
-         float(p.get("entry_price", 1)) - 1) * 100 < -STOP_LOSS_PCT
+         float(p.get("entry_price", 1)) - 1) * 100 < -_stop_internal
         for p in stored_positions if p.get("symbol")
     )
 
-    # Guard: if positions already exist for today AND window is open AND no stops hit,
+    # Account-level daily drawdown kill switch
+    drawdown_hit = check_drawdown(CRYPTO_CFG, b13_day_open, stored_positions, prices)
+
+    # Guard: if positions already exist for today AND window is open AND no stops/drawdown,
     # just re-price — don't create new ones
     same_day_trade = (
         b13_prev_strategy.get("day") == today_iso
         and b13_prev_strategy.get("decision") == "TRADE"
         and bool(stored_positions)
         and not stops_triggered
+        and not drawdown_hit
     )
 
     if b13_inception > today_iso:
-        b13_decision, b13_positions, b13_picks, b13_proj = "HOLD", [], [], 0.0
+        b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = "HOLD", [], [], "Pre-inception hold", [], 0.0
         prev_b13_total = sc_global
         print(f"  BOT13: HOLD (pre-inception, starts {b13_inception})")
+    elif drawdown_hit:
+        _dd_pct = round((b13_day_open - sum(
+            prices.get(p["symbol"], float(p.get("entry_price", 0))) * float(p.get("shares", 0))
+            for p in stored_positions if p.get("symbol")
+        )) / b13_day_open * 100, 2) if stored_positions else 0
+        b13_decision  = "HOLD"
+        b13_positions = []
+        b13_picks     = []
+        b13_rationale = (f"HOLD — daily drawdown limit reached ({_dd_pct:.2f}% account loss). "
+                         "Capital protection activated. No new trades today.")
+        b13_log       = b13_prev_strategy.get("session_log", [])
+        b13_proj      = 0.0
+        print(f"  BOT13: HOLD (daily drawdown kill switch — {_dd_pct:.2f}% loss)")
     elif not window_open:
         # Outside trading window — carry forward last session's decision and positions
         b13_decision  = b13_prev_strategy.get("decision", "HOLD")
         b13_positions = stored_positions  # preserve for receipt display
         b13_picks     = b13_prev_strategy.get("picks", [])
+        b13_rationale = b13_prev_strategy.get("rationale", "")
+        b13_log       = b13_prev_strategy.get("session_log", [])
         b13_proj      = float(b13_prev_strategy.get("projected_return", 0.0))
         print(f"  BOT13: {b13_decision} (outside trading window {TRADING_WINDOW_START}am-{TRADING_WINDOW_END-12}pm ET — carrying forward last session)")
     elif stops_triggered:
@@ -1065,13 +941,13 @@ def main():
             if sym:
                 cur = prices.get(sym, float(p.get("entry_price", 0)))
                 ep  = float(p.get("entry_price") or 0)
-                if ep > 0 and (cur / ep - 1) * 100 < -STOP_LOSS_PCT:
+                if ep > 0 and (cur / ep - 1) * 100 < -_stop_internal:
                     p["stop_triggered"] = True
-                    p["exit_reason"]    = f"stop_loss (>{STOP_LOSS_PCT}% loss)"
+                    p["exit_reason"]    = f"stop_loss (>{CRYPTO_CFG['stop_display']}% loss)"
                     p["exit_time"]      = now_exit
         print(f"  BOT13: stop-loss triggered — closing stopped positions, re-picking...")
-        b13_decision, b13_positions, b13_picks, b13_proj = run_bot13_decision(
-            prices, prev_closes, b13_day_open, intraday_data=intraday_data
+        b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = run_bot13_crypto(
+            CRYPTO_CFG, UNIVERSE, prices, prev_closes, intraday_data, b13_day_open, today_iso, b13_prev_strategy
         )
         print(f"  BOT13: re-entered with {len(b13_picks)} new picks after stop-loss")
     elif same_day_trade:
@@ -1079,12 +955,14 @@ def main():
         b13_positions = stored_positions
         b13_decision  = "TRADE"
         b13_picks     = b13_prev_strategy.get("picks", [])
+        b13_rationale = b13_prev_strategy.get("rationale", "")
+        b13_log       = b13_prev_strategy.get("session_log", [])
         b13_proj      = float(b13_prev_strategy.get("projected_return", 0.0))
         print(f"  BOT13: same-session re-price ({len(b13_positions)} existing positions)")
     else:
         # New session — run fresh decision
-        b13_decision, b13_positions, b13_picks, b13_proj = run_bot13_decision(
-            prices, prev_closes, b13_day_open, intraday_data=intraday_data
+        b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = run_bot13_crypto(
+            CRYPTO_CFG, UNIVERSE, prices, prev_closes, intraday_data, b13_day_open, today_iso, b13_prev_strategy
         )
         print(f"  BOT13: {b13_decision} ({len(b13_picks)} picks)")
 
@@ -1162,9 +1040,11 @@ def main():
             strategy = {
                 "day":              today_iso,
                 "decision":         b13_decision,
+                "rationale":        b13_rationale,
                 "picks":            b13_picks,
-                "stop_pct":         -1.5,
-                "target_pct":       3.0,
+                "session_log":      b13_log,
+                "stop_pct":         -CRYPTO_CFG["stop_display"],
+                "target_pct":       CRYPTO_CFG["target_pct"],
                 "window_open":      window_open,
                 "last_updated":     now_iso,
                 "projected_return": round(b13_proj, 2),
