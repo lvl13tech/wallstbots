@@ -406,24 +406,21 @@ function renderFund(fid) {
   const data = STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null;
   const meta = FUND_META[fid];
   if (!meta) { $('app').innerHTML = '<p>Unknown fund</p>'; return; }
-  const v = data && data.value ? data.value : { total:43000, pnl:0, pnl_pct:0, day_pnl:0, day_pct:0, positions:[] };
-  const startCap = (data && data.starting_capital) || 43000;
+  const cap = (STATE.funds && STATE.funds.starting_capital) || 55000;
+  const v = data && data.value ? data.value : { total:cap, pnl:0, pnl_pct:0, day_pnl:0, day_pct:0, positions:[] };
+  const startCap = (data && data.starting_capital) || cap;
   let strategyHTML = '';
   if (['bot13','oracle','wizard'].includes(fid) && data && data.current_strategy) {
     strategyHTML = renderStrategyPanel(fid, data.current_strategy);
   }
 
-  // Holdings table — graceful fallback for missing price/value
-  // Bot13: use time-based cash window to control display (not just the backend flag)
-  const inCashWindow    = ((fid === 'bot13') && bot13InCashWindow()) ||
-                          ((fid === 'oracle') && oracleInCashWindow());
-  const displayPositions = !inCashWindow ? (v.positions || []) : [];
+  const holdingCash = v.holding_cash === true;
   const windowOpen = v.window_open !== false;
   const cashRow = windowOpen
     ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
     : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>';
-  const positionRows = displayPositions.length
-    ? displayPositions.map(p => {
+  const positionRows = (v.positions || []).length
+    ? v.positions.map(p => {
         const entry  = p.entry_price || p.entry || 0;
         const price  = p.price || entry;  // fall back to entry if live price missing
         const shares = p.shares || 0;
@@ -441,7 +438,7 @@ function renderFund(fid) {
           + '<td class="num '+cls(dayPnl)+'">'+fmtPct(dayPct)+'</td>'
           + '<td class="num '+cls(pnl)+'">'+fmt$0(pnl)+'</td>'
           + '<td class="num '+cls(pnlPct)+'">'+fmtPct(pnlPct)+'</td></tr>';
-      }).join('')
+      }).join('') + (holdingCash ? cashRow : '')
     : cashRow;
 
   $('app').innerHTML =
