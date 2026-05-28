@@ -485,7 +485,7 @@ function renderStrategyPanel(fid, strat) {
   const projHtml = (projRet != null)
     ? '<div style="margin:6px 0 10px;font-size:13px">'
       + '<span style="color:var(--muted)">'+projLabel+': </span>'
-      + '<span style="font-weight:700;color:'+(projRet > 0 ? 'var(--green)' : 'var(--red)')+'">'
+      + '<span style="font-weight:700;color:'+(projRet > 0 ? 'var(--green)' : projRet < 0 ? 'var(--red)' : 'var(--muted)')+'">'
       + (projRet > 0 ? '+' : '')+projRet.toFixed(2)+'%</span></div>'
     : '';
   let picks = '';

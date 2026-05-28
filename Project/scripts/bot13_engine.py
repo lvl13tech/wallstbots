@@ -379,10 +379,10 @@ def run_bot13_equity(
     )
     if projected_return <= cfg["proj_threshold"]:
         return _hold_return(
-            f"HOLD — projected return {projected_return:.2f}% ≤ {cfg['proj_threshold']}% threshold. "
+            f"HOLD — calculated edge score {projected_return:.2f}% ≤ {cfg['proj_threshold']}% threshold. "
             "Not enough edge today.",
-            f"HOLD — LOW PROJECTED RETURN ({projected_return:.2f}%)",
-            f"Weighted projected return {projected_return:.2f}% ≤ {cfg['proj_threshold']}% threshold. "
+            f"HOLD — INSUFFICIENT EDGE ({projected_return:.2f}%)",
+            f"Calculated edge score {projected_return:.2f}% ≤ {cfg['proj_threshold']}% threshold. "
             "Not enough edge to justify risk today. Holding for the day.",
         )
 
@@ -453,7 +453,6 @@ def run_bot13_equity(
     session_log = _append_log(prev_strategy, today_iso, log_entry)
 
     rationale = (
-        f"Projected return: +{projected_return:.2f}%. "
         f"Deployed into {len(picks)} high-conviction names ({pos_summary}). "
         f"Market breadth: {breadth_label}. "
         f"Weighted by signal strength. Stop -{stop_display}% | Target +{target_pct}%."
@@ -570,10 +569,10 @@ def run_bot13_crypto(
     )
     if projected_return <= cfg["proj_threshold"]:
         return _hold_return(
-            f"HOLD — projected return {projected_return:.2f}% ≤ {cfg['proj_threshold']}% threshold. "
+            f"HOLD — calculated edge score {projected_return:.2f}% ≤ {cfg['proj_threshold']}% threshold. "
             "Not enough edge today.",
-            f"HOLD — LOW PROJECTED RETURN ({projected_return:.2f}%)",
-            f"Average 24h projected return {projected_return:.2f}% ≤ {cfg['proj_threshold']}% threshold. "
+            f"HOLD — INSUFFICIENT EDGE ({projected_return:.2f}%)",
+            f"Calculated edge score {projected_return:.2f}% ≤ {cfg['proj_threshold']}% threshold. "
             "Not enough edge to justify risk. Standing down.",
         )
 
@@ -637,7 +636,6 @@ def run_bot13_crypto(
     session_log = _append_log(prev_strategy, today_iso, log_entry)
 
     rationale = (
-        f"Projected return: +{projected_return:.2f}%. "
         f"Deployed into {len(picks)} coins with momentum + volume confirmation ({syms_summary}). "
         f"Equal-weight ${per:,.0f}/coin. "
         f"Stop -{stop_display}% (internal -{stop_internal}%) | Target +{target_pct}%."
