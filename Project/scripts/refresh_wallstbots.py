@@ -872,13 +872,24 @@ def main():
         b13_proj      = float((prev_b13_strategy or {}).get("projected_return", 0.0))
         print(f"  BOT13: same-day re-price ({len(b13_positions)} existing positions)")
     elif not _engine_window_open(EQUITY_CFG):
-        # Market closed on a new day — don't enter positions retroactively
+        # Market closed — don't enter new positions after hours.
+        # If today already had a completed TRADE, preserve its picks/log so the
+        # display keeps showing what the bot did; total is preserved via prev_b13_total.
         b13_decision  = "HOLD"
         b13_positions = []
-        b13_picks     = []
-        b13_rationale = "Market closed — waiting for next trading session."
-        b13_log       = (prev_b13_strategy or {}).get("session_log", [])
-        b13_proj      = 0.0
+        _prior_day    = (prev_b13_strategy or {}).get("day")
+        _prior_dec    = (prev_b13_strategy or {}).get("decision")
+        if _prior_day == today_iso and _prior_dec == "TRADE":
+            # Same-day completed trade — keep its picks and log intact
+            b13_picks     = (prev_b13_strategy or {}).get("picks", [])
+            b13_rationale = (prev_b13_strategy or {}).get("rationale", "")
+            b13_log       = (prev_b13_strategy or {}).get("session_log", [])
+            b13_proj      = float((prev_b13_strategy or {}).get("projected_return", 0.0))
+        else:
+            b13_picks     = []
+            b13_rationale = "Market closed — waiting for next trading session."
+            b13_log       = (prev_b13_strategy or {}).get("session_log", [])
+            b13_proj      = 0.0
         print("  BOT13: HOLD (market closed — no new positions after hours)")
     else:
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = run_bot13_equity(
@@ -932,11 +943,14 @@ def main():
                 total     = b13_day_open + sum_pnl              # day_open + receipts = true total
                 cash      = 0.0
             else:
-                # HOLD/CASH: no positions — empty holdings, today's P&L = 0
+                # HOLD: no active positions.
+                # Use prev_b13_total (the running portfolio value) so a completed intraday
+                # TRADE's gains are preserved when the script re-runs after market close.
+                # On a fresh HOLD day prev_b13_total == b13_day_open anyway, so both cases work.
                 enriched  = []
                 pos_val   = 0.0
-                total     = b13_day_open
-                cash      = b13_day_open
+                total     = prev_b13_total
+                cash      = prev_b13_total
 
             pnl           = total - sc                              # total gain since inception
             pnl_pct       = (pnl / sc * 100) if sc else 0
