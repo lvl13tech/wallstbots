@@ -869,7 +869,7 @@ def main():
 
     # -- Trading window check ----------------------------------------------------
     window_open = in_trading_window()
-    h_et, m_et  = et_hour()
+    _now_et = et_now(); h_et, m_et = _now_et.hour, _now_et.minute
     print(f"[bitbot13] ET time: {h_et:02d}:{m_et:02d} — trading window {'OPEN' if window_open else 'CLOSED'}")
 
     # -- BOT13 decision ----------------------------------------------------------
@@ -1259,7 +1259,6 @@ def main():
         git_push("bitbot13.tech data refresh")
 
     print("\n[bitbot13] ALL DONE")
-
 
 if __name__ == "__main__":
     main()
