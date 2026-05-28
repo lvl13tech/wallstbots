@@ -420,7 +420,7 @@ def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_s
         scored.append((sym, composite, ret5, ret20, rsi, vol_r))
 
     if not scored:
-        return None, None, None
+        return None, None, None, 0.0
 
     scored.sort(key=lambda x: -x[1])
 
@@ -437,7 +437,7 @@ def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_s
             break
 
     if not picks_raw:
-        return None, None, None
+        return None, None, None, 0.0
 
     total_score = sum(s for _, s, *_ in picks_raw)
     raw_w       = [max(0.12, min(0.35, s / total_score)) for _, s, *_ in picks_raw]
@@ -527,7 +527,7 @@ def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_
         scored.append((sym, score, ret20, ret60, sharpe_proxy, dist_ma50))
 
     if not scored:
-        return None, None, None
+        return None, None, None, 0.0
 
     scored.sort(key=lambda x: -x[1])
 
@@ -543,7 +543,7 @@ def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_
             break
 
     if not picks_raw:
-        return None, None, None
+        return None, None, None, 0.0
 
     n      = len(picks_raw)
     q1_cut = max(1, round(n * 0.25))
@@ -931,7 +931,7 @@ def main():
         b13_picks     = b13_prev_strategy.get("picks", [])
         b13_rationale = b13_prev_strategy.get("rationale", "")
         b13_log       = b13_prev_strategy.get("session_log", [])
-        b13_proj      = float(b13_prev_strategy.get("projected_return", 0.0))
+        b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
         print(f"  BOT13: {b13_decision} (outside trading window {TRADING_WINDOW_START}am-{TRADING_WINDOW_END-12}pm ET — carrying forward last session)")
     elif stops_triggered:
         # Stop-loss triggered — mark stopped positions and open fresh picks
@@ -957,7 +957,7 @@ def main():
         b13_picks     = b13_prev_strategy.get("picks", [])
         b13_rationale = b13_prev_strategy.get("rationale", "")
         b13_log       = b13_prev_strategy.get("session_log", [])
-        b13_proj      = float(b13_prev_strategy.get("projected_return", 0.0))
+        b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
         print(f"  BOT13: same-session re-price ({len(b13_positions)} existing positions)")
     else:
         # New session — run fresh decision
@@ -1078,9 +1078,14 @@ def main():
             pnl_pct  = (pnl / sc * 100) if sc else 0
             day_pnl  = sum(p["day_pnl"] for p in enriched)
             day_pct  = (day_pnl / (total - day_pnl)) * 100 if (total - day_pnl) else 0
+
+            # holding_cash for oracle: true on weekends (no active management until Monday)
+            oracle_holding_cash = et_now().weekday() >= 5  # Sat=5, Sun=6
+
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
-                        "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2), "positions": enriched}
+                        "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2),
+                        "holding_cash": oracle_holding_cash, "positions": enriched}
 
         elif fid == "wizard":
             if wizard_new_positions:

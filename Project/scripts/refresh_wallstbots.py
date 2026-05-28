@@ -316,7 +316,7 @@ def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_s
         scored.append((sym, composite, ret5, ret20, rsi, vol_r))
 
     if not scored:
-        return None, None, None
+        return None, None, None, 0.0
 
     scored.sort(key=lambda x: -x[1])
 
@@ -333,7 +333,7 @@ def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_s
             break
 
     if not picks_raw:
-        return None, None, None
+        return None, None, None, 0.0
 
     # Weight by score, clamp 12-35%, renormalize
     total_score = sum(s for _, s, *_ in picks_raw)
@@ -443,7 +443,7 @@ def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_
         scored.append((sym, score, ret20, ret60, sharpe_proxy, dist_ma50))
 
     if not scored:
-        return None, None, None
+        return None, None, None, 0.0
 
     scored.sort(key=lambda x: -x[1])
 
@@ -460,7 +460,7 @@ def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_
             break
 
     if not picks_raw:
-        return None, None, None
+        return None, None, None, 0.0
 
     # Quartile sizing: top 25% of names get double weight
     n = len(picks_raw)
