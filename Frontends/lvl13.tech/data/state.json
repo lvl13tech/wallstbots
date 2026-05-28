@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-05-28T18:42:50",
+    "last_refresh": "2026-05-28T23:19:22",
     "snapshots": [
       {
         "date": "2026-05-21",
@@ -54,7 +54,7 @@
         },
         "current_strategy": {
           "day": "2026-05-28",
-          "decision": "TRADE",
+          "decision": "HOLD",
           "rationale": "Deployed into 5 high-conviction names (SPOT +6.11%, VST +4.82%, BIRK +4.31%, ACHR +3.92%, ALAB +3.04%). Market breadth: 26/55 green. Weighted by signal strength. Stop -1.5% | Target +3.0%.",
           "picks": [
             {
@@ -88,6 +88,8 @@
               "rationale": "ALAB: solid momentum +3.04% \u2014 14% allocation ($9,523). Stop: -1.5% | Target: +3.0%."
             }
           ],
+          "stop_pct": -1.5,
+          "target_pct": 3.0,
           "session_log": [
             {
               "time": "19:03 PM",
@@ -95,7 +97,8 @@
               "action": "CLOSE \u2014 session complete",
               "detail": "Final session positions: SPOT +6.11%, VST +4.82%, BIRK +4.31%, ACHR +3.92%, ALAB +3.04%. Day P&L: $+11,318.32. All positions conceptually closed at 3:50 PM."
             }
-          ]
+          ],
+          "projected_return": 0.0
         },
         "top10": null,
         "per_top_dollars": null,
