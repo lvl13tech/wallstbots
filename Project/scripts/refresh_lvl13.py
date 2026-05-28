@@ -696,6 +696,32 @@ def push_to_api(data_type, data, secrets):
         print(f"  [push:{data_type}] error: {e}")
 
 
+def trigger_portfolio_snapshots(secrets):
+    """Tell the backend to compute per-portfolio daily performance snapshots."""
+    if _requests is None:
+        return
+    api_url      = secrets.get("api_url") or os.environ.get("TRACKER_API_URL", BACKEND_URL)
+    internal_key = secrets.get("internal_api_key") or os.environ.get("INTERNAL_API_KEY", "")
+    if not internal_key:
+        print("  [snapshots] no INTERNAL_API_KEY — skipping portfolio snapshots")
+        return
+    try:
+        r = _requests.post(
+            f"{api_url}/internal/portfolio-fund-snapshots/refresh",
+            json={"platform": "lvl13"},
+            headers={"x-internal-key": internal_key},
+            timeout=30,
+        )
+        if r.status_code == 200:
+            result = r.json()
+            print(f"  [snapshots] OK — {result.get('portfolios_updated', 0)} portfolios updated, "
+                  f"{result.get('prices_available', 0)} prices used")
+        else:
+            print(f"  [snapshots] HTTP {r.status_code}: {r.text[:120]}")
+    except Exception as e:
+        print(f"  [snapshots] error: {e}")
+
+
 # ── Git push ──────────────────────────────────────────────────────────────────────
 def git_push(msg):
     git_root = Path(__file__).resolve().parents[2]
@@ -1118,4 +1144,29 @@ def main():
     print(f"[wallstbots] signals — {n_sig} signals")
     push_to_api("signals", signals_data, secrets)
 
-    # ── News ────────────────────────────────────────────────�
+    # ── News ──────────────────────────────────────────────────────────────────
+    print("[lvl13] fetching news...")
+    news_items = fetch_news(newsapi_key)
+    news_data = {
+        "items":        news_items,
+        "sectors":      sorted({it["sector"] for it in news_items}) if news_items else [],
+        "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+    }
+    print(f"[lvl13] news — {len(news_items)} articles")
+    push_to_api("news", news_data, secrets)
+
+    # ── Reports (placeholder — keeps API consistent) ──────────────────────────
+    push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
+
+    # ── Portfolio performance snapshots ───────────────────────────────────────
+    trigger_portfolio_snapshots(secrets)
+
+    # ── Git push (optional — static files as backup) ─────────────────────────
+    if args.push:
+        git_push("lvl13.tech data refresh")
+
+    print("\n[lvl13] ALL DONE")
+
+
+if __name__ == "__main__":
+    main()�
