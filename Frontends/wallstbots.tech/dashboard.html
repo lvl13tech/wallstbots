@@ -970,6 +970,7 @@
     <a href="/" class="logo">Wall St. <span>Bots</span></a>
     <nav>
       <a href="dashboard.html" class="active">Portfolios</a>
+      <a href="leaderboard.html">Leaderboard</a>
       <a href="#" id="wmNavLink" style="display:none;color:#a78bfa" onclick="toggleWmSection(event)">⚡ Command</a>
     </nav>
 
@@ -1019,6 +1020,7 @@
 <!-- ─── MOBILE NAV ─── -->
 <div class="mob-nav" id="mobNav">
   <a href="dashboard.html" class="active">Portfolios</a>
+  <a href="leaderboard.html">Leaderboard</a>
   <hr class="mob-nav-sep">
   <a href="#" id="wmNavLinkMob" style="display:none;color:#a78bfa" onclick="closeMobNav();toggleWmSection(event)">⚡ Command Center</a>
 </div>
@@ -1038,6 +1040,16 @@
   <div class="drawer-section">
     <div class="drawer-section-title">Profile</div>
     <div class="profile-email" id="drawerEmail">Loading…</div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:6px">Display Name / @Handle</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="drawerHandle" placeholder="@yourhandle" maxlength="30"
+          style="flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:0.85rem;outline:none;transition:border-color 0.15s"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+        <button class="btn-copy" onclick="saveDisplayName()" id="saveHandleBtn">Save</button>
+      </div>
+      <div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Used for comments &amp; leaderboard</div>
+    </div>
     <button class="btn-outline" onclick="openPwModal()">🔑 Reset Password</button>
   </div>
   <div class="drawer-section">
@@ -1454,7 +1466,25 @@
     try {
       userProfile = await api.getUserProfile();
       document.getElementById("drawerEmail").textContent = userProfile?.email || userProfile?.user?.email || "—";
+      const handle = userProfile?.display_name || userProfile?.user?.display_name || "";
+      const inp = document.getElementById("drawerHandle");
+      if (inp) inp.value = handle;
     } catch(e) { document.getElementById("drawerEmail").textContent = "—"; }
+  }
+
+  async function saveDisplayName() {
+    const inp = document.getElementById("drawerHandle");
+    const btn = document.getElementById("saveHandleBtn");
+    const val = (inp?.value || "").trim();
+    if (!val) { showToast("Enter a display name", "error"); return; }
+    btn.disabled = true; btn.textContent = "…";
+    try {
+      const token = await auth.getToken();
+      await fetch(BACKEND_URL + "/user/profile", { method: "PATCH", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token }, body: JSON.stringify({ display_name: val }) });
+      if (userProfile) { if (userProfile.display_name !== undefined) userProfile.display_name = val; else if (userProfile.user) userProfile.user.display_name = val; }
+      showToast("Display name saved!", "success");
+    } catch(e) { showToast("Could not save display name", "error"); }
+    btn.disabled = false; btn.textContent = "Save";
   }
 
   async function loadSubscription() {

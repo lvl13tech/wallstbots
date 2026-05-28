@@ -206,6 +206,40 @@
       .context-back-link { margin-left: 0; }
       .toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
     }
+
+    /* ── Share button ── */
+    .share-btn { background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.25); color: var(--blue); border-radius: 8px; padding: 8px 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+    .share-btn:hover { background: rgba(0,212,255,0.18); }
+
+    /* ── Leaderboard toggle ── */
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 22px; cursor: pointer; transition: background 0.2s; }
+    .toggle-slider:before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
+    input:checked + .toggle-slider { background: var(--blue); }
+    input:checked + .toggle-slider:before { transform: translateX(18px); }
+
+    /* ── Comments ── */
+    .comment-form { background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .comment-form textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 0.875rem; resize: vertical; min-height: 76px; box-sizing: border-box; font-family: inherit; transition: border-color 0.15s; }
+    .comment-form textarea:focus { outline: none; border-color: var(--blue); }
+    .comment-form-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; gap: 10px; }
+    .comment-chars { font-size: 0.72rem; color: var(--muted); }
+    .btn-post { background: var(--blue); border: none; color: var(--bg); border-radius: 8px; padding: 8px 18px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+    .btn-post:hover { background: #00b8e0; }
+    .btn-post:disabled { opacity: 0.5; cursor: default; }
+    .comment-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+    .comment-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .comment-handle { font-size: 0.82rem; font-weight: 700; color: var(--blue); }
+    .comment-time { font-size: 0.72rem; color: var(--muted); }
+    .comment-body-text { font-size: 0.875rem; line-height: 1.6; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+    .comment-del-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; }
+    .comment-del-btn:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
+    .comments-empty { text-align: center; padding: 28px; color: var(--muted); font-size: 0.875rem; }
+    .no-handle-notice { background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.2); border-radius: 10px; padding: 12px 16px; font-size: 0.82rem; color: var(--muted); margin-bottom: 14px; }
+    .no-handle-notice a { color: var(--blue); text-decoration: none; }
+    .no-handle-notice a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -292,6 +326,19 @@
     </div>
     <div class="referral-stats"><span id="drawerRefCount">0</span> referrals · Earn 1 free month per 3 referrals</div>
   </div>
+  <div class="drawer-section" id="drawerPortfolioSection" style="display:none">
+    <div class="drawer-section-title">Portfolio Settings</div>
+    <div class="toggle-row">
+      <div>
+        <div style="font-size:0.85rem;font-weight:500;margin-bottom:2px">Show on Leaderboard</div>
+        <div style="font-size:0.75rem;color:var(--muted)">Qualify at 21 days + 10% gain</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="lbToggle" onchange="toggleLeaderboard(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
   <div class="drawer-section">
     <a href="https://www.paypal.com/myaccount/autopay/" target="_blank" class="manage-link">Manage Subscription on PayPal →</a>
   </div>
@@ -328,6 +375,12 @@
             <p class="fund-hero-tag" id="fundHeroTag"></p>
           </div>
         </div>
+      </div>
+      <div style="display:flex;align-items:flex-start;flex-shrink:0">
+        <button class="share-btn" id="shareBtn" onclick="sharePortfolio()" style="display:none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share
+        </button>
       </div>
     </div>
     <div class="fund-stats-bar">
@@ -397,6 +450,12 @@
     </div>
   </div>
 
+  <div class="panel" id="commentsSection" style="margin-top:18px;display:none">
+    <h3 style="margin-bottom:16px">💬 Comments</h3>
+    <div id="commentFormWrap"></div>
+    <div id="commentsList"><div class="comments-empty">Loading comments…</div></div>
+  </div>
+
 </main>
 
 <div class="toast" id="toast"></div>
@@ -413,12 +472,14 @@ const BACKEND_URL = "https://wallstbots-backend-868128114349.us-east1.run.app";
 const TRACKER_API = BACKEND_URL + "/public/tracker";
 const auth = new WallStBotsAuth(BACKEND_URL);
 const api  = new WallStBotsAPI(BACKEND_URL, auth);
-if (!auth.isAuthenticated()) { window.location.href = "login.html"; }
 
-const params   = new URLSearchParams(window.location.search);
-const BOT_ID   = params.get('portfolio');
-const BOT_SLUG = params.get('bot');
-if (!BOT_ID || !BOT_SLUG) { window.location.href = "dashboard.html"; }
+const params    = new URLSearchParams(window.location.search);
+const IS_PUBLIC = params.get('public') === '1';
+const BOT_ID    = IS_PUBLIC ? params.get('id') : params.get('portfolio');
+let   BOT_SLUG  = IS_PUBLIC ? null              : params.get('bot');
+
+if (!auth.isAuthenticated()) { window.location.href = "login.html"; }
+if (!BOT_ID || (!IS_PUBLIC && !BOT_SLUG)) { window.location.href = "dashboard.html"; }
 
 // ── Shared state ─────────────────────────────────────────────────────────────
 let botData = null, holdings = [], userProfile = null;
@@ -466,30 +527,37 @@ function sectorClass(s) {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
-  // Validate bot slug
-  if (!FUND_META[BOT_SLUG]) {
-    showToast('Unknown strategy: ' + BOT_SLUG, 'error');
-    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
-    return;
-  }
-
-  // Wire up back links
-  const backHref = 'bot-detail.html?id=' + encodeURIComponent(BOT_ID);
-  document.getElementById('heroBackLink').href   = backHref;
-  document.getElementById('navBackPortfolio').href = backHref;
-  document.getElementById('mobBackPortfolio').href = backHref;
-  document.getElementById('ctxBackLink').href      = backHref;
-
-  // Render fund identity immediately (no API needed)
-  renderFundHero();
-
-  // Load profile quietly
   try { userProfile = await api.getUserProfile(); renderProfile(); } catch(e) {}
-  try { loadReferralCode(); } catch(e) {}
-  try { loadSubscriptionInfo(); } catch(e) {}
-
-  // Load portfolio data and site data in parallel
-  await Promise.allSettled([loadPortfolio(), loadSiteData()]);
+  if (IS_PUBLIC) {
+    ['contextStrip','signalsToday','signalsNote','newsGrid'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+    document.querySelectorAll('.section-head').forEach(el => el.style.display = 'none');
+    document.getElementById('positionsGrid').style.display = 'none';
+    document.getElementById('heroBackLink').style.display  = 'none';
+    document.getElementById('commentsSection').style.display = 'block';
+    await loadPublicPortfolio();
+  } else {
+    if (!FUND_META[BOT_SLUG]) {
+      showToast('Unknown strategy: ' + BOT_SLUG, 'error');
+      setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+      return;
+    }
+    const backHref = 'bot-detail.html?id=' + encodeURIComponent(BOT_ID);
+    document.getElementById('heroBackLink').href     = backHref;
+    document.getElementById('navBackPortfolio').href = backHref;
+    document.getElementById('mobBackPortfolio').href = backHref;
+    document.getElementById('ctxBackLink').href      = backHref;
+    renderFundHero();
+    try { loadReferralCode(); } catch(e) {}
+    try { loadSubscriptionInfo(); } catch(e) {}
+    document.getElementById('shareBtn').style.display = 'flex';
+    document.getElementById('drawerPortfolioSection').style.display = 'block';
+    document.getElementById('commentsSection').style.display = 'block';
+    loadLeaderboardSetting();
+    await Promise.allSettled([loadPortfolio(), loadSiteData()]);
+  }
+  loadComments();
 }
 
 // ── Render fund hero from metadata (instant) ──────────────────────────────────
@@ -900,6 +968,105 @@ function showToast(msg, type = 'success') {
   t._timer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+// ── Social features ──────────────────────────────────────────────────────────
+async function loadPublicPortfolio() {
+  try {
+    const data = await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/public`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+    BOT_SLUG = data.strategy || data.bot_slug || 'bot13';
+    if (FUND_META[BOT_SLUG]) renderFundHero();
+    const meta = FUND_META[BOT_SLUG] || {};
+    document.getElementById('fundHeroName').textContent = data.portfolio_name || meta.name || 'Portfolio';
+    if (data.total_return_pct != null) {
+      document.getElementById('fsInception').textContent = (data.total_return_pct >= 0 ? '+' : '') + data.total_return_pct.toFixed(2) + '%';
+      document.getElementById('fsInception').className  = 'fstat-val ' + (data.total_return_pct >= 0 ? 'pos' : 'neg');
+    }
+    if (data.snapshots) {
+      const labels = data.snapshots.map(s => s.date), values = data.snapshots.map(s => s.total_value);
+      if (labels.length) {
+        const ctx2 = document.getElementById('chartFund');
+        const retPct = data.total_return_pct || 0;
+        const color = (meta.color || '#00d4ff');
+        const titleEl = document.getElementById('chartTitle');
+        if (titleEl) titleEl.innerHTML = 'Performance Trajectory &nbsp;<span style="font-size:0.85rem;font-weight:600;color:' + color + '">' + (retPct >= 0 ? '+' : '') + retPct.toFixed(2) + '%</span>';
+        if (CHARTS_F.fund) CHARTS_F.fund.destroy();
+        CHARTS_F.fund = new Chart(ctx2, { type: 'line', data: { labels, datasets: [{ label: 'Return', data: values, borderColor: color, backgroundColor: color + '20', tension: 0.3, borderWidth: 2, fill: true, pointRadius: values.length > 30 ? 0 : 3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#7d8590', maxTicksLimit: 8 }, grid: { color: '#1e2633' } }, y: { ticks: { color: '#7d8590', callback: v => '$' + v.toLocaleString() }, grid: { color: '#1e2633' } } } } });
+      }
+    }
+  } catch(e) { showToast('Could not load portfolio', 'error'); }
+}
+
+async function loadLeaderboardSetting() {
+  try {
+    const data = await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/public`).then(r => r.ok ? r.json() : null);
+    if (data) { const tog = document.getElementById('lbToggle'); if (tog) tog.checked = !!data.public_leaderboard; }
+  } catch(e) {}
+}
+
+async function toggleLeaderboard(checked) {
+  try {
+    const token = await auth.getToken();
+    await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/settings`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ public_leaderboard: checked }) });
+    showToast(checked ? 'Added to leaderboard!' : 'Removed from leaderboard', 'success');
+  } catch(e) { showToast('Could not update setting', 'error'); }
+}
+
+function sharePortfolio() {
+  const url = window.location.origin + '/portfolio-fund.html?id=' + BOT_ID + '&public=1';
+  if (navigator.share) { navigator.share({ title: 'My Portfolio', url }); }
+  else { navigator.clipboard.writeText(url).then(() => showToast('Link copied!', 'success')).catch(() => showToast('Copy failed', 'error')); }
+}
+
+async function loadComments() {
+  try {
+    const res = await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/comments`);
+    const data = await res.json();
+    renderCommentForm();
+    renderComments(data.comments || []);
+  } catch(e) { document.getElementById('commentsList').innerHTML = '<div class="comments-empty">Could not load comments.</div>'; }
+}
+
+function renderCommentForm() {
+  const wrap = document.getElementById('commentFormWrap');
+  if (!auth.isAuthenticated()) { wrap.innerHTML = ''; return; }
+  const handle = userProfile?.display_name || userProfile?.user?.display_name || '';
+  if (!handle) {
+    wrap.innerHTML = '<div class="no-handle-notice">Set a <a href="dashboard.html#account">display name</a> to leave comments.</div>';
+    return;
+  }
+  wrap.innerHTML = `<div class="comment-form"><textarea id="commentText" placeholder="Share your thoughts on this portfolio…" maxlength="500" oninput="document.getElementById('commentChars').textContent=this.value.length+'/500'"></textarea><div class="comment-form-footer"><span class="comment-chars" id="commentChars">0/500</span><button class="btn-post" onclick="postComment()">Post</button></div></div>`;
+}
+
+function renderComments(comments) {
+  const list = document.getElementById('commentsList');
+  if (!comments.length) { list.innerHTML = '<div class="comments-empty">No comments yet. Be the first!</div>'; return; }
+  const myId = userProfile?.id || userProfile?.user?.id || '';
+  list.innerHTML = comments.map(c => {
+    const canDel = myId && (c.user_id === myId);
+    return `<div class="comment-card"><div class="comment-header"><span class="comment-handle">@${escHtml(c.display_name)}</span><div style="display:flex;align-items:center;gap:8px"><span class="comment-time">${relTime(c.created_at)}</span>${canDel ? `<button class="comment-del-btn" onclick="deleteComment('${c.id}')">Delete</button>` : ''}</div></div><div class="comment-body-text">${escHtml(c.body)}</div></div>`;
+  }).join('');
+}
+
+async function postComment() {
+  const ta = document.getElementById('commentText');
+  const body = (ta?.value || '').trim();
+  if (!body) return;
+  try {
+    const token = await auth.getToken();
+    await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/comments`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ body }) });
+    ta.value = ''; document.getElementById('commentChars').textContent = '0/500';
+    loadComments();
+  } catch(e) { showToast('Could not post comment', 'error'); }
+}
+
+async function deleteComment(commentId) {
+  try {
+    const token = await auth.getToken();
+    await fetch(`${BACKEND_URL}/portfolio/${BOT_ID}/comments/${commentId}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+    loadComments();
+  } catch(e) { showToast('Could not delete comment', 'error'); }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Window bindings ───────────────────────────────────────────────────────────
 window.toggleMobNav       = toggleMobNav;
 window.closeMobNav        = closeMobNav;
@@ -911,6 +1078,10 @@ window.closePwModal       = closePwModal;
 window.sendPasswordReset  = sendPasswordReset;
 window.copyReferral       = copyReferral;
 window.logout             = logout;
+window.toggleLeaderboard  = toggleLeaderboard;
+window.sharePortfolio     = sharePortfolio;
+window.postComment        = postComment;
+window.deleteComment      = deleteComment;
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', init);

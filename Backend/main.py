@@ -2663,6 +2663,282 @@ async def create_support_ticket(payload: SupportTicketCreate):
 
 
 # ============================================================================
+# SOCIAL — Display name, leaderboard, comments
+# ============================================================================
+
+class DisplayNameUpdate(BaseModel):
+    display_name: str
+
+class CommentCreate(BaseModel):
+    body: str
+
+class LeaderboardSettings(BaseModel):
+    public_leaderboard: bool
+
+
+@app.patch("/user/profile")
+async def update_display_name(
+    body: DisplayNameUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Set or update the user's public @handle."""
+    import re
+    handle = body.display_name.strip().lstrip("@")
+    if not handle or len(handle) > 50:
+        raise HTTPException(status_code=400, detail="Handle must be 1-50 characters")
+    if not re.match(r'^[\w.]+$', handle):
+        raise HTTPException(status_code=400, detail="Handle may only contain letters, numbers, underscores, and dots")
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("SELECT id FROM users WHERE display_name = %s AND id != %s", (handle, current_user["user_id"]))
+        if cursor.fetchone():
+            raise HTTPException(status_code=409, detail="That handle is already taken")
+        cursor.execute(
+            "UPDATE users SET display_name = %s, updated_at = NOW() WHERE id = %s RETURNING display_name",
+            (handle, current_user["user_id"])
+        )
+        row = cursor.fetchone()
+        conn.commit()
+        return {"display_name": row["display_name"]}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/leaderboard")
+async def get_leaderboard(
+    platform: Optional[str] = Query(None),
+    fund: Optional[str] = Query(None),
+    limit: int = Query(50, le=100),
+):
+    """Public leaderboard — no auth required. Portfolios opted-in, ≥21 days, ≥+10%."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        query = """
+            SELECT
+                b.id                  AS bot_id,
+                b.name                AS portfolio_name,
+                b.platform,
+                b.created_at,
+                COALESCE(u.display_name, 'Trader #' || SUBSTRING(u.id::text, 1, 6)) AS handle,
+                lp.strategy_name      AS fund,
+                lp.gain_loss_pct,
+                lp.total_value,
+                lp.entry_cost,
+                CURRENT_DATE - b.created_at::date AS days_active
+            FROM bots b
+            JOIN users u ON b.user_id = u.id
+            LEFT JOIN bot_latest_performance lp ON lp.bot_id = b.id
+            WHERE
+                b.public_leaderboard = TRUE
+                AND b.status = 'active'
+                AND b.created_at <= NOW() - INTERVAL '21 days'
+                AND COALESCE(lp.gain_loss_pct, 0) >= 10.0
+        """
+        params: list = []
+        if platform:
+            query += " AND b.platform = %s"
+            params.append(platform)
+        if fund:
+            query += " AND LOWER(lp.strategy_name) = LOWER(%s)"
+            params.append(fund)
+        query += " ORDER BY lp.gain_loss_pct DESC NULLS LAST LIMIT %s"
+        params.append(limit)
+
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        return {
+            "leaderboard": [
+                {
+                    "rank":           i,
+                    "handle":         r["handle"],
+                    "portfolio_name": r["portfolio_name"] or "My Portfolio",
+                    "platform":       r["platform"],
+                    "fund":           r["fund"] or "BOT13",
+                    "gain_loss_pct":  float(r["gain_loss_pct"] or 0),
+                    "days_active":    int(r["days_active"] or 0),
+                    "bot_id":         str(r["bot_id"]),
+                }
+                for i, r in enumerate(rows, 1)
+            ],
+            "count": len(rows),
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/portfolio/{bot_id}/public")
+async def get_public_portfolio(bot_id: str):
+    """Public read-only portfolio view — no auth required."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("""
+            SELECT
+                b.id, b.name, b.platform, b.created_at, b.public_leaderboard,
+                COALESCE(u.display_name, 'Trader #' || SUBSTRING(u.id::text, 1, 6)) AS handle,
+                lp.strategy_name AS fund,
+                lp.gain_loss_pct, lp.total_value, lp.entry_cost, lp.snapshot_date
+            FROM bots b
+            JOIN users u ON b.user_id = u.id
+            LEFT JOIN bot_latest_performance lp ON lp.bot_id = b.id
+            WHERE b.id = %s AND b.public_leaderboard = TRUE AND b.status = 'active'
+        """, (bot_id,))
+        bot = cursor.fetchone()
+        if not bot:
+            raise HTTPException(status_code=404, detail="Portfolio not found or not public")
+
+        cursor.execute("""
+            SELECT symbol, fund_name, weight, entry_price FROM bot_holdings
+            WHERE bot_id = %s ORDER BY weight DESC NULLS LAST
+        """, (bot_id,))
+        holdings = cursor.fetchall()
+
+        cursor.execute("""
+            SELECT snapshot_date, gain_loss_pct, total_value
+            FROM bot_performance_snapshots
+            WHERE bot_id = %s ORDER BY snapshot_date ASC LIMIT 90
+        """, (bot_id,))
+        curve = cursor.fetchall()
+
+        return {
+            "bot_id":            str(bot["id"]),
+            "handle":            bot["handle"],
+            "portfolio_name":    bot["name"] or "My Portfolio",
+            "platform":          bot["platform"],
+            "fund":              bot["fund"] or "BOT13",
+            "gain_loss_pct":     float(bot["gain_loss_pct"] or 0),
+            "total_value":       float(bot["total_value"] or 0),
+            "entry_cost":        float(bot["entry_cost"] or 0),
+            "created_at":        bot["created_at"].isoformat() if bot["created_at"] else None,
+            "snapshot_date":     str(bot["snapshot_date"]) if bot["snapshot_date"] else None,
+            "holdings":          [dict(h) for h in holdings],
+            "performance_curve": [
+                {"date": str(r["snapshot_date"]), "gain_loss_pct": float(r["gain_loss_pct"] or 0), "total_value": float(r["total_value"] or 0)}
+                for r in curve
+            ],
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/portfolio/{bot_id}/comments")
+async def get_comments(bot_id: str, limit: int = Query(50, le=100), offset: int = 0):
+    """Public — anyone can read comments."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("SELECT id FROM bots WHERE id = %s AND public_leaderboard = TRUE", (bot_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Portfolio not found or not public")
+        cursor.execute("""
+            SELECT id, display_name, body, created_at
+            FROM portfolio_comments
+            WHERE bot_id = %s AND is_deleted = FALSE
+            ORDER BY created_at DESC LIMIT %s OFFSET %s
+        """, (bot_id, limit, offset))
+        rows = cursor.fetchall()
+        return {"comments": [
+            {"id": str(r["id"]), "display_name": r["display_name"], "body": r["body"], "created_at": r["created_at"].isoformat()}
+            for r in rows
+        ]}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.post("/portfolio/{bot_id}/comments")
+async def post_comment(
+    bot_id: str,
+    body: CommentCreate,
+    current_user: dict = Depends(get_current_user),
+):
+    """Post a comment — any logged-in user."""
+    text = body.body.strip()
+    if not text or len(text) > 1000:
+        raise HTTPException(status_code=400, detail="Comment must be 1-1000 characters")
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("SELECT id FROM bots WHERE id = %s AND public_leaderboard = TRUE", (bot_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Portfolio not found or not public")
+
+        cursor.execute("SELECT display_name, full_name FROM users WHERE id = %s", (current_user["user_id"],))
+        user = cursor.fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        handle = user["display_name"] or user["full_name"] or f"Trader #{current_user['user_id'][:6]}"
+
+        cursor.execute("""
+            INSERT INTO portfolio_comments (bot_id, user_id, display_name, body)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id, display_name, body, created_at
+        """, (bot_id, current_user["user_id"], handle, text))
+        row = cursor.fetchone()
+        conn.commit()
+        return {"id": str(row["id"]), "display_name": row["display_name"], "body": row["body"], "created_at": row["created_at"].isoformat()}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.delete("/portfolio/{bot_id}/comments/{comment_id}")
+async def delete_comment(
+    bot_id: str,
+    comment_id: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """Soft-delete own comment."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("""
+            UPDATE portfolio_comments SET is_deleted = TRUE
+            WHERE id = %s AND bot_id = %s AND user_id = %s AND is_deleted = FALSE
+            RETURNING id
+        """, (comment_id, bot_id, current_user["user_id"]))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Comment not found or already deleted")
+        conn.commit()
+        return {"deleted": True}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.patch("/portfolio/{bot_id}/settings")
+async def update_portfolio_settings(
+    bot_id: str,
+    body: LeaderboardSettings,
+    current_user: dict = Depends(get_current_user),
+):
+    """Toggle public_leaderboard flag — owner only."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("""
+            UPDATE bots SET public_leaderboard = %s, updated_at = NOW()
+            WHERE id = %s AND user_id = %s
+            RETURNING id, public_leaderboard
+        """, (body.public_leaderboard, bot_id, current_user["user_id"]))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Portfolio not found or not yours")
+        conn.commit()
+        return {"bot_id": str(row["id"]), "public_leaderboard": row["public_leaderboard"]}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+# ============================================================================
 # HEALTH CHECK
 # ============================================================================
 
