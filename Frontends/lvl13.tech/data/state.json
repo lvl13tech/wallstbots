@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-05-28T23:19:22",
+    "last_refresh": "2026-05-29T01:44:44",
     "snapshots": [
       {
         "date": "2026-05-21",
@@ -26,6 +26,14 @@
         "wizard": 59936.48,
         "equalizer": 56345.09,
         "titan": 56079.99
+      },
+      {
+        "date": "2026-05-29",
+        "bot13": 66318.32,
+        "oracle": 61909.72,
+        "wizard": 59936.48,
+        "equalizer": 56345.09,
+        "titan": 56079.99
       }
     ],
     "funds": {
@@ -43,9 +51,9 @@
           "pos_val": 0.0,
           "pnl": 11318.32,
           "pnl_pct": 20.58,
-          "day_pnl": 11318.32,
-          "day_pct": 20.58,
-          "day_open": 55000.0,
+          "day_pnl": 0.0,
+          "day_pct": 0.0,
+          "day_open": 66318.32,
           "holding_cash": true,
           "window_open": false,
           "session_open_et": "9:30",
@@ -53,41 +61,10 @@
           "positions": []
         },
         "current_strategy": {
-          "day": "2026-05-28",
+          "day": "2026-05-29",
           "decision": "HOLD",
-          "rationale": "Deployed into 5 high-conviction names (SPOT +6.11%, VST +4.82%, BIRK +4.31%, ACHR +3.92%, ALAB +3.04%). Market breadth: 26/55 green. Weighted by signal strength. Stop -1.5% | Target +3.0%.",
-          "picks": [
-            {
-              "symbol": "SPOT",
-              "weight": 0.233,
-              "score": 48.9,
-              "rationale": "SPOT: STRONG momentum +6.11% \u2014 23% allocation ($15,333). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "VST",
-              "weight": 0.2299,
-              "score": 48.2,
-              "rationale": "VST: solid momentum +4.82% \u2014 23% allocation ($15,131). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "BIRK",
-              "weight": 0.2055,
-              "score": 43.1,
-              "rationale": "BIRK: solid momentum +4.31% \u2014 21% allocation ($13,524). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "ACHR",
-              "weight": 0.1869,
-              "score": 39.2,
-              "rationale": "ACHR: solid momentum +3.92% \u2014 19% allocation ($12,304). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "ALAB",
-              "weight": 0.1447,
-              "score": 30.4,
-              "rationale": "ALAB: solid momentum +3.04% \u2014 14% allocation ($9,523). Stop: -1.5% | Target: +3.0%."
-            }
-          ],
+          "rationale": "Market closed \u2014 waiting for next trading session.",
+          "picks": [],
           "stop_pct": -1.5,
           "target_pct": 3.0,
           "session_log": [
@@ -98,7 +75,7 @@
               "detail": "Final session positions: SPOT +6.11%, VST +4.82%, BIRK +4.31%, ACHR +3.92%, ALAB +3.04%. Day P&L: $+11,318.32. All positions conceptually closed at 3:50 PM."
             }
           ],
-          "projected_return": 4.59
+          "projected_return": 0.0
         },
         "top10": null,
         "per_top_dollars": null,
