@@ -964,16 +964,17 @@ def main():
         # If today already had a completed TRADE, preserve its picks/log so the
         # display keeps showing what the bot did; total is preserved via prev_b13_total.
         b13_decision  = "HOLD"
-        b13_positions = []
         _prior_day    = (b13_prev_strategy or {}).get("day")
         _prior_dec    = (b13_prev_strategy or {}).get("decision")
-        if _prior_day == today_iso and _prior_dec == "TRADE":
-            # Same-day completed trade — keep its picks and log intact
+        if _prior_dec == "TRADE":
+            b13_positions = (b13_prev_strategy or {}).get("positions",
+                              funds.get("bot13", {}).get("value", {}).get("positions", []))
             b13_picks     = (b13_prev_strategy or {}).get("picks", [])
             b13_rationale = (b13_prev_strategy or {}).get("rationale", "")
             b13_log       = (b13_prev_strategy or {}).get("session_log", [])
             b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
         else:
+            b13_positions = []
             b13_picks     = []
             b13_rationale = "Market closed — waiting for next trading session."
             b13_log       = (b13_prev_strategy or {}).get("session_log", [])
