@@ -307,6 +307,15 @@ def push_to_api(secrets, data_type, payload):
     from Supabase instead of HostGator.  Fails silently — HostGator write
     already happened, so this is additive only.
     """
+    # ── DISABLED 2026-05-29 ──────────────────────────────────────────────────
+    # This legacy pusher was overwriting the LIVE lvl13 backend record with
+    # stale, old-schema strategy data (missing projected_return). lvl13 is now
+    # refreshed SOLELY by the GitHub Action "Refresh lvl13.tech"
+    # (Project/scripts/refresh_lvl13.py). Backend pushes from this legacy script
+    # are permanently disabled to prevent clobbering live data.
+    print(f"  [push] DISABLED legacy push — handled by GitHub Action; skipping {data_type}.")
+    return
+
     if _requests is None:
         print(f"  [push] requests not installed — skipping API push for {data_type}")
         return
