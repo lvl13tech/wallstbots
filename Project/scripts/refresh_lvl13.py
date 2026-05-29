@@ -3,7 +3,7 @@
 """
 refresh_wallstbots.py  (v2 — enhanced strategy engine)
 =======================================================
-Fetches live prices + 90-day history for the 55-stock universe.
+Fetches live prices + 90-day history for the 49-stock AI & Quantum universe.
 Runs three bot strategy engines:
   - BOT13  : Precision Intraday Momentum (3 runs/day: open, midday, close)
   - ORACLE : Adaptive Weekly Momentum    (recomputes every Monday)
@@ -52,35 +52,48 @@ STATE_FILE = DATA_DIR / "state.json"
 
 # ── Universe ────────────────────────────────────────────────────────────────────
 UNIVERSE = [
-    # AI Infrastructure & Semiconductors
-    "NVDA","AMD","INTC","ARM","ALAB","MRVL","AVGO","QCOM","SMCI","CRDO",
-    # AI Software & Cloud
-    "MSFT","GOOGL","META","AMZN","CRM","PLTR","AI","BBAI","SOUN","ORCL",
-    # Quantum Computing
-    "IONQ","RGTI","QBTS","QUBT","QTUM",
-    # AI-Powered Tech & Cybersecurity
-    "AAPL","TSLA","RBRK","NOW","SNOW","DDOG","NET","ZS","OKTA","PATH",
-    # Next-Gen Hardware & Space
-    "ACHR","JOBY","RKLB","ASTR","LUNR",
-    # AI Biotech & Health
-    "NVTS","RXRX","GRAL","SMMT","BLUE",
+    # AI Semiconductors & Hardware
+    "NVDA","AMD","INTC","ARM","ALAB","MRVL","AVGO","QCOM","SMCI","CRDO","MU","NVTS",
+    # AI Mega-Cap Platforms
+    "MSFT","GOOGL","META","AMZN","ORCL",
+    # AI Software & Infrastructure
+    "CRM","NOW","SNOW","DDOG","NET","ZS","OKTA","PATH","PLTR","AI","BBAI","SOUN","UPST","RBRK",
+    # AI Data, Security & Robotics
+    "PANW","ANET","PSTG","TSLA","ISRG",
+    # AI Healthcare
+    "RXRX","GRAL","SMMT",
+    # Quantum Computing — established
+    "IONQ","RGTI","QBTS","QUBT","ARQQ","IBM",
+    # Quantum Computing — 2026 IPOs
+    "XNDU","INFQ","HQ",
+    # AI — 2026 IPO
+    "CBRS",
 ]
 
 YF_OVERRIDE = {}
 YF_TO_STATE = {}
 
 SECTORS = {
+    # AI Semiconductors & Hardware
     "NVDA":"AI SEMIS","AMD":"AI SEMIS","INTC":"AI SEMIS","ARM":"AI SEMIS",
     "ALAB":"AI SEMIS","MRVL":"AI SEMIS","AVGO":"AI SEMIS","QCOM":"AI SEMIS",
-    "SMCI":"AI SEMIS","CRDO":"AI SEMIS",
-    "MSFT":"AI CLOUD","GOOGL":"AI CLOUD","META":"AI CLOUD","AMZN":"AI CLOUD",
-    "CRM":"AI CLOUD","PLTR":"AI SOFTWARE","AI":"AI SOFTWARE","BBAI":"AI SOFTWARE",
-    "SOUN":"AI SOFTWARE","ORCL":"AI CLOUD",
-    "IONQ":"QUANTUM","RGTI":"QUANTUM","QBTS":"QUANTUM","QUBT":"QUANTUM","QTUM":"QUANTUM",
-    "AAPL":"AI TECH","TSLA":"AI TECH","RBRK":"CYBER","NOW":"AI CLOUD",
-    "SNOW":"AI DATA","DDOG":"AI OPS","NET":"CYBER","ZS":"CYBER","OKTA":"CYBER","PATH":"AI SOFTWARE",
-    "ACHR":"NEXT-GEN","JOBY":"NEXT-GEN","RKLB":"NEXT-GEN","ASTR":"NEXT-GEN","LUNR":"NEXT-GEN",
-    "NVTS":"AI BIO","RXRX":"AI BIO","GRAL":"AI BIO","SMMT":"AI BIO","BLUE":"AI BIO",
+    "SMCI":"AI SEMIS","CRDO":"AI SEMIS","MU":"AI SEMIS","NVTS":"AI SEMIS",
+    # AI Mega-Cap Platforms
+    "MSFT":"AI CLOUD","GOOGL":"AI CLOUD","META":"AI CLOUD","AMZN":"AI CLOUD","ORCL":"AI CLOUD",
+    # AI Software & Infrastructure
+    "CRM":"AI SOFTWARE","NOW":"AI SOFTWARE","SNOW":"AI DATA","DDOG":"AI OPS",
+    "NET":"CYBER","ZS":"CYBER","OKTA":"CYBER","PATH":"AI SOFTWARE",
+    "PLTR":"AI SOFTWARE","AI":"AI SOFTWARE","BBAI":"AI SOFTWARE","SOUN":"AI SOFTWARE",
+    "UPST":"AI SOFTWARE","RBRK":"CYBER",
+    # AI Data, Security & Robotics
+    "PANW":"CYBER","ANET":"AI INFRA","PSTG":"AI DATA","TSLA":"AI ROBOTICS","ISRG":"AI HEALTH",
+    # AI Healthcare
+    "RXRX":"AI HEALTH","GRAL":"AI HEALTH","SMMT":"AI HEALTH",
+    # Quantum Computing
+    "IONQ":"QUANTUM","RGTI":"QUANTUM","QBTS":"QUANTUM","QUBT":"QUANTUM",
+    "ARQQ":"QUANTUM","IBM":"QUANTUM","XNDU":"QUANTUM","INFQ":"QUANTUM","HQ":"QUANTUM",
+    # AI — 2026 IPO
+    "CBRS":"AI SEMIS",
 }
 
 FUND_ORDER = ["bot13", "oracle", "wizard", "equalizer", "titan"]
@@ -751,7 +764,7 @@ def main():
     state_data = raw.get("data", raw)
     funds      = state_data.get("funds", {})
     snapshots  = list(state_data.get("snapshots", []))
-    sc_global  = float(state_data.get("starting_capital") or 55000)
+    sc_global  = float(state_data.get("starting_capital") or len(UNIVERSE) * 1000)
 
     today      = dt.date.today()
     today_iso  = today.isoformat()
