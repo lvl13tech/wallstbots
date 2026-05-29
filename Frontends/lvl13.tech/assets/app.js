@@ -419,6 +419,10 @@ function renderFund(fid) {
   const cashRow = windowOpen
     ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
     : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>';
+  // For bot13: when positions are empty but picks exist from today's completed trade, render them as closed rows
+  const bot13ClosedPicks = fid === 'bot13'
+    && !(v.positions || []).length
+    && data && data.current_strategy && (data.current_strategy.picks || []).length > 0;
   const positionRows = (v.positions || []).length
     ? v.positions.map(p => {
         const entry  = p.entry_price || p.entry || 0;
@@ -439,6 +443,25 @@ function renderFund(fid) {
           + '<td class="num '+cls(pnl)+'">'+fmt$0(pnl)+'</td>'
           + '<td class="num '+cls(pnlPct)+'">'+fmtPct(pnlPct)+'</td></tr>';
       }).join('') + (holdingCash ? cashRow : '')
+    : bot13ClosedPicks
+    ? (data.current_strategy.picks.map(p => {
+        // Extract performance % from rationale e.g. "SPOT: STRONG momentum +6.11% — ..."
+        const perfMatch = (p.rationale || '').match(/([+-]?\d+\.\d+)%/);
+        const perf = perfMatch ? parseFloat(perfMatch[1]) : 0;
+        // Extract allocated $ from rationale e.g. "($15,333)"
+        const allocMatch = (p.rationale || '').match(/\(\$(\d[\d,]+)\)/);
+        const alloc = allocMatch ? parseFloat(allocMatch[1].replace(/,/g, '')) : (p.weight * v.total);
+        const dayPnl = alloc * perf / 100;
+        return '<tr><td><strong>'+p.symbol+'</strong></td>'
+          + '<td class="num" style="color:var(--muted)">—</td>'
+          + '<td class="num" style="color:var(--muted)">—</td>'
+          + '<td class="num" style="color:var(--muted);font-size:11px">Closed</td>'
+          + '<td class="num">'+fmt$0(alloc)+'</td>'
+          + '<td class="num '+cls(perf)+'">'+fmtPct(perf)+'</td>'
+          + '<td class="num '+cls(dayPnl)+'">'+fmt$0(dayPnl)+'</td>'
+          + '<td class="num '+cls(perf)+'">'+fmtPct(perf)+'</td></tr>';
+      }).join('')
+      + '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:10px;font-size:12px">Intraday — all positions closed at 3:50 PM</td></tr>')
     : cashRow;
 
   $('app').innerHTML =
@@ -484,7 +507,9 @@ function renderStrategyPanel(fid, strat) {
       + (projRet > 0 ? '+' : '')+projRet.toFixed(2)+'%</span></div>'
     : '';
   let picks = '';
-  if (strat.decision === 'CASH' || strat.decision === 'HOLD') {
+  // For bot13: if market is closed but picks exist from today's completed trade, show them (not "100% CASH")
+  const bot13TradedToday = fid === 'bot13' && strat.picks && strat.picks.length > 0;
+  if ((strat.decision === 'CASH' || strat.decision === 'HOLD') && !bot13TradedToday) {
     picks = '<div class="pick-card"><div class="pick-head"><div class="pick-sym">100% CASH</div><div class="pick-meta">No positions — holding cash</div></div>'
       + '<div class="pick-rationale" style="color:var(--muted)">'+escapeHtml(strat.rationale||'')+'</div></div>';
   } else {
