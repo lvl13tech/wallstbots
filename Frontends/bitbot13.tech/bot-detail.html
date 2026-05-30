@@ -90,12 +90,39 @@
     /* ── Signals note ── */
     .signals-note { font-size: 0.72rem; color: var(--muted); margin-top: 8px; font-style: italic; }
 
-    /* ── Portfolio Holdings table ── */
-    .btn-add-holding { background: var(--blue); border: none; color: var(--bg); border-radius: 8px; padding: 8px 16px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
-    .btn-add-holding:hover { background: #00b8e0; }
-    .btn-del-portfolio { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 8px 14px; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-    .btn-del-portfolio:hover { border-color: var(--red); color: var(--red); }
-    .empty-holdings { padding: 40px; text-align: center; color: var(--muted); font-size: 0.9rem; }
+    /* ── Portfolio Holdings chips ── */
+    .holdings-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 16px 18px;
+    }
+    .holding-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 0.82rem;
+      transition: border-color 0.15s;
+    }
+    .holding-chip:hover { border-color: var(--blue); }
+    .holding-chip strong { font-weight: 700; font-size: 0.85rem; }
+    .holding-chip small { color: var(--muted); font-size: 0.72rem; }
+    .holding-chip-remove {
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; padding: 0 0 0 2px; font-size: 1rem;
+      line-height: 1; transition: color 0.15s; display: flex; align-items: center;
+    }
+    .holding-chip-remove:hover { color: var(--red); }
+    .holdings-footer {
+      padding: 10px 18px 14px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .holdings-footer-label { font-size: 0.72rem; color: var(--muted); }
 
     /* ── Account Drawer ── */
     .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 400; }
@@ -166,6 +193,45 @@
     .toast.success { border-color: var(--blue); color: var(--blue); }
     .toast.error { border-color: var(--red); color: var(--red); }
 
+    /* ── Hero action row ── */
+    .hero-action-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:6px; }
+    .share-btn { background:rgba(0,212,255,0.08); border:1px solid rgba(0,212,255,0.25); color:var(--blue); border-radius:8px; padding:7px 14px; font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; gap:6px; }
+    .share-btn:hover { background:rgba(0,212,255,0.18); }
+    .privacy-pill { display:flex; align-items:center; gap:7px; background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:6px 11px; font-size:0.75rem; color:var(--muted); cursor:pointer; user-select:none; }
+    .privacy-dot { width:8px; height:8px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:background 0.2s; }
+    .privacy-dot.public { background:#22c55e; }
+    .privacy-dot.private { background:#ef4444; }
+
+    /* ── Share sheet modal ── */
+    .share-sheet { max-width:340px; }
+    .share-url-box { background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:0.75rem; font-family:monospace; color:var(--muted); word-break:break-all; margin-bottom:10px; }
+    .share-sheet-opt { display:flex; align-items:center; gap:14px; padding:13px 6px; border-bottom:1px solid var(--border); cursor:pointer; border-radius:8px; transition:background 0.15s; }
+    .share-sheet-opt:last-child { border-bottom:none; }
+    .share-sheet-opt:hover { background:var(--panel2); padding-left:10px; padding-right:10px; }
+    .sso-icon { width:38px; height:38px; border-radius:8px; background:var(--panel2); display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; }
+    .sso-label { font-size:0.9rem; font-weight:500; }
+    .sso-sub { font-size:0.75rem; color:var(--muted); margin-top:1px; }
+
+    /* ── Compact holdings chips ── */
+    .holdings-chip-grid { display:flex; flex-wrap:wrap; gap:6px; }
+    .h-chip { background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:5px 10px; font-size:0.73rem; display:flex; align-items:center; gap:5px; transition:border-color 0.15s; }
+    .h-chip:hover { border-color:var(--blue); }
+    .h-chip-sym { font-weight:800; color:var(--text); letter-spacing:-0.2px; white-space:nowrap; }
+    .h-chip-name { color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80px; }
+    .h-chip-remove { background:none; border:none; color:var(--muted); cursor:pointer; padding:0 0 0 4px; font-size:0.9rem; line-height:1; transition:color 0.15s; }
+    .h-chip-remove:hover { color:#ef4444; }
+
+    /* ── Comments ── */
+    .comment-card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+    .comment-handle { font-size:0.82rem; font-weight:700; color:var(--blue); }
+    .comment-time { font-size:0.72rem; color:var(--muted); }
+    .comment-body-text { font-size:0.875rem; line-height:1.6; color:var(--text); white-space:pre-wrap; word-break:break-word; margin-top:6px; }
+    .comment-del-btn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:0.75rem; padding:2px 6px; border-radius:4px; }
+    .comment-del-btn:hover { color:#ef4444; background:rgba(239,68,68,0.08); }
+    .comments-empty { text-align:center; padding:28px; color:var(--muted); font-size:0.875rem; }
+
+    @media(max-width:480px){ .hero-action-row { gap:6px; } }
+
   </style>
 </head>
 <body>
@@ -215,7 +281,7 @@
   <a href="leaderboard.html">Leaderboard</a>
   <hr class="mob-nav-sep">
   <a href="https://wallstbots.tech/dashboard.html">Wall St. Bots — Stocks</a>
-  <a href="https://lvl13.tech/dashboard.html">Level XIII — AI &amp; Quantum</a>
+  <a href="https://lvl13.tech/dashboard.html">Level XIII Tech — AI &amp; Quantum</a>
 </div>
 <div class="mob-nav-overlay" id="mobNavOverlay" onclick="closeMobNav()"></div>
 
@@ -281,6 +347,45 @@
   </div>
 </div>
 
+<!-- ── SHARE SHEET MODAL ── -->
+<div class="modal-overlay" id="shareSheetModal">
+  <div class="modal-box share-sheet">
+    <h3>Share Portfolio</h3>
+    <div class="share-url-box" id="shareUrlDisplay"></div>
+    <div class="share-sheet-opt" onclick="shareAction('copy')">
+      <div class="sso-icon">🔗</div>
+      <div><div class="sso-label">Copy Link</div><div class="sso-sub">Copy URL to clipboard</div></div>
+    </div>
+    <div class="share-sheet-opt" onclick="shareAction('user')">
+      <div class="sso-icon">👤</div>
+      <div><div class="sso-label">Share with User</div><div class="sso-sub">Send to a @handle on this platform</div></div>
+    </div>
+    <div class="share-sheet-opt" onclick="shareAction('email')">
+      <div class="sso-icon">📧</div>
+      <div><div class="sso-label">Email</div><div class="sso-sub">Open in your email app</div></div>
+    </div>
+    <div class="share-sheet-opt" onclick="shareAction('text')">
+      <div class="sso-icon">💬</div>
+      <div><div class="sso-label">Text / iMessage</div><div class="sso-sub">Send via messages</div></div>
+    </div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeShareSheet()">Close</button></div>
+  </div>
+</div>
+
+<!-- ── SHARE WITH USER MODAL ── -->
+<div class="modal-overlay" id="shareUserModal">
+  <div class="modal-box" style="max-width:340px">
+    <h3>Share with @handle</h3>
+    <p>Enter the @handle of the user on this platform.</p>
+    <input id="shareHandleInput" type="text" placeholder="@username" maxlength="50"
+      style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:0.88rem;color:var(--text);outline:none;box-sizing:border-box;font-family:inherit">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('shareUserModal').classList.remove('open')">Cancel</button>
+      <button class="btn-confirm" onclick="addShare()">Share</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── MAIN ── -->
 <main class="app">
 
@@ -289,17 +394,25 @@
     <img src="assets/logo.svg" alt="" class="hero-robot">
     <div class="hero-content">
       <span class="hero-eyebrow" id="heroEyebrow">Your Portfolio</span>
-      <h1 id="heroName" style="margin-bottom:10px">Loading…</h1>
-      <p id="heroMeta" style="color:var(--muted);margin-bottom:18px">&nbsp;</p>
+      <h1 id="heroName" style="margin-bottom:6px">Loading…</h1>
+      <p id="heroMeta" style="color:var(--muted);margin-bottom:14px">&nbsp;</p>
       <div class="hero-ctas">
         <button class="btn btn-primary" onclick="openSearchModal()">+ Add Holding</button>
         <button class="btn btn-secondary" onclick="openDeleteModal()">Delete Portfolio</button>
       </div>
+      <!-- Actions row: Share + Privacy -->
+      <div class="hero-action-row" id="heroActionRow" style="display:none">
+        <button class="share-btn" onclick="openShareSheet()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span>Share Portfolio</span>
+        </button>
+        <div class="privacy-pill" onclick="togglePrivacyPill()" id="privacyPill">
+          <span class="privacy-dot public" id="privacyDot"></span>
+          <span id="privacyLabel">Public</span>
+        </div>
+      </div>
+      <!-- Holdings count only -->
       <div class="hero-stats-bar" id="heroStats" style="display:none">
-        <div class="hs"><span class="hs-val" id="hsValue">—</span><span class="hs-lbl">Value</span></div>
-        <div class="hs"><span class="hs-val" id="hsCost">—</span><span class="hs-lbl">Cost Basis</span></div>
-        <div class="hs"><span class="hs-val" id="hsGain">—</span><span class="hs-lbl">Total Gain</span></div>
-        <div class="hs"><span class="hs-val" id="hsGainPct">—</span><span class="hs-lbl">Return</span></div>
         <div class="hs"><span class="hs-val" id="hsHoldings">—</span><span class="hs-lbl">Holdings</span></div>
       </div>
     </div>
@@ -313,16 +426,7 @@
     <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading leaderboard…</div>
   </div>
 
-  <!-- 3. Bot Analysis — Portfolio Holdings -->
-  <div class="section-head" style="margin-top:28px">
-    <h3>Bot Analysis — Your Holdings</h3>
-    <span style="font-size:0.72rem;color:var(--muted)">How each strategy applies to this portfolio</span>
-  </div>
-  <div class="grid grid-5" id="botAnalysisGrid">
-    <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading bot analysis…</div>
-  </div>
-
-  <!-- 4. Signals — Today -->
+  <!-- 3. Signals — Today (filtered to portfolio) -->
   <div class="section-head" style="margin-top:28px">
     <h3>Signals — Today</h3>
   </div>
@@ -331,7 +435,7 @@
   </div>
   <div class="signals-note" id="signalsNote"></div>
 
-  <!-- 4. News — Today -->
+  <!-- 4. News — Today (filtered to portfolio) -->
   <div class="section-head" style="margin-top:28px">
     <h3>News — Today</h3>
   </div>
@@ -347,7 +451,7 @@
     <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading race…</div>
   </div>
 
-  <!-- 6. Performance Trajectory — All 5 Strategies -->
+  <!-- 6. Performance Trajectory -->
   <div class="panel" style="margin-top:18px">
     <h3 id="chartTitle">Performance Trajectory — All 5 Strategies</h3>
     <div class="chart-wrap" style="min-height:240px" id="chartWrap">
@@ -355,18 +459,21 @@
     </div>
   </div>
 
-  <!-- 7. Portfolio Holdings -->
-  <div class="section-head" style="margin-top:32px">
-    <h3>Portfolio Holdings &nbsp;<span id="holdingsCount" style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:0.78rem"></span></h3>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn-del-portfolio" onclick="openDeleteModal()">Delete Portfolio</button>
-      <button class="btn-add-holding" onclick="openSearchModal()">+ Add Holding</button>
+  <!-- 7. Holdings (compact chips) -->
+  <div class="section-head" style="margin-top:28px">
+    <h3>Holdings &nbsp;<span id="holdingsCount" style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:0.78rem"></span></h3>
+  </div>
+  <div class="panel">
+    <div class="holdings-chip-grid" id="holdingsChipGrid">
+      <span style="color:var(--muted);font-size:0.85rem">Loading holdings…</span>
     </div>
   </div>
-  <div class="panel" style="padding:0;overflow:hidden">
-    <div id="holdingsWrap">
-      <div class="empty-holdings">Loading your holdings…</div>
-    </div>
+
+  <!-- 8. Comments (members only) -->
+  <div class="panel" id="commentsSection" style="margin-top:18px">
+    <h3 style="margin-bottom:16px">💬 Comments</h3>
+    <div id="commentFormWrap"></div>
+    <div id="commentsList"><div class="comments-empty">Loading comments…</div></div>
   </div>
 
 </main>
@@ -374,14 +481,14 @@
 <!-- ── ADD HOLDING MODAL ── -->
 <div class="search-modal" id="searchModal">
   <div class="search-box">
-    <h3>Add a Coin</h3>
+    <h3>Add a Stock</h3>
     <input class="search-input" id="searchInput" type="text"
-           placeholder="Search coin name or symbol…"
+           placeholder="Search ticker or company name…"
            oninput="onSearchInput(this.value)" autocomplete="off" />
     <div class="search-results" id="searchResults">
-      <div class="search-empty">Type 2+ characters to search cryptocurrencies</div>
+      <div class="search-empty">Type 2+ characters to search AI, quantum, and tech stocks (Nasdaq, NYSE, OTC)</div>
     </div>
-    <div class="search-disclosure">Top 250+ cryptocurrencies by market cap. Max 50 holdings per portfolio.</div>
+    <div class="search-disclosure">AI, quantum computing, and emerging tech stocks — Nasdaq, NYSE, OTC &amp; Pink Sheet symbols. Covers the full universe of U.S.-listed tech and innovation companies. Max 50 holdings per portfolio.</div>
     <div class="selected-ticker-display" id="selectedDisplay" style="display:none">
       <span id="selectedTicker">—</span>
       <button style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:1.1rem" onclick="clearSelection()">×</button>
@@ -405,6 +512,7 @@ const SITE_TITLE = "BitBot13";
 // ───────────────────────────────────────────────────────────────────────────
 
 const BACKEND_URL  = "https://wallstbots-backend-868128114349.us-east1.run.app";
+const API_BASE     = BACKEND_URL;
 const TRACKER_API  = BACKEND_URL + "/public/tracker";
 const auth = new WallStBotsAuth(BACKEND_URL);
 const api  = new WallStBotsAPI(BACKEND_URL, auth);
@@ -419,7 +527,7 @@ let selectedSymbol = null, searchTimer = null;
 const CHARTS_BD = {};
 const STATE = { funds: null, news: null, signals: null };
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers (same as app.js) ──────────────────────────────────────────────────
 const fmt$  = n => { const v = n||0; return (v<0?'-$':'$') + Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); };
 const fmt$0 = n => { const v = Math.round(n||0); return (v<0?'-$':'$') + Math.abs(v).toLocaleString(); };
 const fmtPct = n => (n>=0?'+':'') + (n||0).toFixed(2) + '%';
@@ -444,7 +552,7 @@ function sectorClass(s) {
   return 'other';
 }
 
-// ── FUND_META ─────────────────────────────────────────────────────────────────
+// ── FUND_META (same as app.js) ─────────────────────────────────────────────
 const FUND_META = {
   bot13:     { name:'BOT13',     icon:'13', color:'#ec4899', kind:'DAILY',
                tagline:"Daily intraday bot. Buys at open, sells before close. Skips the day if no edge." },
@@ -453,7 +561,7 @@ const FUND_META = {
   wizard:    { name:'WIZARD',    icon:'WZ', color:'#10b981', kind:'MONTHLY',
                tagline:"Monthly hold bot. Buys the 1st trading day, sells the last. Slow and patient." },
   equalizer: { name:'EQUALIZER', icon:'EQ', color:'#00d4ff', kind:'BASELINE',
-               tagline:"Equal weight. No favorites. $1,000 in every coin." },
+               tagline:"Equal weight. No favorites. $1,000 in every stock." },
   titan:     { name:'TITAN',     icon:'TT', color:'#ff8c00', kind:'BASELINE',
                tagline:"Half on the heavyweights. Half on the rest. Concentration meets coverage." },
 };
@@ -508,7 +616,9 @@ async function loadBot() {
     botData = data?.bot || data;
     holdings = botData?.holdings || [];
     renderHero();
-    renderHoldings();
+    renderHoldingsChips();
+    try { loadPrivacyState(); } catch(e) {}
+    try { loadComments(); } catch(e) {}
   } catch(e) {
     document.getElementById('heroName').textContent = 'Error loading portfolio';
     showToast(e.message || 'Could not load portfolio', 'error');
@@ -536,20 +646,15 @@ function renderHero() {
     holdings.length + ' holdings · $' + (holdings.length * 1000).toLocaleString() + ' allocated' + (created ? ' · Since ' + created : '');
 
   document.getElementById('holdingsCount').textContent = '(' + holdings.length + ' of 50)';
-  const lfl = document.getElementById('holdingsFooterLabel');
-  if (lfl) lfl.textContent = holdings.length + ' of 50 holdings';
 
+  // stats bar — only holdings count shown
   const hs = document.getElementById('heroStats');
-  hs.style.display = 'flex';
-  document.getElementById('hsValue').textContent   = fmt$(totalVal);
-  document.getElementById('hsCost').textContent    = fmt$(cost);
-  const gEl = document.getElementById('hsGain');
-  gEl.textContent = (isPos?'+':'') + fmt$(gain).replace('$','') + ' USD';
-  gEl.className   = 'hs-val ' + (isPos ? 'pos' : 'neg');
-  const gpEl = document.getElementById('hsGainPct');
-  gpEl.textContent = (isPos?'+':'') + gainPct.toFixed(2) + '%';
-  gpEl.className   = 'hs-val ' + (isPos ? 'pos' : 'neg');
-  document.getElementById('hsHoldings').textContent = holdings.length + ' / 50';
+  if (hs) hs.style.display = 'flex';
+  const hsH = document.getElementById('hsHoldings');
+  if (hsH) hsH.textContent = holdings.length + ' / 50';
+  // show action row (share + privacy)
+  const ar = document.getElementById('heroActionRow');
+  if (ar) ar.style.display = 'flex';
 }
 
 // ── Holdings table ────────────────────────────────────────────────────────────
@@ -570,34 +675,33 @@ function renderHoldings() {
     + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Entry</th>'
     + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Current</th>'
     + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Return</th>'
-    + '<th style="padding:10px 16px;border-bottom:1px solid var(--border)"></th>'
-    + '</tr></thead>'
-    + '<tbody>'
+    + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)"></th>'
+    + '</tr></thead><tbody>'
     + holdings.map(h => {
-        const alloc   = h.weight || 1000;
-        const entry   = h.entry_price   != null ? '$' + parseFloat(h.entry_price).toFixed(2)   : '—';
-        const current = h.current_price != null ? '$' + parseFloat(h.current_price).toFixed(2) : '—';
-        let retPct = '—', retClass = '';
-        if (h.entry_price != null && h.current_price != null && h.entry_price > 0) {
-          const pct = ((h.current_price - h.entry_price) / h.entry_price) * 100;
-          retPct    = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
-          retClass  = pct >= 0 ? 'pos' : 'neg';
-        }
+        const ep = parseFloat(h.entry_price) || 0;
+        const cp = parseFloat(h.current_price) || ep;
+        const alloc = parseFloat(h.allocated) || 1000;
+        const ret = ep > 0 ? ((cp - ep) / ep * 100) : 0;
+        const pos = ret >= 0;
         return '<tr style="border-bottom:1px solid var(--border)">'
-          + '<td style="padding:11px 16px"><strong style="font-size:0.88rem">' + escHtml(h.symbol) + '</strong>'
-          + (h.name ? '<div style="font-size:0.72rem;color:var(--muted);margin-top:1px">' + escHtml(h.name) + '</div>' : '')
-          + '</td>'
-          + '<td style="padding:11px 16px;text-align:right">$' + alloc.toLocaleString() + '</td>'
-          + '<td style="padding:11px 16px;text-align:right">' + entry + '</td>'
-          + '<td style="padding:11px 16px;text-align:right">' + current + '</td>'
-          + '<td style="padding:11px 16px;text-align:right" class="' + retClass + '">' + retPct + '</td>'
-          + '<td style="padding:11px 16px;text-align:right"><button onclick="removeHolding(\'' + h.id + '\',\'' + escHtml(h.symbol) + '\')" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:3px 9px;font-size:0.72rem;cursor:pointer">Remove</button></td>'
+          + '<td style="padding:12px 16px"><strong>' + escHtml(h.symbol) + '</strong>'
+          + (h.name ? '<div style="font-size:0.72rem;color:var(--muted)">' + escHtml(h.name) + '</div>' : '') + '</td>'
+          + '<td style="padding:12px 16px;text-align:right">' + fmt$(alloc) + '</td>'
+          + '<td style="padding:12px 16px;text-align:right">' + (ep ? fmt$(ep) : '—') + '</td>'
+          + '<td style="padding:12px 16px;text-align:right">' + (cp ? fmt$(cp) : '—') + '</td>'
+          + '<td style="padding:12px 16px;text-align:right;color:' + (pos ? 'var(--green)' : 'var(--red)') + '">'
+          + (pos ? '+' : '') + ret.toFixed(2) + '%</td>'
+          + '<td style="padding:12px 16px;text-align:right">'
+          + '<button onclick="removeHolding(\'' + h.id + '\',\'' + escHtml(h.symbol) + '\')" '
+          + 'style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer" '
+          + 'onmouseenter="this.style.borderColor=\'var(--red)\';this.style.color=\'var(--red)\'" '
+          + 'onmouseleave="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--muted)\'">Remove</button></td>'
           + '</tr>';
       }).join('')
     + '</tbody></table></div>';
 }
 
-// ── Site data ─────────────────────────────────────────────────────────────────
+// ── Site data (state / signals / news) ───────────────────────────────────────
 async function loadSiteData() {
   try {
     const [sr, nr, sigr] = await Promise.allSettled([
@@ -609,11 +713,11 @@ async function loadSiteData() {
     STATE.news    = nr.status   === 'fulfilled' ? nr.value   : { items: [] };
     STATE.signals = sigr.status === 'fulfilled' ? sigr.value : { recommendations: [], summary: {} };
   } catch(e) {}
-  try { renderLeaderboard(); } catch(e) {}
+  try { renderLeaderboard();           } catch(e) {}
   try { renderPortfolioBotAnalysis(); } catch(e) {}
-  try { renderSignals();     } catch(e) {}
-  try { renderNews();        } catch(e) {}
-  try { renderRace();        } catch(e) {}
+  try { renderSignals();              } catch(e) {}
+  try { renderNews();                 } catch(e) {}
+  try { renderRace();                 } catch(e) {}
   drawPortfolioChart();
 }
 
@@ -622,8 +726,6 @@ function renderPortfolioBotAnalysis() {
   const grid = document.getElementById('botAnalysisGrid');
   if (!grid) return;
   const tickers = holdings.map(h => h.symbol).join(', ') || 'your holdings';
-  // NOTE: Performance numbers are NOT pulled from the global tracker.
-  // Portfolio-specific P&L is tracked from the next trading day onward.
   const cards = FUND_ORDER.map(fid => {
     const meta = FUND_META[fid];
     return '<a class="card clickable fund-card" href="portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid + '">'
@@ -637,10 +739,13 @@ function renderPortfolioBotAnalysis() {
   grid.innerHTML = cards;
 }
 
-// ── Leaderboard ───────────────────────────────────────────────────────────────
+// ── Leaderboard strip ─────────────────────────────────────────────────────────
+// Portfolio-specific daily P&L starts at zero on day 1.
+// Links go to portfolio-scoped bot pages, not global homepage.
 function renderLeaderboard() {
   const strip = FUND_ORDER.map(fid => {
     const m = FUND_META[fid];
+    // Use portfolio P&L from STATE if available, otherwise show +0.00%
     const funds = STATE.funds || {};
     const fd    = funds[fid] || {};
     const pnlPct = (fd.day_pct != null) ? fd.day_pct : 0;
@@ -653,7 +758,7 @@ function renderLeaderboard() {
   if (lbEl) lbEl.innerHTML = strip;
 }
 
-// ── Signals ───────────────────────────────────────────────────────────────────
+// ── Signals (filtered to user's holdings only) ───────────────────────────────
 function renderSignals() {
   const allSigs  = (STATE.signals && STATE.signals.recommendations) || [];
   const holdingTickers = holdings.map(h => h.symbol);
@@ -694,7 +799,7 @@ function renderSignals() {
     + sigCol('TOP SELLS','STRONG SELL',4);
 }
 
-// ── News ──────────────────────────────────────────────────────────────────────
+// ── News (filtered to user's holdings) ───────────────────────────────────────
 function newsCard(it) {
   const cat  = sectorClass(it.sector);
   const url  = it.url && it.url !== '#' ? it.url : null;
@@ -724,7 +829,9 @@ function renderNews() {
   document.getElementById('newsGrid').innerHTML = cards || '<p style="color:var(--muted);font-size:0.9rem">No headlines yet for your holdings — the fetcher runs nightly.</p>';
 }
 
-// ── The Race ──────────────────────────────────────────────────────────────────
+// ── The Race — fundCards (portfolio-scoped) ───────────────────────────────────
+// Shows allocated capital as starting value. P&L is $0 on day 1.
+// Links go to portfolio-scoped bot pages.
 function fundCard(fid) {
   const meta = FUND_META[fid];
   const cap  = holdings.length * 1000 || 0;
@@ -830,7 +937,7 @@ async function confirmDeletePortfolio() {
   }
 }
 
-// ── Add Holding ───────────────────────────────────────────────────────────────
+// ── Add Holding (Search Modal) ────────────────────────────────────────────────
 function openSearchModal() {
   if (holdings.length >= 50) {
     showToast('This portfolio is full (50/50). Create another portfolio to track more.', 'error');
@@ -838,7 +945,7 @@ function openSearchModal() {
   }
   selectedSymbol = null;
   document.getElementById('searchInput').value = '';
-  document.getElementById('searchResults').innerHTML = '<div class="search-empty">Type 2+ characters to search cryptocurrencies</div>';
+  document.getElementById('searchResults').innerHTML = '<div class="search-empty">Type 2+ characters to search AI, quantum, and tech stocks</div>';
   document.getElementById('selectedDisplay').style.display = 'none';
   document.getElementById('addHoldingBtn').disabled = true;
   document.getElementById('searchModal').classList.add('open');
@@ -850,7 +957,7 @@ function onSearchInput(q) {
   clearTimeout(searchTimer);
   const trimmed = q.trim();
   if (trimmed.length < 2) {
-    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Type 2+ characters to search cryptocurrencies</div>';
+    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Type 2+ characters to search AI, quantum, and tech stocks</div>';
     return;
   }
   document.getElementById('searchResults').innerHTML = '<div class="search-empty">Searching…</div>';
@@ -859,10 +966,10 @@ function onSearchInput(q) {
 
 async function doSearch(q) {
   try {
-    const data = await api.searchStocks(q, 'crypto');
+    const data = await api.searchStocks(q, 'all');
     const results = data?.results || data || [];
     if (!results.length) {
-      document.getElementById('searchResults').innerHTML = '<div class="search-empty">No results for "<strong>' + escHtml(q) + '</strong>" — try the exact symbol (e.g. BTC, ETH)</div>';
+      document.getElementById('searchResults').innerHTML = '<div class="search-empty">No results for "<strong>' + escHtml(q) + '</strong>" — try the exact ticker (e.g. NVDA) or a keyword</div>';
       return;
     }
     document.getElementById('searchResults').innerHTML = results.slice(0, 12).map(r =>
@@ -873,7 +980,7 @@ async function doSearch(q) {
       + '</div>'
     ).join('');
   } catch(e) {
-    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Search unavailable — try the exact symbol (e.g. BTC, ETH).</div>';
+    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Search unavailable — check connection or try the exact ticker symbol.</div>';
   }
 }
 
@@ -979,6 +1086,7 @@ function copyReferral() {
   }
 }
 
+// ── Logout ────────────────────────────────────────────────────────────────────
 function logout() { auth.logout(); window.location.href = 'login.html'; }
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
@@ -990,7 +1098,201 @@ function showToast(msg, type = 'success') {
   t._timer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ── Window bindings ───────────────────────────────────────────────────────────
+// ── Holdings Chips (compact: symbol · name, with remove) ─────────────────────
+function renderHoldingsChips() {
+  const grid = document.getElementById('holdingsChipGrid');
+  const cnt  = document.getElementById('holdingsCount');
+  if (!grid) return;
+  if (cnt) cnt.textContent = holdings.length + (holdings.length === 1 ? ' asset' : ' assets');
+  document.getElementById('hsHoldings').textContent = holdings.length + ' / 50';
+  document.getElementById('heroStats').style.display = 'flex';
+  document.getElementById('heroActionRow').style.display = 'flex';
+  if (!holdings.length) {
+    grid.innerHTML = '<span style="color:var(--muted);font-size:0.85rem">No holdings yet — click "+ Add Holding" to get started.</span>';
+    return;
+  }
+  grid.innerHTML = holdings.map(h => {
+    const sym  = escHtml((h.symbol || '').toUpperCase());
+    const name = escHtml(h.name || h.company_name || '');
+    return '<div class="h-chip">'
+      + '<span class="h-chip-sym">' + sym + '</span>'
+      + (name ? '<span class="h-chip-name">' + name + '</span>' : '')
+      + '<button class="h-chip-remove" onclick="removeHolding(\'' + escHtml(h.id) + '\',\'' + sym + '\')" title="Remove">×</button>'
+      + '</div>';
+  }).join('');
+}
+
+// ── Share Sheet ───────────────────────────────────────────────────────────────
+function openShareSheet() {
+  const url = window.location.origin + '/bot-detail.html?id=' + encodeURIComponent(BOT_ID) + '&view=public';
+  const box = document.getElementById('shareUrlDisplay');
+  if (box) box.textContent = url;
+  document.getElementById('shareSheetModal').classList.add('open');
+}
+function closeShareSheet() { document.getElementById('shareSheetModal').classList.remove('open'); }
+
+function shareAction(type) {
+  const url  = window.location.origin + '/bot-detail.html?id=' + encodeURIComponent(BOT_ID) + '&view=public';
+  const name = botData?.name || 'My Portfolio';
+  if (type === 'copy') {
+    navigator.clipboard.writeText(url)
+      .then(() => { showToast('Link copied!', 'success'); closeShareSheet(); })
+      .catch(() => showToast('Copy failed', 'error'));
+  } else if (type === 'email') {
+    window.open('mailto:?subject=' + encodeURIComponent('Check out my portfolio: ' + name) + '&body=' + encodeURIComponent(url));
+  } else if (type === 'text') {
+    window.open('sms:?body=' + encodeURIComponent('Check out my portfolio: ' + url));
+  } else if (type === 'user') {
+    closeShareSheet();
+    document.getElementById('shareHandleInput').value = '';
+    document.getElementById('shareUserModal').classList.add('open');
+    setTimeout(() => document.getElementById('shareHandleInput').focus(), 100);
+  }
+}
+
+async function addShare() {
+  const input  = document.getElementById('shareHandleInput');
+  const handle = (input?.value || '').trim().replace(/^@/, '');
+  if (!handle) { showToast('Enter a @handle', 'error'); return; }
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/share', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ handle })
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Error'); }
+    document.getElementById('shareUserModal').classList.remove('open');
+    showToast('@' + handle + ' can now view this portfolio', 'success');
+  } catch(e) { showToast(e.message || 'Could not share portfolio', 'error'); }
+}
+
+// ── Privacy pill ──────────────────────────────────────────────────────────────
+let _isPrivate = false;
+async function loadPrivacyState() {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/public', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (res.status === 403) {
+      // 403 means portfolio is private (public endpoint blocked)
+      _isPrivate = true;
+      updatePrivacyPillUI();
+      return;
+    }
+    if (!res.ok) return;
+    const data = await res.json();
+    _isPrivate = !!data.is_private;
+    updatePrivacyPillUI();
+  } catch(e) {}
+}
+
+function updatePrivacyPillUI() {
+  const dot   = document.getElementById('privacyDot');
+  const label = document.getElementById('privacyLabel');
+  if (dot)   { dot.className = 'privacy-dot ' + (_isPrivate ? 'private' : 'public'); }
+  if (label) { label.textContent = _isPrivate ? 'Private' : 'Public'; }
+}
+
+async function togglePrivacyPill() {
+  const next = !_isPrivate;
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/settings', {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_private: next })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    _isPrivate = next;
+    updatePrivacyPillUI();
+    showToast(next ? 'Portfolio set to private' : 'Portfolio set to public', 'success');
+  } catch(e) { showToast('Could not update privacy', 'error'); }
+}
+
+// ── Comments ──────────────────────────────────────────────────────────────────
+async function loadComments() {
+  try {
+    const token = await auth.getToken().catch(() => null);
+    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/comments?limit=50', { headers });
+    const data = await res.json();
+    const comments = data.comments || [];
+    let myUserId = null;
+    if (token) { try { myUserId = JSON.parse(atob(token.split('.')[1])).user_id; } catch(e) {} }
+    renderCommentForm();
+    renderComments(comments, myUserId);
+  } catch(e) {
+    const el = document.getElementById('commentsList');
+    if (el) el.innerHTML = '<div class="comments-empty">Could not load comments.</div>';
+  }
+}
+
+function renderCommentForm() {
+  const wrap = document.getElementById('commentFormWrap');
+  if (!wrap) return;
+  const handle = userProfile?.display_name;
+  if (!handle) {
+    wrap.innerHTML = '<div style="font-size:0.85rem;color:var(--muted);padding:10px 0;text-align:center">Set a <a href="dashboard.html" style="color:var(--blue)">@handle in your dashboard</a> to post comments.</div>';
+    return;
+  }
+  wrap.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">'
+    + '<textarea id="commentBody" maxlength="1000" rows="3" placeholder="Write a comment…" style="background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:var(--text);resize:vertical;outline:none;font-family:inherit;box-sizing:border-box;width:100%"></textarea>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center">'
+    + '<span style="font-size:0.75rem;color:var(--muted)">Posting as <strong style="color:var(--blue)">@' + escHtml(handle) + '</strong></span>'
+    + '<button class="btn-copy" onclick="postComment()" style="padding:7px 16px;font-size:0.8rem">Post</button>'
+    + '</div></div>';
+}
+
+function renderComments(comments, myUserId) {
+  const list = document.getElementById('commentsList');
+  if (!list) return;
+  if (!comments.length) { list.innerHTML = '<div class="comments-empty">No comments yet. Be the first!</div>'; return; }
+  list.innerHTML = comments.map(c => {
+    const isOwn = myUserId && c.user_id === myUserId;
+    const ts = c.created_at ? new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    return '<div class="comment-card">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+      + '<span class="comment-handle">@' + escHtml(c.display_name) + '</span>'
+      + '<span style="display:flex;gap:10px;align-items:center">'
+      + '<span class="comment-time">' + ts + '</span>'
+      + (isOwn ? '<button class="comment-del-btn" onclick="deleteComment(\'' + c.id + '\')">Delete</button>' : '')
+      + '</span></div>'
+      + '<div class="comment-body-text">' + escHtml(c.body) + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+async function postComment() {
+  const body = (document.getElementById('commentBody')?.value || '').trim();
+  if (!body) return;
+  if (!userProfile?.display_name) { showToast('Set a @handle first', 'error'); return; }
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/comments', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ body })
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Error'); }
+    document.getElementById('commentBody').value = '';
+    loadComments();
+  } catch(e) { showToast(e.message || 'Could not post comment', 'error'); }
+}
+
+async function deleteComment(commentId) {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/comments/' + commentId, {
+      method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('Failed');
+    loadComments();
+  } catch(e) { showToast('Could not delete comment', 'error'); }
+}
+
+// ── Explicit window bindings ──────────────────────────────────────────────────
 window.toggleMobNav           = toggleMobNav;
 window.closeMobNav            = closeMobNav;
 window.togglePlatformMenu     = togglePlatformMenu;
@@ -1004,6 +1306,13 @@ window.selectTicker           = selectTicker;
 window.clearSelection         = clearSelection;
 window.addSelectedHolding     = addSelectedHolding;
 window.removeHolding          = removeHolding;
+window.openShareSheet         = openShareSheet;
+window.closeShareSheet        = closeShareSheet;
+window.shareAction            = shareAction;
+window.addShare               = addShare;
+window.togglePrivacyPill      = togglePrivacyPill;
+window.postComment            = postComment;
+window.deleteComment          = deleteComment;
 window.openDrawer             = openDrawer;
 window.closeDrawer            = closeDrawer;
 window.openPwModal            = openPwModal;

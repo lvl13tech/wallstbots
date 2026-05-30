@@ -3,120 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Bot Strategy — Wall St. Bots</title>
+  <title>Bot Strategy — Level XIII Tech</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="assets/style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
   <style>
-    /* ── Header ── */
-    header { background: var(--panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 200; }
-    .header-inner { max-width: var(--max); margin: 0 auto; padding: 0 var(--pad); height: 60px; display: flex; align-items: center; gap: 24px; }
-    .logo { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; white-space: nowrap; }
-    .logo span { color: var(--blue); }
-    nav { display: flex; gap: 4px; flex: 1; }
-    nav a { padding: 6px 14px; border-radius: 6px; font-size: 0.875rem; color: var(--muted); transition: all 0.15s; }
-    nav a:hover { color: var(--text); background: var(--panel2); }
-
-    .platform-switcher { position: relative; }
-    .platform-btn { display: flex; align-items: center; gap: 8px; background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; color: var(--text); font-size: 0.8rem; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-    .platform-btn:hover { border-color: var(--blue); color: var(--blue); }
-    .platform-btn svg { width: 14px; height: 14px; transition: transform 0.2s; }
-    .platform-btn.open svg { transform: rotate(180deg); }
-    .platform-menu { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 6px; min-width: 220px; box-shadow: var(--shadow); z-index: 300; }
-    .platform-menu.open { display: block; }
-    .platform-menu-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 7px; cursor: pointer; font-size: 0.85rem; transition: background 0.15s; text-decoration: none; color: var(--text); }
-    .platform-menu-item:hover { background: var(--panel2); }
-    .platform-menu-item.current { background: rgba(0,212,255,0.08); color: var(--blue); }
-    .platform-badge { font-size: 0.65rem; font-weight: 700; background: rgba(0,212,255,0.12); color: var(--blue); border: 1px solid rgba(0,212,255,0.3); border-radius: 4px; padding: 2px 6px; letter-spacing: 0.5px; }
-    .platform-menu-item.current .platform-badge { background: var(--blue); color: var(--bg); }
-    .account-btn { background: rgba(0,212,255,0.1); border: 1px solid var(--blue); color: var(--blue); border-radius: 8px; padding: 7px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-    .account-btn:hover { background: var(--blue); color: var(--bg); }
-
-    .ham-btn { display: none; background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; cursor: pointer; color: var(--text); margin-left: auto; flex-shrink: 0; }
-    .ham-btn svg { width: 18px; height: 18px; display: block; }
-    .mob-nav { display: none; position: fixed; top: 60px; left: 0; right: 0; background: var(--panel); border-bottom: 1px solid var(--border); z-index: 199; padding: 8px 16px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-    .mob-nav a { display: block; padding: 11px 14px; border-radius: 8px; font-size: 0.9rem; color: var(--muted); transition: all 0.15s; }
-    .mob-nav a:hover { color: var(--text); background: var(--panel2); }
-    .mob-nav-sep { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
-    .mob-nav-overlay { display: none; position: fixed; inset: 0; top: 60px; z-index: 198; }
-    .mob-nav.open, .mob-nav-overlay.open { display: block; }
-
-    @media (max-width: 600px) {
-      .header-inner { gap: 10px; }
-      nav { display: none; }
-      .ham-btn { display: flex; align-items: center; }
-      .platform-btn span { display: none; }
-    }
-    @media (max-width: 480px) {
-      main { padding: 12px; }
-      .header-inner { padding: 0 12px; gap: 6px; }
-      .platform-btn { display: none !important; }
-      .account-btn { padding: 6px 10px; font-size: 0.78rem; }
-      .fund-stats-bar { gap: 16px; flex-wrap: wrap; }
-      .fstat-val { font-size: 1.1rem; }
-      .toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
-    }
-
-    /* ── Fund Hero ── */
-    .fund-hero { border-radius: 14px; border: 1px solid var(--border); background: var(--panel); overflow: hidden; margin-bottom: 8px; }
-    .fund-hero-accent { height: 4px; width: 100%; }
-    .fund-hero-body { padding: 24px 28px 20px; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
-    .fund-hero-left { display: flex; flex-direction: column; gap: 14px; min-width: 0; flex: 1; }
-    .fund-back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--muted); text-decoration: none; transition: color 0.15s; }
-    .fund-back-link:hover { color: var(--text); }
-    .fund-hero-identity { display: flex; align-items: flex-start; gap: 16px; }
-    .fund-icon-xl { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1rem; letter-spacing: -1px; flex-shrink: 0; color: #fff; }
-    .fund-icon-xl.bot13     { background: linear-gradient(135deg,#ec4899,#be185d); }
-    .fund-icon-xl.oracle    { background: linear-gradient(135deg,#a855f7,#7c3aed); }
-    .fund-icon-xl.wizard    { background: linear-gradient(135deg,#10b981,#059669); }
-    .fund-icon-xl.equalizer { background: linear-gradient(135deg,#00d4ff,#0284c7); }
-    .fund-icon-xl.titan     { background: linear-gradient(135deg,#ff8c00,#c2410c); }
-    .fund-hero-name { font-size: 1.6rem; font-weight: 900; letter-spacing: -0.5px; line-height: 1; margin-bottom: 4px; }
-    .fund-hero-kind { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px; }
-    .fund-hero-tag { font-size: 0.88rem; color: var(--muted); line-height: 1.5; max-width: 440px; margin: 0; }
-    .fund-stats-bar { display: flex; gap: 28px; flex-wrap: wrap; padding: 16px 28px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.15); }
-    .fstat { display: flex; flex-direction: column; gap: 2px; }
-    .fstat-val { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.4px; }
-    .fstat-lbl { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); }
-
-    /* ── Context strip ── */
-    .context-strip { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 16px; margin-bottom: 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; font-size: 0.8rem; }
+    /* ── Member-only extras not in style.css ── */
+    .member-bar { display: none; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .member-bar a { font-size: 0.82rem; color: var(--muted); text-decoration: none; }
+    .member-bar a:hover { color: var(--text); }
+    .share-btn { background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.25); color: var(--blue); border-radius: 8px; padding: 8px 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+    .share-btn:hover { background: rgba(0,212,255,0.18); }
+    .context-strip { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 16px; margin: 18px 0; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; font-size: 0.8rem; }
     .context-strip-sep { color: var(--border); }
-    .context-portfolio-name { font-weight: 600; color: var(--text); }
-    .context-holdings { color: var(--muted); }
     .context-back-link { margin-left: auto; color: var(--blue); text-decoration: none; font-size: 0.78rem; white-space: nowrap; }
     .context-back-link:hover { text-decoration: underline; }
-
-    /* ── Positions ── */
-    .positions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-    .position-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; transition: border-color 0.15s; }
-    .position-card:hover { border-color: var(--blue); }
-    .pos-symbol { font-size: 1rem; font-weight: 800; letter-spacing: -0.3px; }
-    .pos-name { font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .pos-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; }
-    .pos-label { color: var(--muted); }
-    .pos-value { font-weight: 600; font-size: 0.85rem; }
-    .pos-pnl { font-size: 0.9rem; font-weight: 700; }
-    .pos-empty { grid-column: 1/-1; padding: 32px 20px; text-align: center; color: var(--muted); font-size: 0.875rem; line-height: 1.8; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; }
-    .pos-empty strong { color: var(--text); display: block; margin-bottom: 8px; font-size: 1rem; }
-
-    /* ── Chart ── */
-    .chart-wrap { min-height: 280px; position: relative; }
 
     /* ── Account Drawer ── */
     .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 400; }
     .drawer-overlay.open { display: block; }
-    .drawer { position: fixed; top: 0; right: -420px; width: 420px; max-width: 95vw; height: 100vh; background: var(--panel); border-left: 1px solid var(--border); z-index: 500; transition: right 0.3s cubic-bezier(0.4,0,0.2,1); overflow-y: auto; }
+    .drawer { position: fixed; top: 0; right: -420px; width: 420px; max-width: 95vw; height: 100vh; background: var(--panel); border-left: 1px solid var(--border); z-index: 500; transition: right 0.3s cubic-bezier(0.4,0,0.2,1); overflow-y: auto; display: flex; flex-direction: column; }
     .drawer.open { right: 0; }
     .drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--panel); z-index: 1; }
     .drawer-header h2 { font-size: 1rem; font-weight: 600; color: var(--text); margin: 0; }
-    .drawer-close { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 6px; display: flex; align-items: center; transition: all 0.15s; }
+    .drawer-close { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 6px; display: flex; align-items: center; }
     .drawer-close:hover { background: var(--panel2); color: var(--text); }
     .drawer-section { padding: 20px 24px; border-bottom: 1px solid var(--border); }
     .drawer-section:last-child { border-bottom: none; }
     .drawer-section-title { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; }
     .profile-email { font-size: 0.95rem; font-weight: 500; margin-bottom: 12px; word-break: break-all; }
-    .btn-outline { background: none; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 16px; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; width: 100%; }
+    .btn-outline { background: none; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 16px; font-size: 0.82rem; cursor: pointer; width: 100%; }
     .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
     .tier-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .tier-badge { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.5px; padding: 3px 10px; border-radius: 20px; background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
@@ -125,45 +41,12 @@
     .tier-name { font-weight: 600; font-size: 0.92rem; }
     .referral-box { background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
     .referral-code { font-family: monospace; font-size: 1rem; letter-spacing: 2px; color: var(--blue); font-weight: 600; }
-    .btn-copy { background: rgba(0,212,255,0.1); border: 1px solid var(--blue); color: var(--blue); border-radius: 6px; padding: 4px 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .btn-copy { background: rgba(0,212,255,0.1); border: 1px solid var(--blue); color: var(--blue); border-radius: 6px; padding: 4px 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .btn-copy:hover { background: var(--blue); color: var(--bg); }
     .referral-stats { font-size: 0.78rem; color: var(--muted); }
     .referral-stats span { color: var(--blue); font-weight: 600; }
-    .manage-link { display: block; text-align: center; padding: 10px; border-radius: 8px; font-size: 0.82rem; color: var(--muted); border: 1px solid var(--border); transition: all 0.15s; margin-top: 4px; }
+    .manage-link { display: block; text-align: center; padding: 10px; border-radius: 8px; font-size: 0.82rem; color: var(--muted); border: 1px solid var(--border); margin-top: 4px; }
     .manage-link:hover { border-color: var(--blue); color: var(--blue); }
-
-    /* ── Modals ── */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 600; align-items: center; justify-content: center; padding: 20px; }
-    .modal-overlay.open { display: flex; }
-    .modal-box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; width: 100%; max-width: 380px; }
-    .modal-box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; color: var(--text); }
-    .modal-box p { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-    .btn-cancel { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
-    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
-    .btn-confirm { background: var(--blue); border: none; color: var(--bg); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
-    .btn-confirm:hover { background: #00b8e0; }
-
-    /* ── Toast ── */
-    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 0.875rem; font-weight: 500; z-index: 1000; transform: translateY(20px); opacity: 0; transition: all 0.3s; max-width: 340px; }
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.success { border-color: var(--blue); color: var(--blue); }
-    .toast.error { border-color: var(--red); color: var(--red); }
-
-    @media (max-width: 480px) {
-      .fund-hero-body { padding: 16px; }
-      .fund-stats-bar { padding: 12px 16px; }
-      .fund-hero-name { font-size: 1.25rem; }
-      .fund-icon-xl { width: 42px; height: 42px; font-size: 0.95rem; }
-      .context-strip { flex-direction: column; align-items: flex-start; gap: 4px; }
-      .context-back-link { margin-left: 0; }
-    }
-
-    /* ── Share button ── */
-    .share-btn { background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.25); color: var(--blue); border-radius: 8px; padding: 8px 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
-    .share-btn:hover { background: rgba(0,212,255,0.18); }
-
-    /* ── Leaderboard toggle ── */
     .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
@@ -171,16 +54,29 @@
     .toggle-slider:before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
     input:checked + .toggle-slider { background: var(--blue); }
     input:checked + .toggle-slider:before { transform: translateX(18px); }
+    .shared-user-row { display:flex; align-items:center; justify-content:space-between; padding:7px 10px; background:var(--card); border:1px solid var(--border); border-radius:8px; margin-bottom:6px; font-size:0.82rem; }
+    .shared-user-handle { color:var(--blue); font-weight:500; }
+    .revoke-btn { background:rgba(255,85,85,0.1); border:1px solid rgba(255,85,85,0.25); color:#ff5555; border-radius:6px; padding:3px 8px; font-size:0.75rem; cursor:pointer; }
+    .revoke-btn:hover { background:rgba(255,85,85,0.22); }
+
+    /* ── Modal ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 600; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; width: 100%; max-width: 380px; }
+    .modal-box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+    .modal-box p { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .btn-cancel { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; cursor: pointer; }
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+    .btn-confirm { background: var(--blue); border: none; color: var(--bg); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 0.875rem; font-weight: 500; z-index: 1000; transform: translateY(20px); opacity: 0; transition: all 0.3s; max-width: 340px; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--blue); color: var(--blue); }
+    .toast.error { border-color: var(--red); color: var(--red); }
 
     /* ── Comments ── */
-    .comment-form { background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-    .comment-form textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 0.875rem; resize: vertical; min-height: 76px; box-sizing: border-box; font-family: inherit; transition: border-color 0.15s; }
-    .comment-form textarea:focus { outline: none; border-color: var(--blue); }
-    .comment-form-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; gap: 10px; }
-    .comment-chars { font-size: 0.72rem; color: var(--muted); }
-    .btn-post { background: var(--blue); border: none; color: var(--bg); border-radius: 8px; padding: 8px 18px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: background 0.15s; }
-    .btn-post:hover { background: #00b8e0; }
-    .btn-post:disabled { opacity: 0.5; cursor: default; }
     .comment-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
     .comment-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .comment-handle { font-size: 0.82rem; font-weight: 700; color: var(--blue); }
@@ -189,106 +85,63 @@
     .comment-del-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; }
     .comment-del-btn:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
     .comments-empty { text-align: center; padding: 28px; color: var(--muted); font-size: 0.875rem; }
-    .shared-user-row { display:flex; align-items:center; justify-content:space-between; padding:7px 10px; background:var(--card); border:1px solid var(--border); border-radius:8px; margin-bottom:6px; font-size:0.82rem; }
-    .shared-user-handle { color:var(--blue); font-weight:500; }
-    .revoke-btn { background:rgba(255,85,85,0.1); border:1px solid rgba(255,85,85,0.25); color:#ff5555; border-radius:6px; padding:3px 8px; font-size:0.75rem; cursor:pointer; }
-    .revoke-btn:hover { background:rgba(255,85,85,0.22); }
     .private-wall { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; text-align:center; }
     .private-wall-icon { font-size:3rem; margin-bottom:16px; }
     .private-wall h2 { font-size:1.3rem; margin-bottom:8px; }
     .private-wall p { color:var(--muted); font-size:0.9rem; max-width:320px; line-height:1.6; }
-    .no-handle-notice { background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.2); border-radius: 10px; padding: 12px 16px; font-size: 0.82rem; color: var(--muted); margin-bottom: 14px; }
-    .no-handle-notice a { color: var(--blue); text-decoration: none; }
-    .no-handle-notice a:hover { text-decoration: underline; }
+    .chart-wrap { min-height: 280px; position: relative; }
+
+    /* ── Account button in nav ── */
+    .nav-account { background: rgba(0,212,255,0.1); border: 1px solid var(--blue); color: var(--blue); border-radius: 8px; padding: 6px 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .nav-account:hover { background: var(--blue); color: var(--bg); }
   </style>
 </head>
 <body>
 
-<!-- ── HEADER ── -->
-<header>
-  <div class="header-inner">
-    <a href="/" class="logo">Wall St. <span>Bots</span></a>
-    <nav>
-      <a href="#" id="navBackPortfolio">← Portfolio</a>
-      <a href="dashboard.html">All Portfolios</a>
-    </nav>
-    <button class="ham-btn" id="hamBtn" onclick="toggleMobNav()" aria-label="Open menu">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-        <line x1="3" y1="6" x2="21" y2="6"/>
-        <line x1="3" y1="12" x2="21" y2="12"/>
-        <line x1="3" y1="18" x2="21" y2="18"/>
-      </svg>
-    </button>
-    <div class="platform-switcher">
-      <button class="platform-btn" id="platformBtn" onclick="togglePlatformMenu()">
-        <span>Switch Platform</span>
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.427 7.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 7H4.604a.25.25 0 00-.177.427z"/></svg>
-      </button>
-      <div class="platform-menu" id="platformMenu">
-        <div class="platform-menu-item current">
-          <span class="platform-badge">WSB</span>
-          <div><div style="font-weight:600">Wall St. Bots</div><div style="font-size:0.72rem;color:var(--muted)">Stock Market</div></div>
-        </div>
-        <a href="https://bitbot13.tech/dashboard.html" class="platform-menu-item">
-          <span class="platform-badge" style="background:var(--panel2);color:var(--muted);border-color:var(--border)">BB13</span>
-          <div><div style="font-weight:600">BitBot13</div><div style="font-size:0.72rem;color:var(--muted)">Cryptocurrency</div></div>
-        </a>
-        <a href="https://lvl13.tech/dashboard.html" class="platform-menu-item">
-          <span class="platform-badge" style="background:var(--panel2);color:var(--muted);border-color:var(--border)">L13</span>
-          <div><div style="font-weight:600">Level XIII Tech</div><div style="font-size:0.72rem;color:var(--muted)">AI &amp; Quantum</div></div>
-        </a>
-      </div>
-    </div>
-    <button class="account-btn" onclick="openDrawer()">My Account</button>
+<header class="site-header">
+  <div class="brand">
+    <a href="/" class="brand-link" aria-label="Level XIII Tech home">
+      <img src="assets/logo.svg" alt="Level XIII Tech" class="brand-logo">
+    </a>
   </div>
+  <button class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <nav class="site-nav" id="siteNav" aria-label="Primary">
+    <a href="#" id="navBackPortfolio">← Portfolio</a>
+    <a href="dashboard.html">All Portfolios</a>
+    <a href="leaderboard.html">Leaderboard</a>
+    <button class="nav-account" onclick="openDrawer()">My Account</button>
+  </nav>
 </header>
 
-<!-- ── MOBILE NAV ── -->
-<div class="mob-nav" id="mobNav">
-  <a href="#" id="mobBackPortfolio">← My Portfolio</a>
-  <a href="dashboard.html">All Portfolios</a>
-  <hr class="mob-nav-sep">
-  <a href="https://bitbot13.tech/dashboard.html">BitBot13 — Crypto</a>
-  <a href="https://lvl13.tech/dashboard.html">Level XIII Tech — AI &amp; Quantum</a>
-</div>
-<div class="mob-nav-overlay" id="mobNavOverlay" onclick="closeMobNav()"></div>
-
-<!-- ── ACCOUNT DRAWER ── -->
+<!-- ── Account Drawer ── -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="accountDrawer">
   <div class="drawer-header">
     <h2>My Account</h2>
     <button class="drawer-close" onclick="closeDrawer()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
   </div>
   <div class="drawer-section">
-    <div class="drawer-section-title">Profile</div>
-    <div class="profile-email" id="drawerEmail">Loading…</div>
-    <button class="btn-outline" onclick="openPwModal()">🔑 Reset Password</button>
-  </div>
-  <div class="drawer-section">
-    <div class="drawer-section-title">Membership</div>
     <div class="tier-row">
-      <span class="tier-badge" id="drawerTierBadge">Free</span>
+      <span class="tier-badge" id="drawerTierBadge">FREE</span>
       <span class="tier-name" id="drawerTierName">Free Plan</span>
     </div>
-    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:6px">Status: <span id="drawerStatus" style="color:var(--text);font-weight:500">—</span></div>
-    <div style="font-size:0.8rem;color:var(--muted)">Renewal: <span id="drawerBillDate" style="color:var(--text);font-weight:500">—</span></div>
+    <div class="profile-email" id="drawerEmail">Loading…</div>
+    <button class="btn-outline" onclick="openPwModal()">Reset Password</button>
   </div>
   <div class="drawer-section">
-    <div class="drawer-section-title">Referral Program</div>
+    <div class="drawer-section-title">Referral</div>
     <div class="referral-box">
       <span class="referral-code" id="drawerRefCode">———</span>
       <button class="btn-copy" onclick="copyReferral()">Copy</button>
     </div>
-    <div class="referral-stats"><span id="drawerRefCount">0</span> referrals · Earn 1 free month per 3 referrals</div>
+    <div class="referral-stats">Referrals: <span id="drawerRefCount">0</span></div>
   </div>
   <div class="drawer-section" id="drawerPortfolioSection" style="display:none">
     <div class="drawer-section-title">Portfolio Settings</div>
-    <!-- Privacy toggle -->
     <div class="toggle-row" style="margin-bottom:12px">
       <div>
         <div style="font-size:0.85rem;font-weight:500;margin-bottom:2px">Private Portfolio</div>
@@ -299,7 +152,6 @@
         <span class="toggle-slider"></span>
       </label>
     </div>
-    <!-- Leaderboard toggle -->
     <div class="toggle-row" style="margin-bottom:16px">
       <div>
         <div style="font-size:0.85rem;font-weight:500;margin-bottom:2px">Show on Leaderboard</div>
@@ -310,7 +162,6 @@
         <span class="toggle-slider"></span>
       </label>
     </div>
-    <!-- Share with user -->
     <div style="margin-bottom:10px">
       <div style="font-size:0.8rem;font-weight:600;margin-bottom:8px;color:var(--text)">Share With</div>
       <div style="display:flex;gap:6px;align-items:center">
@@ -319,7 +170,6 @@
         <button class="btn-copy" onclick="addShare()" id="addShareBtn" style="white-space:nowrap;padding:7px 12px;font-size:0.8rem">Add</button>
       </div>
     </div>
-    <!-- Shared-with list -->
     <div id="sharedWithList" style="margin-top:4px"></div>
   </div>
   <div class="drawer-section">
@@ -327,7 +177,7 @@
   </div>
 </div>
 
-<!-- ── PASSWORD RESET MODAL ── -->
+<!-- ── Password Reset Modal ── -->
 <div class="modal-overlay" id="pwModal">
   <div class="modal-box">
     <h3>Reset Password</h3>
@@ -339,58 +189,73 @@
   </div>
 </div>
 
-<!-- ── MAIN ── -->
-<main class="app">
+<main id="app" class="app">
 
-  <div class="fund-hero" id="fundHero">
-    <div class="fund-hero-accent" id="fundAccent"></div>
-    <div class="fund-hero-body">
-      <div class="fund-hero-left">
-        <a class="fund-back-link" id="heroBackLink" href="#">← <span id="heroBackLabel">Portfolio</span></a>
-        <div class="fund-hero-identity">
-          <span class="fund-icon-xl" id="fundIconEl"></span>
-          <div>
-            <div class="fund-hero-name" id="fundHeroName">Loading…</div>
-            <div class="fund-hero-kind" id="fundHeroKind"></div>
-            <p class="fund-hero-tag" id="fundHeroTag"></p>
-          </div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:flex-start;flex-shrink:0">
-        <button class="share-btn" id="shareBtn" onclick="sharePortfolio()" style="display:none">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-          Share
-        </button>
-      </div>
-    </div>
-    <div class="fund-stats-bar">
-      <div class="fstat"><span class="fstat-val" id="fsDay">+0.00%</span><span class="fstat-lbl">Today</span></div>
-      <div class="fstat"><span class="fstat-val" id="fsInception">+0.00%</span><span class="fstat-lbl">Since Inception</span></div>
-      <div class="fstat"><span class="fstat-val" id="fsValue">$0</span><span class="fstat-lbl">Allocated</span></div>
-      <div class="fstat"><span class="fstat-val" id="fsPositions">0</span><span class="fstat-lbl">Active Positions</span></div>
-      <div class="fstat"><span class="fstat-val" id="fsHoldings">0</span><span class="fstat-lbl">Your Holdings</span></div>
+  <!-- Member back bar -->
+  <div class="member-bar" id="memberBackBar">
+    <a href="#" id="heroBackLink">← <span id="heroBackLabel">Portfolio</span></a>
+    <button class="share-btn" id="shareBtn" onclick="sharePortfolio()" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Share
+    </button>
+  </div>
+
+  <!-- Fund head — identical to renderFund() -->
+  <div class="fund-head" style="margin-bottom:14px">
+    <span class="fund-icon" id="fundIconEl" style="width:48px;height:48px;font-size:16px"></span>
+    <div>
+      <h1 style="margin:0" id="fundHeroName">Loading…</h1>
+      <div class="fund-tag" id="fundHeroTag"></div>
     </div>
   </div>
 
+  <!-- 3 stat cards — identical to renderFund() -->
+  <div class="grid grid-3" style="margin-bottom:18px">
+    <div class="card"><h3>Current Value</h3>
+      <div class="fund-value" id="fsTotal">—</div>
+      <div style="color:var(--muted);font-size:11px;margin-top:6px" id="fsStarted"></div>
+    </div>
+    <div class="card"><h3>Total P&amp;L</h3>
+      <div class="fund-value" id="fsPnl">—</div>
+      <div class="fund-pnl" id="fsPnlPct"></div>
+    </div>
+    <div class="card"><h3>Today's Change</h3>
+      <div class="fund-value" id="fsDayPnl">—</div>
+      <div class="fund-pnl" id="fsDayPct"></div>
+    </div>
+  </div>
+
+  <!-- Strategy panel -->
+  <div id="strategyPanel"></div>
+
+  <!-- Holdings table — identical to renderFund() -->
+  <div class="panel" id="holdingsPanel">
+    <h3>Holdings</h3>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th>Symbol</th><th class="num">Shares</th><th class="num">Entry</th>
+        <th class="num">Price</th><th class="num">Value</th><th class="num">Today</th>
+        <th class="num">Total P&amp;L</th><th class="num">%</th>
+      </tr></thead>
+      <tbody id="holdingsTbody"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Loading…</td></tr></tbody>
+    </table></div>
+  </div>
+
+  <!-- Member extras -->
   <div class="context-strip" id="contextStrip">
-    <span class="context-portfolio-name" id="ctxPortfolioName">Loading portfolio…</span>
+    <span style="font-weight:600" id="ctxPortfolioName">Loading…</span>
     <span class="context-strip-sep">·</span>
-    <span class="context-holdings" id="ctxHoldings">0 holdings</span>
+    <span style="color:var(--muted)" id="ctxHoldings">0 holdings</span>
     <span class="context-strip-sep">·</span>
-    <span style="color:var(--muted);font-size:0.78rem">All data filtered to your stocks</span>
+    <span style="color:var(--muted);font-size:0.78rem">Filtered to your stocks</span>
     <a class="context-back-link" id="ctxBackLink" href="#">View full portfolio →</a>
-  </div>
-
-  <div class="section-head"><h3>Active Positions — Your Stocks</h3></div>
-  <div class="positions-grid" id="positionsGrid">
-    <div class="pos-empty"><strong>Loading positions…</strong></div>
   </div>
 
   <div class="section-head" style="margin-top:28px"><h3>Signals — Today</h3></div>
   <div class="signals-today" id="signalsToday">
     <div class="card" style="color:var(--muted);font-size:0.82rem">Loading signals…</div>
   </div>
-  <div class="signals-note" id="signalsNote" style="font-size:0.72rem;color:var(--muted);margin-top:8px;font-style:italic"></div>
+  <div id="signalsNote" style="font-size:0.72rem;color:var(--muted);margin-top:8px;font-style:italic"></div>
 
   <div class="section-head" style="margin-top:28px"><h3>News — Today</h3></div>
   <div class="news-grid" id="newsGrid">
@@ -399,12 +264,12 @@
 
   <div class="panel" style="margin-top:18px">
     <h3 id="chartTitle">Performance Trajectory</h3>
-    <div class="chart-wrap" style="min-height:240px" id="chartWrap">
+    <div class="chart-wrap" id="chartWrap">
       <canvas id="chartFund"></canvas>
     </div>
   </div>
 
-  <!-- ── Comments ── -->
+  <!-- Comments -->
   <div class="panel" id="commentsSection" style="margin-top:18px;display:none">
     <h3 style="margin-bottom:16px">💬 Comments</h3>
     <div id="commentFormWrap"></div>
@@ -412,6 +277,32 @@
   </div>
 
 </main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img src="assets/favicon.svg" alt="" class="footer-robot">
+      <span>Level XIII Tech</span>
+    </div>
+    <div class="footer-links">
+      <a href="dashboard.html">My Portfolios</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="/">Home</a>
+    </div>
+    <div class="footer-network">
+      <span class="footer-network-label">Also from Level 13</span>
+      <div class="footer-network-links">
+        <a href="https://wallstbots.tech" target="_blank" rel="noopener">Wall St. Bots</a>
+        <a href="https://bitbot13.tech" target="_blank" rel="noopener">bitbot13.tech</a>
+        <span class="footer-network-current">lvl13.tech</span>
+      </div>
+    </div>
+    <div class="footer-fine">
+      <span>&copy; 2026 lvl13.tech</span><span class="dot">·</span>
+      <span>Not investment advice</span>
+    </div>
+  </div>
+</footer>
 
 <div class="toast" id="toast"></div>
 
@@ -436,7 +327,7 @@ let   BOT_SLUG  = IS_PUBLIC ? null              : params.get('bot');
 if (!auth.isAuthenticated()) { window.location.href = "login.html"; }
 if (!BOT_ID || (!IS_PUBLIC && !BOT_SLUG)) { window.location.href = "dashboard.html"; }
 
-let botData = null, holdings = [], userProfile = null;
+let botData = null, holdings = [], userProfile = null, portfolioPerf = null;
 const CHARTS_F = {};
 const STATE = { funds: null, news: null, signals: null };
 
@@ -481,17 +372,15 @@ async function init() {
   try { userProfile = await api.getUserProfile(); renderProfile(); } catch(e) {}
 
   if (IS_PUBLIC) {
-    // ── Public view: load via public endpoint, hide private sections ──
     ['contextStrip','signalsToday','signalsNote','newsGrid'].forEach(id => {
       const el = document.getElementById(id); if (el) el.style.display = 'none';
     });
     document.querySelectorAll('.section-head').forEach(el => el.style.display = 'none');
-    document.getElementById('positionsGrid').style.display = 'none';
-    document.getElementById('heroBackLink').style.display  = 'none';
+    document.getElementById('holdingsPanel').style.display = 'none';
+    document.getElementById('memberBackBar').style.display = 'none';
     document.getElementById('commentsSection').style.display = 'block';
     await loadPublicPortfolio();
   } else {
-    // ── Private view: existing behaviour + social additions ──
     if (!FUND_META[BOT_SLUG]) {
       showToast('Unknown strategy: ' + BOT_SLUG, 'error');
       setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
@@ -500,17 +389,17 @@ async function init() {
     const backHref = 'bot-detail.html?id=' + encodeURIComponent(BOT_ID);
     document.getElementById('heroBackLink').href     = backHref;
     document.getElementById('navBackPortfolio').href = backHref;
-    document.getElementById('mobBackPortfolio').href = backHref;
     document.getElementById('ctxBackLink').href      = backHref;
     renderFundHero();
     try { loadReferralCode(); } catch(e) {}
     try { loadSubscriptionInfo(); } catch(e) {}
-    // Share button + leaderboard toggle are owner-only
     document.getElementById('shareBtn').style.display = 'flex';
     document.getElementById('drawerPortfolioSection').style.display = 'block';
     document.getElementById('commentsSection').style.display = 'block';
     loadPrivacySettings();
     await Promise.allSettled([loadPortfolio(), loadSiteData()]);
+    // Re-render stats now that both portfolio perf and site data are loaded
+    try { renderFundStats(); } catch(e) {}
   }
   loadComments();
 }
@@ -520,21 +409,26 @@ function renderFundHero() {
   document.title = meta.name + ' — ' + SITE_TITLE;
   const iconEl = document.getElementById('fundIconEl');
   iconEl.textContent = meta.icon;
-  iconEl.className   = 'fund-icon-xl ' + BOT_SLUG;
+  iconEl.className   = 'fund-icon ' + BOT_SLUG;
   document.getElementById('fundHeroName').textContent = meta.name;
-  document.getElementById('fundHeroKind').textContent = meta.kind;
-  document.getElementById('fundHeroKind').style.color = meta.color;
   document.getElementById('fundHeroTag').textContent  = meta.tagline;
-  document.getElementById('fundAccent').style.background = meta.color;
+  document.getElementById('memberBackBar').style.display = 'flex';
 }
 
 async function loadPortfolio() {
   try {
-    const data = await api.getBot(BOT_ID);
-    botData  = data?.bot || data;
-    holdings = botData?.holdings || [];
+    const [botRes, perfRes] = await Promise.allSettled([
+      api.getBot(BOT_ID),
+      api.getBotLatestPerformance(BOT_ID),
+    ]);
+    if (botRes.status === 'fulfilled') {
+      botData  = botRes.value?.bot || botRes.value;
+      holdings = botData?.holdings || [];
+    }
+    if (perfRes.status === 'fulfilled') {
+      portfolioPerf = perfRes.value;
+    }
     renderContextStrip();
-    updateStatsAllocated();
     drawFundChart();
   } catch(e) { showToast('Could not load portfolio', 'error'); }
 }
@@ -545,11 +439,6 @@ function renderContextStrip() {
   document.getElementById('heroBackLabel').textContent    = name;
   document.getElementById('ctxPortfolioName').textContent = name;
   document.getElementById('ctxHoldings').textContent      = holdings.length + ' stock' + (holdings.length !== 1 ? 's' : '');
-  document.getElementById('fsHoldings').textContent       = holdings.length;
-}
-
-function updateStatsAllocated() {
-  document.getElementById('fsValue').textContent = fmt$0(holdings.length * 1000);
 }
 
 async function loadSiteData() {
@@ -570,78 +459,146 @@ async function loadSiteData() {
 }
 
 function renderFundStats() {
-  const fd = (STATE.funds && STATE.funds[BOT_SLUG]) || {};
-  const dayPct = fd.day_pct ?? 0;
-  const pnlPct = fd.pnl_pct ?? 0;
-  document.getElementById('fsDay').textContent       = fmtPct(dayPct);
-  document.getElementById('fsDay').className         = 'fstat-val ' + cls(dayPct);
-  document.getElementById('fsInception').textContent = fmtPct(pnlPct);
-  document.getElementById('fsInception').className   = 'fstat-val ' + cls(pnlPct);
+  // ── 3 stat cards: use the USER'S portfolio performance, not global ──
+  const cap    = holdings.length * 1000 || (portfolioPerf?.starting_value) || 0;
+  const total  = portfolioPerf?.total_value   ?? cap;
+  const pnl    = portfolioPerf?.gain_loss      ?? 0;
+  const pnlPct = portfolioPerf?.gain_loss_pct  ?? 0;
+  const dayPnl = portfolioPerf?.day_gain_loss  ?? 0;
+  const dayPct = portfolioPerf?.day_gain_loss_pct ?? 0;
+
+  document.getElementById('fsTotal').textContent   = fmt$0(total);
+  document.getElementById('fsStarted').textContent = 'Started at ' + fmt$0(cap);
+  document.getElementById('fsPnl').textContent     = fmt$0(pnl);
+  document.getElementById('fsPnl').className       = 'fund-value ' + cls(Math.round(pnl));
+  document.getElementById('fsPnlPct').textContent  = fmtPct(pnlPct) + ' all-time';
+  document.getElementById('fsPnlPct').className    = 'fund-pnl ' + cls(pnlPct);
+  document.getElementById('fsDayPnl').textContent  = fmt$0(dayPnl);
+  document.getElementById('fsDayPnl').className    = 'fund-value ' + cls(dayPnl);
+  document.getElementById('fsDayPct').textContent  = fmtPct(dayPct) + ' since yesterday';
+  document.getElementById('fsDayPct').className    = 'fund-pnl ' + cls(dayPct);
+
+  // ── Strategy panel: use global tracker (bot logic is the same for all users) ──
+  const funds = STATE.funds && STATE.funds.funds ? STATE.funds.funds : STATE.funds || {};
+  const fd    = funds[BOT_SLUG] || {};
+  if (['bot13','oracle','wizard'].includes(BOT_SLUG) && fd.current_strategy) {
+    document.getElementById('strategyPanel').innerHTML = renderStrategyPanel(BOT_SLUG, fd.current_strategy);
+  }
+}
+
+function renderStrategyPanel(fid, strat) {
+  const period = fid==='bot13' ? 'Day of '+strat.day
+               : fid==='oracle' ? 'Week of '+strat.week
+               : 'Month of '+strat.month;
+  const label  = fid==='bot13' ? "TODAY'S STRATEGY"
+               : fid==='oracle' ? "THIS WEEK'S STRATEGY"
+               : "THIS MONTH'S STRATEGY";
+  const projLabel = fid==='bot13' ? 'Projected Return'
+                  : fid==='oracle' ? 'Projected Week Return'
+                  : 'Projected Month Return';
+  const projRet  = strat.projected_return;
+  const projHtml = (projRet != null)
+    ? '<div style="margin:6px 0 10px;font-size:13px">'
+      + '<span style="color:var(--muted)">'+projLabel+': </span>'
+      + '<span style="font-weight:700;color:'+(projRet > 0 ? 'var(--green)' : projRet < 0 ? 'var(--red)' : 'var(--muted)')+'">'
+      + (projRet > 0 ? '+' : '')+projRet.toFixed(2)+'%</span></div>'
+    : '';
+  let picks = '';
+  if (strat.decision === 'CASH' || strat.decision === 'HOLD') {
+    picks = '<div class="pick-card"><div class="pick-head"><div class="pick-sym">100% CASH</div>'
+      + '<div class="pick-meta">No positions — holding cash</div></div>'
+      + '<div class="pick-rationale" style="color:var(--muted)">'+escHtml(strat.rationale||'')+'</div></div>';
+  } else {
+    picks = '<div class="pick-grid">' + (strat.picks||[]).map(p => {
+      const ind = p.indicators || {};
+      const parts = [];
+      if (ind.mom_1d   != null) parts.push('1d: '+fmtPct(ind.mom_1d));
+      if (ind.mom_5d   != null) parts.push('5d: '+fmtPct(ind.mom_5d));
+      if (ind.mom_20d  != null) parts.push('20d: '+fmtPct(ind.mom_20d));
+      if (ind.mom_60d  != null) parts.push('60d: '+fmtPct(ind.mom_60d));
+      if (ind.rsi_14   != null) parts.push('RSI: '+ind.rsi_14);
+      if (ind.macd_pct != null) parts.push('MACD: '+fmtPct(ind.macd_pct));
+      return '<div class="pick-card"><div class="pick-head">'
+        + '<div class="pick-sym">'+p.symbol+'</div>'
+        + '<div class="pick-meta">Wt '+(p.weight*100).toFixed(0)+'% · '+(p.score>=0?'+':'')+p.score+'</div></div>'
+        + '<div class="pick-rationale">'+escHtml(p.rationale||'')+'</div>'
+        + '<div class="pick-indicators">'+parts.join(' · ')+'</div></div>';
+    }).join('') + '</div>';
+  }
+  const cleanRationale = (strat.rationale||'').replace(/^Projected return:[^.]*\.\s*/i, '');
+  return '<div class="strategy-panel '+fid+'"><h3>'+label+'</h3>'
+    + '<div class="strategy-meta">'+escHtml(period)+' · '+escHtml(strat.decision||'')+'</div>'
+    + projHtml
+    + '<p class="strategy-rationale">'+escHtml(cleanRationale)+'</p>'+picks+'</div>';
 }
 
 function renderPositions() {
-  const grid   = document.getElementById('positionsGrid');
-  const fd     = (STATE.funds && STATE.funds[BOT_SLUG]) || {};
-  const allPos = fd.positions || [];
+  const tbody  = document.getElementById('holdingsTbody');
+  const funds  = STATE.funds && STATE.funds.funds ? STATE.funds.funds : STATE.funds || {};
+  const fd     = funds[BOT_SLUG] || {};
+  const v      = fd.value || {};
+  const allPos = v.positions || [];
   const holdingTickers = holdings.map(h => (h.symbol || '').toUpperCase());
+  const isBaseline = BOT_SLUG === 'equalizer' || BOT_SLUG === 'titan';
+  const meta = FUND_META[BOT_SLUG];
+
+  const holdingCash = v.holding_cash === true;
+  const windowOpen  = v.window_open !== false;
+  const cashRow = windowOpen
+    ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
+    : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>';
 
   const myPos = holdingTickers.length
     ? allPos.filter(p => holdingTickers.includes((p.symbol || p.ticker || '').toUpperCase()))
-    : [];
-
-  document.getElementById('fsPositions').textContent = myPos.length;
+    : allPos;
 
   if (!myPos.length) {
-    const meta = FUND_META[BOT_SLUG];
-    const isBaseline = BOT_SLUG === 'equalizer' || BOT_SLUG === 'titan';
     if (!holdingTickers.length) {
-      grid.innerHTML = '<div class="pos-empty"><strong>No stocks yet</strong>Go back to your portfolio and add some stocks to see what ' + meta.name + ' would do with them.</div>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">No stocks yet — go back to your portfolio and add some stocks.</td></tr>';
     } else if (isBaseline) {
-      renderBaselinePositions(holdingTickers, grid);
+      tbody.innerHTML = holdings.map(h => {
+        const entry  = h.entry_price || 0;
+        const price  = h.current_price || entry;
+        const shares = entry > 0 ? (1000 / entry) : 0;
+        const value  = shares * price;
+        const pnl    = value - 1000;
+        const pnlPct = entry > 0 ? ((price / entry - 1) * 100) : 0;
+        const dayPct = h.day_pct ?? 0;
+        const dayPnl = value * dayPct / 100;
+        return '<tr><td><strong>'+escHtml(h.symbol||'—')+'</strong></td>'
+          + '<td class="num">'+shares.toFixed(2)+'</td>'
+          + '<td class="num">$'+(entry||0).toFixed(2)+'</td>'
+          + '<td class="num">$'+(price||0).toFixed(2)+'</td>'
+          + '<td class="num">'+fmt$0(value)+'</td>'
+          + '<td class="num '+cls(dayPnl)+'">'+fmtPct(dayPct)+'</td>'
+          + '<td class="num '+cls(pnl)+'">'+fmt$0(pnl)+'</td>'
+          + '<td class="num '+cls(pnlPct)+'">'+fmtPct(pnlPct)+'</td></tr>';
+      }).join('') + (holdingCash ? cashRow : '');
     } else {
-      grid.innerHTML = '<div class="pos-empty"><strong>' + meta.name + ' has no active positions in your stocks today</strong>The bot may be in HOLD mode, or today\'s picks don\'t overlap with your ' + holdingTickers.length + ' stock' + (holdingTickers.length !== 1 ? 's' : '') + '. Check back after the next refresh.</div>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">'
+        + meta.name + ' has no active positions in your stocks today.</td></tr>';
     }
     return;
   }
-  grid.innerHTML = myPos.map(p => positionCard(p)).join('');
-}
 
-function positionCard(p) {
-  const sym    = p.symbol || p.ticker || '—';
-  const name   = p.name || p.company || '';
-  const val    = p.value || p.current_value || 0;
-  const entry  = p.entry_price || p.avg_cost || 0;
-  const curr   = p.current_price || p.price || 0;
-  const pnl    = p.pnl || p.gain_loss || (val - (p.cost_basis || entry * (p.shares || 1)));
-  const pnlPct = p.pnl_pct || p.gain_loss_pct || (entry ? ((curr - entry) / entry * 100) : 0);
-  const shares = p.shares || p.quantity || 0;
-  return '<div class="position-card">'
-    + '<div class="pos-symbol">' + escHtml(sym) + '</div>'
-    + (name ? '<div class="pos-name">' + escHtml(name) + '</div>' : '')
-    + (shares ? '<div class="pos-row"><span class="pos-label">Shares</span><span class="pos-value">' + shares + '</span></div>' : '')
-    + (entry  ? '<div class="pos-row"><span class="pos-label">Entry</span><span class="pos-value">' + fmt$(entry) + '</span></div>' : '')
-    + (curr   ? '<div class="pos-row"><span class="pos-label">Current</span><span class="pos-value">' + fmt$(curr) + '</span></div>' : '')
-    + '<div class="pos-row"><span class="pos-label">Value</span><span class="pos-value">' + fmt$0(val) + '</span></div>'
-    + '<div class="pos-pnl ' + cls(pnl) + '">' + (pnl >= 0 ? '+' : '') + fmt$(pnl) + ' (' + fmtPct(pnlPct) + ')</div>'
-    + '</div>';
-}
-
-function renderBaselinePositions(tickers, grid) {
-  if (!tickers.length) { grid.innerHTML = '<div class="pos-empty"><strong>No stocks yet</strong>Add stocks to your portfolio.</div>'; return; }
-  grid.innerHTML = holdings.map(h => {
-    const entry  = h.entry_price || 0;
-    const curr   = h.current_price || entry;
-    const pnl    = entry && curr ? (curr - entry) : 0;
-    const pnlPct = entry && curr ? ((curr - entry) / entry * 100) : 0;
-    return '<div class="position-card">'
-      + '<div class="pos-symbol">' + escHtml(h.symbol || '—') + '</div>'
-      + (h.name ? '<div class="pos-name">' + escHtml(h.name) + '</div>' : '')
-      + '<div class="pos-row"><span class="pos-label">Allocation</span><span class="pos-value">$1,000</span></div>'
-      + (entry ? '<div class="pos-row"><span class="pos-label">Entry</span><span class="pos-value">' + fmt$(entry) + '</span></div>' : '')
-      + (curr && curr !== entry ? '<div class="pos-row"><span class="pos-label">Current</span><span class="pos-value">' + fmt$(curr) + '</span></div>' : '')
-      + '<div class="pos-pnl ' + cls(pnl) + '">' + (pnl >= 0 ? '+' : '') + fmt$(pnl) + ' (' + fmtPct(pnlPct) + ')</div>'
-      + '</div>';
-  }).join('');
+  tbody.innerHTML = myPos.map(p => {
+    const entry  = p.entry_price || p.entry || 0;
+    const price  = p.price || entry;
+    const shares = p.shares || 0;
+    const value  = p.value || (shares * price);
+    const pnl    = p.pnl != null ? p.pnl : (value - (p.cost_basis || (shares * entry)));
+    const pnlPct = p.pnl_pct != null ? p.pnl_pct : (entry > 0 ? ((price/entry - 1)*100) : 0);
+    const dayPnl = p.day_pnl != null ? p.day_pnl : 0;
+    const dayPct = p.day_pct != null ? p.day_pct : 0;
+    return '<tr><td><strong>'+escHtml(p.symbol||'—')+'</strong></td>'
+      + '<td class="num">'+shares.toFixed(2)+'</td>'
+      + '<td class="num">$'+entry.toFixed(2)+'</td>'
+      + '<td class="num">$'+price.toFixed(2)+'</td>'
+      + '<td class="num">'+fmt$0(value)+'</td>'
+      + '<td class="num '+cls(dayPnl)+'">'+fmtPct(dayPct)+'</td>'
+      + '<td class="num '+cls(pnl)+'">'+fmt$0(pnl)+'</td>'
+      + '<td class="num '+cls(pnlPct)+'">'+fmtPct(pnlPct)+'</td></tr>';
+  }).join('') + (holdingCash ? cashRow : '');
 }
 
 function renderSignals() {
@@ -710,15 +667,13 @@ async function drawFundChart() {
   });
 }
 
-// ── SOCIAL: Privacy, Sharing, Comments ───────────────────────────────────────
-
+// ── Public portfolio view ─────────────────────────────────────────────────────
 async function loadPublicPortfolio() {
   try {
     const token = await auth.getToken();
     const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
     const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/public', { headers });
     if (res.status === 403) {
-      // Private portfolio — show wall
       document.querySelector('main.app').innerHTML = '<div class="private-wall"><div class="private-wall-icon">🔒</div><h2>Private Portfolio</h2><p>This portfolio is private. Ask the owner to share it with your @handle.</p></div>';
       return;
     }
@@ -727,10 +682,10 @@ async function loadPublicPortfolio() {
     BOT_SLUG = data.fund || data.strategy || 'bot13';
     if (FUND_META[BOT_SLUG]) renderFundHero();
     document.getElementById('fundHeroName').textContent = data.portfolio_name || 'Portfolio';
-    const fsInc = document.getElementById('fsInception');
-    if (fsInc && data.gain_loss_pct != null) {
-      fsInc.textContent = (data.gain_loss_pct >= 0 ? '+' : '') + data.gain_loss_pct.toFixed(2) + '%';
-      fsInc.className = 'fstat-val ' + (data.gain_loss_pct >= 0 ? 'pos' : 'neg');
+    const fsPnlEl = document.getElementById('fsPnlPct');
+    if (fsPnlEl && data.gain_loss_pct != null) {
+      fsPnlEl.textContent = (data.gain_loss_pct >= 0 ? '+' : '') + data.gain_loss_pct.toFixed(2) + '% all-time';
+      fsPnlEl.className = 'fund-pnl ' + (data.gain_loss_pct >= 0 ? 'pos' : 'neg');
     }
     if (data.performance_curve && data.performance_curve.length) {
       const wrap = document.getElementById('chartWrap');
@@ -751,22 +706,86 @@ async function loadPublicPortfolio() {
   } catch(e) { showToast('Could not load portfolio', 'error'); }
 }
 
+// ── Account drawer ────────────────────────────────────────────────────────────
+function renderProfile() {
+  if (!userProfile) return;
+  const email = userProfile.email || '';
+  const tier  = (userProfile.tier || 'free').toLowerCase();
+  const el = document.getElementById('drawerEmail');
+  if (el) el.textContent = email;
+  const badge = document.getElementById('drawerTierBadge');
+  const name  = document.getElementById('drawerTierName');
+  if (badge) { badge.textContent = tier.toUpperCase(); badge.className = 'tier-badge ' + (tier === 'pro' ? 'pro' : tier === 'elite' ? 'elite' : ''); }
+  if (name)  name.textContent = tier.charAt(0).toUpperCase() + tier.slice(1) + ' Plan';
+}
+
+async function loadReferralCode() {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/user/referral', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const el = document.getElementById('drawerRefCode');
+    const cnt = document.getElementById('drawerRefCount');
+    if (el) el.textContent = data.code || '———';
+    if (cnt) cnt.textContent = data.referral_count || 0;
+  } catch(e) {}
+}
+
+async function loadSubscriptionInfo() {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/user/subscription', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const badge = document.getElementById('drawerTierBadge');
+    const name  = document.getElementById('drawerTierName');
+    const tier  = (data.tier || 'free').toLowerCase();
+    if (badge) { badge.textContent = tier.toUpperCase(); badge.className = 'tier-badge ' + (tier === 'pro' ? 'pro' : tier === 'elite' ? 'elite' : ''); }
+    if (name)  name.textContent = tier.charAt(0).toUpperCase() + tier.slice(1) + ' Plan';
+  } catch(e) {}
+}
+
+function openDrawer()  { document.getElementById('accountDrawer').classList.add('open'); document.getElementById('drawerOverlay').classList.add('open'); }
+function closeDrawer() { document.getElementById('accountDrawer').classList.remove('open'); document.getElementById('drawerOverlay').classList.remove('open'); }
+function openPwModal()  { document.getElementById('pwModal').classList.add('open'); }
+function closePwModal() { document.getElementById('pwModal').classList.remove('open'); }
+
+async function sendPasswordReset() {
+  const btn = document.getElementById('pwConfirmBtn');
+  btn.textContent = 'Sending…'; btn.disabled = true;
+  try {
+    const email = userProfile?.email;
+    if (!email) throw new Error('No email found');
+    await auth.resetPassword(email);
+    document.getElementById('pwModalText').textContent = 'Reset link sent! Check your email.';
+    btn.style.display = 'none';
+  } catch(e) {
+    document.getElementById('pwModalText').textContent = 'Could not send reset link. Try again.';
+    btn.textContent = 'Retry'; btn.disabled = false;
+  }
+}
+
+function copyReferral() {
+  const code = document.getElementById('drawerRefCode').textContent;
+  if (code && code !== '———') {
+    navigator.clipboard.writeText(code)
+      .then(() => showToast('Referral code copied!', 'success'))
+      .catch(() => showToast('Copy failed', 'error'));
+  }
+}
+
+// ── Privacy & Sharing ─────────────────────────────────────────────────────────
 async function loadPrivacySettings() {
   try {
     const token = await auth.getToken();
-    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/public', {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/public', { headers: { 'Authorization': 'Bearer ' + token } });
     if (!res.ok) return;
     const data = await res.json();
     const privToggle = document.getElementById('privacyToggle');
     const lbToggle   = document.getElementById('lbToggle');
     if (privToggle) privToggle.checked = !!data.is_private;
-    if (lbToggle) {
-      lbToggle.checked   = !!data.public_leaderboard;
-      lbToggle.disabled  = !!data.is_private;
-      lbToggle.parentElement.style.opacity = data.is_private ? '0.4' : '1';
-    }
+    if (lbToggle) { lbToggle.checked = !!data.public_leaderboard; lbToggle.disabled = !!data.is_private; lbToggle.parentElement.style.opacity = data.is_private ? '0.4' : '1'; }
   } catch(e) {}
   loadShares();
 }
@@ -775,17 +794,12 @@ async function togglePrivacy(checked) {
   try {
     const token = await auth.getToken();
     const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/settings', {
-      method: 'PATCH',
-      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_private: checked })
     });
     if (!res.ok) throw new Error(await res.text());
-    const data = await res.json();
     const lbToggle = document.getElementById('lbToggle');
-    if (lbToggle) {
-      if (checked) { lbToggle.checked = false; lbToggle.disabled = true; lbToggle.parentElement.style.opacity = '0.4'; }
-      else { lbToggle.disabled = false; lbToggle.parentElement.style.opacity = '1'; }
-    }
+    if (lbToggle) { if (checked) { lbToggle.checked = false; lbToggle.disabled = true; lbToggle.parentElement.style.opacity = '0.4'; } else { lbToggle.disabled = false; lbToggle.parentElement.style.opacity = '1'; } }
     showToast(checked ? 'Portfolio set to private' : 'Portfolio set to public', 'success');
   } catch(e) { showToast('Could not update privacy setting', 'error'); document.getElementById('privacyToggle').checked = !checked; }
 }
@@ -794,8 +808,7 @@ async function toggleLeaderboard(checked) {
   try {
     const token = await auth.getToken();
     const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/settings', {
-      method: 'PATCH',
-      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ public_leaderboard: checked })
     });
     if (!res.ok) throw new Error(await res.text());
@@ -805,19 +818,14 @@ async function toggleLeaderboard(checked) {
 
 function sharePortfolio() {
   const url = window.location.origin + '/portfolio-fund.html?id=' + encodeURIComponent(BOT_ID) + '&public=1';
-  if (navigator.share) {
-    navigator.share({ title: 'Check out my portfolio', url }).catch(() => {});
-  } else {
-    navigator.clipboard.writeText(url).then(() => showToast('Portfolio link copied!', 'success')).catch(() => showToast('Could not copy link', 'error'));
-  }
+  if (navigator.share) { navigator.share({ title: 'Check out my portfolio', url }).catch(() => {}); }
+  else { navigator.clipboard.writeText(url).then(() => showToast('Portfolio link copied!', 'success')).catch(() => showToast('Could not copy link', 'error')); }
 }
 
 async function loadShares() {
   try {
     const token = await auth.getToken();
-    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/shares', {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/shares', { headers: { 'Authorization': 'Bearer ' + token } });
     if (!res.ok) return;
     const data = await res.json();
     renderSharedWith(data.shares || []);
@@ -827,15 +835,10 @@ async function loadShares() {
 function renderSharedWith(shares) {
   const wrap = document.getElementById('sharedWithList');
   if (!wrap) return;
-  if (!shares.length) {
-    wrap.innerHTML = '<div style="font-size:0.75rem;color:var(--muted);text-align:center;padding:8px 0">Not shared with anyone yet</div>';
-    return;
-  }
+  if (!shares.length) { wrap.innerHTML = '<div style="font-size:0.75rem;color:var(--muted);text-align:center;padding:8px 0">Not shared with anyone yet</div>'; return; }
   wrap.innerHTML = shares.map(s =>
-    '<div class="shared-user-row">'
-    + '<span class="shared-user-handle">@' + escHtml(s.handle) + '</span>'
-    + '<button class="revoke-btn" onclick="revokeShare(\'' + s.share_id + '\', \'' + escHtml(s.handle) + '\')">Remove</button>'
-    + '</div>'
+    '<div class="shared-user-row"><span class="shared-user-handle">@' + escHtml(s.handle) + '</span>'
+    + '<button class="revoke-btn" onclick="revokeShare(\'' + s.share_id + '\', \'' + escHtml(s.handle) + '\')">Remove</button></div>'
   ).join('');
 }
 
@@ -848,8 +851,7 @@ async function addShare() {
   try {
     const token = await auth.getToken();
     const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/share', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ handle })
     });
     if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Error'); }
@@ -864,32 +866,31 @@ async function revokeShare(shareId, handle) {
   try {
     const token = await auth.getToken();
     const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/share/' + shareId, {
-      method: 'DELETE',
-      headers: { 'Authorization': 'Bearer ' + token }
+      method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
     });
     if (!res.ok) throw new Error('Failed');
-    showToast('@' + handle + ' access removed', 'success');
+    showToast('@' + handle + ' access revoked', 'success');
     loadShares();
   } catch(e) { showToast('Could not revoke access', 'error'); }
 }
 
+// ── Comments ──────────────────────────────────────────────────────────────────
 async function loadComments() {
   try {
-    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/comments?limit=50');
+    const token = await auth.getToken();
+    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/comments', { headers });
+    if (!res.ok) throw new Error(res.status);
     const data = await res.json();
-    const comments = data.comments || [];
-    const token = await auth.getToken().catch(() => null);
-    let myUserId = null;
-    if (token) { try { myUserId = JSON.parse(atob(token.split('.')[1])).user_id; } catch(e) {} }
-    renderCommentForm();
-    renderComments(comments, myUserId);
+    const handle = userProfile?.display_name || '';
+    renderCommentForm(handle);
+    renderComments(data.comments || [], userProfile?.id);
   } catch(e) { document.getElementById('commentsList').innerHTML = '<div class="comments-empty">Could not load comments.</div>'; }
 }
 
-function renderCommentForm() {
+function renderCommentForm(handle) {
   const wrap = document.getElementById('commentFormWrap');
   if (!wrap) return;
-  const handle = userProfile?.display_name;
   if (!handle) {
     wrap.innerHTML = '<div style="font-size:0.85rem;color:var(--muted);padding:10px 0;text-align:center">Set a <a href="dashboard.html" style="color:var(--blue)">@handle in your dashboard</a> to post comments.</div>';
     return;
@@ -909,14 +910,11 @@ function renderComments(comments, myUserId) {
     const isOwn = myUserId && c.user_id === myUserId;
     const ts = c.created_at ? new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
     return '<div class="comment-card">'
-      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
-      + '<span class="comment-handle">@' + escHtml(c.display_name) + '</span>'
-      + '<span style="display:flex;gap:10px;align-items:center">'
-      + '<span style="font-size:0.72rem;color:var(--muted)">' + ts + '</span>'
-      + (isOwn ? '<button class="revoke-btn" onclick="deleteComment(\'' + c.id + '\')">Delete</button>' : '')
+      + '<div class="comment-header"><span class="comment-handle">@' + escHtml(c.display_name) + '</span>'
+      + '<span style="display:flex;gap:10px;align-items:center"><span class="comment-time">' + ts + '</span>'
+      + (isOwn ? '<button class="comment-del-btn" onclick="deleteComment(\'' + c.id + '\')">Delete</button>' : '')
       + '</span></div>'
-      + '<div style="font-size:0.875rem;line-height:1.55;color:var(--text)">' + escHtml(c.body) + '</div>'
-      + '</div>';
+      + '<div class="comment-body-text">' + escHtml(c.body) + '</div></div>';
   }).join('');
 }
 
@@ -927,8 +925,7 @@ async function postComment() {
   try {
     const token = await auth.getToken();
     const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/comments', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ body })
     });
     if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Error'); }
@@ -941,13 +938,33 @@ async function deleteComment(commentId) {
   try {
     const token = await auth.getToken();
     const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/comments/' + commentId, {
-      method: 'DELETE',
-      headers: { 'Authorization': 'Bearer ' + token }
+      method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
     });
     if (!res.ok) throw new Error('Failed');
     loadComments();
   } catch(e) { showToast('Could not delete comment', 'error'); }
 }
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + type;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Nav toggle (mobile) ───────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const toggle = document.getElementById('menuToggle');
+  const nav    = document.getElementById('siteNav');
+  if (toggle && nav) {
+    toggle.addEventListener('click', () => {
+      const open = nav.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', open);
+    });
+  }
+  init();
+});
 
 window.togglePrivacy     = togglePrivacy;
 window.toggleLeaderboard = toggleLeaderboard;
@@ -956,7 +973,13 @@ window.addShare          = addShare;
 window.revokeShare       = revokeShare;
 window.postComment       = postComment;
 window.deleteComment     = deleteComment;
-
+window.openDrawer        = openDrawer;
+window.closeDrawer       = closeDrawer;
+window.openPwModal       = openPwModal;
+window.closePwModal      = closePwModal;
+window.sendPasswordReset = sendPasswordReset;
+window.copyReferral      = copyReferral;
 </script>
 </body>
 </html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
