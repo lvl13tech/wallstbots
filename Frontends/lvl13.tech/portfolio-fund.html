@@ -248,6 +248,49 @@
     .private-wall-icon { font-size:3rem; margin-bottom:16px; }
     .private-wall h2 { font-size:1.3rem; margin-bottom:8px; }
     .private-wall p { color:var(--muted); font-size:0.9rem; max-width:320px; line-height:1.6; }
+
+    /* ── Hero actions row ── */
+    .hero-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex-shrink:0; }
+    .privacy-pill { display:flex; align-items:center; gap:7px; background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:6px 11px; font-size:0.75rem; color:var(--muted); cursor:pointer; user-select:none; }
+    .privacy-pill .toggle-switch { width:30px; height:17px; }
+    .privacy-pill .toggle-slider { border-radius:17px; }
+    .privacy-pill .toggle-slider:before { width:11px; height:11px; left:3px; top:3px; }
+    input:checked + .privacy-pill-slider { background:var(--blue); }
+
+    /* ── Leaderboard strip ── */
+    .lb-strip { display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+    .lb-strip::-webkit-scrollbar { height:3px; }
+    .lb-strip::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+    .lb-strip .card { flex:1; min-width:110px; display:flex; flex-direction:column; align-items:center; gap:5px; padding:14px 10px; text-align:center; text-decoration:none; }
+    .lb-pct { font-size:1rem; font-weight:800; letter-spacing:-0.3px; }
+
+    /* ── Race grid ── */
+    .race-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+    @media(max-width:700px){ .race-grid { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:420px){ .race-grid { grid-template-columns:1fr 1fr; } }
+
+    /* ── Holdings chips ── */
+    .holdings-chips { display:flex; flex-wrap:wrap; gap:6px; }
+    .holding-chip { background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:5px 10px; font-size:0.73rem; display:flex; align-items:center; gap:5px; }
+    .chip-sym { font-weight:800; color:var(--text); letter-spacing:-0.2px; white-space:nowrap; }
+    .chip-name { color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80px; }
+    .holdings-empty { color:var(--muted); font-size:0.85rem; text-align:center; padding:20px; }
+
+    /* ── Share sheet modal ── */
+    .share-sheet { max-width:340px; }
+    .share-sheet-opt { display:flex; align-items:center; gap:14px; padding:13px 6px; border-bottom:1px solid var(--border); cursor:pointer; border-radius:8px; transition:background 0.15s; }
+    .share-sheet-opt:last-child { border-bottom:none; }
+    .share-sheet-opt:hover { background:var(--panel2); padding-left:10px; padding-right:10px; }
+    .sso-icon { width:38px; height:38px; border-radius:8px; background:var(--panel2); display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; }
+    .sso-label { font-size:0.9rem; font-weight:500; }
+    .sso-sub { font-size:0.75rem; color:var(--muted); margin-top:1px; }
+    .share-url-box { background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:0.75rem; font-family:monospace; color:var(--muted); word-break:break-all; margin-bottom:10px; }
+
+    @media(max-width:480px) {
+      .hero-actions { gap:6px; }
+      .privacy-pill span { display:none; }
+      .race-grid { grid-template-columns:1fr 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -393,6 +436,27 @@
   </div>
 </div>
 
+<!-- ── SHARE SHEET MODAL ── -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal-box share-sheet">
+    <h3>Share Portfolio</h3>
+    <div class="share-url-box" id="shareUrlBox"></div>
+    <div class="share-sheet-opt" onclick="shareAction('copy')">
+      <div class="sso-icon">🔗</div>
+      <div><div class="sso-label">Copy Link</div><div class="sso-sub">Copy portfolio URL to clipboard</div></div>
+    </div>
+    <div class="share-sheet-opt" onclick="shareAction('email')">
+      <div class="sso-icon">📧</div>
+      <div><div class="sso-label">Email</div><div class="sso-sub">Open in your email app</div></div>
+    </div>
+    <div class="share-sheet-opt" onclick="shareAction('text')">
+      <div class="sso-icon">💬</div>
+      <div><div class="sso-label">Text / iMessage</div><div class="sso-sub">Send via messages</div></div>
+    </div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="document.getElementById('shareModal').classList.remove('open')">Close</button></div>
+  </div>
+</div>
+
 <!-- ── MAIN ── -->
 <main class="app">
 
@@ -413,8 +477,19 @@
           </div>
         </div>
       </div>
-      <div style="display:flex;align-items:flex-start;flex-shrink:0">
-        <button class="share-btn" id="shareBtn" onclick="sharePortfolio()" style="display:none">
+      <div class="hero-actions" id="heroActions" style="display:none">
+        <!-- Public/Private inline -->
+        <label class="privacy-pill" id="privacyPill" title="Toggle private">
+          <input type="checkbox" id="privacyToggleHero" style="opacity:0;position:absolute" onchange="togglePrivacy(this.checked)">
+          <span class="toggle-switch" style="width:30px;height:17px;flex-shrink:0">
+            <span class="toggle-slider" id="privacySlider" style="position:absolute;inset:0;background:var(--border);border-radius:17px;cursor:pointer;transition:background 0.2s">
+              <span style="content:'';position:absolute;width:11px;height:11px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform 0.2s;display:block" id="privacyDot"></span>
+            </span>
+          </span>
+          <span id="privacyLabel">Public</span>
+        </label>
+        <!-- Share -->
+        <button class="share-btn" id="shareBtn" onclick="showShareSheet()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           Share
         </button>
@@ -430,53 +505,46 @@
         <span class="fstat-lbl">Since Inception</span>
       </div>
       <div class="fstat">
-        <span class="fstat-val" id="fsValue">$0</span>
-        <span class="fstat-lbl">Allocated</span>
-      </div>
-      <div class="fstat">
-        <span class="fstat-val" id="fsPositions">0</span>
-        <span class="fstat-lbl">Active Positions</span>
-      </div>
-      <div class="fstat">
         <span class="fstat-val" id="fsHoldings">0</span>
         <span class="fstat-lbl">Your Holdings</span>
       </div>
     </div>
   </div>
 
-  <!-- Context strip -->
-  <div class="context-strip" id="contextStrip">
-    <span class="context-portfolio-name" id="ctxPortfolioName">Loading portfolio…</span>
-    <span class="context-strip-sep">·</span>
-    <span class="context-holdings" id="ctxHoldings">0 holdings</span>
-    <span class="context-strip-sep">·</span>
-    <span style="color:var(--muted);font-size:0.78rem">All data filtered to your holdings</span>
-    <a class="context-back-link" id="ctxBackLink" href="#">View full portfolio →</a>
+  <!-- Live Leaderboard -->
+  <div class="section-head" style="margin-top:18px">
+    <h3>Live Leaderboard — Today</h3>
+    <a class="more" id="lbMoreLink" href="#">View all →</a>
+  </div>
+  <div class="lb-strip" id="lbStrip">
+    <div class="card" style="color:var(--muted);font-size:0.82rem;min-width:100px">Loading…</div>
   </div>
 
-  <!-- Active Positions in Your Portfolio -->
-  <div class="section-head">
-    <h3>Active Positions — Your Holdings</h3>
-  </div>
-  <div class="positions-grid" id="positionsGrid">
-    <div class="pos-empty"><strong>Loading positions…</strong></div>
-  </div>
-
-  <!-- Signals — Today -->
+  <!-- Signals — Today (filtered to holdings) -->
   <div class="section-head" style="margin-top:28px">
     <h3>Signals — Today</h3>
+    <a class="more" href="#" onclick="window.location.href='portfolio-fund.html?portfolio='+BOT_ID+'&bot='+BOT_SLUG+'&tab=signals'">View all signals →</a>
   </div>
   <div class="signals-today" id="signalsToday">
     <div class="card" style="color:var(--muted);font-size:0.82rem">Loading signals…</div>
   </div>
-  <div class="signals-note" id="signalsNote" style="font-size:0.72rem;color:var(--muted);margin-top:8px;font-style:italic"></div>
+  <div id="signalsNote" style="font-size:0.72rem;color:var(--muted);margin-top:8px;font-style:italic"></div>
 
-  <!-- News — Today -->
+  <!-- News — Today (filtered to holdings) -->
   <div class="section-head" style="margin-top:28px">
     <h3>News — Today</h3>
+    <a class="more" href="#">More news →</a>
   </div>
   <div class="news-grid" id="newsGrid">
     <div class="card" style="color:var(--muted);font-size:0.82rem">Loading news…</div>
+  </div>
+
+  <!-- The Race -->
+  <div class="section-head" style="margin-top:28px">
+    <h3>The Race</h3>
+  </div>
+  <div class="race-grid" id="raceSection">
+    <div class="card" style="color:var(--muted);font-size:0.82rem">Loading…</div>
   </div>
 
   <!-- Performance Trajectory -->
@@ -487,6 +555,16 @@
     </div>
   </div>
 
+  <!-- Holdings -->
+  <div class="section-head" style="margin-top:28px">
+    <h3>Holdings</h3>
+    <span id="holdingsCount" style="color:var(--muted);font-size:0.8rem"></span>
+  </div>
+  <div class="holdings-chips" id="holdingsChips">
+    <span class="holdings-empty">Loading holdings…</span>
+  </div>
+
+  <!-- Comments -->
   <div class="panel" id="commentsSection" style="margin-top:18px;display:none">
     <h3 style="margin-bottom:16px">💬 Comments</h3>
     <div id="commentFormWrap"></div>
@@ -588,7 +666,7 @@ async function init() {
     renderFundHero();
     try { loadReferralCode(); } catch(e) {}
     try { loadSubscriptionInfo(); } catch(e) {}
-    document.getElementById('shareBtn').style.display = 'flex';
+    document.getElementById('heroActions').style.display = 'flex';
     document.getElementById('drawerPortfolioSection').style.display = 'block';
     document.getElementById('commentsSection').style.display = 'block';
     loadPrivacySettings();
@@ -620,7 +698,8 @@ async function loadPortfolio() {
     botData  = data?.bot || data;
     holdings = botData?.holdings || [];
     renderContextStrip();
-    updateStatsAllocated();
+    renderHoldingsChips();
+    document.getElementById('fsHoldings').textContent = holdings.length;
     drawFundChart();
   } catch(e) {
     showToast('Could not load portfolio', 'error');
@@ -654,10 +733,11 @@ async function loadSiteData() {
     STATE.signals = sigr.status === 'fulfilled' ? sigr.value : { recommendations: [], summary: {} };
   } catch(e) {}
 
-  try { renderFundStats();    } catch(e) {}
-  try { renderPositions();    } catch(e) {}
-  try { renderSignals();      } catch(e) {}
-  try { renderNews();         } catch(e) {}
+  try { renderFundStats();        } catch(e) {}
+  try { renderLeaderboardStrip(); } catch(e) {}
+  try { renderRaceSection();      } catch(e) {}
+  try { renderSignals();          } catch(e) {}
+  try { renderNews();             } catch(e) {}
 }
 
 // ── Fund stats from global tracker ────────────────────────────────────────────
@@ -1084,6 +1164,7 @@ async function loadPrivacySettings() {
     const privToggle = document.getElementById('privacyToggle');
     const lbToggle   = document.getElementById('lbToggle');
     if (privToggle) privToggle.checked = !!data.is_private;
+    updateHeroPrivacyToggle(!!data.is_private);
     if (lbToggle) {
       lbToggle.checked   = !!data.public_leaderboard;
       lbToggle.disabled  = !!data.is_private;
@@ -1103,6 +1184,7 @@ async function togglePrivacy(checked) {
     });
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
+    updateHeroPrivacyToggle(checked);
     const lbToggle = document.getElementById('lbToggle');
     if (lbToggle) {
       if (checked) { lbToggle.checked = false; lbToggle.disabled = true; lbToggle.parentElement.style.opacity = '0.4'; }
@@ -1271,9 +1353,113 @@ async function deleteComment(commentId) {
   } catch(e) { showToast('Could not delete comment', 'error'); }
 }
 
+// ── Live Leaderboard Strip ────────────────────────────────────────────────────
+function renderLeaderboardStrip() {
+  const funds = STATE.funds && STATE.funds.funds;
+  const FUND_ORDER = ['bot13','oracle','wizard','equalizer','titan'];
+  const strip = document.getElementById('lbStrip');
+  const lbMore = document.getElementById('lbMoreLink');
+  if (lbMore) lbMore.href = 'portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + BOT_SLUG;
+  if (!strip) return;
+  strip.innerHTML = FUND_ORDER.map(fid => {
+    const fd = (funds && funds[fid]) || {};
+    const v  = fd.value || { day_pct: 0, day_pnl: 0 };
+    const m  = FUND_META[fid];
+    const active = fid === BOT_SLUG ? 'style="border-color:' + m.color + '"' : '';
+    const href = 'portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid;
+    return '<a class="card clickable" href="' + href + '" ' + active + '>'
+      + '<span class="fund-icon ' + fid + '">' + m.icon + '</span>'
+      + '<div class="lb-name"><strong>' + m.name + '</strong><small>' + m.kind + '</small></div>'
+      + '<div class="lb-pct ' + cls(v.day_pnl) + '">' + fmtPct(v.day_pct) + '</div></a>';
+  }).join('');
+}
+
+// ── The Race (5 fund cards, same as home) ─────────────────────────────────────
+function renderRaceSection() {
+  const funds = STATE.funds && STATE.funds.funds;
+  const sc    = (STATE.funds && STATE.funds.starting_capital) || 49000;
+  const FUND_ORDER = ['bot13','oracle','wizard','equalizer','titan'];
+  const el = document.getElementById('raceSection');
+  if (!el) return;
+  el.innerHTML = FUND_ORDER.map(fid => {
+    const fd = (funds && funds[fid]) || {};
+    const v  = fd.value || { total: sc, pnl: 0, pnl_pct: 0, day_pnl: 0, day_pct: 0 };
+    const m  = FUND_META[fid];
+    const active = fid === BOT_SLUG ? 'border-color:' + m.color + ';' : '';
+    const href = 'portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid;
+    return '<a class="card clickable fund-card" href="' + href + '" style="' + active + '">'
+      + '<div class="fund-head">'
+      + '<span class="fund-icon ' + fid + '">' + m.icon + '</span>'
+      + '<div style="min-width:0"><div class="fund-name">' + m.name + '</div>'
+      + '<div class="fund-kind" style="color:' + m.color + '">' + m.kind + '</div></div></div>'
+      + '<div class="fund-tag">' + escHtml(m.tagline) + '</div>'
+      + '<div class="fund-value">' + fmt$0(v.total) + '</div>'
+      + '<div class="fstat-lbl" style="margin-top:4px">'
+      + '<span class="' + cls(v.day_pnl) + '">' + fmtPct(v.day_pct) + ' today</span>'
+      + ' &nbsp;·&nbsp; <span class="' + cls(v.pnl) + '">' + fmtPct(v.pnl_pct) + ' total</span>'
+      + '</div></a>';
+  }).join('');
+}
+
+// ── Holdings Chips (compact: symbol + name) ───────────────────────────────────
+function renderHoldingsChips() {
+  const el = document.getElementById('holdingsChips');
+  const cnt = document.getElementById('holdingsCount');
+  if (!el) return;
+  if (cnt) cnt.textContent = holdings.length + (holdings.length === 1 ? ' asset' : ' assets');
+  if (!holdings.length) {
+    el.innerHTML = '<span class="holdings-empty">No holdings yet — add stocks or crypto to your portfolio.</span>';
+    return;
+  }
+  el.innerHTML = holdings.map(h => {
+    const sym  = escHtml((h.symbol || '').toUpperCase());
+    const name = escHtml(h.name || h.company_name || '');
+    return '<div class="holding-chip">'
+      + '<span class="chip-sym">' + sym + '</span>'
+      + (name ? '<span class="chip-sep" style="color:var(--border)">·</span><span class="chip-name">' + name + '</span>' : '')
+      + '</div>';
+  }).join('');
+}
+
+// ── Share Sheet ───────────────────────────────────────────────────────────────
+function showShareSheet() {
+  const url = window.location.origin + '/portfolio-fund.html?id=' + encodeURIComponent(BOT_ID) + '&public=1';
+  const box = document.getElementById('shareUrlBox');
+  if (box) box.textContent = url;
+  document.getElementById('shareModal').classList.add('open');
+}
+
+function shareAction(type) {
+  const url = window.location.origin + '/portfolio-fund.html?id=' + encodeURIComponent(BOT_ID) + '&public=1';
+  const name = botData?.name || 'My Portfolio';
+  if (type === 'copy') {
+    navigator.clipboard.writeText(url)
+      .then(() => { showToast('Link copied!', 'success'); document.getElementById('shareModal').classList.remove('open'); })
+      .catch(() => showToast('Could not copy', 'error'));
+  } else if (type === 'email') {
+    window.open('mailto:?subject=' + encodeURIComponent('Check out my portfolio: ' + name) + '&body=' + encodeURIComponent('View my portfolio here: ' + url));
+  } else if (type === 'text') {
+    window.open('sms:?body=' + encodeURIComponent('Check out my portfolio: ' + url));
+  }
+}
+
+// ── Update privacy toggle in hero ─────────────────────────────────────────────
+function updateHeroPrivacyToggle(isPrivate) {
+  const cb = document.getElementById('privacyToggleHero');
+  const dot = document.getElementById('privacyDot');
+  const slider = document.getElementById('privacySlider');
+  const label = document.getElementById('privacyLabel');
+  if (cb) cb.checked = isPrivate;
+  if (slider) slider.style.background = isPrivate ? 'var(--blue)' : 'var(--border)';
+  if (dot) dot.style.transform = isPrivate ? 'translateX(13px)' : 'translateX(0)';
+  if (label) label.textContent = isPrivate ? 'Private' : 'Public';
+}
+
 window.togglePrivacy     = togglePrivacy;
 window.toggleLeaderboard = toggleLeaderboard;
 window.sharePortfolio    = sharePortfolio;
+window.showShareSheet    = showShareSheet;
+window.shareAction       = shareAction;
 window.addShare          = addShare;
 window.revokeShare       = revokeShare;
 window.postComment       = postComment;
