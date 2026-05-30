@@ -646,18 +646,14 @@ function renderHero() {
 
   document.getElementById('holdingsCount').textContent = '(' + holdings.length + ' of 50)';
 
-  // stats bar
+  // stats bar — only holdings count shown
   const hs = document.getElementById('heroStats');
-  hs.style.display = 'flex';
-  document.getElementById('hsValue').textContent   = fmt$(totalVal);
-  document.getElementById('hsCost').textContent    = fmt$(cost);
-  const gEl = document.getElementById('hsGain');
-  gEl.textContent = (isPos?'+':'') + fmt$(gain).replace('$','') + ' USD';
-  gEl.className   = 'hs-val ' + (isPos ? 'pos' : 'neg');
-  const gpEl = document.getElementById('hsGainPct');
-  gpEl.textContent = (isPos?'+':'') + gainPct.toFixed(2) + '%';
-  gpEl.className   = 'hs-val ' + (isPos ? 'pos' : 'neg');
-  document.getElementById('hsHoldings').textContent = holdings.length + ' / 50';
+  if (hs) hs.style.display = 'flex';
+  const hsH = document.getElementById('hsHoldings');
+  if (hsH) hsH.textContent = holdings.length + ' / 50';
+  // show action row (share + privacy)
+  const ar = document.getElementById('heroActionRow');
+  if (ar) ar.style.display = 'flex';
 }
 
 // ── Holdings table ────────────────────────────────────────────────────────────
