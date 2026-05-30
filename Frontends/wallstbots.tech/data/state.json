@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-05-30T19:51:47",
+    "last_refresh": "2026-05-30T19:53:37",
     "snapshots": [
       {
         "date": "2026-05-21",
@@ -87,39 +87,8 @@
         "current_strategy": {
           "day": "2026-05-30",
           "decision": "HOLD",
-          "rationale": "Projected return: +8.84%. Deployed into 5 high-conviction names (ARM +13.80%, RBRK +7.98%, ALAB +7.86%, ACHR +6.77%, GRAL +5.54%). Market breadth: 23/55 green. Weighted by signal strength. Stop -1.5% | Target +3.0%.",
-          "picks": [
-            {
-              "symbol": "ARM",
-              "weight": 0.252,
-              "score": 75.9,
-              "rationale": "ARM: STRONG momentum +13.80% \u2014 25% allocation ($15,585). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "RBRK",
-              "weight": 0.212,
-              "score": 63.8,
-              "rationale": "RBRK: STRONG momentum +7.98% \u2014 21% allocation ($13,109). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "ALAB",
-              "weight": 0.2088,
-              "score": 62.9,
-              "rationale": "ALAB: STRONG momentum +7.86% \u2014 21% allocation ($12,915). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "ACHR",
-              "weight": 0.1799,
-              "score": 54.2,
-              "rationale": "ACHR: STRONG momentum +6.77% \u2014 18% allocation ($11,124). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "GRAL",
-              "weight": 0.1473,
-              "score": 44.4,
-              "rationale": "GRAL: STRONG momentum +5.54% \u2014 15% allocation ($9,111). Stop: -1.5% | Target: +3.0%."
-            }
-          ],
+          "rationale": "Market closed \u2014 waiting for next trading session.",
+          "picks": [],
           "stop_pct": -1.5,
           "target_pct": 3.0,
           "session_log": [
@@ -130,7 +99,7 @@
               "detail": "Current positions: ARM +13.80%, RBRK +7.98%, ALAB +7.86%, ACHR +6.77%, GRAL +5.54%. Breadth: 23/55 green. Monitoring for stop/target triggers. Any position through -1.35% (internal) exits immediately."
             }
           ],
-          "projected_return": 8.84
+          "projected_return": 0.0
         },
         "top10": null,
         "per_top_dollars": null,
