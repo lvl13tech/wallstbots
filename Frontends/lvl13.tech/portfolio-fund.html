@@ -474,11 +474,16 @@ function renderFundStats() {
   document.getElementById('fsDayPct').textContent  = fmtPct(dayPct) + ' since yesterday';
   document.getElementById('fsDayPct').className    = 'fund-pnl ' + cls(dayPct);
 
-  // ── Strategy panel: use global tracker (bot logic is the same for all users) ──
-  const funds = STATE.funds && STATE.funds.funds ? STATE.funds.funds : STATE.funds || {};
-  const fd    = funds[BOT_SLUG] || {};
-  if (['bot13','oracle','wizard'].includes(BOT_SLUG) && fd.current_strategy) {
-    document.getElementById('strategyPanel').innerHTML = renderStrategyPanel(BOT_SLUG, fd.current_strategy);
+  // ── Strategy panel: only show after simulation has run for THIS portfolio ──
+  const hasSimulated = portfolioPerf && portfolioPerf.snapshot_date;
+  if (hasSimulated && ['bot13','oracle','wizard'].includes(BOT_SLUG)) {
+    const funds = STATE.funds && STATE.funds.funds ? STATE.funds.funds : STATE.funds || {};
+    const fd    = funds[BOT_SLUG] || {};
+    if (fd.current_strategy) {
+      document.getElementById('strategyPanel').innerHTML = renderStrategyPanel(BOT_SLUG, fd.current_strategy);
+    }
+  } else {
+    document.getElementById('strategyPanel').innerHTML = '';
   }
 }
 
@@ -574,8 +579,15 @@ function renderPositions() {
           + '<td class="num '+cls(pnlPct)+'">'+fmtPct(pnlPct)+'</td></tr>';
       }).join('') + (holdingCash ? cashRow : '');
     } else {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">'
-        + meta.name + ' has no active positions in your stocks today.</td></tr>';
+      const hasSimulated = portfolioPerf && portfolioPerf.snapshot_date;
+      if (!hasSimulated) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:28px;line-height:1.8">'
+          + '<strong style="color:var(--text);display:block;margin-bottom:6px">Awaiting first simulation</strong>'
+          + meta.name + ' will begin trading your ' + holdingTickers.length + ' stock' + (holdingTickers.length !== 1 ? 's' : '') + ' during the next trading session.</td></tr>';
+      } else {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">'
+          + meta.name + ' has no active positions in your stocks today — the bot may be holding cash.</td></tr>';
+      }
     }
     return;
   }
