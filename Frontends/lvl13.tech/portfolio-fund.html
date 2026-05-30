@@ -32,7 +32,6 @@
     .account-btn { background: rgba(0,212,255,0.1); border: 1px solid var(--blue); color: var(--blue); border-radius: 8px; padding: 7px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
     .account-btn:hover { background: var(--blue); color: var(--bg); }
 
-    /* ── Mobile ── */
     .ham-btn { display: none; background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; cursor: pointer; color: var(--text); margin-left: auto; flex-shrink: 0; }
     .ham-btn svg { width: 18px; height: 18px; display: block; }
     .mob-nav { display: none; position: fixed; top: 60px; left: 0; right: 0; background: var(--panel); border-bottom: 1px solid var(--border); z-index: 199; padding: 8px 16px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
@@ -55,43 +54,18 @@
       .account-btn { padding: 6px 10px; font-size: 0.78rem; }
       .fund-stats-bar { gap: 16px; flex-wrap: wrap; }
       .fstat-val { font-size: 1.1rem; }
-      .section-head { flex-wrap: wrap; gap: 8px; }
+      .toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
     }
 
     /* ── Fund Hero ── */
-    .fund-hero {
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: var(--panel);
-      overflow: hidden;
-      margin-bottom: 8px;
-    }
-    .fund-hero-accent {
-      height: 4px;
-      width: 100%;
-    }
-    .fund-hero-body {
-      padding: 24px 28px 20px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
+    .fund-hero { border-radius: 14px; border: 1px solid var(--border); background: var(--panel); overflow: hidden; margin-bottom: 8px; }
+    .fund-hero-accent { height: 4px; width: 100%; }
+    .fund-hero-body { padding: 24px 28px 20px; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
     .fund-hero-left { display: flex; flex-direction: column; gap: 14px; min-width: 0; flex: 1; }
-    .fund-back-link {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: 0.78rem; color: var(--muted);
-      text-decoration: none; transition: color 0.15s;
-    }
+    .fund-back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--muted); text-decoration: none; transition: color 0.15s; }
     .fund-back-link:hover { color: var(--text); }
     .fund-hero-identity { display: flex; align-items: flex-start; gap: 16px; }
-    .fund-icon-xl {
-      width: 52px; height: 52px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 900; font-size: 1.1rem; letter-spacing: -1px;
-      flex-shrink: 0; color: #fff;
-    }
+    .fund-icon-xl { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1rem; letter-spacing: -1px; flex-shrink: 0; color: #fff; }
     .fund-icon-xl.bot13     { background: linear-gradient(135deg,#ec4899,#be185d); }
     .fund-icon-xl.oracle    { background: linear-gradient(135deg,#a855f7,#7c3aed); }
     .fund-icon-xl.wizard    { background: linear-gradient(135deg,#10b981,#059669); }
@@ -100,38 +74,22 @@
     .fund-hero-name { font-size: 1.6rem; font-weight: 900; letter-spacing: -0.5px; line-height: 1; margin-bottom: 4px; }
     .fund-hero-kind { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px; }
     .fund-hero-tag { font-size: 0.88rem; color: var(--muted); line-height: 1.5; max-width: 440px; margin: 0; }
-
-    /* ── Stats bar ── */
-    .fund-stats-bar {
-      display: flex; gap: 28px; flex-wrap: wrap;
-      padding: 16px 28px;
-      border-top: 1px solid var(--border);
-      background: rgba(0,0,0,0.15);
-    }
+    .fund-stats-bar { display: flex; gap: 28px; flex-wrap: wrap; padding: 16px 28px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.15); }
     .fstat { display: flex; flex-direction: column; gap: 2px; }
     .fstat-val { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.4px; }
     .fstat-lbl { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); }
 
     /* ── Context strip ── */
-    .context-strip {
-      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-      padding: 10px 16px; margin-bottom: 24px;
-      background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-      font-size: 0.8rem;
-    }
+    .context-strip { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 16px; margin-bottom: 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; font-size: 0.8rem; }
     .context-strip-sep { color: var(--border); }
     .context-portfolio-name { font-weight: 600; color: var(--text); }
     .context-holdings { color: var(--muted); }
     .context-back-link { margin-left: auto; color: var(--blue); text-decoration: none; font-size: 0.78rem; white-space: nowrap; }
     .context-back-link:hover { text-decoration: underline; }
 
-    /* ── Positions grid ── */
-    .positions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 0; }
-    .position-card {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-      padding: 16px 18px; display: flex; flex-direction: column; gap: 6px;
-      transition: border-color 0.15s;
-    }
+    /* ── Positions ── */
+    .positions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .position-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; transition: border-color 0.15s; }
     .position-card:hover { border-color: var(--blue); }
     .pos-symbol { font-size: 1rem; font-weight: 800; letter-spacing: -0.3px; }
     .pos-name { font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -139,12 +97,7 @@
     .pos-label { color: var(--muted); }
     .pos-value { font-weight: 600; font-size: 0.85rem; }
     .pos-pnl { font-size: 0.9rem; font-weight: 700; }
-    .pos-empty {
-      grid-column: 1 / -1;
-      padding: 32px 20px; text-align: center;
-      color: var(--muted); font-size: 0.875rem; line-height: 1.8;
-      background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-    }
+    .pos-empty { grid-column: 1/-1; padding: 32px 20px; text-align: center; color: var(--muted); font-size: 0.875rem; line-height: 1.8; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; }
     .pos-empty strong { color: var(--text); display: block; margin-bottom: 8px; font-size: 1rem; }
 
     /* ── Chart ── */
@@ -153,7 +106,7 @@
     /* ── Account Drawer ── */
     .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 400; }
     .drawer-overlay.open { display: block; }
-    .drawer { position: fixed; top: 0; right: -420px; width: 420px; max-width: 95vw; height: 100vh; background: var(--panel); border-left: 1px solid var(--border); z-index: 500; transition: right 0.3s cubic-bezier(0.4,0,0.2,1); overflow-y: auto; display: flex; flex-direction: column; }
+    .drawer { position: fixed; top: 0; right: -420px; width: 420px; max-width: 95vw; height: 100vh; background: var(--panel); border-left: 1px solid var(--border); z-index: 500; transition: right 0.3s cubic-bezier(0.4,0,0.2,1); overflow-y: auto; }
     .drawer.open { right: 0; }
     .drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--panel); z-index: 1; }
     .drawer-header h2 { font-size: 1rem; font-weight: 600; color: var(--text); margin: 0; }
@@ -182,13 +135,13 @@
     /* ── Modals ── */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 600; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
-    .modal-box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; width: 100%; max-width: 380px; box-shadow: var(--shadow); }
+    .modal-box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; width: 100%; max-width: 380px; }
     .modal-box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; color: var(--text); }
     .modal-box p { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
     .btn-cancel { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
     .btn-cancel:hover { border-color: var(--text); color: var(--text); }
-    .btn-confirm { background: var(--blue); border: none; color: var(--bg); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .btn-confirm { background: var(--blue); border: none; color: var(--bg); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
     .btn-confirm:hover { background: #00b8e0; }
 
     /* ── Toast ── */
@@ -198,14 +151,55 @@
     .toast.error { border-color: var(--red); color: var(--red); }
 
     @media (max-width: 480px) {
-      .fund-hero-body { padding: 16px; gap: 16px; }
-      .fund-stats-bar { padding: 12px 16px; gap: 16px; }
+      .fund-hero-body { padding: 16px; }
+      .fund-stats-bar { padding: 12px 16px; }
       .fund-hero-name { font-size: 1.25rem; }
       .fund-icon-xl { width: 42px; height: 42px; font-size: 0.95rem; }
       .context-strip { flex-direction: column; align-items: flex-start; gap: 4px; }
       .context-back-link { margin-left: 0; }
-      .toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
     }
+
+    /* ── Share button ── */
+    .share-btn { background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.25); color: var(--blue); border-radius: 8px; padding: 8px 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+    .share-btn:hover { background: rgba(0,212,255,0.18); }
+
+    /* ── Leaderboard toggle ── */
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 22px; cursor: pointer; transition: background 0.2s; }
+    .toggle-slider:before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
+    input:checked + .toggle-slider { background: var(--blue); }
+    input:checked + .toggle-slider:before { transform: translateX(18px); }
+
+    /* ── Comments ── */
+    .comment-form { background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .comment-form textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 0.875rem; resize: vertical; min-height: 76px; box-sizing: border-box; font-family: inherit; transition: border-color 0.15s; }
+    .comment-form textarea:focus { outline: none; border-color: var(--blue); }
+    .comment-form-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; gap: 10px; }
+    .comment-chars { font-size: 0.72rem; color: var(--muted); }
+    .btn-post { background: var(--blue); border: none; color: var(--bg); border-radius: 8px; padding: 8px 18px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+    .btn-post:hover { background: #00b8e0; }
+    .btn-post:disabled { opacity: 0.5; cursor: default; }
+    .comment-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+    .comment-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .comment-handle { font-size: 0.82rem; font-weight: 700; color: var(--blue); }
+    .comment-time { font-size: 0.72rem; color: var(--muted); }
+    .comment-body-text { font-size: 0.875rem; line-height: 1.6; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+    .comment-del-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; }
+    .comment-del-btn:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
+    .comments-empty { text-align: center; padding: 28px; color: var(--muted); font-size: 0.875rem; }
+    .shared-user-row { display:flex; align-items:center; justify-content:space-between; padding:7px 10px; background:var(--card); border:1px solid var(--border); border-radius:8px; margin-bottom:6px; font-size:0.82rem; }
+    .shared-user-handle { color:var(--blue); font-weight:500; }
+    .revoke-btn { background:rgba(255,85,85,0.1); border:1px solid rgba(255,85,85,0.25); color:#ff5555; border-radius:6px; padding:3px 8px; font-size:0.75rem; cursor:pointer; }
+    .revoke-btn:hover { background:rgba(255,85,85,0.22); }
+    .private-wall { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; text-align:center; }
+    .private-wall-icon { font-size:3rem; margin-bottom:16px; }
+    .private-wall h2 { font-size:1.3rem; margin-bottom:8px; }
+    .private-wall p { color:var(--muted); font-size:0.9rem; max-width:320px; line-height:1.6; }
+    .no-handle-notice { background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.2); border-radius: 10px; padding: 12px 16px; font-size: 0.82rem; color: var(--muted); margin-bottom: 14px; }
+    .no-handle-notice a { color: var(--blue); text-decoration: none; }
+    .no-handle-notice a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -292,6 +286,42 @@
     </div>
     <div class="referral-stats"><span id="drawerRefCount">0</span> referrals · Earn 1 free month per 3 referrals</div>
   </div>
+  <div class="drawer-section" id="drawerPortfolioSection" style="display:none">
+    <div class="drawer-section-title">Portfolio Settings</div>
+    <!-- Privacy toggle -->
+    <div class="toggle-row" style="margin-bottom:12px">
+      <div>
+        <div style="font-size:0.85rem;font-weight:500;margin-bottom:2px">Private Portfolio</div>
+        <div style="font-size:0.75rem;color:var(--muted)">Only you + shared users can view</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="privacyToggle" onchange="togglePrivacy(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <!-- Leaderboard toggle -->
+    <div class="toggle-row" style="margin-bottom:16px">
+      <div>
+        <div style="font-size:0.85rem;font-weight:500;margin-bottom:2px">Show on Leaderboard</div>
+        <div style="font-size:0.75rem;color:var(--muted)">Qualify at 21 days + 10% gain</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="lbToggle" onchange="toggleLeaderboard(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <!-- Share with user -->
+    <div style="margin-bottom:10px">
+      <div style="font-size:0.8rem;font-weight:600;margin-bottom:8px;color:var(--text)">Share With</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="text" id="shareHandleInput" placeholder="@username" maxlength="50"
+          style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:0.82rem;color:var(--text);outline:none">
+        <button class="btn-copy" onclick="addShare()" id="addShareBtn" style="white-space:nowrap;padding:7px 12px;font-size:0.8rem">Add</button>
+      </div>
+    </div>
+    <!-- Shared-with list -->
+    <div id="sharedWithList" style="margin-top:4px"></div>
+  </div>
   <div class="drawer-section">
     <a href="https://www.paypal.com/myaccount/autopay/" target="_blank" class="manage-link">Manage Subscription on PayPal →</a>
   </div>
@@ -312,14 +342,11 @@
 <!-- ── MAIN ── -->
 <main class="app">
 
-  <!-- Fund Hero -->
   <div class="fund-hero" id="fundHero">
     <div class="fund-hero-accent" id="fundAccent"></div>
     <div class="fund-hero-body">
       <div class="fund-hero-left">
-        <a class="fund-back-link" id="heroBackLink" href="#">
-          ← <span id="heroBackLabel">Portfolio</span>
-        </a>
+        <a class="fund-back-link" id="heroBackLink" href="#">← <span id="heroBackLabel">Portfolio</span></a>
         <div class="fund-hero-identity">
           <span class="fund-icon-xl" id="fundIconEl"></span>
           <div>
@@ -329,72 +356,59 @@
           </div>
         </div>
       </div>
+      <div style="display:flex;align-items:flex-start;flex-shrink:0">
+        <button class="share-btn" id="shareBtn" onclick="sharePortfolio()" style="display:none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share
+        </button>
+      </div>
     </div>
     <div class="fund-stats-bar">
-      <div class="fstat">
-        <span class="fstat-val" id="fsDay">+0.00%</span>
-        <span class="fstat-lbl">Today</span>
-      </div>
-      <div class="fstat">
-        <span class="fstat-val" id="fsInception">+0.00%</span>
-        <span class="fstat-lbl">Since Inception</span>
-      </div>
-      <div class="fstat">
-        <span class="fstat-val" id="fsValue">$0</span>
-        <span class="fstat-lbl">Allocated</span>
-      </div>
-      <div class="fstat">
-        <span class="fstat-val" id="fsPositions">0</span>
-        <span class="fstat-lbl">Active Positions</span>
-      </div>
-      <div class="fstat">
-        <span class="fstat-val" id="fsHoldings">0</span>
-        <span class="fstat-lbl">Your Holdings</span>
-      </div>
+      <div class="fstat"><span class="fstat-val" id="fsDay">+0.00%</span><span class="fstat-lbl">Today</span></div>
+      <div class="fstat"><span class="fstat-val" id="fsInception">+0.00%</span><span class="fstat-lbl">Since Inception</span></div>
+      <div class="fstat"><span class="fstat-val" id="fsValue">$0</span><span class="fstat-lbl">Allocated</span></div>
+      <div class="fstat"><span class="fstat-val" id="fsPositions">0</span><span class="fstat-lbl">Active Positions</span></div>
+      <div class="fstat"><span class="fstat-val" id="fsHoldings">0</span><span class="fstat-lbl">Your Holdings</span></div>
     </div>
   </div>
 
-  <!-- Context strip -->
   <div class="context-strip" id="contextStrip">
     <span class="context-portfolio-name" id="ctxPortfolioName">Loading portfolio…</span>
     <span class="context-strip-sep">·</span>
     <span class="context-holdings" id="ctxHoldings">0 holdings</span>
     <span class="context-strip-sep">·</span>
-    <span style="color:var(--muted);font-size:0.78rem">All data filtered to your holdings</span>
+    <span style="color:var(--muted);font-size:0.78rem">All data filtered to your stocks</span>
     <a class="context-back-link" id="ctxBackLink" href="#">View full portfolio →</a>
   </div>
 
-  <!-- Active Positions in Your Portfolio -->
-  <div class="section-head">
-    <h3>Active Positions — Your Holdings</h3>
-  </div>
+  <div class="section-head"><h3>Active Positions — Your Stocks</h3></div>
   <div class="positions-grid" id="positionsGrid">
     <div class="pos-empty"><strong>Loading positions…</strong></div>
   </div>
 
-  <!-- Signals — Today -->
-  <div class="section-head" style="margin-top:28px">
-    <h3>Signals — Today</h3>
-  </div>
+  <div class="section-head" style="margin-top:28px"><h3>Signals — Today</h3></div>
   <div class="signals-today" id="signalsToday">
     <div class="card" style="color:var(--muted);font-size:0.82rem">Loading signals…</div>
   </div>
   <div class="signals-note" id="signalsNote" style="font-size:0.72rem;color:var(--muted);margin-top:8px;font-style:italic"></div>
 
-  <!-- News — Today -->
-  <div class="section-head" style="margin-top:28px">
-    <h3>News — Today</h3>
-  </div>
+  <div class="section-head" style="margin-top:28px"><h3>News — Today</h3></div>
   <div class="news-grid" id="newsGrid">
     <div class="card" style="color:var(--muted);font-size:0.82rem">Loading news…</div>
   </div>
 
-  <!-- Performance Trajectory -->
   <div class="panel" style="margin-top:18px">
     <h3 id="chartTitle">Performance Trajectory</h3>
     <div class="chart-wrap" style="min-height:240px" id="chartWrap">
       <canvas id="chartFund"></canvas>
     </div>
+  </div>
+
+  <!-- ── Comments ── -->
+  <div class="panel" id="commentsSection" style="margin-top:18px;display:none">
+    <h3 style="margin-bottom:16px">💬 Comments</h3>
+    <div id="commentFormWrap"></div>
+    <div id="commentsList"><div class="comments-empty">Loading comments…</div></div>
   </div>
 
 </main>
@@ -413,19 +427,19 @@ const BACKEND_URL = "https://wallstbots-backend-868128114349.us-east1.run.app";
 const TRACKER_API = BACKEND_URL + "/public/tracker";
 const auth = new WallStBotsAuth(BACKEND_URL);
 const api  = new WallStBotsAPI(BACKEND_URL, auth);
+
+const params    = new URLSearchParams(window.location.search);
+const IS_PUBLIC = params.get('public') === '1';
+const BOT_ID    = IS_PUBLIC ? params.get('id') : params.get('portfolio');
+let   BOT_SLUG  = IS_PUBLIC ? null              : params.get('bot');
+
 if (!auth.isAuthenticated()) { window.location.href = "login.html"; }
+if (!BOT_ID || (!IS_PUBLIC && !BOT_SLUG)) { window.location.href = "dashboard.html"; }
 
-const params   = new URLSearchParams(window.location.search);
-const BOT_ID   = params.get('portfolio');
-const BOT_SLUG = params.get('bot');
-if (!BOT_ID || !BOT_SLUG) { window.location.href = "dashboard.html"; }
-
-// ── Shared state ─────────────────────────────────────────────────────────────
 let botData = null, holdings = [], userProfile = null;
 const CHARTS_F = {};
 const STATE = { funds: null, news: null, signals: null };
 
-// ── Fund metadata ─────────────────────────────────────────────────────────────
 const FUND_META = {
   bot13:     { name:'BOT13',     icon:'13', color:'#ec4899', kind:'DAILY TRADER',
                tagline:"Daily intraday bot. Buys at open, sells before close. Skips the day if no edge." },
@@ -439,7 +453,6 @@ const FUND_META = {
                tagline:"Half on the heavyweights. Half on the rest. Concentration meets coverage." },
 };
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
 const fmt$  = n => { const v=n||0; return (v<0?'-$':'$')+Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); };
 const fmt$0 = n => { const v=Math.round(n||0); return (v<0?'-$':'$')+Math.abs(v).toLocaleString(); };
 const fmtPct = n => (n>=0?'+':'')+(n||0).toFixed(2)+'%';
@@ -449,58 +462,65 @@ function relTime(iso) {
   if (!iso) return '';
   const t = new Date(iso); if (isNaN(t)) return iso;
   const m = Math.round((Date.now()-t)/60000);
-  if (m < 60)    return m+'m ago';
-  if (m < 1440)  return Math.round(m/60)+'h ago';
+  if (m < 60) return m+'m ago';
+  if (m < 1440) return Math.round(m/60)+'h ago';
   if (m < 10080) return Math.round(m/1440)+'d ago';
   return t.toLocaleDateString();
 }
 function sectorClass(s) {
   if (!s) return 'other';
   const v = s.toLowerCase();
-  if (v.includes('energy')||v.includes('util'))         return 'energy';
-  if (v.includes('health')||v.includes('bio'))          return 'bio';
-  if (v.includes('financ')||v.includes('bank'))         return 'finance';
+  if (v.includes('energy')||v.includes('util'))  return 'energy';
+  if (v.includes('health')||v.includes('bio'))   return 'bio';
+  if (v.includes('financ')||v.includes('bank'))  return 'finance';
   if (v.includes('tech')||v.includes(' it')||v.includes('communic')||v.includes('industrial')) return 'tech';
   return 'other';
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
-  // Validate bot slug
-  if (!FUND_META[BOT_SLUG]) {
-    showToast('Unknown strategy: ' + BOT_SLUG, 'error');
-    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
-    return;
-  }
-
-  // Wire up back links
-  const backHref = 'bot-detail.html?id=' + encodeURIComponent(BOT_ID);
-  document.getElementById('heroBackLink').href   = backHref;
-  document.getElementById('navBackPortfolio').href = backHref;
-  document.getElementById('mobBackPortfolio').href = backHref;
-  document.getElementById('ctxBackLink').href      = backHref;
-
-  // Render fund identity immediately (no API needed)
-  renderFundHero();
-
-  // Load profile quietly
   try { userProfile = await api.getUserProfile(); renderProfile(); } catch(e) {}
-  try { loadReferralCode(); } catch(e) {}
-  try { loadSubscriptionInfo(); } catch(e) {}
 
-  // Load portfolio data and site data in parallel
-  await Promise.allSettled([loadPortfolio(), loadSiteData()]);
+  if (IS_PUBLIC) {
+    // ── Public view: load via public endpoint, hide private sections ──
+    ['contextStrip','signalsToday','signalsNote','newsGrid'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+    document.querySelectorAll('.section-head').forEach(el => el.style.display = 'none');
+    document.getElementById('positionsGrid').style.display = 'none';
+    document.getElementById('heroBackLink').style.display  = 'none';
+    document.getElementById('commentsSection').style.display = 'block';
+    await loadPublicPortfolio();
+  } else {
+    // ── Private view: existing behaviour + social additions ──
+    if (!FUND_META[BOT_SLUG]) {
+      showToast('Unknown strategy: ' + BOT_SLUG, 'error');
+      setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+      return;
+    }
+    const backHref = 'bot-detail.html?id=' + encodeURIComponent(BOT_ID);
+    document.getElementById('heroBackLink').href     = backHref;
+    document.getElementById('navBackPortfolio').href = backHref;
+    document.getElementById('mobBackPortfolio').href = backHref;
+    document.getElementById('ctxBackLink').href      = backHref;
+    renderFundHero();
+    try { loadReferralCode(); } catch(e) {}
+    try { loadSubscriptionInfo(); } catch(e) {}
+    // Share button + leaderboard toggle are owner-only
+    document.getElementById('shareBtn').style.display = 'flex';
+    document.getElementById('drawerPortfolioSection').style.display = 'block';
+    document.getElementById('commentsSection').style.display = 'block';
+    loadPrivacySettings();
+    await Promise.allSettled([loadPortfolio(), loadSiteData()]);
+  }
+  loadComments();
 }
 
-// ── Render fund hero from metadata (instant) ──────────────────────────────────
 function renderFundHero() {
   const meta = FUND_META[BOT_SLUG];
   document.title = meta.name + ' — ' + SITE_TITLE;
-
   const iconEl = document.getElementById('fundIconEl');
-  iconEl.textContent  = meta.icon;
-  iconEl.className    = 'fund-icon-xl ' + BOT_SLUG;
-
+  iconEl.textContent = meta.icon;
+  iconEl.className   = 'fund-icon-xl ' + BOT_SLUG;
   document.getElementById('fundHeroName').textContent = meta.name;
   document.getElementById('fundHeroKind').textContent = meta.kind;
   document.getElementById('fundHeroKind').style.color = meta.color;
@@ -508,7 +528,6 @@ function renderFundHero() {
   document.getElementById('fundAccent').style.background = meta.color;
 }
 
-// ── Portfolio data ────────────────────────────────────────────────────────────
 async function loadPortfolio() {
   try {
     const data = await api.getBot(BOT_ID);
@@ -517,26 +536,22 @@ async function loadPortfolio() {
     renderContextStrip();
     updateStatsAllocated();
     drawFundChart();
-  } catch(e) {
-    showToast('Could not load portfolio', 'error');
-  }
+  } catch(e) { showToast('Could not load portfolio', 'error'); }
 }
 
 function renderContextStrip() {
   if (!botData) return;
   const name = botData.name || 'My Portfolio';
-  document.getElementById('heroBackLabel').textContent      = name;
-  document.getElementById('ctxPortfolioName').textContent   = name;
-  document.getElementById('ctxHoldings').textContent        = holdings.length + ' holding' + (holdings.length !== 1 ? 's' : '');
-  document.getElementById('fsHoldings').textContent         = holdings.length;
+  document.getElementById('heroBackLabel').textContent    = name;
+  document.getElementById('ctxPortfolioName').textContent = name;
+  document.getElementById('ctxHoldings').textContent      = holdings.length + ' stock' + (holdings.length !== 1 ? 's' : '');
+  document.getElementById('fsHoldings').textContent       = holdings.length;
 }
 
 function updateStatsAllocated() {
-  const cap = holdings.length * 1000;
-  document.getElementById('fsValue').textContent = fmt$0(cap);
+  document.getElementById('fsValue').textContent = fmt$0(holdings.length * 1000);
 }
 
-// ── Site data (tracker API) ───────────────────────────────────────────────────
 async function loadSiteData() {
   try {
     const [sr, nr, sigr] = await Promise.allSettled([
@@ -548,32 +563,28 @@ async function loadSiteData() {
     STATE.news    = nr.status   === 'fulfilled' ? nr.value   : { items: [] };
     STATE.signals = sigr.status === 'fulfilled' ? sigr.value : { recommendations: [], summary: {} };
   } catch(e) {}
-
-  try { renderFundStats();    } catch(e) {}
-  try { renderPositions();    } catch(e) {}
-  try { renderSignals();      } catch(e) {}
-  try { renderNews();         } catch(e) {}
+  try { renderFundStats();  } catch(e) {}
+  try { renderPositions();  } catch(e) {}
+  try { renderSignals();    } catch(e) {}
+  try { renderNews();       } catch(e) {}
 }
 
-// ── Fund stats from global tracker ────────────────────────────────────────────
 function renderFundStats() {
   const fd = (STATE.funds && STATE.funds[BOT_SLUG]) || {};
-  const dayPct  = fd.day_pct  ?? 0;
-  const pnlPct  = fd.pnl_pct  ?? 0;
+  const dayPct = fd.day_pct ?? 0;
+  const pnlPct = fd.pnl_pct ?? 0;
   document.getElementById('fsDay').textContent       = fmtPct(dayPct);
   document.getElementById('fsDay').className         = 'fstat-val ' + cls(dayPct);
   document.getElementById('fsInception').textContent = fmtPct(pnlPct);
   document.getElementById('fsInception').className   = 'fstat-val ' + cls(pnlPct);
 }
 
-// ── Active Positions filtered to user's holdings ──────────────────────────────
 function renderPositions() {
-  const grid    = document.getElementById('positionsGrid');
-  const fd      = (STATE.funds && STATE.funds[BOT_SLUG]) || {};
-  const allPos  = fd.positions || [];
+  const grid   = document.getElementById('positionsGrid');
+  const fd     = (STATE.funds && STATE.funds[BOT_SLUG]) || {};
+  const allPos = fd.positions || [];
   const holdingTickers = holdings.map(h => (h.symbol || '').toUpperCase());
 
-  // Filter global positions to only those in user's portfolio
   const myPos = holdingTickers.length
     ? allPos.filter(p => holdingTickers.includes((p.symbol || p.ticker || '').toUpperCase()))
     : [];
@@ -583,337 +594,369 @@ function renderPositions() {
   if (!myPos.length) {
     const meta = FUND_META[BOT_SLUG];
     const isBaseline = BOT_SLUG === 'equalizer' || BOT_SLUG === 'titan';
-    const holdCount  = holdingTickers.length;
-
-    if (!holdCount) {
-      grid.innerHTML = '<div class="pos-empty"><strong>No holdings yet</strong>Go back to your portfolio and add some stocks to see what ' + meta.name + ' would do with them.</div>';
+    if (!holdingTickers.length) {
+      grid.innerHTML = '<div class="pos-empty"><strong>No stocks yet</strong>Go back to your portfolio and add some stocks to see what ' + meta.name + ' would do with them.</div>';
     } else if (isBaseline) {
-      // Baselines hold everything — show user's holdings as positions
       renderBaselinePositions(holdingTickers, grid);
     } else {
-      grid.innerHTML = '<div class="pos-empty"><strong>' + meta.name + ' has no active positions in your holdings today</strong>The bot may be in HOLD mode, or today\'s picks don\'t overlap with your ' + holdCount + ' holding' + (holdCount !== 1 ? 's' : '') + '. Check back after the next refresh.</div>';
+      grid.innerHTML = '<div class="pos-empty"><strong>' + meta.name + ' has no active positions in your stocks today</strong>The bot may be in HOLD mode, or today\'s picks don\'t overlap with your ' + holdingTickers.length + ' stock' + (holdingTickers.length !== 1 ? 's' : '') + '. Check back after the next refresh.</div>';
     }
     return;
   }
-
   grid.innerHTML = myPos.map(p => positionCard(p)).join('');
 }
 
 function positionCard(p) {
-  const sym   = p.symbol || p.ticker || '—';
-  const name  = p.name || p.company || '';
-  const val   = p.value || p.current_value || 0;
-  const entry = p.entry_price || p.avg_cost || 0;
-  const curr  = p.current_price || p.price || 0;
-  const pnl   = p.pnl || p.gain_loss || (val - (p.cost_basis || entry * (p.shares || 1)));
+  const sym    = p.symbol || p.ticker || '—';
+  const name   = p.name || p.company || '';
+  const val    = p.value || p.current_value || 0;
+  const entry  = p.entry_price || p.avg_cost || 0;
+  const curr   = p.current_price || p.price || 0;
+  const pnl    = p.pnl || p.gain_loss || (val - (p.cost_basis || entry * (p.shares || 1)));
   const pnlPct = p.pnl_pct || p.gain_loss_pct || (entry ? ((curr - entry) / entry * 100) : 0);
   const shares = p.shares || p.quantity || 0;
-
   return '<div class="position-card">'
     + '<div class="pos-symbol">' + escHtml(sym) + '</div>'
     + (name ? '<div class="pos-name">' + escHtml(name) + '</div>' : '')
     + (shares ? '<div class="pos-row"><span class="pos-label">Shares</span><span class="pos-value">' + shares + '</span></div>' : '')
-    + (entry ? '<div class="pos-row"><span class="pos-label">Entry</span><span class="pos-value">' + fmt$(entry) + '</span></div>' : '')
-    + (curr  ? '<div class="pos-row"><span class="pos-label">Current</span><span class="pos-value">' + fmt$(curr) + '</span></div>' : '')
+    + (entry  ? '<div class="pos-row"><span class="pos-label">Entry</span><span class="pos-value">' + fmt$(entry) + '</span></div>' : '')
+    + (curr   ? '<div class="pos-row"><span class="pos-label">Current</span><span class="pos-value">' + fmt$(curr) + '</span></div>' : '')
     + '<div class="pos-row"><span class="pos-label">Value</span><span class="pos-value">' + fmt$0(val) + '</span></div>'
     + '<div class="pos-pnl ' + cls(pnl) + '">' + (pnl >= 0 ? '+' : '') + fmt$(pnl) + ' (' + fmtPct(pnlPct) + ')</div>'
     + '</div>';
 }
 
-// For EQUALIZER / TITAN — these baselines hold everything, show each holding as a position
 function renderBaselinePositions(tickers, grid) {
-  if (!tickers.length) {
-    grid.innerHTML = '<div class="pos-empty"><strong>No holdings yet</strong>Add stocks to your portfolio to see positions.</div>';
-    return;
-  }
-  // Map holdings to position cards using data we have
-  const cards = holdings.map(h => {
-    const sym    = h.symbol || '—';
-    const name   = h.name || '';
+  if (!tickers.length) { grid.innerHTML = '<div class="pos-empty"><strong>No stocks yet</strong>Add stocks to your portfolio.</div>'; return; }
+  grid.innerHTML = holdings.map(h => {
     const entry  = h.entry_price || 0;
     const curr   = h.current_price || entry;
-    const pnl    = entry && curr ? (curr - entry) * 1 : 0;
+    const pnl    = entry && curr ? (curr - entry) : 0;
     const pnlPct = entry && curr ? ((curr - entry) / entry * 100) : 0;
-    const alloc  = 1000; // $1,000 per holding
-
     return '<div class="position-card">'
-      + '<div class="pos-symbol">' + escHtml(sym) + '</div>'
-      + (name ? '<div class="pos-name">' + escHtml(name) + '</div>' : '')
-      + '<div class="pos-row"><span class="pos-label">Allocation</span><span class="pos-value">' + fmt$0(alloc) + '</span></div>'
+      + '<div class="pos-symbol">' + escHtml(h.symbol || '—') + '</div>'
+      + (h.name ? '<div class="pos-name">' + escHtml(h.name) + '</div>' : '')
+      + '<div class="pos-row"><span class="pos-label">Allocation</span><span class="pos-value">$1,000</span></div>'
       + (entry ? '<div class="pos-row"><span class="pos-label">Entry</span><span class="pos-value">' + fmt$(entry) + '</span></div>' : '')
       + (curr && curr !== entry ? '<div class="pos-row"><span class="pos-label">Current</span><span class="pos-value">' + fmt$(curr) + '</span></div>' : '')
       + '<div class="pos-pnl ' + cls(pnl) + '">' + (pnl >= 0 ? '+' : '') + fmt$(pnl) + ' (' + fmtPct(pnlPct) + ')</div>'
       + '</div>';
-  });
-  grid.innerHTML = cards.join('');
+  }).join('');
 }
 
-// ── Signals filtered to user's holdings ──────────────────────────────────────
 function renderSignals() {
   const allSigs = (STATE.signals && STATE.signals.recommendations) || [];
-  const holdingTickers = holdings.map(h => h.symbol);
-
-  const filtered = holdingTickers.length
-    ? allSigs.filter(r => holdingTickers.includes(r.symbol))
-    : [];
-
+  const tickers = holdings.map(h => h.symbol);
+  const filtered = tickers.length ? allSigs.filter(r => tickers.includes(r.symbol)) : [];
   const note = document.getElementById('signalsNote');
-  if (!holdingTickers.length) {
-    note.textContent = 'Add holdings to see signals filtered to your portfolio.';
-  } else if (!filtered.length) {
-    note.textContent = 'No signals today for your ' + holdingTickers.length + ' holding' + (holdingTickers.length !== 1 ? 's' : '') + '. Check back after the next refresh.';
-  } else {
-    note.textContent = 'Showing signals for your ' + holdingTickers.length + ' holding' + (holdingTickers.length !== 1 ? 's' : '') + ' only.';
-  }
-
-  const topByAction = (action, n) => filtered.filter(r => r.action === action).slice(0, n);
-  const sigCol = (label, action, n) => {
-    const items = topByAction(action, n);
+  if (!tickers.length) { note.textContent = 'Add stocks to see signals filtered to your portfolio.'; }
+  else if (!filtered.length) { note.textContent = 'No signals today for your ' + tickers.length + ' stock' + (tickers.length !== 1 ? 's' : '') + '. Check back after the next refresh.'; }
+  else { note.textContent = 'Showing signals for your ' + tickers.length + ' stock' + (tickers.length !== 1 ? 's' : '') + ' only.'; }
+  const col = (label, action, n) => {
+    const items = filtered.filter(r => r.action === action).slice(0, n);
     const count = filtered.filter(r => r.action === action).length;
-    const rows = items.length
-      ? items.map(r => '<div class="row"><strong>' + escHtml(r.symbol) + '</strong>'
-          + '<span class="' + (r.upside_pct >= 0 ? 'pos' : 'neg') + '">'
-          + (r.upside_pct != null ? fmtPct(r.upside_pct) : '') + '</span></div>').join('')
-      : '<div class="row" style="color:var(--muted);font-size:11px">None today</div>';
-    const sigClass = action === 'STRONG BUY' ? 'signal-strong-buy' : action === 'HOLD' ? 'signal-hold' : 'signal-strong-sell';
-    return '<div class="card">'
-      + '<div class="signals-today-head"><span class="signal ' + sigClass + '">' + label + '</span>'
-      + (count ? '<span style="color:var(--muted);font-size:10px">' + count + ' of your holdings</span>' : '')
-      + '</div>'
-      + '<div class="signals-today-list">' + rows + '</div></div>';
+    const rows  = items.length ? items.map(r => '<div class="row"><strong>' + escHtml(r.symbol) + '</strong><span class="' + (r.upside_pct >= 0 ? 'pos' : 'neg') + '">' + (r.upside_pct != null ? fmtPct(r.upside_pct) : '') + '</span></div>').join('') : '<div class="row" style="color:var(--muted);font-size:11px">None today</div>';
+    const sc    = action === 'STRONG BUY' ? 'signal-strong-buy' : action === 'HOLD' ? 'signal-hold' : 'signal-strong-sell';
+    return '<div class="card"><div class="signals-today-head"><span class="signal ' + sc + '">' + label + '</span>' + (count ? '<span style="color:var(--muted);font-size:10px">' + count + ' of your stocks</span>' : '') + '</div><div class="signals-today-list">' + rows + '</div></div>';
   };
-
-  document.getElementById('signalsToday').innerHTML =
-    sigCol('TOP BUYS', 'STRONG BUY', 4)
-    + sigCol('HOLDS',  'HOLD',       4)
-    + sigCol('TOP SELLS','STRONG SELL',4);
-}
-
-// ── News filtered to user's holdings ─────────────────────────────────────────
-function newsCard(it) {
-  const cat  = sectorClass(it.sector);
-  const url  = it.url && it.url !== '#' ? it.url : null;
-  const open = url ? ' target="_blank" rel="noopener noreferrer"' : '';
-  const href = url || 'javascript:void(0)';
-  return '<a class="news-card cat-' + cat + '" href="' + escHtml(href) + '"' + open + '>'
-    + '<div class="news-title">' + escHtml(it.title || '') + '</div>'
-    + '<div class="news-meta">' + escHtml(it.source || it.sector || 'Source') + ' · ' + relTime(it.published_at) + '</div></a>';
+  document.getElementById('signalsToday').innerHTML = col('TOP BUYS','STRONG BUY',4) + col('HOLDS','HOLD',4) + col('TOP SELLS','STRONG SELL',4);
 }
 
 function renderNews() {
   const allNews = (STATE.news && STATE.news.items) || [];
-  const holdingTickers = holdings.map(h => (h.symbol || '').toUpperCase());
-
-  let filtered = allNews;
-  if (holdingTickers.length) {
+  const tickers = holdings.map(h => (h.symbol || '').toUpperCase());
+  let filtered  = allNews;
+  if (tickers.length) {
     filtered = allNews.filter(item => {
-      if (item.ticker  && holdingTickers.includes(item.ticker.toUpperCase()))  return true;
-      if (item.symbol  && holdingTickers.includes(item.symbol.toUpperCase()))  return true;
-      if (item.tickers && item.tickers.some(t => holdingTickers.includes(t.toUpperCase()))) return true;
-      const title = (item.title || '').toUpperCase();
-      return holdingTickers.some(t => title.includes(t));
+      if (item.ticker  && tickers.includes(item.ticker.toUpperCase()))  return true;
+      if (item.symbol  && tickers.includes(item.symbol.toUpperCase()))  return true;
+      if (item.tickers && item.tickers.some(t => tickers.includes(t.toUpperCase()))) return true;
+      return tickers.some(t => (item.title||'').toUpperCase().includes(t));
     });
   }
-
-  const cards = filtered.slice(0, 6).map(newsCard).join('');
-  document.getElementById('newsGrid').innerHTML = cards ||
-    '<p style="color:var(--muted);font-size:0.9rem">No headlines yet for your holdings — the fetcher runs nightly.</p>';
+  const cards = filtered.slice(0,6).map(it => {
+    const cat = sectorClass(it.sector);
+    const url = it.url && it.url !== '#' ? it.url : null;
+    return '<a class="news-card cat-' + cat + '" href="' + escHtml(url||'javascript:void(0)') + '"' + (url?' target="_blank" rel="noopener noreferrer"':'') + '><div class="news-title">' + escHtml(it.title||'') + '</div><div class="news-meta">' + escHtml(it.source||it.sector||'Source') + ' · ' + relTime(it.published_at) + '</div></a>';
+  }).join('');
+  document.getElementById('newsGrid').innerHTML = cards || '<p style="color:var(--muted);font-size:0.9rem">No headlines yet for your stocks.</p>';
 }
 
-// ── Performance Chart ─────────────────────────────────────────────────────────
 async function drawFundChart() {
   const wrap = document.getElementById('chartWrap');
   const ctx  = document.getElementById('chartFund');
   if (!wrap || !ctx) return;
   if (CHARTS_F.fund) CHARTS_F.fund.destroy();
-
   let snapshots = [];
-  try {
-    const data = await api.getBotPerformance(BOT_ID, 90);
-    snapshots = data?.snapshots || [];
-  } catch(e) {}
-
+  try { const data = await api.getBotPerformance(BOT_ID, 90); snapshots = data?.snapshots || []; } catch(e) {}
   const meta    = FUND_META[BOT_SLUG];
-  const created = botData?.created_at
-    ? new Date(botData.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
-    : 'today';
-
+  const created = botData?.created_at ? new Date(botData.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'today';
   if (!snapshots.length) {
     const titleEl = document.getElementById('chartTitle');
-    if (titleEl) titleEl.textContent = 'Performance Trajectory — ' + meta.name;
-    wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.8">'
-      + 'Portfolio started ' + created + '.<br>'
-      + 'Performance history appears after the first trading day.<br>'
-      + '<span style="font-size:0.78rem;color:var(--muted);opacity:0.7">'
-      + meta.name + ' strategy lines will plot here as data comes in.'
-      + '</span></div>';
+    if (titleEl) titleEl.textContent = 'Performance Trajectory — ' + (meta ? meta.name : '');
+    wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.8">Portfolio started ' + created + '.<br>Performance history appears after the first trading day.</div>';
     return;
   }
-
   const labels = snapshots.map(s => s.date);
   const values = snapshots.map(s => s.total_value);
-  const last   = snapshots[snapshots.length - 1];
-  const retPct = last.gain_loss_pct || 0;
-  const color  = meta.color;
-
+  const retPct = snapshots[snapshots.length-1].gain_loss_pct || 0;
   const titleEl = document.getElementById('chartTitle');
-  if (titleEl) titleEl.innerHTML = 'Performance Trajectory — ' + meta.name
-    + ' &nbsp;<span style="font-size:0.85rem;font-weight:600;color:' + color + '">'
-    + (retPct >= 0 ? '+' : '') + retPct.toFixed(2) + '%</span>';
-
+  if (titleEl && meta) titleEl.innerHTML = 'Performance Trajectory — ' + meta.name + ' &nbsp;<span style="font-size:0.85rem;font-weight:600;color:' + meta.color + '">' + (retPct >= 0 ? '+' : '') + retPct.toFixed(2) + '%</span>';
+  const color = (meta && meta.color) || '#00d4ff';
   CHARTS_F.fund = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: meta.name,
-        data: values,
-        borderColor: color,
-        backgroundColor: color + '20',
-        tension: 0.3, borderWidth: 2, fill: true,
-        pointRadius: values.length > 30 ? 0 : 3,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color:'#7d8590', maxTicksLimit:8 }, grid: { color:'#1e2633' } },
-        y: { ticks: { color:'#7d8590', callback: v => '$'+v.toLocaleString() }, grid: { color:'#1e2633' } }
-      }
-    }
+    data: { labels, datasets: [{ label: 'Portfolio Value', data: values, borderColor: color, backgroundColor: color + '22', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '$' + ctx.parsed.y.toLocaleString() } } }, scales: { x: { ticks: { maxTicksLimit: 6, color: '#6b7280', font: { size: 11 } }, grid: { color: '#1f2937' } }, y: { ticks: { color: '#6b7280', font: { size: 11 }, callback: v => '$' + v.toLocaleString() }, grid: { color: '#1f2937' } } } }
   });
 }
 
-// ── Profile & account ─────────────────────────────────────────────────────────
-function renderProfile() {
-  const email = userProfile?.email || userProfile?.user?.email || '—';
-  document.getElementById('drawerEmail').textContent = email;
-}
-async function loadSubscriptionInfo() {
+// ── SOCIAL: Privacy, Sharing, Comments ───────────────────────────────────────
+
+async function loadPublicPortfolio() {
   try {
-    const sub = await api.getSubscription(); if (!sub) return;
-    const tier = sub.tier || sub.plan || 'Free';
-    const tl = tier.toLowerCase();
-    let bc = '';
-    if (tl.includes('insider')||tl.includes('elite')||tl.includes('premium')) bc = 'elite';
-    else if (tl.includes('pro')) bc = 'pro';
-    const tb = document.getElementById('drawerTierBadge');
-    tb.textContent = tier.charAt(0).toUpperCase()+tier.slice(1);
-    if (bc) tb.className = 'tier-badge ' + bc;
-    document.getElementById('drawerTierName').textContent = sub.plan_name || tier + ' Plan';
-    document.getElementById('drawerStatus').textContent = (sub.status||'active').charAt(0).toUpperCase()+(sub.status||'active').slice(1);
-    if (sub.current_period_end || sub.tier_expires_at) {
-      const d = new Date((sub.current_period_end||sub.tier_expires_at)*1000||(sub.current_period_end||sub.tier_expires_at));
-      document.getElementById('drawerBillDate').textContent = d.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+    const token = await auth.getToken();
+    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/public', { headers });
+    if (res.status === 403) {
+      // Private portfolio — show wall
+      document.querySelector('main.app').innerHTML = '<div class="private-wall"><div class="private-wall-icon">🔒</div><h2>Private Portfolio</h2><p>This portfolio is private. Ask the owner to share it with your @handle.</p></div>';
+      return;
+    }
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    BOT_SLUG = data.fund || data.strategy || 'bot13';
+    if (FUND_META[BOT_SLUG]) renderFundHero();
+    document.getElementById('fundHeroName').textContent = data.portfolio_name || 'Portfolio';
+    const fsInc = document.getElementById('fsInception');
+    if (fsInc && data.gain_loss_pct != null) {
+      fsInc.textContent = (data.gain_loss_pct >= 0 ? '+' : '') + data.gain_loss_pct.toFixed(2) + '%';
+      fsInc.className = 'fstat-val ' + (data.gain_loss_pct >= 0 ? 'pos' : 'neg');
+    }
+    if (data.performance_curve && data.performance_curve.length) {
+      const wrap = document.getElementById('chartWrap');
+      const ctx  = document.getElementById('chartFund');
+      if (wrap && ctx) {
+        const meta  = FUND_META[BOT_SLUG] || {};
+        const color = meta.color || '#00d4ff';
+        const labels = data.performance_curve.map(p => p.date);
+        const values = data.performance_curve.map(p => p.total_value);
+        if (CHARTS_F.fund) CHARTS_F.fund.destroy();
+        CHARTS_F.fund = new Chart(ctx, {
+          type: 'line',
+          data: { labels, datasets: [{ data: values, borderColor: color, backgroundColor: color + '22', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: 6, color: '#6b7280', font: { size: 11 } }, grid: { color: '#1f2937' } }, y: { ticks: { color: '#6b7280', font: { size: 11 }, callback: v => '$' + v.toLocaleString() }, grid: { color: '#1f2937' } } } }
+        });
+      }
+    }
+  } catch(e) { showToast('Could not load portfolio', 'error'); }
+}
+
+async function loadPrivacySettings() {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/public', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const privToggle = document.getElementById('privacyToggle');
+    const lbToggle   = document.getElementById('lbToggle');
+    if (privToggle) privToggle.checked = !!data.is_private;
+    if (lbToggle) {
+      lbToggle.checked   = !!data.public_leaderboard;
+      lbToggle.disabled  = !!data.is_private;
+      lbToggle.parentElement.style.opacity = data.is_private ? '0.4' : '1';
     }
   } catch(e) {}
+  loadShares();
 }
-async function loadReferralCode() {
+
+async function togglePrivacy(checked) {
   try {
-    const r = await api.getReferralStats();
-    document.getElementById('drawerRefCode').textContent  = r?.referral_code || '—';
-    document.getElementById('drawerRefCount').textContent = r?.referred_count || r?.referral_count || 0;
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/settings', {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_private: checked })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    const lbToggle = document.getElementById('lbToggle');
+    if (lbToggle) {
+      if (checked) { lbToggle.checked = false; lbToggle.disabled = true; lbToggle.parentElement.style.opacity = '0.4'; }
+      else { lbToggle.disabled = false; lbToggle.parentElement.style.opacity = '1'; }
+    }
+    showToast(checked ? 'Portfolio set to private' : 'Portfolio set to public', 'success');
+  } catch(e) { showToast('Could not update privacy setting', 'error'); document.getElementById('privacyToggle').checked = !checked; }
+}
+
+async function toggleLeaderboard(checked) {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/settings', {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ public_leaderboard: checked })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    showToast(checked ? 'Added to leaderboard' : 'Removed from leaderboard', 'success');
+  } catch(e) { showToast('Could not update leaderboard setting', 'error'); document.getElementById('lbToggle').checked = !checked; }
+}
+
+function sharePortfolio() {
+  const url = window.location.origin + '/portfolio-fund.html?id=' + encodeURIComponent(BOT_ID) + '&public=1';
+  if (navigator.share) {
+    navigator.share({ title: 'Check out my portfolio', url }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(url).then(() => showToast('Portfolio link copied!', 'success')).catch(() => showToast('Could not copy link', 'error'));
+  }
+}
+
+async function loadShares() {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/shares', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    renderSharedWith(data.shares || []);
   } catch(e) {}
 }
 
-// ── Mobile Nav ────────────────────────────────────────────────────────────────
-function toggleMobNav() {
-  const nav = document.getElementById('mobNav');
-  const ov  = document.getElementById('mobNavOverlay');
-  const isOpen = nav.classList.toggle('open');
-  ov.classList.toggle('open', isOpen);
-  document.body.style.overflow = isOpen ? 'hidden' : '';
-}
-function closeMobNav() {
-  document.getElementById('mobNav').classList.remove('open');
-  document.getElementById('mobNavOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-// ── Platform Switcher ─────────────────────────────────────────────────────────
-function togglePlatformMenu() {
-  const btn  = document.getElementById('platformBtn');
-  const menu = document.getElementById('platformMenu');
-  const open = menu.classList.toggle('open');
-  btn.classList.toggle('open', open);
-  if (open) {
-    const close = e => { if (!btn.contains(e.target) && !menu.contains(e.target)) { menu.classList.remove('open'); btn.classList.remove('open'); document.removeEventListener('click', close); } };
-    setTimeout(() => document.addEventListener('click', close), 0);
+function renderSharedWith(shares) {
+  const wrap = document.getElementById('sharedWithList');
+  if (!wrap) return;
+  if (!shares.length) {
+    wrap.innerHTML = '<div style="font-size:0.75rem;color:var(--muted);text-align:center;padding:8px 0">Not shared with anyone yet</div>';
+    return;
   }
+  wrap.innerHTML = shares.map(s =>
+    '<div class="shared-user-row">'
+    + '<span class="shared-user-handle">@' + escHtml(s.handle) + '</span>'
+    + '<button class="revoke-btn" onclick="revokeShare(\'' + s.share_id + '\', \'' + escHtml(s.handle) + '\')">Remove</button>'
+    + '</div>'
+  ).join('');
 }
 
-// ── Account Drawer ────────────────────────────────────────────────────────────
-function openDrawer() {
-  document.getElementById('accountDrawer').classList.add('open');
-  document.getElementById('drawerOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeDrawer() {
-  document.getElementById('accountDrawer').classList.remove('open');
-  document.getElementById('drawerOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-// ── Password Reset Modal ──────────────────────────────────────────────────────
-function openPwModal() {
-  document.getElementById('pwModal').classList.add('open');
-  document.getElementById('pwModalText').textContent = "We'll send a reset link to your email address.";
-  const btn = document.getElementById('pwConfirmBtn');
-  btn.disabled = false; btn.textContent = 'Send Reset Link';
-}
-function closePwModal() { document.getElementById('pwModal').classList.remove('open'); }
-async function sendPasswordReset() {
-  const btn = document.getElementById('pwConfirmBtn');
-  btn.disabled = true; btn.textContent = 'Sending…';
+async function addShare() {
+  const input = document.getElementById('shareHandleInput');
+  const handle = (input.value || '').trim().replace(/^@/, '');
+  if (!handle) { showToast('Enter a @handle to share with', 'error'); return; }
+  const btn = document.getElementById('addShareBtn');
+  btn.textContent = '…'; btn.disabled = true;
   try {
-    const email = userProfile?.email || userProfile?.user?.email;
-    if (!email) throw new Error('No email on file');
-    await api.requestPasswordReset(email);
-    document.getElementById('pwModalText').textContent = 'Reset link sent! Check your inbox.';
-    btn.textContent = 'Sent ✓';
-  } catch(e) {
-    document.getElementById('pwModalText').textContent = e.message || 'Failed to send reset link.';
-    btn.disabled = false; btn.textContent = 'Try Again';
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/share', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ handle })
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Error'); }
+    input.value = '';
+    showToast('@' + handle + ' can now view this portfolio', 'success');
+    loadShares();
+  } catch(e) { showToast(e.message || 'Could not share portfolio', 'error'); }
+  finally { btn.textContent = 'Add'; btn.disabled = false; }
+}
+
+async function revokeShare(shareId, handle) {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/share/' + shareId, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('Failed');
+    showToast('@' + handle + ' access removed', 'success');
+    loadShares();
+  } catch(e) { showToast('Could not revoke access', 'error'); }
+}
+
+async function loadComments() {
+  try {
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/comments?limit=50');
+    const data = await res.json();
+    const comments = data.comments || [];
+    const token = await auth.getToken().catch(() => null);
+    let myUserId = null;
+    if (token) { try { myUserId = JSON.parse(atob(token.split('.')[1])).user_id; } catch(e) {} }
+    renderCommentForm();
+    renderComments(comments, myUserId);
+  } catch(e) { document.getElementById('commentsList').innerHTML = '<div class="comments-empty">Could not load comments.</div>'; }
+}
+
+function renderCommentForm() {
+  const wrap = document.getElementById('commentFormWrap');
+  if (!wrap) return;
+  const handle = userProfile?.display_name;
+  if (!handle) {
+    wrap.innerHTML = '<div style="font-size:0.85rem;color:var(--muted);padding:10px 0;text-align:center">Set a <a href="dashboard.html" style="color:var(--blue)">@handle in your dashboard</a> to post comments.</div>';
+    return;
   }
+  wrap.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">'
+    + '<textarea id="commentBody" maxlength="1000" rows="3" placeholder="Write a comment…" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:var(--text);resize:vertical;outline:none;font-family:inherit"></textarea>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center">'
+    + '<span style="font-size:0.75rem;color:var(--muted)">Posting as <strong style="color:var(--blue)">@' + escHtml(handle) + '</strong></span>'
+    + '<button class="btn-copy" onclick="postComment()" style="padding:7px 16px;font-size:0.8rem">Post</button>'
+    + '</div></div>';
 }
 
-// ── Referral ──────────────────────────────────────────────────────────────────
-function copyReferral() {
-  const code = document.getElementById('drawerRefCode').textContent;
-  if (code && code !== '———') {
-    navigator.clipboard.writeText(code)
-      .then(() => showToast('Referral code copied!', 'success'))
-      .catch(() => showToast('Copy failed', 'error'));
-  }
+function renderComments(comments, myUserId) {
+  const list = document.getElementById('commentsList');
+  if (!comments.length) { list.innerHTML = '<div class="comments-empty">No comments yet. Be the first!</div>'; return; }
+  list.innerHTML = comments.map(c => {
+    const isOwn = myUserId && c.user_id === myUserId;
+    const ts = c.created_at ? new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    return '<div class="comment-card">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+      + '<span class="comment-handle">@' + escHtml(c.display_name) + '</span>'
+      + '<span style="display:flex;gap:10px;align-items:center">'
+      + '<span style="font-size:0.72rem;color:var(--muted)">' + ts + '</span>'
+      + (isOwn ? '<button class="revoke-btn" onclick="deleteComment(\'' + c.id + '\')">Delete</button>' : '')
+      + '</span></div>'
+      + '<div style="font-size:0.875rem;line-height:1.55;color:var(--text)">' + escHtml(c.body) + '</div>'
+      + '</div>';
+  }).join('');
 }
 
-// ── Logout ────────────────────────────────────────────────────────────────────
-function logout() { auth.logout(); window.location.href = 'login.html'; }
-
-// ── Toast ─────────────────────────────────────────────────────────────────────
-function showToast(msg, type = 'success') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show ' + type;
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+async function postComment() {
+  const body = (document.getElementById('commentBody')?.value || '').trim();
+  if (!body) return;
+  if (!userProfile?.display_name) { showToast('Set a @handle first', 'error'); return; }
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/comments', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ body })
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Error'); }
+    document.getElementById('commentBody').value = '';
+    loadComments();
+  } catch(e) { showToast(e.message || 'Could not post comment', 'error'); }
 }
 
-// ── Window bindings ───────────────────────────────────────────────────────────
-window.toggleMobNav       = toggleMobNav;
-window.closeMobNav        = closeMobNav;
-window.togglePlatformMenu = togglePlatformMenu;
-window.openDrawer         = openDrawer;
-window.closeDrawer        = closeDrawer;
-window.openPwModal        = openPwModal;
-window.closePwModal       = closePwModal;
-window.sendPasswordReset  = sendPasswordReset;
-window.copyReferral       = copyReferral;
-window.logout             = logout;
+async function deleteComment(commentId) {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/portfolio/' + BOT_ID + '/comments/' + commentId, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('Failed');
+    loadComments();
+  } catch(e) { showToast('Could not delete comment', 'error'); }
+}
 
-// ── Boot ──────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', init);
+window.togglePrivacy     = togglePrivacy;
+window.toggleLeaderboard = toggleLeaderboard;
+window.sharePortfolio    = sharePortfolio;
+window.addShare          = addShare;
+window.revokeShare       = revokeShare;
+window.postComment       = postComment;
+window.deleteComment     = deleteComment;
+
 </script>
 </body>
 </html>
