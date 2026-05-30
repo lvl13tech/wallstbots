@@ -327,7 +327,7 @@ let   BOT_SLUG  = IS_PUBLIC ? null              : params.get('bot');
 if (!auth.isAuthenticated()) { window.location.href = "login.html"; }
 if (!BOT_ID || (!IS_PUBLIC && !BOT_SLUG)) { window.location.href = "dashboard.html"; }
 
-let botData = null, holdings = [], userProfile = null, portfolioPerf = null;
+let botData = null, holdings = [], userProfile = null, portfolioPerf = null, fundState = null;
 const CHARTS_F = {};
 const STATE = { funds: null, news: null, signals: null };
 
@@ -397,8 +397,8 @@ async function init() {
     document.getElementById('drawerPortfolioSection').style.display = 'block';
     document.getElementById('commentsSection').style.display = 'block';
     loadPrivacySettings();
-    // Wait for BOTH before rendering — guarantees holdings is populated
-    await Promise.allSettled([loadPortfolio(), loadSiteData()]);
+    // Wait for portfolio, site data AND fund state before rendering
+    await Promise.allSettled([loadPortfolio(), loadSiteData(), loadFundState()]);
     try { renderFundStats();  } catch(e) {}
     try { renderPositions();  } catch(e) {}
     try { renderSignals();    } catch(e) {}
@@ -430,6 +430,21 @@ async function loadPortfolio() {
   } catch(e) { showToast('Could not load portfolio', 'error'); }
 }
 
+async function loadFundState() {
+  // Fetch per-portfolio bot simulation state from new endpoint
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(BACKEND_URL + '/bots/' + BOT_ID + '/fund/' + BOT_SLUG + '/state', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.state) {
+      fundState = data.state;
+    }
+  } catch(e) {}
+}
+
 function renderContextStrip() {
   if (!botData) return;
   const name = botData.name || 'My Portfolio';
@@ -455,13 +470,14 @@ async function loadSiteData() {
 }
 
 function renderFundStats() {
-  // ── 3 stat cards: use the USER'S portfolio performance, not global ──
+  // ── 3 stat cards: use fundState (per-portfolio simulation) if available ──
   const cap    = holdings.length * 1000;
-  const total  = (portfolioPerf && portfolioPerf.total_value  != null) ? portfolioPerf.total_value  : cap;
-  const pnl    = (portfolioPerf && portfolioPerf.gain_loss     != null) ? portfolioPerf.gain_loss     : 0;
-  const pnlPct = (portfolioPerf && portfolioPerf.gain_loss_pct != null) ? portfolioPerf.gain_loss_pct : 0;
-  const dayPnl = (portfolioPerf && portfolioPerf.day_gain_loss != null) ? portfolioPerf.day_gain_loss : 0;
-  const dayPct = (portfolioPerf && portfolioPerf.day_gain_loss_pct != null) ? portfolioPerf.day_gain_loss_pct : 0;
+  const fs     = fundState;  // from /bots/{id}/fund/{slug}/state
+  const total  = (fs && fs.total_value  != null) ? fs.total_value  : cap;
+  const pnl    = (fs && fs.gain_loss     != null) ? fs.gain_loss     : 0;
+  const pnlPct = (fs && fs.gain_loss_pct != null) ? fs.gain_loss_pct : 0;
+  const dayPnl = (fs && fs.day_pnl       != null) ? fs.day_pnl       : 0;
+  const dayPct = (fs && fs.day_pct       != null) ? fs.day_pct       : 0;
 
   document.getElementById('fsTotal').textContent   = fmt$0(total);
   document.getElementById('fsStarted').textContent = 'Started at ' + fmt$0(cap);
@@ -474,14 +490,10 @@ function renderFundStats() {
   document.getElementById('fsDayPct').textContent  = fmtPct(dayPct) + ' since yesterday';
   document.getElementById('fsDayPct').className    = 'fund-pnl ' + cls(dayPct);
 
-  // ── Strategy panel: only show after simulation has run for THIS portfolio ──
-  const hasSimulated = portfolioPerf && portfolioPerf.snapshot_date;
-  if (hasSimulated && ['bot13','oracle','wizard'].includes(BOT_SLUG)) {
-    const funds = STATE.funds && STATE.funds.funds ? STATE.funds.funds : STATE.funds || {};
-    const fd    = funds[BOT_SLUG] || {};
-    if (fd.current_strategy) {
-      document.getElementById('strategyPanel').innerHTML = renderStrategyPanel(BOT_SLUG, fd.current_strategy);
-    }
+  // ── Strategy panel: use per-portfolio simulation if available ──
+  const hasSimulated = fundState && fundState.snapshot_date;
+  if (hasSimulated && ['bot13','oracle','wizard'].includes(BOT_SLUG) && fundState.strategy) {
+    document.getElementById('strategyPanel').innerHTML = renderStrategyPanel(BOT_SLUG, fundState.strategy);
   } else {
     document.getElementById('strategyPanel').innerHTML = '';
   }
@@ -535,16 +547,15 @@ function renderStrategyPanel(fid, strat) {
 
 function renderPositions() {
   const tbody  = document.getElementById('holdingsTbody');
-  const funds  = STATE.funds && STATE.funds.funds ? STATE.funds.funds : STATE.funds || {};
-  const fd     = funds[BOT_SLUG] || {};
-  const v      = fd.value || {};
-  const allPos = v.positions || [];
+  // Use per-portfolio simulation positions from fundState
+  const allPos = (fundState && fundState.positions) ? fundState.positions : [];
+  const v      = fundState || {};
   const holdingTickers = holdings.map(h => (h.symbol || '').toUpperCase());
   const isBaseline = BOT_SLUG === 'equalizer' || BOT_SLUG === 'titan';
   const meta = FUND_META[BOT_SLUG];
 
-  const holdingCash = v.holding_cash === true;
-  const windowOpen  = v.window_open !== false;
+  const holdingCash = (fundState && fundState.holding_cash === true);
+  const windowOpen  = (!fundState || fundState.window_open !== false);
   const cashRow = windowOpen
     ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
     : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>';

@@ -27,6 +27,7 @@ from pathlib import Path
 
 # ── Bot13 unified engine ─────────────────────────────────────────────────────────
 sys.path.insert(0, str(Path(__file__).parent))
+import refresh_portfolios
 from bot13_engine import (
     run_bot13_crypto, check_drawdown,
     CRYPTO_CFG,
@@ -1279,6 +1280,15 @@ def main():
 
     # -- Portfolio performance snapshots -----------------------------------------
     trigger_portfolio_snapshots(secrets)
+
+    # ── Per-portfolio bot simulations ─────────────────────────────────────────
+    refresh_portfolios.run(
+        platform="bitbot13",
+        prices=prices,
+        prev_closes=prev_closes,
+        hist_data=hist_data,
+        secrets=secrets,
+    )
 
     # -- Git push (optional) -----------------------------------------------------
     if args.push:

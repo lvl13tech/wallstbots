@@ -1147,6 +1147,45 @@ def verify_internal_key(x_internal_key: str = Header(...)):
         raise HTTPException(status_code=403, detail="Invalid internal key")
 
 
+@app.get("/internal/portfolios/active")
+async def get_active_portfolios(
+    platform: str = "lvl13",
+    _: None = Depends(verify_internal_key)
+):
+    """
+    Return all active portfolios with their holdings for a given platform.
+    Called by refresh_portfolios.py to know which portfolios to simulate.
+    """
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("""
+            SELECT b.id AS bot_id,
+                   h.symbol, h.entry_price
+            FROM bots b
+            JOIN bot_holdings h ON h.bot_id = b.id AND h.removed_at IS NULL
+            WHERE b.platform = %s AND b.status != 'deleted'
+            ORDER BY b.id, h.symbol
+        """, (platform,))
+        rows = cursor.fetchall()
+
+        portfolios = {}
+        for row in rows:
+            bid = str(row["bot_id"])
+            if bid not in portfolios:
+                portfolios[bid] = {"bot_id": bid, "holdings": []}
+            portfolios[bid]["holdings"].append({
+                "symbol":      row["symbol"],
+                "entry_price": float(row["entry_price"] or 0),
+            })
+
+        result = [v for v in portfolios.values() if v["holdings"]]
+        return {"success": True, "platform": platform, "portfolios": result}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
 @app.post("/internal/tracker/push")
 async def tracker_push(
     payload: TrackerPushRequest,
@@ -1281,6 +1320,155 @@ async def refresh_portfolio_fund_snapshots(
     finally:
         if cursor:
             cursor.close()
+        return_db_connection(conn)
+
+
+# ============================================================================
+# PER-PORTFOLIO BOT STATE — store and read bot simulation results per portfolio
+# ============================================================================
+
+@app.post("/internal/portfolio-bot-state/upsert")
+async def upsert_portfolio_bot_state(
+    request: Request,
+    _: None = Depends(verify_internal_key)
+):
+    """
+    Store per-portfolio bot simulation results.
+    Called by refresh_portfolios.py after running bot engines against member holdings.
+    Upserts one row per (bot_id, fund_name) — always the latest state.
+    """
+    body = await request.json()
+    results = body.get("results", [])  # list of state dicts
+    today_str = datetime.utcnow().strftime("%Y-%m-%d")
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+
+        # Ensure table exists
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS bot_fund_state (
+                bot_id          UUID        NOT NULL,
+                fund_name       TEXT        NOT NULL,
+                snapshot_date   DATE        NOT NULL,
+                positions       JSONB,
+                strategy        JSONB,
+                total_value     NUMERIC(14,2),
+                entry_cost      NUMERIC(14,2),
+                gain_loss       NUMERIC(14,2),
+                gain_loss_pct   NUMERIC(10,4),
+                day_pnl         NUMERIC(14,2),
+                day_pct         NUMERIC(10,4),
+                window_open     BOOLEAN     DEFAULT FALSE,
+                holding_cash    BOOLEAN     DEFAULT FALSE,
+                updated_at      TIMESTAMPTZ DEFAULT NOW(),
+                PRIMARY KEY (bot_id, fund_name)
+            )
+        """)
+
+        upserted = 0
+        for r in results:
+            cursor.execute("""
+                INSERT INTO bot_fund_state
+                    (bot_id, fund_name, snapshot_date, positions, strategy,
+                     total_value, entry_cost, gain_loss, gain_loss_pct,
+                     day_pnl, day_pct, window_open, holding_cash, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                ON CONFLICT (bot_id, fund_name) DO UPDATE SET
+                    snapshot_date = EXCLUDED.snapshot_date,
+                    positions     = EXCLUDED.positions,
+                    strategy      = EXCLUDED.strategy,
+                    total_value   = EXCLUDED.total_value,
+                    entry_cost    = EXCLUDED.entry_cost,
+                    gain_loss     = EXCLUDED.gain_loss,
+                    gain_loss_pct = EXCLUDED.gain_loss_pct,
+                    day_pnl       = EXCLUDED.day_pnl,
+                    day_pct       = EXCLUDED.day_pct,
+                    window_open   = EXCLUDED.window_open,
+                    holding_cash  = EXCLUDED.holding_cash,
+                    updated_at    = NOW()
+            """, (
+                r["bot_id"], r["fund_name"], today_str,
+                json.dumps(r.get("positions", [])),
+                json.dumps(r.get("strategy", {})),
+                round(float(r.get("total_value", 0)), 2),
+                round(float(r.get("entry_cost", 0)), 2),
+                round(float(r.get("gain_loss", 0)), 2),
+                round(float(r.get("gain_loss_pct", 0)), 4),
+                round(float(r.get("day_pnl", 0)), 2),
+                round(float(r.get("day_pct", 0)), 4),
+                bool(r.get("window_open", False)),
+                bool(r.get("holding_cash", False)),
+            ))
+            upserted += 1
+
+        conn.commit()
+        return {"success": True, "upserted": upserted, "date": today_str}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/bots/{bot_id}/fund/{fund_name}/state")
+async def get_portfolio_fund_state(
+    bot_id: str,
+    fund_name: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Return the latest bot simulation state for a specific portfolio + fund combo.
+    Used by portfolio-fund.html to show per-member positions, strategy and P&L.
+    """
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+
+        # Verify ownership
+        cursor.execute(
+            "SELECT id FROM bots WHERE id = %s AND user_id = %s",
+            (bot_id, current_user["user_id"])
+        )
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Portfolio not found")
+
+        cursor.execute("""
+            SELECT fund_name, snapshot_date, positions, strategy,
+                   total_value, entry_cost, gain_loss, gain_loss_pct,
+                   day_pnl, day_pct, window_open, holding_cash, updated_at
+            FROM bot_fund_state
+            WHERE bot_id = %s AND fund_name = %s
+        """, (bot_id, fund_name))
+        row = cursor.fetchone()
+
+        if not row:
+            return {"success": True, "state": None}  # no simulation yet
+
+        positions = row["positions"] if isinstance(row["positions"], list) else json.loads(row["positions"] or "[]")
+        strategy  = row["strategy"]  if isinstance(row["strategy"],  dict) else json.loads(row["strategy"]  or "{}")
+
+        return {
+            "success": True,
+            "state": {
+                "fund_name":     row["fund_name"],
+                "snapshot_date": str(row["snapshot_date"]),
+                "positions":     positions,
+                "strategy":      strategy,
+                "total_value":   float(row["total_value"]   or 0),
+                "entry_cost":    float(row["entry_cost"]    or 0),
+                "gain_loss":     float(row["gain_loss"]     or 0),
+                "gain_loss_pct": float(row["gain_loss_pct"] or 0),
+                "day_pnl":       float(row["day_pnl"]       or 0),
+                "day_pct":       float(row["day_pct"]       or 0),
+                "window_open":   bool(row["window_open"]),
+                "holding_cash":  bool(row["holding_cash"]),
+                "updated_at":    str(row["updated_at"]),
+            }
+        }
+    finally:
+        cursor.close()
         return_db_connection(conn)
 
 

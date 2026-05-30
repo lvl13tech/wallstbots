@@ -27,6 +27,7 @@ from pathlib import Path
 
 # ── Bot13 unified engine ─────────────────────────────────────────────────────────
 sys.path.insert(0, str(Path(__file__).parent))
+import refresh_portfolios
 from bot13_engine import (
     run_bot13_equity, check_drawdown,
     EQUITY_CFG,
@@ -1196,6 +1197,15 @@ def main():
 
     # ── Portfolio performance snapshots ───────────────────────────────────────
     trigger_portfolio_snapshots(secrets)
+
+    # ── Per-portfolio bot simulations ─────────────────────────────────────────
+    refresh_portfolios.run(
+        platform="wallstbots",
+        prices=prices,
+        prev_closes=prev_closes,
+        hist_data=hist_data,
+        secrets=secrets,
+    )
 
     # ── Git push (optional — static files as backup) ─────────────────────────
     if args.push:
