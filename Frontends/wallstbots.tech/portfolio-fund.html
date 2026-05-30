@@ -397,9 +397,12 @@ async function init() {
     document.getElementById('drawerPortfolioSection').style.display = 'block';
     document.getElementById('commentsSection').style.display = 'block';
     loadPrivacySettings();
+    // Wait for BOTH before rendering — guarantees holdings is populated
     await Promise.allSettled([loadPortfolio(), loadSiteData()]);
-    // Re-render stats now that both portfolio perf and site data are loaded
-    try { renderFundStats(); } catch(e) {}
+    try { renderFundStats();  } catch(e) {}
+    try { renderPositions();  } catch(e) {}
+    try { renderSignals();    } catch(e) {}
+    try { renderNews();       } catch(e) {}
   }
   loadComments();
 }
@@ -436,6 +439,8 @@ function renderContextStrip() {
 }
 
 async function loadSiteData() {
+  // Fetch global tracker data — store only, do NOT render yet
+  // Rendering happens after BOTH this AND loadPortfolio() complete (in init)
   try {
     const [sr, nr, sigr] = await Promise.allSettled([
       fetch(TRACKER_API + '/state?platform='   + PLATFORM, {cache:'no-store'}).then(r=>r.json()).then(r=>r.data),
@@ -446,10 +451,7 @@ async function loadSiteData() {
     STATE.news    = nr.status   === 'fulfilled' ? nr.value   : { items: [] };
     STATE.signals = sigr.status === 'fulfilled' ? sigr.value : { recommendations: [], summary: {} };
   } catch(e) {}
-  try { renderFundStats();  } catch(e) {}
-  try { renderPositions();  } catch(e) {}
-  try { renderSignals();    } catch(e) {}
-  try { renderNews();       } catch(e) {}
+  // DO NOT render here — holdings may not be loaded yet
 }
 
 function renderFundStats() {
@@ -542,9 +544,12 @@ function renderPositions() {
     ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
     : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>';
 
-  const myPos = holdingTickers.length
-    ? allPos.filter(p => holdingTickers.includes((p.symbol || p.ticker || '').toUpperCase()))
-    : allPos;
+  // Hard guard: never show global positions without member holdings
+  if (!holdingTickers.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">No stocks in your portfolio yet.</td></tr>';
+    return;
+  }
+  const myPos = allPos.filter(p => holdingTickers.includes((p.symbol || p.ticker || '').toUpperCase()));
 
   if (!myPos.length) {
     if (!holdingTickers.length) {
