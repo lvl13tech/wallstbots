@@ -1175,6 +1175,12 @@ async function loadPrivacyState() {
     const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/public', {
       headers: { 'Authorization': 'Bearer ' + token }
     });
+    if (res.status === 403) {
+      // 403 means portfolio is private (public endpoint blocked)
+      _isPrivate = true;
+      updatePrivacyPillUI();
+      return;
+    }
     if (!res.ok) return;
     const data = await res.json();
     _isPrivate = !!data.is_private;

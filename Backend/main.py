@@ -594,7 +594,7 @@ async def get_user_profile(current_user: dict = Depends(get_current_user)):
     try:
         cursor = conn.cursor(row_factory=dict_row)
         cursor.execute("""
-            SELECT id, email, full_name, role, referral_code, referral_credit_balance, created_at
+            SELECT id, email, full_name, display_name, role, referral_code, referral_credit_balance, created_at
             FROM users WHERE id = %s
         """, (current_user["user_id"],))
         user = cursor.fetchone()
@@ -604,6 +604,7 @@ async def get_user_profile(current_user: dict = Depends(get_current_user)):
             "id":                      str(user["id"]),
             "email":                   user["email"],
             "full_name":               user["full_name"],
+            "display_name":            user["display_name"],
             "role":                    user["role"],
             "referral_code":           user["referral_code"],
             "referral_credit_balance": float(user["referral_credit_balance"] or 0),
