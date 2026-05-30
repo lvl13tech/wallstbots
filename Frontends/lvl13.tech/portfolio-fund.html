@@ -327,7 +327,7 @@ let   BOT_SLUG  = IS_PUBLIC ? null              : params.get('bot');
 if (!auth.isAuthenticated()) { window.location.href = "login.html"; }
 if (!BOT_ID || (!IS_PUBLIC && !BOT_SLUG)) { window.location.href = "dashboard.html"; }
 
-let botData = null, holdings = [], userProfile = null;
+let botData = null, holdings = [], userProfile = null, portfolioPerf = null;
 const CHARTS_F = {};
 const STATE = { funds: null, news: null, signals: null };
 
@@ -398,6 +398,8 @@ async function init() {
     document.getElementById('commentsSection').style.display = 'block';
     loadPrivacySettings();
     await Promise.allSettled([loadPortfolio(), loadSiteData()]);
+    // Re-render stats now that both portfolio perf and site data are loaded
+    try { renderFundStats(); } catch(e) {}
   }
   loadComments();
 }
@@ -415,9 +417,17 @@ function renderFundHero() {
 
 async function loadPortfolio() {
   try {
-    const data = await api.getBot(BOT_ID);
-    botData  = data?.bot || data;
-    holdings = botData?.holdings || [];
+    const [botRes, perfRes] = await Promise.allSettled([
+      api.getBot(BOT_ID),
+      api.getBotLatestPerformance(BOT_ID),
+    ]);
+    if (botRes.status === 'fulfilled') {
+      botData  = botRes.value?.bot || botRes.value;
+      holdings = botData?.holdings || [];
+    }
+    if (perfRes.status === 'fulfilled') {
+      portfolioPerf = perfRes.value;
+    }
     renderContextStrip();
     drawFundChart();
   } catch(e) { showToast('Could not load portfolio', 'error'); }
@@ -449,16 +459,13 @@ async function loadSiteData() {
 }
 
 function renderFundStats() {
-  const funds = STATE.funds && STATE.funds.funds ? STATE.funds.funds : STATE.funds || {};
-  const fd  = funds[BOT_SLUG] || {};
-  const v   = fd.value || {};
-  const cap = (STATE.funds && STATE.funds.starting_capital) || fd.starting_capital || 49000;
-
-  const total  = v.total   ?? cap;
-  const pnl    = v.pnl     ?? 0;
-  const pnlPct = v.pnl_pct ?? 0;
-  const dayPnl = v.day_pnl ?? 0;
-  const dayPct = v.day_pct ?? 0;
+  // ── 3 stat cards: use the USER'S portfolio performance, not global ──
+  const cap    = holdings.length * 1000 || (portfolioPerf?.starting_value) || 0;
+  const total  = portfolioPerf?.total_value   ?? cap;
+  const pnl    = portfolioPerf?.gain_loss      ?? 0;
+  const pnlPct = portfolioPerf?.gain_loss_pct  ?? 0;
+  const dayPnl = portfolioPerf?.day_gain_loss  ?? 0;
+  const dayPct = portfolioPerf?.day_gain_loss_pct ?? 0;
 
   document.getElementById('fsTotal').textContent   = fmt$0(total);
   document.getElementById('fsStarted').textContent = 'Started at ' + fmt$0(cap);
@@ -471,6 +478,9 @@ function renderFundStats() {
   document.getElementById('fsDayPct').textContent  = fmtPct(dayPct) + ' since yesterday';
   document.getElementById('fsDayPct').className    = 'fund-pnl ' + cls(dayPct);
 
+  // ── Strategy panel: use global tracker (bot logic is the same for all users) ──
+  const funds = STATE.funds && STATE.funds.funds ? STATE.funds.funds : STATE.funds || {};
+  const fd    = funds[BOT_SLUG] || {};
   if (['bot13','oracle','wizard'].includes(BOT_SLUG) && fd.current_strategy) {
     document.getElementById('strategyPanel').innerHTML = renderStrategyPanel(BOT_SLUG, fd.current_strategy);
   }
