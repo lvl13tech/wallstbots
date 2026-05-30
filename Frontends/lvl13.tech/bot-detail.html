@@ -745,10 +745,10 @@ function renderPortfolioBotAnalysis() {
 function renderLeaderboard() {
   const strip = FUND_ORDER.map(fid => {
     const m = FUND_META[fid];
-    // Use portfolio P&L from STATE if available, otherwise show +0.00%
-    const funds = STATE.funds || {};
+    const funds = STATE.funds && STATE.funds.funds ? STATE.funds.funds : {};
     const fd    = funds[fid] || {};
-    const pnlPct = (fd.day_pct != null) ? fd.day_pct : 0;
+    const v     = fd.value || {};
+    const pnlPct = (v.day_pct != null) ? v.day_pct : 0;
     return '<a class="card clickable" href="portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid + '">'
       + '<span class="fund-icon ' + fid + '">' + m.icon + '</span>'
       + '<div class="lb-name"><strong>' + m.name + '</strong><small>' + m.kind + '</small></div>'
@@ -833,17 +833,24 @@ function renderNews() {
 // Shows allocated capital as starting value. P&L is $0 on day 1.
 // Links go to portfolio-scoped bot pages.
 function fundCard(fid) {
-  const meta = FUND_META[fid];
-  const cap  = holdings.length * 1000 || 0;
-  const v    = { total: cap, pnl: 0, pnl_pct: 0, day_pnl: 0, day_pct: 0 };
+  const meta  = FUND_META[fid];
+  const funds = STATE.funds && STATE.funds.funds ? STATE.funds.funds : {};
+  const fd    = funds[fid] || {};
+  const gv    = fd.value || {};
+  const cap   = holdings.length * 1000 || (STATE.funds && STATE.funds.starting_capital) || 0;
+  const total  = gv.total   ?? cap;
+  const pnl    = gv.pnl     ?? 0;
+  const pnlPct = gv.pnl_pct ?? 0;
+  const dayPnl = gv.day_pnl ?? 0;
+  const dayPct = gv.day_pct ?? 0;
   return '<a class="card clickable fund-card" href="portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid + '">'
     + '<div class="fund-head"><span class="fund-icon ' + fid + '">' + meta.icon + '</span>'
     + '<div style="min-width:0"><div class="fund-name">' + meta.name + '</div><div class="fund-kind" style="color:' + meta.color + '">' + meta.kind + '</div></div></div>'
     + '<div class="fund-tag">' + meta.tagline + '</div>'
-    + '<div class="fund-value">' + fmt$0(v.total) + '</div>'
-    + '<div class="fund-pnl ' + cls(v.pnl) + '">' + fmt$0(v.pnl) + ' (' + fmtPct(v.pnl_pct) + ') since inception</div>'
+    + '<div class="fund-value">' + fmt$0(total) + '</div>'
+    + '<div class="fund-pnl ' + cls(pnl) + '">' + fmt$0(pnl) + ' (' + fmtPct(pnlPct) + ') since inception</div>'
     + '<div class="stat-row"><span class="stat-label">Today</span>'
-    + '<span class="stat-val ' + cls(v.day_pnl) + '">' + fmtPct(v.day_pct) + '</span></div></a>';
+    + '<span class="stat-val ' + cls(dayPnl) + '">' + fmtPct(dayPct) + '</span></div></a>';
 }
 
 function renderRace() {
