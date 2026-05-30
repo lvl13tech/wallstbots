@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 49000.0,
-    "last_refresh": "2026-05-29T20:04:47",
+    "last_refresh": "2026-05-30T19:38:05",
     "snapshots": [
       {
         "date": "2026-05-29",
@@ -10,6 +10,14 @@
         "wizard": 51018.03,
         "equalizer": 50577.66,
         "titan": 50370.51
+      },
+      {
+        "date": "2026-05-30",
+        "bot13": 49000.0,
+        "oracle": 54096.42,
+        "wizard": 51018.03,
+        "equalizer": 50666.24,
+        "titan": 50426.16
       }
     ],
     "funds": {
@@ -37,7 +45,7 @@
           "positions": []
         },
         "current_strategy": {
-          "day": "2026-05-29",
+          "day": "2026-05-30",
           "decision": "HOLD",
           "rationale": "Market closed \u2014 waiting for next trading session.",
           "picks": [],
@@ -66,7 +74,7 @@
           "pnl_pct": 10.4,
           "day_pnl": 5096.42,
           "day_pct": 10.4,
-          "holding_cash": false,
+          "holding_cash": true,
           "positions": [
             {
               "symbol": "SNOW",
@@ -371,13 +379,13 @@
         "inception": "2026-05-29",
         "starting_capital": 49000.0,
         "value": {
-          "total": 50577.66,
+          "total": 50666.24,
           "cash": 0.0,
-          "pos_val": 50577.66,
-          "pnl": 1577.66,
-          "pnl_pct": 3.22,
-          "day_pnl": 1577.66,
-          "day_pct": 3.22,
+          "pos_val": 50666.24,
+          "pnl": 1666.24,
+          "pnl_pct": 3.4,
+          "day_pnl": 1666.24,
+          "day_pct": 3.4,
           "positions": [
             {
               "symbol": "NVDA",
@@ -812,14 +820,14 @@
               "symbol": "PSTG",
               "shares": 13.691128,
               "entry_price": 73.04,
-              "current_price": 73.04,
+              "current_price": 79.51,
               "cost_basis": 1000.0,
-              "price": 73.04,
-              "value": 1000.0,
-              "pnl": 0.0,
-              "pnl_pct": 0.0,
-              "day_pnl": 0.0,
-              "day_pct": 0.0
+              "price": 79.51,
+              "value": 1088.58,
+              "pnl": 88.58,
+              "pnl_pct": 8.86,
+              "day_pnl": 88.58,
+              "day_pct": 8.86
             },
             {
               "symbol": "TSLA",
@@ -1032,13 +1040,13 @@
         "inception": "2026-05-29",
         "starting_capital": 49000.0,
         "value": {
-          "total": 50370.51,
+          "total": 50426.16,
           "cash": 0.0,
-          "pos_val": 50370.7,
-          "pnl": 1370.51,
-          "pnl_pct": 2.8,
-          "day_pnl": 1370.51,
-          "day_pct": 2.8,
+          "pos_val": 50426.35,
+          "pnl": 1426.16,
+          "pnl_pct": 2.91,
+          "day_pnl": 1426.16,
+          "day_pct": 2.91,
           "positions": [
             {
               "symbol": "NVDA",
@@ -1499,14 +1507,14 @@
               "symbol": "PSTG",
               "shares": 8.600904,
               "entry_price": 73.04,
-              "current_price": 73.04,
+              "current_price": 79.51,
               "cost_basis": 628.21,
-              "price": 73.04,
-              "value": 628.21,
-              "pnl": 0.0,
-              "pnl_pct": 0.0,
-              "day_pnl": 0.0,
-              "day_pct": 0.0
+              "price": 79.51,
+              "value": 683.86,
+              "pnl": 55.65,
+              "pnl_pct": 8.86,
+              "day_pnl": 55.65,
+              "day_pct": 8.86
             },
             {
               "symbol": "ISRG",
@@ -1712,14 +1720,14 @@
         },
         {
           "fund": "equalizer",
-          "week_pnl": 1577.66,
-          "week_pct": 3.22,
+          "week_pnl": 1666.24,
+          "week_pct": 3.4,
           "week_grade": "A"
         },
         {
           "fund": "titan",
-          "week_pnl": 1370.51,
-          "week_pct": 2.8,
+          "week_pnl": 1426.16,
+          "week_pct": 2.91,
           "week_grade": "B"
         },
         {
@@ -1744,14 +1752,14 @@
         },
         {
           "fund": "equalizer",
-          "all_pnl": 1577.66,
-          "all_pct": 3.22,
+          "all_pnl": 1666.24,
+          "all_pct": 3.4,
           "overall_grade": "A"
         },
         {
           "fund": "titan",
-          "all_pnl": 1370.51,
-          "all_pct": 2.8,
+          "all_pnl": 1426.16,
+          "all_pct": 2.91,
           "overall_grade": "B"
         },
         {
