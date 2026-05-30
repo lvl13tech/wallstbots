@@ -342,48 +342,64 @@
 <!-- ── MAIN ── -->
 <main class="app">
 
-  <div class="fund-hero" id="fundHero">
-    <div class="fund-hero-accent" id="fundAccent"></div>
-    <div class="fund-hero-body">
-      <div class="fund-hero-left">
-        <a class="fund-back-link" id="heroBackLink" href="#">← <span id="heroBackLabel">Portfolio</span></a>
-        <div class="fund-hero-identity">
-          <span class="fund-icon-xl" id="fundIconEl"></span>
-          <div>
-            <div class="fund-hero-name" id="fundHeroName">Loading…</div>
-            <div class="fund-hero-kind" id="fundHeroKind"></div>
-            <p class="fund-hero-tag" id="fundHeroTag"></p>
-          </div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:flex-start;flex-shrink:0">
-        <button class="share-btn" id="shareBtn" onclick="sharePortfolio()" style="display:none">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-          Share
-        </button>
-      </div>
-    </div>
-    <div class="fund-stats-bar">
-      <div class="fstat"><span class="fstat-val" id="fsDay">+0.00%</span><span class="fstat-lbl">Today</span></div>
-      <div class="fstat"><span class="fstat-val" id="fsInception">+0.00%</span><span class="fstat-lbl">Since Inception</span></div>
-      <div class="fstat"><span class="fstat-val" id="fsValue">$0</span><span class="fstat-lbl">Allocated</span></div>
-      <div class="fstat"><span class="fstat-val" id="fsPositions">0</span><span class="fstat-lbl">Active Positions</span></div>
-      <div class="fstat"><span class="fstat-val" id="fsHoldings">0</span><span class="fstat-lbl">Your Holdings</span></div>
+  <!-- Back link (member-only) -->
+  <div id="memberBackBar" style="margin-bottom:14px;display:none">
+    <a class="fund-back-link" id="heroBackLink" href="#">← <span id="heroBackLabel">Portfolio</span></a>
+    <button class="share-btn" id="shareBtn" onclick="sharePortfolio()" style="display:none;float:right">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Share
+    </button>
+  </div>
+
+  <!-- Fund head — matches renderFund() -->
+  <div class="fund-head" style="margin-bottom:14px" id="fundHead">
+    <span class="fund-icon" id="fundIconEl" style="width:48px;height:48px;font-size:16px"></span>
+    <div>
+      <h1 style="margin:0" id="fundHeroName">Loading…</h1>
+      <div class="fund-tag" id="fundHeroTag"></div>
     </div>
   </div>
 
-  <div class="context-strip" id="contextStrip">
+  <!-- 3 stat cards — matches renderFund() -->
+  <div class="grid grid-3" style="margin-bottom:18px">
+    <div class="card"><h3>Current Value</h3>
+      <div class="fund-value" id="fsTotal">—</div>
+      <div style="color:var(--muted);font-size:11px;margin-top:6px" id="fsStarted"></div>
+    </div>
+    <div class="card"><h3>Total P&amp;L</h3>
+      <div class="fund-value" id="fsPnl">—</div>
+      <div class="fund-pnl" id="fsPnlPct"></div>
+    </div>
+    <div class="card"><h3>Today's Change</h3>
+      <div class="fund-value" id="fsDayPnl">—</div>
+      <div class="fund-pnl" id="fsDayPct"></div>
+    </div>
+  </div>
+
+  <!-- Strategy panel — populated by renderStrategyPanel() -->
+  <div id="strategyPanel"></div>
+
+  <!-- Holdings table — matches renderFund() -->
+  <div class="panel" id="holdingsPanel">
+    <h3>Holdings</h3>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th>Symbol</th><th class="num">Shares</th><th class="num">Entry</th>
+        <th class="num">Price</th><th class="num">Value</th><th class="num">Today</th>
+        <th class="num">Total P&amp;L</th><th class="num">%</th>
+      </tr></thead>
+      <tbody id="holdingsTbody"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Loading…</td></tr></tbody>
+    </table></div>
+  </div>
+
+  <!-- Member-only extras -->
+  <div class="context-strip" id="contextStrip" style="margin-top:18px">
     <span class="context-portfolio-name" id="ctxPortfolioName">Loading portfolio…</span>
     <span class="context-strip-sep">·</span>
     <span class="context-holdings" id="ctxHoldings">0 holdings</span>
     <span class="context-strip-sep">·</span>
     <span style="color:var(--muted);font-size:0.78rem">All data filtered to your stocks</span>
     <a class="context-back-link" id="ctxBackLink" href="#">View full portfolio →</a>
-  </div>
-
-  <div class="section-head"><h3>Active Positions — Your Stocks</h3></div>
-  <div class="positions-grid" id="positionsGrid">
-    <div class="pos-empty"><strong>Loading positions…</strong></div>
   </div>
 
   <div class="section-head" style="margin-top:28px"><h3>Signals — Today</h3></div>
@@ -486,8 +502,8 @@ async function init() {
       const el = document.getElementById(id); if (el) el.style.display = 'none';
     });
     document.querySelectorAll('.section-head').forEach(el => el.style.display = 'none');
-    document.getElementById('positionsGrid').style.display = 'none';
-    document.getElementById('heroBackLink').style.display  = 'none';
+    document.getElementById('holdingsPanel').style.display = 'none';
+    document.getElementById('memberBackBar').style.display = 'none';
     document.getElementById('commentsSection').style.display = 'block';
     await loadPublicPortfolio();
   } else {
@@ -520,12 +536,10 @@ function renderFundHero() {
   document.title = meta.name + ' — ' + SITE_TITLE;
   const iconEl = document.getElementById('fundIconEl');
   iconEl.textContent = meta.icon;
-  iconEl.className   = 'fund-icon-xl ' + BOT_SLUG;
+  iconEl.className   = 'fund-icon ' + BOT_SLUG;
   document.getElementById('fundHeroName').textContent = meta.name;
-  document.getElementById('fundHeroKind').textContent = meta.kind;
-  document.getElementById('fundHeroKind').style.color = meta.color;
   document.getElementById('fundHeroTag').textContent  = meta.tagline;
-  document.getElementById('fundAccent').style.background = meta.color;
+  document.getElementById('memberBackBar').style.display = 'block';
 }
 
 async function loadPortfolio() {
@@ -545,11 +559,6 @@ function renderContextStrip() {
   document.getElementById('heroBackLabel').textContent    = name;
   document.getElementById('ctxPortfolioName').textContent = name;
   document.getElementById('ctxHoldings').textContent      = holdings.length + ' stock' + (holdings.length !== 1 ? 's' : '');
-  document.getElementById('fsHoldings').textContent       = holdings.length;
-}
-
-function updateStatsAllocated() {
-  document.getElementById('fsValue').textContent = fmt$0(holdings.length * 1000);
 }
 
 async function loadSiteData() {
@@ -570,78 +579,152 @@ async function loadSiteData() {
 }
 
 function renderFundStats() {
-  const fd = (STATE.funds && STATE.funds[BOT_SLUG]) || {};
-  const dayPct = fd.day_pct ?? 0;
-  const pnlPct = fd.pnl_pct ?? 0;
-  document.getElementById('fsDay').textContent       = fmtPct(dayPct);
-  document.getElementById('fsDay').className         = 'fstat-val ' + cls(dayPct);
-  document.getElementById('fsInception').textContent = fmtPct(pnlPct);
-  document.getElementById('fsInception').className   = 'fstat-val ' + cls(pnlPct);
+  const funds = STATE.funds && STATE.funds.funds ? STATE.funds.funds : STATE.funds || {};
+  const fd  = funds[BOT_SLUG] || {};
+  const v   = fd.value || {};
+  const cap = (STATE.funds && STATE.funds.starting_capital) || (fd.starting_capital) || 49000;
+
+  // 3 cards — identical to renderFund() in app.js
+  const total   = v.total   ?? cap;
+  const pnl     = v.pnl     ?? 0;
+  const pnlPct  = v.pnl_pct ?? 0;
+  const dayPnl  = v.day_pnl ?? 0;
+  const dayPct  = v.day_pct ?? 0;
+
+  document.getElementById('fsTotal').textContent   = fmt$0(total);
+  document.getElementById('fsStarted').textContent = 'Started at ' + fmt$0(cap);
+  document.getElementById('fsPnl').textContent     = fmt$0(pnl);
+  document.getElementById('fsPnl').className       = 'fund-value ' + cls(Math.round(pnl));
+  document.getElementById('fsPnlPct').textContent  = fmtPct(pnlPct) + ' all-time';
+  document.getElementById('fsPnlPct').className    = 'fund-pnl ' + cls(pnlPct);
+  document.getElementById('fsDayPnl').textContent  = fmt$0(dayPnl);
+  document.getElementById('fsDayPnl').className    = 'fund-value ' + cls(dayPnl);
+  document.getElementById('fsDayPct').textContent  = fmtPct(dayPct) + ' since yesterday';
+  document.getElementById('fsDayPct').className    = 'fund-pnl ' + cls(dayPct);
+
+  // Strategy panel — matches renderStrategyPanel() in app.js
+  if (['bot13','oracle','wizard'].includes(BOT_SLUG) && fd.current_strategy) {
+    document.getElementById('strategyPanel').innerHTML = renderStrategyPanel(BOT_SLUG, fd.current_strategy);
+  }
+}
+
+function renderStrategyPanel(fid, strat) {
+  const period = fid==='bot13' ? 'Day of '+strat.day
+               : fid==='oracle' ? 'Week of '+strat.week
+               : 'Month of '+strat.month;
+  const label  = fid==='bot13' ? "TODAY'S STRATEGY"
+               : fid==='oracle' ? "THIS WEEK'S STRATEGY"
+               : "THIS MONTH'S STRATEGY";
+  const projLabel = fid==='bot13' ? 'Projected Return'
+                  : fid==='oracle' ? 'Projected Week Return'
+                  : 'Projected Month Return';
+  const projRet  = strat.projected_return;
+  const projHtml = (projRet != null)
+    ? '<div style="margin:6px 0 10px;font-size:13px">'
+      + '<span style="color:var(--muted)">'+projLabel+': </span>'
+      + '<span style="font-weight:700;color:'+(projRet > 0 ? 'var(--green)' : projRet < 0 ? 'var(--red)' : 'var(--muted)')+'">'
+      + (projRet > 0 ? '+' : '')+projRet.toFixed(2)+'%</span></div>'
+    : '';
+  let picks = '';
+  if (strat.decision === 'CASH' || strat.decision === 'HOLD') {
+    picks = '<div class="pick-card"><div class="pick-head"><div class="pick-sym">100% CASH</div>'
+      + '<div class="pick-meta">No positions — holding cash</div></div>'
+      + '<div class="pick-rationale" style="color:var(--muted)">'+escHtml(strat.rationale||'')+'</div></div>';
+  } else {
+    picks = '<div class="pick-grid">' + (strat.picks||[]).map(p => {
+      const ind = p.indicators || {};
+      const parts = [];
+      if (ind.mom_1d   != null) parts.push('1d: '+fmtPct(ind.mom_1d));
+      if (ind.mom_5d   != null) parts.push('5d: '+fmtPct(ind.mom_5d));
+      if (ind.mom_20d  != null) parts.push('20d: '+fmtPct(ind.mom_20d));
+      if (ind.mom_60d  != null) parts.push('60d: '+fmtPct(ind.mom_60d));
+      if (ind.rsi_14   != null) parts.push('RSI: '+ind.rsi_14);
+      if (ind.macd_pct != null) parts.push('MACD: '+fmtPct(ind.macd_pct));
+      return '<div class="pick-card"><div class="pick-head">'
+        + '<div class="pick-sym">'+p.symbol+'</div>'
+        + '<div class="pick-meta">Wt '+(p.weight*100).toFixed(0)+'% · '+(p.score>=0?'+':'')+p.score+'</div></div>'
+        + '<div class="pick-rationale">'+escHtml(p.rationale||'')+'</div>'
+        + '<div class="pick-indicators">'+parts.join(' · ')+'</div></div>';
+    }).join('') + '</div>';
+  }
+  const cleanRationale = (strat.rationale||'').replace(/^Projected return:[^.]*\.\s*/i, '');
+  return '<div class="strategy-panel '+fid+'"><h3>'+label+'</h3>'
+    + '<div class="strategy-meta">'+escHtml(period)+' · '+escHtml(strat.decision||'')+'</div>'
+    + projHtml
+    + '<p class="strategy-rationale">'+escHtml(cleanRationale)+'</p>'+picks+'</div>';
 }
 
 function renderPositions() {
-  const grid   = document.getElementById('positionsGrid');
-  const fd     = (STATE.funds && STATE.funds[BOT_SLUG]) || {};
-  const allPos = fd.positions || [];
+  const tbody  = document.getElementById('holdingsTbody');
+  const funds  = STATE.funds && STATE.funds.funds ? STATE.funds.funds : STATE.funds || {};
+  const fd     = funds[BOT_SLUG] || {};
+  const v      = fd.value || {};
+  const allPos = v.positions || [];
   const holdingTickers = holdings.map(h => (h.symbol || '').toUpperCase());
+  const isBaseline = BOT_SLUG === 'equalizer' || BOT_SLUG === 'titan';
+  const meta = FUND_META[BOT_SLUG];
 
+  const holdingCash = v.holding_cash === true;
+  const windowOpen  = v.window_open !== false;
+  const cashRow = windowOpen
+    ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
+    : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>';
+
+  // Filter positions to user's holdings
   const myPos = holdingTickers.length
     ? allPos.filter(p => holdingTickers.includes((p.symbol || p.ticker || '').toUpperCase()))
-    : [];
-
-  document.getElementById('fsPositions').textContent = myPos.length;
+    : allPos;
 
   if (!myPos.length) {
-    const meta = FUND_META[BOT_SLUG];
-    const isBaseline = BOT_SLUG === 'equalizer' || BOT_SLUG === 'titan';
     if (!holdingTickers.length) {
-      grid.innerHTML = '<div class="pos-empty"><strong>No stocks yet</strong>Go back to your portfolio and add some stocks to see what ' + meta.name + ' would do with them.</div>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">No stocks yet — go back to your portfolio and add some stocks.</td></tr>';
     } else if (isBaseline) {
-      renderBaselinePositions(holdingTickers, grid);
+      // Baselines: show all holdings as equal-weight rows
+      tbody.innerHTML = holdings.map(h => {
+        const entry  = h.entry_price || 0;
+        const price  = h.current_price || entry;
+        const shares = entry > 0 ? (1000 / entry) : 0;
+        const value  = shares * price;
+        const pnl    = value - 1000;
+        const pnlPct = entry > 0 ? ((price / entry - 1) * 100) : 0;
+        const dayPct = h.day_pct ?? 0;
+        const dayPnl = value * dayPct / 100;
+        return '<tr><td><strong>'+escHtml(h.symbol||'—')+'</strong></td>'
+          + '<td class="num">'+shares.toFixed(2)+'</td>'
+          + '<td class="num">$'+(entry||0).toFixed(2)+'</td>'
+          + '<td class="num">$'+(price||0).toFixed(2)+'</td>'
+          + '<td class="num">'+fmt$0(value)+'</td>'
+          + '<td class="num '+cls(dayPnl)+'">'+fmtPct(dayPct)+'</td>'
+          + '<td class="num '+cls(pnl)+'">'+fmt$0(pnl)+'</td>'
+          + '<td class="num '+cls(pnlPct)+'">'+fmtPct(pnlPct)+'</td></tr>';
+      }).join('') + (holdingCash ? cashRow : '');
     } else {
-      grid.innerHTML = '<div class="pos-empty"><strong>' + meta.name + ' has no active positions in your stocks today</strong>The bot may be in HOLD mode, or today\'s picks don\'t overlap with your ' + holdingTickers.length + ' stock' + (holdingTickers.length !== 1 ? 's' : '') + '. Check back after the next refresh.</div>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">'
+        + meta.name + ' has no active positions in your stocks today. The bot may be in HOLD mode, or today\'s picks don\'t overlap with your '
+        + holdingTickers.length + ' stock' + (holdingTickers.length !== 1 ? 's' : '') + '.</td></tr>';
     }
     return;
   }
-  grid.innerHTML = myPos.map(p => positionCard(p)).join('');
-}
 
-function positionCard(p) {
-  const sym    = p.symbol || p.ticker || '—';
-  const name   = p.name || p.company || '';
-  const val    = p.value || p.current_value || 0;
-  const entry  = p.entry_price || p.avg_cost || 0;
-  const curr   = p.current_price || p.price || 0;
-  const pnl    = p.pnl || p.gain_loss || (val - (p.cost_basis || entry * (p.shares || 1)));
-  const pnlPct = p.pnl_pct || p.gain_loss_pct || (entry ? ((curr - entry) / entry * 100) : 0);
-  const shares = p.shares || p.quantity || 0;
-  return '<div class="position-card">'
-    + '<div class="pos-symbol">' + escHtml(sym) + '</div>'
-    + (name ? '<div class="pos-name">' + escHtml(name) + '</div>' : '')
-    + (shares ? '<div class="pos-row"><span class="pos-label">Shares</span><span class="pos-value">' + shares + '</span></div>' : '')
-    + (entry  ? '<div class="pos-row"><span class="pos-label">Entry</span><span class="pos-value">' + fmt$(entry) + '</span></div>' : '')
-    + (curr   ? '<div class="pos-row"><span class="pos-label">Current</span><span class="pos-value">' + fmt$(curr) + '</span></div>' : '')
-    + '<div class="pos-row"><span class="pos-label">Value</span><span class="pos-value">' + fmt$0(val) + '</span></div>'
-    + '<div class="pos-pnl ' + cls(pnl) + '">' + (pnl >= 0 ? '+' : '') + fmt$(pnl) + ' (' + fmtPct(pnlPct) + ')</div>'
-    + '</div>';
-}
-
-function renderBaselinePositions(tickers, grid) {
-  if (!tickers.length) { grid.innerHTML = '<div class="pos-empty"><strong>No stocks yet</strong>Add stocks to your portfolio.</div>'; return; }
-  grid.innerHTML = holdings.map(h => {
-    const entry  = h.entry_price || 0;
-    const curr   = h.current_price || entry;
-    const pnl    = entry && curr ? (curr - entry) : 0;
-    const pnlPct = entry && curr ? ((curr - entry) / entry * 100) : 0;
-    return '<div class="position-card">'
-      + '<div class="pos-symbol">' + escHtml(h.symbol || '—') + '</div>'
-      + (h.name ? '<div class="pos-name">' + escHtml(h.name) + '</div>' : '')
-      + '<div class="pos-row"><span class="pos-label">Allocation</span><span class="pos-value">$1,000</span></div>'
-      + (entry ? '<div class="pos-row"><span class="pos-label">Entry</span><span class="pos-value">' + fmt$(entry) + '</span></div>' : '')
-      + (curr && curr !== entry ? '<div class="pos-row"><span class="pos-label">Current</span><span class="pos-value">' + fmt$(curr) + '</span></div>' : '')
-      + '<div class="pos-pnl ' + cls(pnl) + '">' + (pnl >= 0 ? '+' : '') + fmt$(pnl) + ' (' + fmtPct(pnlPct) + ')</div>'
-      + '</div>';
-  }).join('');
+  // Render table rows — identical to renderFund() in app.js
+  tbody.innerHTML = myPos.map(p => {
+    const entry  = p.entry_price || p.entry || 0;
+    const price  = p.price || entry;
+    const shares = p.shares || 0;
+    const value  = p.value || (shares * price);
+    const pnl    = p.pnl != null ? p.pnl : (value - (p.cost_basis || (shares * entry)));
+    const pnlPct = p.pnl_pct != null ? p.pnl_pct : (entry > 0 ? ((price/entry - 1)*100) : 0);
+    const dayPnl = p.day_pnl != null ? p.day_pnl : 0;
+    const dayPct = p.day_pct != null ? p.day_pct : 0;
+    return '<tr><td><strong>'+escHtml(p.symbol||'—')+'</strong></td>'
+      + '<td class="num">'+shares.toFixed(2)+'</td>'
+      + '<td class="num">$'+entry.toFixed(2)+'</td>'
+      + '<td class="num">$'+price.toFixed(2)+'</td>'
+      + '<td class="num">'+fmt$0(value)+'</td>'
+      + '<td class="num '+cls(dayPnl)+'">'+fmtPct(dayPct)+'</td>'
+      + '<td class="num '+cls(pnl)+'">'+fmt$0(pnl)+'</td>'
+      + '<td class="num '+cls(pnlPct)+'">'+fmtPct(pnlPct)+'</td></tr>';
+  }).join('') + (holdingCash ? cashRow : '');
 }
 
 function renderSignals() {
@@ -727,10 +810,10 @@ async function loadPublicPortfolio() {
     BOT_SLUG = data.fund || data.strategy || 'bot13';
     if (FUND_META[BOT_SLUG]) renderFundHero();
     document.getElementById('fundHeroName').textContent = data.portfolio_name || 'Portfolio';
-    const fsInc = document.getElementById('fsInception');
-    if (fsInc && data.gain_loss_pct != null) {
-      fsInc.textContent = (data.gain_loss_pct >= 0 ? '+' : '') + data.gain_loss_pct.toFixed(2) + '%';
-      fsInc.className = 'fstat-val ' + (data.gain_loss_pct >= 0 ? 'pos' : 'neg');
+    const fsPnlEl = document.getElementById('fsPnlPct');
+    if (fsPnlEl && data.gain_loss_pct != null) {
+      fsPnlEl.textContent = (data.gain_loss_pct >= 0 ? '+' : '') + data.gain_loss_pct.toFixed(2) + '% all-time';
+      fsPnlEl.className = 'fund-pnl ' + (data.gain_loss_pct >= 0 ? 'pos' : 'neg');
     }
     if (data.performance_curve && data.performance_curve.length) {
       const wrap = document.getElementById('chartWrap');
