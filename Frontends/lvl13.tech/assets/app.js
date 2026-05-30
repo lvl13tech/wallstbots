@@ -153,7 +153,7 @@ function getYoursHint(msg) {
 }
 function fundCard(fid, data) {
   const meta = FUND_META[fid];
-  const v = data && data.value ? data.value : { total: 43000, pnl: 0, pnl_pct: 0, day_pnl: 0, day_pct: 0 };
+  const v = data && data.value ? data.value : { total: 49000, pnl: 0, pnl_pct: 0, day_pnl: 0, day_pct: 0 };
   return '<a class="card clickable fund-card" href="#/fund/'+fid+'">'
     + '<div class="fund-head"><span class="fund-icon '+fid+'">'+meta.icon+'</span>'
     + '<div style="min-width:0"><div class="fund-name">'+meta.name+'</div><div class="fund-kind" style="color:'+meta.color+'">'+meta.kind+'</div></div></div>'
@@ -217,7 +217,7 @@ function renderHome() {
     '<section class="hero"><img src="assets/logo.svg" alt="" class="hero-robot">'
     + '<div class="hero-content"><span class="hero-eyebrow">AI &amp; Quantum Stock Tracker</span>'
     + '<h1>5 AI strategies. One universe. Watch them race.</h1>'
-    + '<p>Three Claude-built bots — daily, weekly, monthly — trading head-to-head against two passive strategies on the same 43 AI/Quantum stocks. Daily Buy/Sell/Hold signals on every name. AI &amp; Quantum news, filtered to what matters. <strong>Welcome to Level 13.</strong></p>'
+    + '<p>Three Claude-built bots — daily, weekly, monthly — trading head-to-head against two passive strategies on the same 49 AI/Quantum stocks. Daily Buy/Sell/Hold signals on every name. AI &amp; Quantum news, filtered to what matters. <strong>Welcome to Level 13.</strong></p>'
     + '<div class="hero-ctas"><a class="btn btn-primary" href="#/race">See The Race</a>'
     + '<a class="btn btn-secondary" href="#/how">How It Works</a></div></div></section>'
 
@@ -340,7 +340,7 @@ function renderRace() {
   const cards = FUND_ORDER.map(fid =>
     fundCard(fid, STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null)).join('');
   $('app').innerHTML = '<h1>The Race</h1>'
-    + '<p class="sub">Five strategies. '+fmt$0((STATE.funds&&STATE.funds.starting_capital)||43000)+' each. Same 43-stock universe. Refreshed live.</p>'
+    + '<p class="sub">Five strategies. '+fmt$0((STATE.funds&&STATE.funds.starting_capital)||49000)+' each. Same 49-stock universe. Refreshed live.</p>'
     + '<div class="grid grid-5">'+cards+'</div>'
     + '<div class="panel" style="margin-top:24px"><h3>Performance Trajectory — All 5 Strategies</h3>'
     + '<div class="chart-wrap"><canvas id="chartRace"></canvas></div></div>'
@@ -979,7 +979,7 @@ async function renderMyTracker() {
     const funds = data.funds || {};
     const snaps = data.snapshots || [];
     const lb    = data.leaderboards || {};
-    const sc    = data.starting_capital || 43000;
+    const sc    = data.starting_capital || 49000;
 
     let html = '<section class="section"><h2 class="section-title">My Tracker</h2>'
       + '<p style="color:var(--muted);font-size:13px;margin-bottom:20px">Last updated: '
