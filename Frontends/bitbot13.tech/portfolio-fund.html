@@ -294,7 +294,7 @@
       <div class="footer-network-links">
         <a href="https://wallstbots.tech" target="_blank" rel="noopener">Wall St. Bots</a>
         <a href="https://bitbot13.tech" target="_blank" rel="noopener">bitbot13.tech</a>
-        <span class="footer-network-current">bitbot13.tech</span>
+        <span class="footer-network-current">lvl13.tech</span>
       </div>
     </div>
     <div class="footer-fine">
@@ -417,17 +417,11 @@ function renderFundHero() {
 
 async function loadPortfolio() {
   try {
-    const [botRes, perfRes] = await Promise.allSettled([
-      api.getBot(BOT_ID),
-      api.getBotLatestPerformance(BOT_ID),
-    ]);
-    if (botRes.status === 'fulfilled') {
-      botData  = botRes.value?.bot || botRes.value;
-      holdings = botData?.holdings || [];
-    }
-    if (perfRes.status === 'fulfilled') {
-      portfolioPerf = perfRes.value;
-    }
+    const data = await api.getBot(BOT_ID);
+    botData  = data?.bot || data;
+    holdings = botData?.holdings || [];
+    // performance is null until simulation runs
+    portfolioPerf = botData?.performance || null;
     renderContextStrip();
     drawFundChart();
   } catch(e) { showToast('Could not load portfolio', 'error'); }
@@ -460,12 +454,12 @@ async function loadSiteData() {
 
 function renderFundStats() {
   // ── 3 stat cards: use the USER'S portfolio performance, not global ──
-  const cap    = holdings.length * 1000 || (portfolioPerf?.starting_value) || 0;
-  const total  = portfolioPerf?.total_value   ?? cap;
-  const pnl    = portfolioPerf?.gain_loss      ?? 0;
-  const pnlPct = portfolioPerf?.gain_loss_pct  ?? 0;
-  const dayPnl = portfolioPerf?.day_gain_loss  ?? 0;
-  const dayPct = portfolioPerf?.day_gain_loss_pct ?? 0;
+  const cap    = holdings.length * 1000;
+  const total  = (portfolioPerf && portfolioPerf.total_value  != null) ? portfolioPerf.total_value  : cap;
+  const pnl    = (portfolioPerf && portfolioPerf.gain_loss     != null) ? portfolioPerf.gain_loss     : 0;
+  const pnlPct = (portfolioPerf && portfolioPerf.gain_loss_pct != null) ? portfolioPerf.gain_loss_pct : 0;
+  const dayPnl = (portfolioPerf && portfolioPerf.day_gain_loss != null) ? portfolioPerf.day_gain_loss : 0;
+  const dayPct = (portfolioPerf && portfolioPerf.day_gain_loss_pct != null) ? portfolioPerf.day_gain_loss_pct : 0;
 
   document.getElementById('fsTotal').textContent   = fmt$0(total);
   document.getElementById('fsStarted').textContent = 'Started at ' + fmt$0(cap);
