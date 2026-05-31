@@ -481,14 +481,14 @@
 <!-- ── ADD HOLDING MODAL ── -->
 <div class="search-modal" id="searchModal">
   <div class="search-box">
-    <h3>Add a Stock</h3>
+    <h3>Add a Coin</h3>
     <input class="search-input" id="searchInput" type="text"
-           placeholder="Search ticker or company name…"
+           placeholder="Search coin name or ticker (e.g. BTC, Ethereum…)"
            oninput="onSearchInput(this.value)" autocomplete="off" />
     <div class="search-results" id="searchResults">
-      <div class="search-empty">Type 2+ characters to search AI, quantum, and tech stocks (Nasdaq, NYSE, OTC)</div>
+      <div class="search-empty">Type to search supported coins</div>
     </div>
-    <div class="search-disclosure">AI, quantum computing, and emerging tech stocks — Nasdaq, NYSE, OTC &amp; Pink Sheet symbols. Covers the full universe of U.S.-listed tech and innovation companies. Max 50 holdings per portfolio.</div>
+    <div class="search-disclosure">Supported coins only — 50 top cryptocurrencies tracked by BitBot13. Max 50 holdings per portfolio.</div>
     <div class="selected-ticker-display" id="selectedDisplay" style="display:none">
       <span id="selectedTicker">—</span>
       <button style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:1.1rem" onclick="clearSelection()">×</button>
@@ -961,24 +961,118 @@ function onSearchInput(q) {
   searchTimer = setTimeout(() => doSearch(trimmed), 350);
 }
 
-async function doSearch(q) {
-  try {
-    const data = await api.searchStocks(q, 'all');
-    const results = data?.results || data || [];
-    if (!results.length) {
-      document.getElementById('searchResults').innerHTML = '<div class="search-empty">No results for "<strong>' + escHtml(q) + '</strong>" — try the exact ticker (e.g. NVDA) or a keyword</div>';
-      return;
-    }
-    document.getElementById('searchResults').innerHTML = results.slice(0, 12).map(r =>
-      '<div class="search-result-item" onclick="selectTicker(\'' + escHtml(r.ticker) + '\',\'' + escHtml((r.name||r.ticker).replace(/'/g,"&#39;")) + '\')">'
-      + '<span class="result-ticker">' + escHtml(r.ticker) + '</span>'
-      + '<span class="result-name">' + escHtml(r.name||'') + '</span>'
-      + '<span class="result-type">' + escHtml(r.market||r.type||r.exchange||'') + '</span>'
-      + '</div>'
-    ).join('');
-  } catch(e) {
-    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Search unavailable — check connection or try the exact ticker symbol.</div>';
+// Supported coins — top 200+ by market cap, no stablecoins, no wrapped tokens
+const COIN_UNIVERSE = [
+  {ticker:"BTC", name:"Bitcoin"},{ticker:"ETH", name:"Ethereum"},{ticker:"BNB", name:"BNB"},
+  {ticker:"SOL", name:"Solana"},{ticker:"XRP", name:"XRP"},{ticker:"ADA", name:"Cardano"},
+  {ticker:"AVAX", name:"Avalanche"},{ticker:"DOGE", name:"Dogecoin"},{ticker:"TRX", name:"TRON"},
+  {ticker:"DOT", name:"Polkadot"},{ticker:"LINK", name:"Chainlink"},{ticker:"TON", name:"Toncoin"},
+  {ticker:"MATIC", name:"Polygon"},{ticker:"SHIB", name:"Shiba Inu"},{ticker:"LTC", name:"Litecoin"},
+  {ticker:"BCH", name:"Bitcoin Cash"},{ticker:"ETC", name:"Ethereum Classic"},{ticker:"XLM", name:"Stellar"},
+  {ticker:"HBAR", name:"Hedera"},{ticker:"NEAR", name:"NEAR Protocol"},{ticker:"ICP", name:"Internet Computer"},
+  {ticker:"APT", name:"Aptos"},{ticker:"SUI", name:"Sui"},{ticker:"ARB", name:"Arbitrum"},
+  {ticker:"OP", name:"Optimism"},{ticker:"SEI", name:"Sei"},{ticker:"INJ", name:"Injective"},
+  {ticker:"EGLD", name:"MultiversX"},{ticker:"ALGO", name:"Algorand"},{ticker:"VET", name:"VeChain"},
+  {ticker:"ATOM", name:"Cosmos"},{ticker:"FTM", name:"Fantom"},{ticker:"MINA", name:"Mina"},
+  {ticker:"ROSE", name:"Oasis Network"},{ticker:"FLOW", name:"Flow"},{ticker:"EOS", name:"EOS"},
+  {ticker:"ZIL", name:"Zilliqa"},{ticker:"ONE", name:"Harmony"},{ticker:"KAVA", name:"Kava"},
+  {ticker:"CELO", name:"Celo"},{ticker:"METIS", name:"Metis"},{ticker:"MANTA", name:"Manta Network"},
+  {ticker:"ZK", name:"ZKsync"},{ticker:"STRK", name:"Starknet"},{ticker:"KSM", name:"Kusama"},
+  {ticker:"GLMR", name:"Moonbeam"},{ticker:"MOVR", name:"Moonriver"},{ticker:"ASTR", name:"Astar"},
+  {ticker:"NEO", name:"NEO"},{ticker:"XTZ", name:"Tezos"},{ticker:"WAVES", name:"Waves"},
+  {ticker:"DCR", name:"Decred"},{ticker:"ZEN", name:"Horizen"},{ticker:"SC", name:"Siacoin"},
+  {ticker:"DGB", name:"DigiByte"},{ticker:"HOT", name:"Holo"},{ticker:"IOTA", name:"IOTA"},
+  {ticker:"STX", name:"Stacks"},{ticker:"CKB", name:"Nervos Network"},{ticker:"CFX", name:"Conflux"},
+  {ticker:"MNT", name:"Mantle"},{ticker:"UNI", name:"Uniswap"},{ticker:"AAVE", name:"Aave"},
+  {ticker:"MKR", name:"Maker"},{ticker:"CRV", name:"Curve DAO"},{ticker:"SNX", name:"Synthetix"},
+  {ticker:"COMP", name:"Compound"},{ticker:"YFI", name:"yearn.finance"},{ticker:"SUSHI", name:"SushiSwap"},
+  {ticker:"1INCH", name:"1inch"},{ticker:"BAL", name:"Balancer"},{ticker:"CVX", name:"Convex Finance"},
+  {ticker:"LDO", name:"Lido DAO"},{ticker:"RPL", name:"Rocket Pool"},{ticker:"FXS", name:"Frax Share"},
+  {ticker:"PENDLE", name:"Pendle"},{ticker:"JUP", name:"Jupiter"},{ticker:"ORCA", name:"Orca"},
+  {ticker:"RAY", name:"Raydium"},{ticker:"CAKE", name:"PancakeSwap"},{ticker:"GMX", name:"GMX"},
+  {ticker:"DYDX", name:"dYdX"},{ticker:"RUNE", name:"THORChain"},{ticker:"LRC", name:"Loopring"},
+  {ticker:"ZRX", name:"0x Protocol"},{ticker:"BAT", name:"Basic Attention Token"},{ticker:"UMA", name:"UMA"},
+  {ticker:"TRB", name:"Tellor"},{ticker:"PERP", name:"Perpetual Protocol"},{ticker:"PYTH", name:"Pyth Network"},
+  {ticker:"JTO", name:"Jito"},{ticker:"QNT", name:"Quant"},{ticker:"GRT", name:"The Graph"},
+  {ticker:"FIL", name:"Filecoin"},{ticker:"AR", name:"Arweave"},{ticker:"STORJ", name:"Storj"},
+  {ticker:"OCEAN", name:"Ocean Protocol"},{ticker:"BAND", name:"Band Protocol"},{ticker:"API3", name:"API3"},
+  {ticker:"ANKR", name:"Ankr"},{ticker:"SKL", name:"SKALE"},{ticker:"PHA", name:"Phala Network"},
+  {ticker:"RENDER", name:"Render Network"},{ticker:"FET", name:"Fetch.ai"},{ticker:"AGIX", name:"SingularityNET"},
+  {ticker:"NMR", name:"Numeraire"},{ticker:"WLD", name:"Worldcoin"},{ticker:"TAO", name:"Bittensor"},
+  {ticker:"ARKM", name:"Arkham"},{ticker:"IO", name:"io.net"},{ticker:"ATH", name:"Aethir"},
+  {ticker:"AXS", name:"Axie Infinity"},{ticker:"SAND", name:"The Sandbox"},{ticker:"MANA", name:"Decentraland"},
+  {ticker:"IMX", name:"ImmutableX"},{ticker:"GALA", name:"Gala"},{ticker:"ENJ", name:"Enjin Coin"},
+  {ticker:"MAGIC", name:"MAGIC"},{ticker:"BEAM", name:"Beam"},{ticker:"ILV", name:"Illuvium"},
+  {ticker:"GODS", name:"Gods Unchained"},{ticker:"PYR", name:"Vulcan Forged"},{ticker:"CHR", name:"Chromia"},
+  {ticker:"TLM", name:"Alien Worlds"},{ticker:"SLP", name:"Smooth Love Potion"},{ticker:"GHST", name:"Aavegotchi"},
+  {ticker:"AXL", name:"Axelar"},{ticker:"PEPE", name:"Pepe"},{ticker:"FLOKI", name:"Floki"},
+  {ticker:"WIF", name:"dogwifhat"},{ticker:"BONK", name:"Bonk"},{ticker:"NOT", name:"Notcoin"},
+  {ticker:"BOME", name:"Book of Meme"},{ticker:"BRETT", name:"Brett"},{ticker:"TURBO", name:"Turbo"},
+  {ticker:"MOG", name:"Mog Coin"},{ticker:"MEME", name:"Memecoin"},{ticker:"POPCAT", name:"Popcat"},
+  {ticker:"ONDO", name:"Ondo Finance"},{ticker:"JASMY", name:"JasmyCoin"},
+  {ticker:"XMR", name:"Monero"},{ticker:"ZEC", name:"Zcash"},{ticker:"SCRT", name:"Secret"},
+  {ticker:"OKB", name:"OKB"},{ticker:"KCS", name:"KuCoin Token"},{ticker:"BGB", name:"Bitget Token"},
+  {ticker:"CRO", name:"Cronos"},{ticker:"ZRO", name:"LayerZero"},{ticker:"W", name:"Wormhole"},
+  {ticker:"ENS", name:"Ethereum Name Service"},{ticker:"MASK", name:"Mask Network"},{ticker:"AUDIO", name:"Audius"},
+  {ticker:"CHZ", name:"Chiliz"},{ticker:"BTT", name:"BitTorrent"},{ticker:"WIN", name:"WINkLink"},
+  {ticker:"OGN", name:"Origin Protocol"},{ticker:"PEOPLE", name:"ConstitutionDAO"},{ticker:"BLUR", name:"Blur"},
+  {ticker:"THETA", name:"Theta Network"},{ticker:"KAS", name:"Kaspa"},{ticker:"APE", name:"ApeCoin"},
+  {ticker:"HNT", name:"Helium"},{ticker:"IOTX", name:"IoTeX"},{ticker:"RVN", name:"Ravencoin"},
+  {ticker:"COTI", name:"COTI"},{ticker:"CTSI", name:"Cartesi"},{ticker:"GTC", name:"Gitcoin"},
+  {ticker:"XVS", name:"Venus"},{ticker:"BICO", name:"Biconomy"},{ticker:"ACH", name:"Alchemy Pay"},
+  {ticker:"TIA", name:"Celestia"},{ticker:"DYM", name:"Dymension"},{ticker:"EIGEN", name:"EigenLayer"},
+  {ticker:"ETHFI", name:"ether.fi"},{ticker:"OMNI", name:"Omni Network"},{ticker:"ALT", name:"AltLayer"},
+  {ticker:"ZETA", name:"ZetaChain"},{ticker:"SAGA", name:"Saga"},{ticker:"SAFE", name:"Safe"},
+  {ticker:"AERO", name:"Aerodrome Finance"},{ticker:"VELO", name:"Velodrome Finance"},{ticker:"COW", name:"CoW Protocol"},
+  {ticker:"REZ", name:"Renzo"},{ticker:"DRIFT", name:"Drift"},{ticker:"TNSR", name:"Tensor"},
+  {ticker:"MEW", name:"cat in a dogs world"},{ticker:"PONKE", name:"Ponke"},{ticker:"LISTA", name:"Lista DAO"},
+  {ticker:"CORE", name:"Core"},{ticker:"BB", name:"BounceBit"},{ticker:"XEM", name:"NEM"},
+  {ticker:"NANO", name:"Nano"},{ticker:"LSK", name:"Lisk"},{ticker:"HIVE", name:"Hive"},
+  {ticker:"WAXP", name:"WAX"},{ticker:"SYN", name:"Synapse"},{ticker:"EWT", name:"Energy Web Token"},
+  {ticker:"REEF", name:"Reef"},{ticker:"SPELL", name:"Spell Token"},
+  {ticker:"FLR", name:"Flare"},{ticker:"SGB", name:"Songbird"},{ticker:"NYM", name:"Nym"},
+  {ticker:"DUSK", name:"Dusk Network"},{ticker:"PROM", name:"Prom"},{ticker:"POND", name:"Marlin"},
+  {ticker:"CTXC", name:"Cortex"},{ticker:"VOXEL", name:"Voxies"},{ticker:"LOOKS", name:"LooksRare"},
+  {ticker:"RARE", name:"SuperRare"},{ticker:"RARI", name:"Rarible"},{ticker:"YGG", name:"Yield Guild Games"},
+  {ticker:"ALICE", name:"My Neighbor Alice"},{ticker:"LOKA", name:"League of Kingdoms"},{ticker:"SPS", name:"Splinterlands"},
+  {ticker:"MOBOX", name:"MOBOX"},{ticker:"VRA", name:"Verasity"},{ticker:"TFUEL", name:"Theta Fuel"},
+  {ticker:"ONG", name:"Ontology Gas"},{ticker:"ONT", name:"Ontology"},{ticker:"ARDR", name:"Ardor"},
+  {ticker:"VTHO", name:"VeThor Token"},{ticker:"XDC", name:"XDC Network"},{ticker:"WAN", name:"Wanchain"},
+  {ticker:"PIVX", name:"PIVX"},{ticker:"SYS", name:"Syscoin"},{ticker:"STEEM", name:"Steem"},
+  {ticker:"XVG", name:"Verge"},{ticker:"BTG", name:"Bitcoin Gold"},{ticker:"BSV", name:"Bitcoin SV"},
+  {ticker:"DASH", name:"Dash"},{ticker:"GAS", name:"Gas"},{ticker:"NXT", name:"Nxt"},
+  {ticker:"STRAX", name:"Stratis"},{ticker:"DATA", name:"Streamr"},
+  {ticker:"ALICE", name:"My Neighbor Alice"},{ticker:"DOSE", name:"DOSE"},
+  {ticker:"IDEX", name:"IDEX"},{ticker:"FOR", name:"ForTube"},{ticker:"HARD", name:"HARD Protocol"},
+  {ticker:"ZCL", name:"ZClassic"},{ticker:"LBC", name:"LBRY Credits"},{ticker:"NAS", name:"Nebulas"},
+  {ticker:"DIVI", name:"Divi"},{ticker:"WAXP", name:"WAX"},
+  {ticker:"SKL", name:"SKALE"},{ticker:"ACH", name:"Alchemy Pay"},{ticker:"ANKR", name:"Ankr"},
+  {ticker:"NMR", name:"Numeraire"},{ticker:"COTI", name:"COTI"},
+  {ticker:"CTSI", name:"Cartesi"},{ticker:"GTC", name:"Gitcoin"},{ticker:"AUDIO", name:"Audius"},
+  {ticker:"BICO", name:"Biconomy"},{ticker:"POLS", name:"Polkastarter"},{ticker:"SUPER", name:"SuperFarm"},
+  {ticker:"NULS", name:"NULS"},{ticker:"AERGO", name:"Aergo"},{ticker:"OAX", name:"OAX"},
+  {ticker:"FARM", name:"Harvest Finance"},{ticker:"CHZ", name:"Chiliz"},
+  {ticker:"LOOM", name:"Loom Network"},{ticker:"CELR", name:"Celer Network"}
+];
+
+function doSearch(q) {
+  const qLower = q.toLowerCase();
+  const already = new Set(holdings.map(h => (h.symbol||'').toUpperCase()));
+  const results = COIN_UNIVERSE.filter(c =>
+    !already.has(c.ticker) &&
+    (c.ticker.toLowerCase().includes(qLower) || c.name.toLowerCase().includes(qLower))
+  ).slice(0, 12);
+  if (!results.length) {
+    document.getElementById('searchResults').innerHTML = '<div class="search-empty">No supported coins match "<strong>' + escHtml(q) + '</strong>" — try BTC, ETH, SOL, etc.</div>';
+    return;
   }
+  document.getElementById('searchResults').innerHTML = results.map(r =>
+    '<div class="search-result-item" onclick="selectTicker(\'' + escHtml(r.ticker) + '\',\'' + escHtml(r.name.replace(/'/g,"&#39;")) + '\')">'
+    + '<span class="result-ticker">' + escHtml(r.ticker) + '</span>'
+    + '<span class="result-name">' + escHtml(r.name) + '</span>'
+    + '<span class="result-type">crypto</span>'
+    + '</div>'
+  ).join('');
 }
 
 function selectTicker(ticker, name) {
@@ -1252,74 +1346,4 @@ function renderComments(comments, myUserId) {
     return '<div class="comment-card">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
       + '<span class="comment-handle">@' + escHtml(c.display_name) + '</span>'
-      + '<span style="display:flex;gap:10px;align-items:center">'
-      + '<span class="comment-time">' + ts + '</span>'
-      + (isOwn ? '<button class="comment-del-btn" onclick="deleteComment(\'' + c.id + '\')">Delete</button>' : '')
-      + '</span></div>'
-      + '<div class="comment-body-text">' + escHtml(c.body) + '</div>'
-      + '</div>';
-  }).join('');
-}
-
-async function postComment() {
-  const body = (document.getElementById('commentBody')?.value || '').trim();
-  if (!body) return;
-  if (!userProfile?.display_name) { showToast('Set a @handle first', 'error'); return; }
-  try {
-    const token = await auth.getToken();
-    const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/comments', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body })
-    });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Error'); }
-    document.getElementById('commentBody').value = '';
-    loadComments();
-  } catch(e) { showToast(e.message || 'Could not post comment', 'error'); }
-}
-
-async function deleteComment(commentId) {
-  try {
-    const token = await auth.getToken();
-    const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/comments/' + commentId, {
-      method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
-    });
-    if (!res.ok) throw new Error('Failed');
-    loadComments();
-  } catch(e) { showToast('Could not delete comment', 'error'); }
-}
-
-// ── Explicit window bindings ──────────────────────────────────────────────────
-window.toggleMobNav           = toggleMobNav;
-window.closeMobNav            = closeMobNav;
-window.togglePlatformMenu     = togglePlatformMenu;
-window.openDeleteModal        = openDeleteModal;
-window.closeDeleteModal       = closeDeleteModal;
-window.confirmDeletePortfolio = confirmDeletePortfolio;
-window.openSearchModal        = openSearchModal;
-window.closeSearchModal       = closeSearchModal;
-window.onSearchInput          = onSearchInput;
-window.selectTicker           = selectTicker;
-window.clearSelection         = clearSelection;
-window.addSelectedHolding     = addSelectedHolding;
-window.removeHolding          = removeHolding;
-window.openShareSheet         = openShareSheet;
-window.closeShareSheet        = closeShareSheet;
-window.shareAction            = shareAction;
-window.addShare               = addShare;
-window.togglePrivacyPill      = togglePrivacyPill;
-window.postComment            = postComment;
-window.deleteComment          = deleteComment;
-window.openDrawer             = openDrawer;
-window.closeDrawer            = closeDrawer;
-window.openPwModal            = openPwModal;
-window.closePwModal           = closePwModal;
-window.sendPasswordReset      = sendPasswordReset;
-window.copyReferral           = copyReferral;
-window.logout                 = logout;
-
-// ── Boot ──────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', init);
-</script>
-</body>
-</html>
+      + '<span style="display:flex;gap:10px;alig
