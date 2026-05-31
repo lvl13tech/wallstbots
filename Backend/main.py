@@ -1271,8 +1271,8 @@ async def refresh_portfolio_fund_snapshots(
             SELECT b.id AS bot_id,
                    h.symbol, h.entry_price
             FROM bots b
-            JOIN bots_holdings h
-                ON h.bot_id = b.id AND h.deleted_at IS NULL
+            JOIN bot_holdings h
+                ON h.bot_id = b.id AND h.removed_at IS NULL
             WHERE b.status != 'deleted'
             ORDER BY b.id
         """)
