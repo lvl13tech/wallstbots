@@ -48,8 +48,11 @@ RESEND_API_KEY           = os.getenv("RESEND_API_KEY", "")
 SUPPORT_FROM_EMAIL       = "Wall St. Bots Support <info@lvl13.tech>"
 SUPPORT_NOTIFY_EMAIL     = "info@lvl13.tech"
 
-# Admin codes: grant free lifetime SYNDICATE access — case-insensitive
-ADMIN_CODES = {'adminm13'}
+# Admin codes: grant free lifetime access — case-insensitive
+# admin13   → insider tier
+# adminm13  → syndicate tier
+ADMIN_CODES = {'admin13', 'adminm13'}
+ADMIN_CODE_TIERS = {'admin13': 'insider', 'adminm13': 'syndicate'}
 
 PAYPAL_API_BASE = (
     "https://api.paypal.com" if PAYPAL_MODE == "live"
@@ -511,17 +514,18 @@ async def signup_with_admin_code(request: AdminCodeClaimRequest):
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
+        admin_tier = ADMIN_CODE_TIERS.get(request.code.lower(), 'insider')
         cursor.execute("""
             INSERT INTO users (id, email, full_name, subscription_tier, tier_expires_at, admin_code_used)
-            VALUES (%s, %s, %s, 'syndicate', NULL, TRUE)
+            VALUES (%s, %s, %s, %s, NULL, TRUE)
             ON CONFLICT (id) DO UPDATE SET
                 email             = EXCLUDED.email,
                 full_name         = EXCLUDED.full_name,
-                subscription_tier = 'syndicate',
+                subscription_tier = EXCLUDED.subscription_tier,
                 tier_expires_at   = NULL,
                 admin_code_used   = TRUE
             RETURNING id, email, referral_code
-        """, (user_id, request.email, request.full_name or ""))
+        """, (user_id, request.email, request.full_name or "", admin_tier))
         user = cursor.fetchone()
         conn.commit()
 
@@ -570,16 +574,17 @@ async def claim_admin_access(
     if code.lower() not in ADMIN_CODES:
         raise HTTPException(status_code=400, detail="Invalid admin code")
 
+    admin_tier = ADMIN_CODE_TIERS.get(code.lower(), 'insider')
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE users
-            SET subscription_tier = 'syndicate', tier_expires_at = NULL
+            SET subscription_tier = %s, tier_expires_at = NULL
             WHERE id = %s
-        """, (current_user["user_id"],))
+        """, (admin_tier, current_user["user_id"]))
         conn.commit()
-        return {"success": True, "tier": "syndicate", "message": "SYNDICATE access activated!"}
+        return {"success": True, "tier": admin_tier, "message": f"{admin_tier.upper()} access activated!"}
     finally:
         cursor.close()
         return_db_connection(conn)
@@ -985,14 +990,15 @@ async def validate_referral_code(code: str = Query(..., description="Referral co
     if not code or len(code) < 4:
         return {"valid": False, "code": code, "message": "Invalid code format"}
 
-    # Admin codes bypass the DB — grant free lifetime INSIDER access
+    # Admin codes bypass the DB — grant free lifetime access at the correct tier
     if code.lower() in ADMIN_CODES:
+        admin_tier = ADMIN_CODE_TIERS.get(code.lower(), 'insider')
         return {
             "valid":   True,
             "code":    code,
             "type":    "admin_lifetime",
-            "tier":    "insider",
-            "message": "Admin code — free lifetime INSIDER access! Enter your details below to claim.",
+            "tier":    admin_tier,
+            "message": f"Admin code — free lifetime {admin_tier.upper()} access! Enter your details below to claim.",
         }
 
     conn = get_db_connection()
