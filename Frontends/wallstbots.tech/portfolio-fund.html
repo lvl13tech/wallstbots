@@ -590,14 +590,18 @@ function renderPositions() {
           + '<td class="num '+cls(pnlPct)+'">'+fmtPct(pnlPct)+'</td></tr>';
       }).join('') + (holdingCash ? cashRow : '');
     } else {
-      const hasSimulated = portfolioPerf && portfolioPerf.snapshot_date;
+      const hasSimulated = fundState && fundState.snapshot_date;
       if (!hasSimulated) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:28px;line-height:1.8">'
           + '<strong style="color:var(--text);display:block;margin-bottom:6px">Awaiting first simulation</strong>'
           + meta.name + ' will begin trading your ' + holdingTickers.length + ' stock' + (holdingTickers.length !== 1 ? 's' : '') + ' during the next trading session.</td></tr>';
+      } else if (fundState && fundState.holding_cash) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:28px;line-height:1.8">'
+          + '<strong style="color:var(--text);display:block;margin-bottom:6px">Holding Cash</strong>'
+          + meta.name + ' evaluated your ' + holdingTickers.length + ' stock' + (holdingTickers.length !== 1 ? 's' : '') + ' and is holding cash — no picks met the entry criteria today.</td></tr>';
       } else {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">'
-          + meta.name + ' has no active positions in your stocks today — the bot may be holding cash.</td></tr>';
+          + meta.name + ' has no active positions in your stocks today.</td></tr>';
       }
     }
     return;
