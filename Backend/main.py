@@ -1478,6 +1478,46 @@ async def get_portfolio_fund_state(
         return_db_connection(conn)
 
 
+@app.get("/internal/portfolio-fund-state/{bot_id}/{fund_name}")
+async def internal_get_portfolio_fund_state(
+    bot_id: str,
+    fund_name: str,
+    _: None = Depends(verify_internal_key),
+):
+    """
+    Internal endpoint — returns the last stored bot_fund_state for a portfolio+fund.
+    Called by refresh_portfolios.py to retrieve previous total_value for balance carryover.
+    No user auth required — protected by x-internal-key header only.
+    """
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("""
+            SELECT fund_name, snapshot_date, total_value, entry_cost,
+                   gain_loss, gain_loss_pct, updated_at
+            FROM bot_fund_state
+            WHERE bot_id = %s AND fund_name = %s
+        """, (bot_id, fund_name))
+        row = cursor.fetchone()
+        if not row:
+            return {"success": True, "state": None}
+        return {
+            "success": True,
+            "state": {
+                "fund_name":     row["fund_name"],
+                "snapshot_date": str(row["snapshot_date"]),
+                "total_value":   float(row["total_value"]   or 0),
+                "entry_cost":    float(row["entry_cost"]    or 0),
+                "gain_loss":     float(row["gain_loss"]     or 0),
+                "gain_loss_pct": float(row["gain_loss_pct"] or 0),
+                "updated_at":    str(row["updated_at"]),
+            }
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
 @app.get("/public/tracker/{data_type}")
 async def tracker_read(data_type: str, platform: str = "lvl13"):
     if data_type not in VALID_DATA_TYPES:

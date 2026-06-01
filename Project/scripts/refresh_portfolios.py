@@ -81,7 +81,12 @@ def compute_rsi(closes, period=14):
 
 
 def get_all_portfolios(secrets, platform):
-    """Fetch all active portfolios with holdings from the backend."""
+    """
+    Fetch all active portfolios with holdings from the backend.
+    Also fetches existing bot_fund_state rows so we can carry balances forward.
+    Returns list of portfolio dicts, each with an optional 'prev_balances' dict:
+        { 'bot13': float, 'oracle': float, 'wizard': float }
+    """
     if _requests is None:
         return []
     api_url = secrets.get("api_url", BACKEND_URL)
@@ -97,13 +102,34 @@ def get_all_portfolios(secrets, platform):
             data = r.json()
             portfolios = data.get("portfolios", [])
             print(f"  [portfolios] {len(portfolios)} active portfolios for {platform}")
-            return portfolios
         else:
             print(f"  [portfolios] HTTP {r.status_code}: {r.text[:120]}")
             return []
     except Exception as e:
         print(f"  [portfolios] error: {e}")
         return []
+
+    # Fetch previous bot_fund_state for each portfolio so compounding works
+    for portfolio in portfolios:
+        bot_id   = portfolio["bot_id"]
+        prev_bal = {}
+        for fund in ("bot13", "oracle", "wizard"):
+            try:
+                rs = _requests.get(
+                    f"{api_url}/internal/portfolio-fund-state/{bot_id}/{fund}",
+                    headers={"x-internal-key": key},
+                    timeout=10,
+                )
+                if rs.status_code == 200:
+                    state = rs.json().get("state") or {}
+                    tv = state.get("total_value")
+                    if tv and float(tv) > 0:
+                        prev_bal[fund] = float(tv)
+            except Exception:
+                pass
+        portfolio["prev_balances"] = prev_bal
+
+    return portfolios
 
 
 def push_bot_states(secrets, results):
@@ -387,93 +413,166 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
         if not universe:
             continue
 
-        starting_capital = len(universe) * 1000.0
+        # Original buy-in cost — always len(universe) × $1,000. Never changes.
+        original_cost = len(universe) * 1000.0
 
-        # Compute total portfolio value and day P&L across all positions
-        total_value = 0.0
-        day_pnl_total = 0.0
+        # Previous bot balances from last simulation run (carryover).
+        # First run ever → falls back to original_cost so we start clean.
+        prev_bal = portfolio.get("prev_balances", {})
+
+        # ── BOT13 capital: carries forward from previous day's close ──────────
+        # Daily bot cashes out every session. Next session opens with yesterday's total.
+        b13_capital = prev_bal.get("bot13", original_cost)
+
+        # ── ORACLE capital: carries forward from previous week's close ─────────
+        # Weekly bot sells Friday, buys Monday. Balance compounds week over week.
+        oracle_capital = prev_bal.get("oracle", original_cost)
+
+        # ── WIZARD capital: carries forward from previous month's close ────────
+        # Monthly bot sells last trading day, buys first of next month.
+        wizard_capital = prev_bal.get("wizard", original_cost)
+
+        # ── Baselines: Equalizer & Titan never sell ────────────────────────────
+        # Track current value vs original cost. Capital base is always original_cost.
+        # Value drifts naturally with price movement — no compounding needed.
+        baseline_capital = original_cost
+
+        # Day P&L and current value for baselines (mark-to-market vs original buy-in)
+        eq_total_value = 0.0
+        eq_day_pnl     = 0.0
         for sym in universe:
             price = prices.get(sym, 0)
             prev  = prev_closes.get(sym, price)
+            alloc = original_cost / len(universe)  # $1,000 per holding for equalizer
             if price > 0:
-                total_value   += price / (prev if prev > 0 else price) * 1000.0
+                # Find the holding's entry price to compute true current value
+                h_entry = next((float(h["entry_price"]) for h in holdings
+                                if h["symbol"].upper() == sym and h.get("entry_price")), 0)
+                entry = h_entry if h_entry > 0 else price
+                shares = alloc / entry if entry > 0 else 0
+                eq_total_value += shares * price
+                eq_day_pnl     += shares * (price - prev) if prev > 0 else 0
             else:
-                total_value   += 1000.0
-            day_pnl_total += (price - prev) * (1000.0 / prev if prev > 0 else 0)
+                eq_total_value += alloc  # flat if no price
+        eq_gain_loss     = round(eq_total_value - original_cost, 2)
+        eq_gain_loss_pct = round(eq_gain_loss / original_cost * 100, 4) if original_cost > 0 else 0
+        eq_day_pct       = round(eq_day_pnl / original_cost * 100, 4) if original_cost > 0 else 0
 
-        gain_loss     = round(total_value - starting_capital, 2)
-        gain_loss_pct = round(gain_loss / starting_capital * 100, 4) if starting_capital > 0 else 0
-        day_pct       = round(day_pnl_total / starting_capital * 100, 4) if starting_capital > 0 else 0
-
-        # ── BOT13 ──
+        # ── BOT13 ─────────────────────────────────────────────────────────────
         if is_equity:
             b13_dec, b13_pos, b13_picks, b13_rat, b13_log, b13_proj = run_bot13_equity(
-                cfg, universe, prices, prev_closes, hist_data, starting_capital, today_iso
+                cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
             )
         else:
             b13_dec, b13_pos, b13_picks, b13_rat, b13_log, b13_proj = run_bot13_crypto(
-                cfg, universe, prices, prev_closes, hist_data, starting_capital, today_iso
+                cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
             )
+        # BOT13 total_value: if trading, mark positions to market; if cash, carry balance flat
+        if b13_dec == "TRADE" and b13_pos:
+            b13_total = round(sum(p.get("value", p.get("cost_basis", 0)) for p in b13_pos), 2)
+        else:
+            b13_total = round(b13_capital, 2)
+        b13_day_pnl = round(b13_total - b13_capital, 2)
+        b13_day_pct = round(b13_day_pnl / b13_capital * 100, 4) if b13_capital > 0 else 0
+        b13_gain    = round(b13_total - original_cost, 2)
+        b13_gain_pct= round(b13_gain / original_cost * 100, 4) if original_cost > 0 else 0
         results.append({
             "bot_id": bot_id, "fund_name": "bot13",
             "positions": b13_pos,
             "strategy": {"decision": b13_dec, "picks": b13_picks, "rationale": b13_rat,
                          "projected_return": b13_proj, "day": today_iso},
-            "total_value": round(total_value, 2), "entry_cost": round(starting_capital, 2),
-            "gain_loss": gain_loss, "gain_loss_pct": gain_loss_pct,
-            "day_pnl": round(day_pnl_total, 2), "day_pct": day_pct,
+            "total_value": b13_total, "entry_cost": round(original_cost, 2),
+            "gain_loss": b13_gain, "gain_loss_pct": b13_gain_pct,
+            "day_pnl": b13_day_pnl, "day_pct": b13_day_pct,
             "window_open": win_open, "holding_cash": b13_dec in ("CASH", "HOLD"),
         })
 
-        # ── ORACLE ──
+        # ── ORACLE ────────────────────────────────────────────────────────────
         oracle_dec, oracle_pos, oracle_picks, oracle_rat, oracle_proj = run_oracle_for_universe(
-            universe, prices, prev_closes, hist_data, starting_capital, week_str
+            universe, prices, prev_closes, hist_data, oracle_capital, week_str
         )
+        if oracle_dec == "TRADE" and oracle_pos:
+            oracle_total = round(sum(p.get("cost_basis", 0) * (
+                prices.get(p["symbol"], p.get("entry_price", 0)) / p.get("entry_price", 1)
+                if p.get("entry_price", 0) > 0 else 1
+            ) for p in oracle_pos), 2)
+        else:
+            oracle_total = round(oracle_capital, 2)
+        oracle_day_pnl = round(oracle_total - oracle_capital, 2)
+        oracle_day_pct = round(oracle_day_pnl / oracle_capital * 100, 4) if oracle_capital > 0 else 0
+        oracle_gain    = round(oracle_total - original_cost, 2)
+        oracle_gain_pct= round(oracle_gain / original_cost * 100, 4) if original_cost > 0 else 0
         results.append({
             "bot_id": bot_id, "fund_name": "oracle",
             "positions": oracle_pos,
             "strategy": {"decision": oracle_dec, "picks": oracle_picks, "rationale": oracle_rat,
                          "projected_return": oracle_proj, "week": week_str},
-            "total_value": round(total_value, 2), "entry_cost": round(starting_capital, 2),
-            "gain_loss": gain_loss, "gain_loss_pct": gain_loss_pct,
-            "day_pnl": round(day_pnl_total, 2), "day_pct": day_pct,
+            "total_value": oracle_total, "entry_cost": round(original_cost, 2),
+            "gain_loss": oracle_gain, "gain_loss_pct": oracle_gain_pct,
+            "day_pnl": oracle_day_pnl, "day_pct": oracle_day_pct,
             "window_open": win_open, "holding_cash": oracle_dec in ("CASH", "HOLD"),
         })
 
-        # ── WIZARD ──
+        # ── WIZARD ────────────────────────────────────────────────────────────
         wizard_dec, wizard_pos, wizard_picks, wizard_rat, wizard_proj = run_wizard_for_universe(
-            universe, prices, prev_closes, hist_data, starting_capital, month_str
+            universe, prices, prev_closes, hist_data, wizard_capital, month_str
         )
+        if wizard_dec == "TRADE" and wizard_pos:
+            wizard_total = round(sum(p.get("cost_basis", 0) * (
+                prices.get(p["symbol"], p.get("entry_price", 0)) / p.get("entry_price", 1)
+                if p.get("entry_price", 0) > 0 else 1
+            ) for p in wizard_pos), 2)
+        else:
+            wizard_total = round(wizard_capital, 2)
+        wizard_day_pnl = round(wizard_total - wizard_capital, 2)
+        wizard_day_pct = round(wizard_day_pnl / wizard_capital * 100, 4) if wizard_capital > 0 else 0
+        wizard_gain    = round(wizard_total - original_cost, 2)
+        wizard_gain_pct= round(wizard_gain / original_cost * 100, 4) if original_cost > 0 else 0
         results.append({
             "bot_id": bot_id, "fund_name": "wizard",
             "positions": wizard_pos,
             "strategy": {"decision": wizard_dec, "picks": wizard_picks, "rationale": wizard_rat,
                          "projected_return": wizard_proj, "month": month_str},
-            "total_value": round(total_value, 2), "entry_cost": round(starting_capital, 2),
-            "gain_loss": gain_loss, "gain_loss_pct": gain_loss_pct,
-            "day_pnl": round(day_pnl_total, 2), "day_pct": day_pct,
+            "total_value": wizard_total, "entry_cost": round(original_cost, 2),
+            "gain_loss": wizard_gain, "gain_loss_pct": wizard_gain_pct,
+            "day_pnl": wizard_day_pnl, "day_pct": wizard_day_pct,
             "window_open": win_open, "holding_cash": wizard_dec in ("CASH", "HOLD"),
         })
 
-        # ── EQUALIZER ──
-        eq_dec, eq_pos = run_equalizer_for_universe(universe, prices, prev_closes, starting_capital)
+        # ── EQUALIZER ─────────────────────────────────────────────────────────
+        eq_dec, eq_pos = run_equalizer_for_universe(universe, prices, prev_closes, baseline_capital)
         results.append({
             "bot_id": bot_id, "fund_name": "equalizer",
             "positions": eq_pos, "strategy": {"decision": eq_dec},
-            "total_value": round(total_value, 2), "entry_cost": round(starting_capital, 2),
-            "gain_loss": gain_loss, "gain_loss_pct": gain_loss_pct,
-            "day_pnl": round(day_pnl_total, 2), "day_pct": day_pct,
+            "total_value": round(eq_total_value, 2), "entry_cost": round(original_cost, 2),
+            "gain_loss": eq_gain_loss, "gain_loss_pct": eq_gain_loss_pct,
+            "day_pnl": round(eq_day_pnl, 2), "day_pct": eq_day_pct,
             "window_open": win_open, "holding_cash": False,
         })
 
-        # ── TITAN ──
-        tt_dec, tt_pos = run_titan_for_universe(universe, prices, prev_closes, starting_capital)
+        # ── TITAN ─────────────────────────────────────────────────────────────
+        tt_dec, tt_pos = run_titan_for_universe(universe, prices, prev_closes, baseline_capital)
+        # Titan's value: mark each position to market using its cost_basis and live price
+        tt_total = 0.0
+        tt_day_pnl = 0.0
+        for p in tt_pos:
+            sym   = p["symbol"]
+            price = prices.get(sym, p.get("entry_price", 0))
+            prev  = prev_closes.get(sym, price)
+            entry = p.get("entry_price", price)
+            alloc = p.get("cost_basis", 0)
+            shares = alloc / entry if entry > 0 else 0
+            tt_total   += shares * price if price > 0 else alloc
+            tt_day_pnl += shares * (price - prev) if price > 0 and prev > 0 else 0
+        tt_gain     = round(tt_total - original_cost, 2)
+        tt_gain_pct = round(tt_gain / original_cost * 100, 4) if original_cost > 0 else 0
+        tt_day_pct  = round(tt_day_pnl / original_cost * 100, 4) if original_cost > 0 else 0
         results.append({
             "bot_id": bot_id, "fund_name": "titan",
             "positions": tt_pos, "strategy": {"decision": tt_dec},
-            "total_value": round(total_value, 2), "entry_cost": round(starting_capital, 2),
-            "gain_loss": gain_loss, "gain_loss_pct": gain_loss_pct,
-            "day_pnl": round(day_pnl_total, 2), "day_pct": day_pct,
+            "total_value": round(tt_total, 2), "entry_cost": round(original_cost, 2),
+            "gain_loss": tt_gain, "gain_loss_pct": tt_gain_pct,
+            "day_pnl": round(tt_day_pnl, 2), "day_pct": tt_day_pct,
             "window_open": win_open, "holding_cash": False,
         })
 
