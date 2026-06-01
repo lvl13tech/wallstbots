@@ -1,0 +1,25 @@
+=== PUSH LOG === 
+Sat 05/30/2026 21:41:32.68 
+ 
+[1] git add 
+warning: in the working copy of 'Frontends/bitbot13.tech/bot-detail.html', LF will be replaced by CRLF the next time Git touches it
+ADD EXIT: 0 
+ 
+[2] git commit 
+[master 7ca0d26] fix: update coin search dialog text on bitbot13 bot-detail
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+COMMIT EXIT: 0 
+ 
+[3] git push 
+To https://github.com/lvl13tech/wallstbots.git
+   873ffac..7ca0d26  master -> master
+PUSH EXIT: 0 
+ 
+[4] git log 
+7ca0d26 fix: update coin search dialog text on bitbot13 bot-detail
+873ffac fix: bitbot13 coin search — 250 curated coins, no stablecoins, file restored correctly
+6d69583 fix: bitbot13 coin search — 250 curated coins, no stablecoins; backend snapshot table fix
+5d86f7f fix: bots_holdings -> bot_holdings, deleted_at -> removed_at in snapshot endpoint
+7a936a8 auto: bitbot13 data refresh [2026-05-31 00:10 UTC]
+ 
+=== DONE === 
