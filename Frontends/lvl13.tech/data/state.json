@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 49000.0,
-    "last_refresh": "2026-06-01T23:06:04",
+    "last_refresh": "2026-06-01T19:57:41",
     "snapshots": [
       {
         "date": "2026-05-29",
@@ -205,8 +205,8 @@
         "starting_capital": 49000.0,
         "value": {
           "total": 49000.0,
-          "cash": 0.01,
-          "pos_val": 48999.99,
+          "cash": 0.0,
+          "pos_val": 49000.0,
           "pnl": 0.0,
           "pnl_pct": 0.0,
           "day_pnl": 5076.36,
@@ -215,12 +215,12 @@
           "positions": [
             {
               "symbol": "SNOW",
-              "shares": 44.124262,
+              "shares": 44.124286,
               "entry_price": 280.16,
               "current_price": 280.16,
-              "cost_basis": 12361.85,
+              "cost_basis": 12361.86,
               "price": 280.16,
-              "value": 12361.85,
+              "value": 12361.86,
               "pnl": 0.0,
               "pnl_pct": 0.0,
               "day_pnl": 1085.9,
@@ -228,12 +228,12 @@
             },
             {
               "symbol": "OKTA",
-              "shares": 75.916232,
+              "shares": 75.916339,
               "entry_price": 139.79,
               "current_price": 139.79,
-              "cost_basis": 10612.33,
+              "cost_basis": 10612.35,
               "price": 139.79,
-              "value": 10612.33,
+              "value": 10612.35,
               "pnl": 0.0,
               "pnl_pct": 0.0,
               "day_pnl": 1254.14,
@@ -241,25 +241,25 @@
             },
             {
               "symbol": "ARM",
-              "shares": 23.915941,
+              "shares": 23.916069,
               "entry_price": 408.85,
               "current_price": 408.85,
-              "cost_basis": 9778.03,
+              "cost_basis": 9778.08,
               "price": 408.85,
-              "value": 9778.03,
+              "value": 9778.08,
               "pnl": 0.0,
               "pnl_pct": 0.0,
-              "day_pnl": 1328.77,
+              "day_pnl": 1328.78,
               "day_pct": 15.73
             },
             {
               "symbol": "DDOG",
-              "shares": 30.764436,
+              "shares": 30.764296,
               "entry_price": 277.49,
               "current_price": 277.49,
-              "cost_basis": 8536.82,
+              "cost_basis": 8536.78,
               "price": 277.49,
-              "value": 8536.82,
+              "value": 8536.78,
               "pnl": 0.0,
               "pnl_pct": 0.0,
               "day_pnl": 927.24,
@@ -267,15 +267,15 @@
             },
             {
               "symbol": "MU",
-              "shares": 7.446606,
+              "shares": 7.446572,
               "entry_price": 1035.5,
               "current_price": 1035.5,
-              "cost_basis": 7710.96,
+              "cost_basis": 7710.93,
               "price": 1035.5,
-              "value": 7710.96,
+              "value": 7710.93,
               "pnl": 0.0,
               "pnl_pct": 0.0,
-              "day_pnl": 480.31,
+              "day_pnl": 480.3,
               "day_pct": 6.64
             }
           ]
@@ -289,7 +289,7 @@
               "symbol": "SNOW",
               "weight": 0.2523,
               "score": 51.6,
-              "rationale": "SNOW: 5d +57.7% | 20d +94.3% | RSI 94 | Vol x1.99. Allocated 25%."
+              "rationale": "SNOW: 5d +57.7% | 20d +94.3% | RSI 94 | Vol x2.00. Allocated 25%."
             },
             {
               "symbol": "OKTA",

@@ -1,0 +1,55 @@
+=== PUSH LOG === 
+Mon 06/01/2026 19:56:33.65 
+ 
+[1] git add 
+warning: in the working copy of 'Project/scripts/refresh_portfolios.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Backend/fix_bot_fund_state_precision.sql', LF will be replaced by CRLF the next time Git touches it
+ADD EXIT: 0 
+ 
+[2] git commit 
+[master 66aca28] fix: simulation engine ΓÇö Oracle/Wizard day enforcement, Equalizer/Titan fixed entry prices, BOT13 session-aware carryover, column precision
+ 2 files changed, 383 insertions(+), 205 deletions(-)
+ create mode 100644 Backend/fix_bot_fund_state_precision.sql
+COMMIT EXIT: 0 
+ 
+[3] git stash any unstaged 
+Saved working directory and index state WIP on master: 66aca28 fix: simulation engine ΓÇö Oracle/Wizard day enforcement, Equalizer/Titan fixed entry prices, BOT13 session-aware carryover, column precision
+ 
+[4] git pull --rebase 
+From https://github.com/lvl13tech/wallstbots
+ * branch            master     -> FETCH_HEAD
+   c5e3e00..4627efd  master     -> origin/master
+Rebasing (1/1)Successfully rebased and updated refs/heads/master.
+PULL EXIT: 0 
+ 
+[5] git push 
+To https://github.com/lvl13tech/wallstbots.git
+   4627efd..a5a5017  master -> master
+PUSH EXIT: 0 
+ 
+[6] git stash pop 
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   refresh-wallstbots-result.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	Backend/fix_snapshot_precision.sql
+	Backend/reset_bot_history.sql
+	push-simulation-engine-fix-log.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+Dropped refs/stash@{0} (03377cd34822b64d940d87f5c6cc2afce7681adc)
+ 
+[7] git log 
+a5a5017 fix: simulation engine ΓÇö Oracle/Wizard day enforcement, Equalizer/Titan fixed entry prices, BOT13 session-aware carryover, column precision
+4627efd auto: bitbot13 data refresh [2026-06-01 23:54 UTC]
+c5e3e00 merge remote; keep local data
+8435805 wallstbots refresh ΓÇö fix bot13 inception 2026-05-22
+bcd344d auto: lvl13 data refresh [2026-06-01 23:06 UTC]
+ 
+=== DONE === 
