@@ -819,7 +819,6 @@ function renderPaypalForm() {
   const wrap = $('paypalFormWrap');
   if (!wrap) return;
 
-  // Admin code flow — show signup form instead of PayPal
   if (GY_ADMIN_CODE) {
     wrap.innerHTML =
       '<input id="adminEmail" type="email" placeholder="Your email" autocomplete="email" '
@@ -828,55 +827,53 @@ function renderPaypalForm() {
       + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:10px">'
       + '<button onclick="claimAdminAccess()" '
       + 'style="width:100%;background:#ff8c00;color:#000;border:none;border-radius:8px;padding:12px 0;font-weight:800;cursor:pointer;font-size:15px">🎉 Claim Free INSIDER Access</button>'
-      + '<div id="adminClaimMsg" style="font-size:12px;margin-top:8px;min-height:16px"></div>'
-      + '<div style="font-size:11px;margin-top:8px;color:var(--muted);text-align:center">Free forever. Want SYNDICATE? Upgrade for just $30/mo anytime.</div>';
+      + '<div id="adminClaimMsg" style="font-size:12px;margin-top:8px;min-height:16px"></div>';
     return;
   }
 
-  const paypal     = STATE.meta.paypalEmail;
   const annual     = GY_CYCLE === 'annual';
   const ref        = GY_VALID ? GY_REF : '';
   const tierPrices = PRICING[GY_TIER];
-  const tierLabel  = TIER_META[GY_TIER].label;
-  const price      = annual ? tierPrices.annual  : tierPrices.monthly;
+  const price      = annual ? tierPrices.annual : tierPrices.monthly;
   const base       = price.toFixed(2);
-  const unit       = annual ? 'Y' : 'M';
-  const label      = annual ? 'Annual' : 'Monthly';
   const refPrice   = annual ? (price - 100).toFixed(2) : (price * 0.5).toFixed(2);
-  const btnTxt     = 'Subscribe — $' + base + (annual ? '/yr' : '/mo');
-  // custom field carries platform + optional referral code for backend webhook
-  const customField = 'wallstbots' + (ref ? '|ref=' + ref : '');
-  const refFields = ref
-    ? '<input type="hidden" name="a1" value="'+refPrice+'">'
-    + '<input type="hidden" name="p1" value="1">'
-    + '<input type="hidden" name="t1" value="'+unit+'">'
-    : '';
-  const refBtnTxt = ref
+  const btnTxt     = ref
     ? 'Subscribe — $' + refPrice + ' today, then $' + base + (annual ? '/yr' : '/mo')
-    : btnTxt;
+    : 'Subscribe — $' + base + (annual ? '/yr' : '/mo');
 
   wrap.innerHTML =
-    '<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="margin:0">'
-    + '<input type="hidden" name="cmd" value="_xclick-subscriptions">'
-    + '<input type="hidden" name="business" value="'+paypal+'">'
-    + '<input type="hidden" name="lc" value="US">'
-    + '<input type="hidden" name="item_name" value="wallstbots.tech '+tierLabel+' - '+label+'">'
-    + '<input type="hidden" name="no_note" value="1"><input type="hidden" name="no_shipping" value="1">'
-    + '<input type="hidden" name="custom" value="'+escapeHtml(customField)+'">'
-    + '<input type="hidden" name="src" value="1">'
-    + refFields
-    + '<input type="hidden" name="a3" value="'+base+'">'
-    + '<input type="hidden" name="p3" value="1"><input type="hidden" name="t3" value="'+unit+'">'
-    + '<input type="hidden" name="currency_code" value="USD">'
-    + '<input type="hidden" name="return" value="https://wallstbots.tech/#/thanks">'
-    + '<input type="hidden" name="cancel_return" value="https://wallstbots.tech/#/get-yours">'
-    + '<button type="submit" class="paypal-btn">'+refBtnTxt+'</button>'
-    + '</form>'
-    + '<div style="font-size:12px;margin-top:6px;opacity:0.85">'
-    + (ref
-      ? 'Referral discount applied to first payment. Renews at $'+base+(annual?'/yr':'/mo')+' afterwards.'
-      : '$'+base+' today, renews every '+(annual?'year':'month'))
-    + '</div>';
+    '<button id="stripeCheckoutBtn" onclick="startStripeCheckout()" '
+    + 'style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:14px;font-size:15px;font-weight:700;cursor:pointer">'
+    + btnTxt + '</button>'
+    + '<div style="font-size:12px;margin-top:8px;color:var(--muted);text-align:center">'
+    + (ref ? 'Referral discount applied. Renews at $'+base+(annual?'/yr':'/mo')+' afterwards.' : 'Renews every '+(annual?'year':'month')+' · cancel anytime')
+    + '</div>'
+    + '<div style="font-size:11px;margin-top:6px;color:var(--muted);text-align:center;opacity:0.7">SECURED BY STRIPE</div>';
+}
+
+async function startStripeCheckout() {
+  const btn = $('stripeCheckoutBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to checkout…'; }
+  const jwt = getJWT();
+  if (!jwt) {
+    alert('Please log in or create an account first, then return to subscribe.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Subscribe'; }
+    window.location.href = '/login.html';
+    return;
+  }
+  try {
+    const r = await fetch(API_BASE + '/stripe/create-checkout', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + jwt, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier: GY_TIER, cycle: GY_CYCLE, platform: 'wallstbots', ref_code: GY_VALID ? GY_REF : '' }),
+    });
+    const d = await r.json();
+    if (d.url) { window.location.href = d.url; }
+    else { throw new Error(d.detail || 'Could not create checkout session'); }
+  } catch(e) {
+    alert('Checkout error: ' + (e.message || 'Please try again.'));
+    if (btn) { btn.disabled = false; btn.textContent = 'Subscribe'; }
+  }
 }
 
 async function claimAdminAccess() {

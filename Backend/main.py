@@ -16,6 +16,7 @@ from decimal import Decimal
 
 from fastapi import FastAPI, Depends, HTTPException, status, Header, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 import psycopg
@@ -23,6 +24,11 @@ from psycopg_pool import ConnectionPool
 from psycopg.rows import dict_row
 import requests
 from dotenv import load_dotenv
+
+try:
+    import stripe as _stripe
+except ImportError:
+    _stripe = None
 
 load_dotenv()
 
@@ -36,9 +42,9 @@ SUPABASE_ANON_KEY        = os.getenv("SUPABASE_ANON_KEY")
 JWT_SECRET               = os.getenv("JWT_SECRET")
 DATABASE_URL             = os.getenv("DATABASE_URL")
 
-PAYPAL_CLIENT_ID         = os.getenv("PAYPAL_CLIENT_ID")
-PAYPAL_CLIENT_SECRET     = os.getenv("PAYPAL_CLIENT_SECRET")
-PAYPAL_MODE              = os.getenv("PAYPAL_MODE", "sandbox")
+STRIPE_SECRET_KEY        = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET    = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+STRIPE_PUBLISHABLE_KEY   = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
 POLYGON_API_KEY          = os.getenv("POLYGON_API_KEY", "")
 
 # Internal key used by GitHub Actions to push tracker data — never exposed publicly
@@ -54,8 +60,16 @@ SUPPORT_NOTIFY_EMAIL     = "info@lvl13.tech"
 ADMIN_CODES = {'admin13', 'adminm13'}
 ADMIN_CODE_TIERS = {'admin13': 'insider', 'adminm13': 'syndicate'}
 
+# Stripe price IDs per tier per billing cycle
+STRIPE_PRICES = {
+    "member":    {"monthly": "price_1TdiQz79ykntfWmWfuubQxGm", "annual": "price_1TdiSj79ykntfWmWtMfJsZGM"},
+    "insider":   {"monthly": "price_1TdiTJ79ykntfWmW0QpkGhkW", "annual": "price_1TdiUU79ykntfWmWgkG7F48q"},
+    "syndicate": {"monthly": "price_1TdiV879ykntfWmW5aa6w07G", "annual": "price_1TdiVp79ykntfWmWXgwR3WtM"},
+}
+
 PAYPAL_API_BASE = (
-    "https://api.paypal.com" if PAYPAL_MODE == "live"
+    "https://api.paypal.com"
+    if True  # kept for legacy DB rows only — no longer used for new payments
     else "https://api.sandbox.paypal.com"
 )
 
@@ -1078,67 +1092,198 @@ async def calculate_subscription_price(
     }
 
 
-@app.post("/paypal/webhook")
-async def handle_paypal_webhook(event: PayPalWebhookEvent):
-    """Handle PayPal webhooks for subscription payments."""
+@app.post("/stripe/create-checkout")
+async def stripe_create_checkout(request: Request, current_user: dict = Depends(get_current_user)):
+    """
+    Create a Stripe Checkout Session for a subscription.
+    Called by the frontend when user clicks Subscribe.
+    Returns a checkout URL to redirect to.
+    """
+    if _stripe is None:
+        raise HTTPException(status_code=500, detail="Stripe not installed on server")
+    if not STRIPE_SECRET_KEY:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+
+    _stripe.api_key = STRIPE_SECRET_KEY
+
+    body = await request.json()
+    tier     = body.get("tier", "member").lower()
+    cycle    = body.get("cycle", "monthly").lower()
+    platform = body.get("platform", "lvl13").lower()
+    ref_code = body.get("ref_code", "")
+
+    price_id = (STRIPE_PRICES.get(tier) or {}).get(cycle)
+    if not price_id:
+        raise HTTPException(status_code=400, detail=f"Invalid tier/cycle: {tier}/{cycle}")
+
+    # Build success/cancel URLs per platform
+    platform_origins = {
+        "lvl13":      "https://lvl13.tech",
+        "bitbot13":   "https://bitbot13.tech",
+        "wallstbots": "https://wallstbots.tech",
+    }
+    origin = platform_origins.get(platform, "https://lvl13.tech")
+
+    # Get user email for prefill
     conn = get_db_connection()
     try:
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO paypal_webhook_log (event_type, payload)
-            VALUES (%s, %s)
-        """, (event.event_type, json.dumps(event.dict())))
-        conn.commit()
-
-        if event.event_type == "CHECKOUT.ORDER.COMPLETED":
-            resource  = event.resource
-            txn_id    = resource.get("id", "")
-            payer     = resource.get("payer", {})
-            payer_email = payer.get("email_address", "")
-            purchase_unit = resource.get("purchase_units", [{}])[0]
-            amount_str  = purchase_unit.get("amount", {}).get("value", "0")
-            try:
-                amount = float(amount_str)
-            except Exception:
-                amount = 0.0
-
-            # Identify which Level 13 site originated the sale.
-            # The frontend PayPal form sends site name in `custom` (legacy IPN)
-            # or `custom_id` (Orders API). Format is "<site>" or "<site>|ref=CODE".
-            # Default to lvl13 if missing/unrecognized.
-            origin_raw = (
-                purchase_unit.get("custom_id")
-                or resource.get("custom_id")
-                or resource.get("custom")
-                or ""
-            ).strip().lower()
-            # Strip any "|ref=…" suffix before validating
-            site_token = origin_raw.split("|", 1)[0].strip()
-            valid_platforms = {"lvl13", "bitbot13", "wallstbots"}
-            origin_platform = site_token if site_token in valid_platforms else "lvl13"
-
-            # Look up user by payer email
-            cursor2 = conn.cursor(row_factory=dict_row)
-            cursor2.execute("SELECT id FROM users WHERE email = %s", (payer_email,))
-            user_row = cursor2.fetchone()
-            if user_row:
-                # Activate subscription. user_id is the key — a sale here counts
-                # across ALL 3 sites; origin_platform just records where it came
-                # from for ops/reporting.
-                cursor2.execute("""
-                    INSERT INTO subscriptions
-                        (user_id, bot_count, final_price, status,
-                         paypal_transaction_id, origin_platform)
-                    VALUES (%s, 1, %s, 'completed', %s, %s)
-                    ON CONFLICT DO NOTHING
-                """, (user_row["id"], amount, txn_id, origin_platform))
-                conn.commit()
-            cursor2.close()
-
-        return {"success": True, "message": "Webhook processed"}
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("SELECT email FROM users WHERE id = %s", (current_user["user_id"],))
+        user_row = cursor.fetchone()
+        customer_email = user_row["email"] if user_row else None
     finally:
         cursor.close()
         return_db_connection(conn)
+
+    metadata = {
+        "user_id":  current_user["user_id"],
+        "platform": platform,
+        "tier":     tier,
+        "cycle":    cycle,
+        "ref_code": ref_code,
+    }
+
+    session = _stripe.checkout.Session.create(
+        mode="subscription",
+        line_items=[{"price": price_id, "quantity": 1}],
+        customer_email=customer_email,
+        success_url=origin + "/#/thanks?session_id={CHECKOUT_SESSION_ID}",
+        cancel_url=origin + "/#/get-yours",
+        metadata=metadata,
+        subscription_data={"metadata": metadata},
+        allow_promotion_codes=True,
+    )
+
+    return {"success": True, "url": session.url}
+
+
+@app.post("/stripe/webhook")
+async def stripe_webhook(request: Request):
+    """
+    Handle Stripe webhook events.
+    Verifies the Stripe signature then processes subscription lifecycle events.
+    """
+    if _stripe is None:
+        raise HTTPException(status_code=500, detail="Stripe not installed")
+
+    _stripe.api_key = STRIPE_SECRET_KEY
+    payload    = await request.body()
+    sig_header = request.headers.get("stripe-signature", "")
+
+    try:
+        event = _stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
+    except _stripe.error.SignatureVerificationError:
+        raise HTTPException(status_code=400, detail="Invalid Stripe signature")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    event_type = event["type"]
+    data       = event["data"]["object"]
+
+    # ── checkout.session.completed ─────────────────────────────────────────────
+    # User completed checkout — activate their subscription immediately.
+    if event_type == "checkout.session.completed":
+        meta         = data.get("metadata") or {}
+        user_id      = meta.get("user_id")
+        tier         = meta.get("tier", "member")
+        platform     = meta.get("platform", "lvl13")
+        ref_code     = meta.get("ref_code", "")
+        amount_total = (data.get("amount_total") or 0) / 100.0  # cents → dollars
+        stripe_sub_id = data.get("subscription", "")
+        customer_email = data.get("customer_email") or data.get("customer_details", {}).get("email", "")
+
+        # Map tier to subscription_tier column value
+        tier_map = {"member": "member", "insider": "insider", "syndicate": "syndicate"}
+        sub_tier = tier_map.get(tier, "member")
+
+        conn = get_db_connection()
+        try:
+            cursor = conn.cursor(row_factory=dict_row)
+
+            # If we have user_id from metadata use it; otherwise look up by email
+            if not user_id and customer_email:
+                cursor.execute("SELECT id FROM users WHERE email = %s", (customer_email,))
+                row = cursor.fetchone()
+                user_id = str(row["id"]) if row else None
+
+            if user_id:
+                # Activate tier on user row
+                cursor.execute("""
+                    UPDATE users
+                    SET subscription_tier = %s, tier_expires_at = NULL
+                    WHERE id = %s
+                """, (sub_tier, user_id))
+
+                # Record subscription
+                cursor.execute("""
+                    INSERT INTO subscriptions
+                        (user_id, bot_count, final_price, status,
+                         stripe_subscription_id, origin_platform)
+                    VALUES (%s, 1, %s, 'active', %s, %s)
+                    ON CONFLICT DO NOTHING
+                """, (user_id, amount_total, stripe_sub_id, platform))
+
+                # Handle referral credit if code was used
+                if ref_code:
+                    try:
+                        cursor.execute("""
+                            SELECT created_by_user_id FROM referral_codes WHERE code = %s
+                        """, (ref_code,))
+                        ref_row = cursor.fetchone()
+                        if ref_row:
+                            cursor.execute("""
+                                UPDATE users
+                                SET referral_credit_balance = referral_credit_balance + 35
+                                WHERE id = %s
+                            """, (ref_row["created_by_user_id"],))
+                            cursor.execute("""
+                                UPDATE referral_codes
+                                SET used_count = used_count + 1,
+                                    total_referral_credits = total_referral_credits + 35
+                                WHERE code = %s
+                            """, (ref_code,))
+                    except Exception:
+                        pass  # referral failure is non-fatal
+
+                conn.commit()
+
+        except Exception as e:
+            conn.rollback()
+            print(f"[stripe webhook] DB error on checkout.session.completed: {e}")
+        finally:
+            cursor.close()
+            return_db_connection(conn)
+
+    # ── customer.subscription.deleted ─────────────────────────────────────────
+    # Subscription cancelled — downgrade user to free tier.
+    elif event_type == "customer.subscription.deleted":
+        meta    = data.get("metadata") or {}
+        user_id = meta.get("user_id")
+        conn = get_db_connection()
+        try:
+            cursor = conn.cursor()
+            if user_id:
+                cursor.execute("""
+                    UPDATE users SET subscription_tier = 'free' WHERE id = %s
+                """, (user_id,))
+                cursor.execute("""
+                    UPDATE subscriptions SET status = 'cancelled'
+                    WHERE stripe_subscription_id = %s
+                """, (data.get("id", ""),))
+                conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f"[stripe webhook] DB error on subscription.deleted: {e}")
+        finally:
+            cursor.close()
+            return_db_connection(conn)
+
+    # ── invoice.payment_failed ─────────────────────────────────────────────────
+    # Payment failed — log it (don't immediately revoke access, Stripe will retry)
+    elif event_type == "invoice.payment_failed":
+        print(f"[stripe webhook] payment failed: customer={data.get('customer')} amount={data.get('amount_due')}")
+
+    return JSONResponse({"received": True})
 
 # ============================================================================
 # TRACKER ENDPOINTS
