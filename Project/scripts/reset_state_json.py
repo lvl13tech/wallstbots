@@ -40,7 +40,8 @@ for path in PLATFORMS:
     # ── 1. Reset snapshots to today only ──────────────────────────────────────
     today_snapshot = {"date": TODAY}
     for fid in FUND_ORDER:
-        today_snapshot[fid] = sc  # all start at starting_capital today
+        fund_sc = float((funds.get(fid) or {}).get("starting_capital") or sc)
+        today_snapshot[fid] = fund_sc  # each fund starts at its own starting_capital
     state_data["snapshots"] = [today_snapshot]
     print(f"  snapshots reset to today ({TODAY}) only")
 
@@ -55,28 +56,24 @@ for path in PLATFORMS:
         # Reset inception to today
         fund["inception"] = TODAY
 
-        # Reset value totals — preserve positions and prices, just zero the P&L
+        # Wipe ALL positions — the refresh scripts will re-seed at today's prices
+        # on the next run. This is the only way to guarantee pnl starts at 0.
         val = fund.get("value", {})
         if val:
+            val["positions"]    = []   # force fresh seed on next refresh
             val["total"]        = fund_sc
             val["pnl"]          = 0.0
             val["pnl_pct"]      = 0.0
             val["day_pnl"]      = 0.0
             val["day_pct"]      = 0.0
             val["day_open"]     = fund_sc
+            val["cash"]         = fund_sc
+            val["pos_val"]      = 0.0
 
-            # For baselines (equalizer/titan): also reset positions entry_price
-            # to current price so they start from today's price, not old prices
-            if fid in ("equalizer", "titan"):
-                positions = val.get("positions", [])
-                for pos in positions:
-                    # entry_price = today's price (current price IS inception price now)
-                    pos["entry_price"] = pos.get("price", pos.get("entry_price", 0))
-                    pos["cost_basis"]  = round(float(pos.get("shares", 0)) * float(pos.get("entry_price", 0)), 2)
-                    pos["pnl"]         = 0.0
-                    pos["pnl_pct"]     = 0.0
+        # Also wipe current_strategy so bots don't carry forward old decisions
+        fund["current_strategy"] = {}
 
-        print(f"  {fid}: reset to ${fund_sc:,.2f}, inception={TODAY}")
+        print(f"  {fid}: reset to ${fund_sc:,.2f}, positions wiped, inception={TODAY}")
 
     # ── 3. Write back ─────────────────────────────────────────────────────────
     out = json.dumps(raw, indent=2, ensure_ascii=False)
