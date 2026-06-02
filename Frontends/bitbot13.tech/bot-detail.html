@@ -1292,19 +1292,27 @@ async function togglePrivacyPill() {
 
 // ── Comments ──────────────────────────────────────────────────────────────────
 async function loadComments() {
+  const listEl = document.getElementById('commentsList');
   try {
     const token = await auth.getToken().catch(() => null);
     const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
     const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/comments?limit=50', { headers });
+    if (!res.ok) {
+      if (listEl) listEl.innerHTML = '<div class="comments-empty">No comments yet. Be the first!</div>';
+      try { renderCommentForm(); } catch(e) {}
+      return;
+    }
     const data = await res.json();
-    const comments = data.comments || [];
+    const comments = Array.isArray(data.comments) ? data.comments : [];
     let myUserId = null;
-    if (token) { try { myUserId = JSON.parse(atob(token.split('.')[1])).user_id; } catch(e) {} }
-    renderCommentForm();
-    renderComments(comments, myUserId);
+    if (token) { try { myUserId = JSON.parse(atob(token.split('.')[1])).sub || JSON.parse(atob(token.split('.')[1])).user_id; } catch(e) {} }
+    try { renderCommentForm(); } catch(e) {}
+    try { renderComments(comments, myUserId); } catch(e) {
+      if (listEl) listEl.innerHTML = '<div class="comments-empty">No comments yet. Be the first!</div>';
+    }
   } catch(e) {
-    const el = document.getElementById('commentsList');
-    if (el) el.innerHTML = '<div class="comments-empty">Could not load comments.</div>';
+    if (listEl) listEl.innerHTML = '<div class="comments-empty">No comments yet. Be the first!</div>';
+    try { renderCommentForm(); } catch(e2) {}
   }
 }
 
