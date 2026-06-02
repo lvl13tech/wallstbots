@@ -1,36 +1,36 @@
 === RESET STATE LOG === 
-Mon 06/01/2026 20:52:35.54 
+Tue 06/02/2026 17:54:31.27 
  
 [1] Running reset_state_json.py 
 
 [reset] bitbot13.tech/state.json
   starting_capital: 50000.0
-  snapshots reset to today (2026-06-01) only
-  bot13: reset to $50,000.00, inception=2026-06-01
-  oracle: reset to $50,000.00, inception=2026-06-01
-  wizard: reset to $50,000.00, inception=2026-06-01
-  equalizer: reset to $50,000.00, inception=2026-06-01
-  titan: reset to $50,000.00, inception=2026-06-01
+  snapshots reset to today (2026-06-02) only
+  bot13: reset to $50,000.00, positions wiped, inception=2026-06-02
+  oracle: reset to $50,000.00, positions wiped, inception=2026-06-02
+  wizard: reset to $50,000.00, positions wiped, inception=2026-06-02
+  equalizer: reset to $50,000.00, positions wiped, inception=2026-06-02
+  titan: reset to $50,000.00, positions wiped, inception=2026-06-02
   written: C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Frontends\bitbot13.tech\data\state.json
 
 [reset] wallstbots.tech/state.json
   starting_capital: 55000.0
-  snapshots reset to today (2026-06-01) only
-  bot13: reset to $55,000.00, inception=2026-06-01
-  oracle: reset to $55,000.00, inception=2026-06-01
-  wizard: reset to $55,000.00, inception=2026-06-01
-  equalizer: reset to $55,000.00, inception=2026-06-01
-  titan: reset to $55,000.00, inception=2026-06-01
+  snapshots reset to today (2026-06-02) only
+  bot13: reset to $55,000.00, positions wiped, inception=2026-06-02
+  oracle: reset to $55,000.00, positions wiped, inception=2026-06-02
+  wizard: reset to $55,000.00, positions wiped, inception=2026-06-02
+  equalizer: reset to $55,000.00, positions wiped, inception=2026-06-02
+  titan: reset to $55,000.00, positions wiped, inception=2026-06-02
   written: C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Frontends\wallstbots.tech\data\state.json
 
 [reset] lvl13.tech/state.json
   starting_capital: 49000.0
-  snapshots reset to today (2026-06-01) only
-  bot13: reset to $49,000.00, inception=2026-06-01
-  oracle: reset to $49,000.00, inception=2026-06-01
-  wizard: reset to $49,000.00, inception=2026-06-01
-  equalizer: reset to $49,000.00, inception=2026-06-01
-  titan: reset to $49,000.00, inception=2026-06-01
+  snapshots reset to today (2026-06-02) only
+  bot13: reset to $49,000.00, positions wiped, inception=2026-06-02
+  oracle: reset to $49,000.00, positions wiped, inception=2026-06-02
+  wizard: reset to $49,000.00, positions wiped, inception=2026-06-02
+  equalizer: reset to $49,000.00, positions wiped, inception=2026-06-02
+  titan: reset to $49,000.00, positions wiped, inception=2026-06-02
   written: C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Frontends\lvl13.tech\data\state.json
 
 [done] All 3 state.json files reset to today as day 1.
@@ -42,33 +42,58 @@ warning: in the working copy of 'Project/scripts/reset_state_json.py', LF will b
 ADD EXIT: 0 
  
 [3] git commit 
-[master 5a8754c] reset: all 3 platforms reset to today as day 1 ΓÇö clean race start
- 4 files changed, 1437 insertions(+), 1498 deletions(-)
- create mode 100644 Project/scripts/reset_state_json.py
+[master 03de4c4] reset: all 3 platforms reset to today as day 1 ΓÇö clean race start
+ 4 files changed, 186 insertions(+), 5272 deletions(-)
 COMMIT EXIT: 0 
  
 [4] git stash 
-No local changes to save
+warning: in the working copy of 'reset-state-log.txt', LF will be replaced by CRLF the next time Git touches it
+Saved working directory and index state WIP on master: 03de4c4 reset: all 3 platforms reset to today as day 1 ΓÇö clean race start
+error: unable to unlink old 'reset-state-log.txt': Invalid argument
+fatal: Could not reset index file to revision 'HEAD'.
  
 [5] git pull --rebase 
-From https://github.com/lvl13tech/wallstbots
- * branch            master     -> FETCH_HEAD
-Current branch master is up to date.
-PULL EXIT: 0 
+error: cannot pull with rebase: You have unstaged changes.
+error: Please commit or stash them.
+PULL EXIT: 128 
  
 [6] git push 
 To https://github.com/lvl13tech/wallstbots.git
-   9b78579..5a8754c  master -> master
-PUSH EXIT: 0 
+ ! [rejected]        master -> master (fetch first)
+error: failed to push some refs to 'https://github.com/lvl13tech/wallstbots.git'
+hint: Updates were rejected because the remote contains work that you do not
+hint: have locally. This is usually caused by another repository pushing to
+hint: the same ref. If you want to integrate the remote changes, use
+hint: 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+PUSH EXIT: 1 
  
 [7] git stash pop 
-No stash entries found.
+error: Your local changes to the following files would be overwritten by merge:
+	reset-state-log.txt
+Please commit your changes or stash them before you merge.
+Aborting
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   reset-state-log.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	push-stripe-migration-log.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+The stash entry is kept in case you need it again.
  
 [8] git log 
+03de4c4 reset: all 3 platforms reset to today as day 1 ΓÇö clean race start
+2298934 feat: migrate from PayPal to Stripe ΓÇö checkout, webhooks, all 3 sites
+5656320 auto: bitbot13 data refresh [2026-06-02 02:44 UTC]
+7701844 data: all 3 platforms refresh + portfolio simulations Mon 06/01/2026 20:54:16.96
 5a8754c reset: all 3 platforms reset to today as day 1 ΓÇö clean race start
-9b78579 fix: leaderboard shows live gain/loss LOG 2>&1
-42963dd fix: comments load correctly on bot-detail across all 3 sites
-ca45b24 data: all 3 platforms refresh + portfolio simulations Mon 06/01/2026 19:58:26.46
-a5a5017 fix: simulation engine ΓÇö Oracle/Wizard day enforcement, Equalizer/Titan fixed entry prices, BOT13 session-aware carryover, column precision
  
 === DONE === 
