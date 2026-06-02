@@ -574,6 +574,7 @@ async function init() {
   try { loadSubscriptionInfo(); } catch(e) {}
   await loadBot();
   await loadSiteData();
+  try { loadFundStates(); } catch(e) {}  // loads all 5 bot states, re-renders leaderboard with real %
 }
 
 function renderProfile() {
@@ -739,17 +740,44 @@ function renderPortfolioBotAnalysis() {
   grid.innerHTML = cards;
 }
 
+// ── Fund states (per-portfolio bot simulation results) ────────────────────────
+const FUND_STATES = {};  // keyed by fund slug, populated by loadFundStates()
+
+async function loadFundStates() {
+  try {
+    const token = await auth.getToken().catch(() => null);
+    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    await Promise.all(FUND_ORDER.map(async fid => {
+      try {
+        const res = await fetch(API_BASE + '/bots/' + BOT_ID + '/fund/' + fid + '/state', { headers });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.state) FUND_STATES[fid] = data.state;
+        }
+      } catch(e) {}
+    }));
+    renderLeaderboard();  // re-render with real data once loaded
+  } catch(e) {}
+}
+
 // ── Leaderboard strip ─────────────────────────────────────────────────────────
-// Portfolio-specific daily P&L starts at zero on day 1.
-// Links go to portfolio-scoped bot pages, not global homepage.
+// Shows per-portfolio all-time gain/loss % for each bot strategy.
+// Reads from FUND_STATES populated by loadFundStates().
 function renderLeaderboard() {
   const strip = FUND_ORDER.map(fid => {
-    const m = FUND_META[fid];
-    // Leaderboard shows member's portfolio links — no global P&L data
+    const m  = FUND_META[fid];
+    const fs = FUND_STATES[fid];
+    let pctHtml = '<div class="lb-pct" style="color:var(--muted)">—</div>';
+    if (fs && fs.gain_loss_pct != null) {
+      const pct    = parseFloat(fs.gain_loss_pct);
+      const cls    = pct >= 0 ? 'pos' : 'neg';
+      const sign   = pct >= 0 ? '+' : '';
+      pctHtml = '<div class="lb-pct ' + cls + '">' + sign + pct.toFixed(2) + '%</div>';
+    }
     return '<a class="card clickable" href="portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid + '">'
       + '<span class="fund-icon ' + fid + '">' + m.icon + '</span>'
       + '<div class="lb-name"><strong>' + m.name + '</strong><small>' + m.kind + '</small></div>'
-      + '<div class="lb-pct">—</div></a>';
+      + pctHtml + '</a>';
   }).join('');
   const lbEl = document.getElementById('lbStrip');
   if (lbEl) lbEl.innerHTML = strip;
