@@ -1,15 +1,15 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-06-02T23:05:37",
+    "last_refresh": "2026-06-02T19:18:52",
     "snapshots": [
       {
         "date": "2026-06-02",
         "bot13": 55000.0,
         "oracle": 54191.81,
         "wizard": 55596.55,
-        "equalizer": 54859.12,
-        "titan": 54679.38
+        "equalizer": 54862.86,
+        "titan": 54681.67
       }
     ],
     "funds": {
@@ -373,13 +373,13 @@
         "inception": "2026-06-02",
         "starting_capital": 55000.0,
         "value": {
-          "total": 54859.12,
+          "total": 54862.86,
           "cash": 0.0,
-          "pos_val": 54859.14,
-          "pnl": -140.88,
-          "pnl_pct": -0.26,
-          "day_pnl": -140.88,
-          "day_pct": -0.26,
+          "pos_val": 54862.88,
+          "pnl": -137.14,
+          "pnl_pct": -0.25,
+          "day_pnl": -137.14,
+          "day_pct": -0.25,
           "positions": [
             {
               "symbol": "XOM",
@@ -502,14 +502,14 @@
               "symbol": "ALB",
               "shares": 5.843511,
               "entry_price": 171.13,
-              "current_price": 171.13,
+              "current_price": 171.77,
               "cost_basis": 1000.0,
-              "price": 171.13,
-              "value": 1000.0,
-              "pnl": 0.0,
-              "pnl_pct": 0.0,
-              "day_pnl": 0.0,
-              "day_pct": 0.0
+              "price": 171.77,
+              "value": 1003.74,
+              "pnl": 3.74,
+              "pnl_pct": 0.37,
+              "day_pnl": 3.74,
+              "day_pct": 0.37
             },
             {
               "symbol": "CAT",
@@ -1112,12 +1112,12 @@
         "inception": "2026-06-02",
         "starting_capital": 55000.0,
         "value": {
-          "total": 54679.38,
+          "total": 54681.67,
           "cash": 0.05,
-          "pos_val": 54679.33,
-          "pnl": -320.62,
+          "pos_val": 54681.62,
+          "pnl": -318.33,
           "pnl_pct": -0.58,
-          "day_pnl": -320.62,
+          "day_pnl": -318.33,
           "day_pct": -0.58,
           "positions": [
             {
@@ -1371,14 +1371,14 @@
               "symbol": "ALB",
               "shares": 3.571028,
               "entry_price": 171.13,
-              "current_price": 171.13,
+              "current_price": 171.77,
               "cost_basis": 611.11,
-              "price": 171.13,
-              "value": 611.11,
-              "pnl": 0.0,
-              "pnl_pct": 0.0,
-              "day_pnl": 0.0,
-              "day_pct": 0.0
+              "price": 171.77,
+              "value": 613.4,
+              "pnl": 2.29,
+              "pnl_pct": 0.37,
+              "day_pnl": 2.29,
+              "day_pct": 0.37
             },
             {
               "symbol": "CAT",
@@ -1870,13 +1870,13 @@
         },
         {
           "fund": "equalizer",
-          "week_pnl": -140.88,
-          "week_pct": -0.26,
+          "week_pnl": -137.14,
+          "week_pct": -0.25,
           "week_grade": "D"
         },
         {
           "fund": "titan",
-          "week_pnl": -320.62,
+          "week_pnl": -318.33,
           "week_pct": -0.58,
           "week_grade": "D"
         },
@@ -1902,13 +1902,13 @@
         },
         {
           "fund": "equalizer",
-          "all_pnl": -140.88,
-          "all_pct": -0.26,
+          "all_pnl": -137.14,
+          "all_pct": -0.25,
           "overall_grade": "D"
         },
         {
           "fund": "titan",
-          "all_pnl": -320.62,
+          "all_pnl": -318.33,
           "all_pct": -0.58,
           "overall_grade": "D"
         },
