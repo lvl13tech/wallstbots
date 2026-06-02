@@ -1,0 +1,20 @@
+=== FORCE PUSH RESET LOG === 
+Tue 06/02/2026 17:59:36.58 
+ 
+[1] abort any in-progress rebase 
+ 
+[2] force our state.json files as the correct version 
+ 
+[3] force push our version 
+To https://github.com/lvl13tech/wallstbots.git
+ + c9d10c7...5eaa13e master -> master (forced update)
+PUSH EXIT: 0 
+ 
+[4] git log 
+5eaa13e data: all 3 platforms refresh + portfolio simulations Tue 06/02/2026 17:55:43.73
+03de4c4 reset: all 3 platforms reset to today as day 1 ΓÇö clean race start
+2298934 feat: migrate from PayPal to Stripe ΓÇö checkout, webhooks, all 3 sites
+5656320 auto: bitbot13 data refresh [2026-06-02 02:44 UTC]
+7701844 data: all 3 platforms refresh + portfolio simulations Mon 06/01/2026 20:54:16.96
+ 
+=== DONE === 
