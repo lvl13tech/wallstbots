@@ -1379,11 +1379,11 @@ async def refresh_portfolio_fund_snapshots(
     Compute and store daily portfolio value snapshots for all active portfolios.
     Called by each platform's refresh script after pushing global state.
 
-    Logic per portfolio:
-      entry_cost  = number_of_holdings × $1,000
-      total_value = Σ ($1,000 × current_price / holding_entry_price) per holding
-      gain_loss   = total_value − entry_cost
-    Prices come from the latest global state already stored in tracker_live_data.
+    Logic: reads total_value and gain_loss directly from bot_fund_state
+    (the authoritative simulation source) rather than recalculating independently.
+    This keeps the dashboard card and portfolio-fund page in perfect sync.
+    Uses the EQUALIZER fund as the canonical portfolio value since it tracks
+    all holdings equally and is the most stable reference.
     """
     body = await request.json()
     platform = body.get("platform", "wallstbots")
@@ -1393,57 +1393,34 @@ async def refresh_portfolio_fund_snapshots(
     try:
         cursor = conn.cursor(row_factory=dict_row)
 
-        # ── 1. Build a price map from the most-recent global state for this platform ──
-        cursor.execute(
-            "SELECT data FROM tracker_live_data WHERE data_type = 'state' AND platform = %s",
-            (platform,)
-        )
-        state_row = cursor.fetchone()
-        prices = {}
-        if state_row:
-            state_data = state_row["data"]
-            if isinstance(state_data, str):
-                state_data = json.loads(state_data)
-            for fund in (state_data.get("funds") or {}).values():
-                for pos in ((fund.get("value") or {}).get("positions") or []):
-                    sym = (pos.get("symbol") or pos.get("ticker") or "").upper()
-                    price = pos.get("current_price") or pos.get("price")
-                    if sym and price:
-                        prices[sym] = float(price)
-
-        # ── 2. Fetch all active portfolios with holdings ─────────────────────────────
+        # Pull the latest bot_fund_state for the equalizer fund per portfolio.
+        # Equalizer is the canonical reference — equal weight, never rebalances,
+        # always has positions. Its total_value IS the portfolio value.
         cursor.execute("""
-            SELECT b.id AS bot_id,
-                   h.symbol, h.entry_price
-            FROM bots b
-            JOIN bot_holdings h
-                ON h.bot_id = b.id AND h.removed_at IS NULL
-            WHERE b.status != 'deleted'
-            ORDER BY b.id
-        """)
+            SELECT
+                bfs.bot_id,
+                bfs.total_value,
+                bfs.entry_cost,
+                bfs.gain_loss,
+                bfs.gain_loss_pct,
+                bfs.snapshot_date
+            FROM bot_fund_state bfs
+            JOIN bots b ON b.id = bfs.bot_id
+            WHERE bfs.fund_name = 'equalizer'
+              AND b.status != 'deleted'
+              AND (b.platform = %s OR %s = 'all')
+        """, (platform, platform))
         rows = cursor.fetchall()
 
-        # Group holdings by portfolio id
-        portfolios: dict = {}
-        for row in rows:
-            bid = str(row["bot_id"])
-            portfolios.setdefault(bid, []).append(row)
-
         updated = 0
-        for bot_id, holdings in portfolios.items():
-            entry_cost  = len(holdings) * 1000.0
-            total_value = 0.0
-            for h in holdings:
-                sym   = (h["symbol"] or "").upper()
-                entry = float(h["entry_price"] or 0)
-                curr  = prices.get(sym, entry)
-                # If no price available, treat as flat ($1,000 unchanged)
-                total_value += (curr / entry * 1000.0) if entry > 0 and curr > 0 else 1000.0
+        for row in rows:
+            bot_id       = str(row["bot_id"])
+            total_value  = float(row["total_value"]   or 0)
+            entry_cost   = float(row["entry_cost"]    or 0)
+            gain_loss    = float(row["gain_loss"]     or 0)
+            gain_loss_pct= float(row["gain_loss_pct"] or 0)
 
-            gain_loss     = total_value - entry_cost
-            gain_loss_pct = (gain_loss / entry_cost * 100.0) if entry_cost > 0 else 0.0
-
-            # Upsert: delete today's row then insert fresh (avoids needing UNIQUE constraint)
+            # Upsert today's snapshot using the simulation's values
             cursor.execute(
                 "DELETE FROM bot_performance_snapshots WHERE bot_id = %s AND snapshot_date = %s",
                 (bot_id, today_str)
@@ -1463,7 +1440,6 @@ async def refresh_portfolio_fund_snapshots(
             "date":               today_str,
             "platform":           platform,
             "portfolios_updated": updated,
-            "prices_available":   len(prices),
         }
     except Exception as e:
         conn.rollback()

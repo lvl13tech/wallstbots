@@ -432,17 +432,20 @@ async function loadPortfolio() {
 
 async function loadFundState() {
   // Fetch per-portfolio bot simulation state from new endpoint
-  try {
-    const token = await auth.getToken();
-    const res = await fetch(BACKEND_URL + '/bots/' + BOT_ID + '/fund/' + BOT_SLUG + '/state', {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
-    if (!res.ok) return;
-    const data = await res.json();
-    if (data.state) {
-      fundState = data.state;
-    }
-  } catch(e) {}
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const token = await auth.getToken();
+      if (!token) break;
+      const res = await fetch(BACKEND_URL + '/bots/' + BOT_ID + '/fund/' + BOT_SLUG + '/state', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.status === 401 && attempt === 0) continue;  // retry once on auth fail
+      if (!res.ok) break;
+      const data = await res.json();
+      if (data.state) fundState = data.state;
+      break;
+    } catch(e) { break; }
+  }
 }
 
 function renderContextStrip() {
