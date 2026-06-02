@@ -47,6 +47,7 @@ ADD EXIT: 0
 COMMIT EXIT: 0 
  
 [4] git stash 
+<<<<<<< Updated upstream
 warning: in the working copy of 'reset-state-log.txt', LF will be replaced by CRLF the next time Git touches it
 Saved working directory and index state WIP on master: 03de4c4 reset: all 3 platforms reset to today as day 1 ΓÇö clean race start
 error: unable to unlink old 'reset-state-log.txt': Invalid argument
@@ -97,3 +98,5 @@ The stash entry is kept in case you need it again.
 5a8754c reset: all 3 platforms reset to today as day 1 ΓÇö clean race start
  
 === DONE === 
+=======
+>>>>>>> Stashed changes
