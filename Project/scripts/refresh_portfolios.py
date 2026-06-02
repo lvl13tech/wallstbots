@@ -431,9 +431,11 @@ def build_baseline_positions(universe, prices, prev_closes, original_cost, prev_
             entry_price = float(stored.get("entry_price", price))
             cost_basis  = float(stored.get("cost_basis", 0))
         else:
-            # First run for this holding — set inception values now
+            # First run for this holding — set inception values now.
+            # Use prev_close as entry price so P&L reflects real movement
+            # from the prior close. If no prev_close, fall back to today's price.
             alloc       = original_cost / len(universe) if universe else 0
-            entry_price = price if price > 0 else 1.0
+            entry_price = prev if prev > 0 else (price if price > 0 else 1.0)
             shares      = alloc / entry_price if entry_price > 0 else 0
             cost_basis  = alloc
 
