@@ -252,6 +252,16 @@
         "date": "2026-06-01"
       },
       {
+        "symbol": "PSTG",
+        "action": "HOLD",
+        "confidence": 1.0,
+        "reason": "Up +6.21% but against 5d trend \u2014 wait for confirmation.",
+        "price": 84.45,
+        "upside_pct": 6.21,
+        "sector": "AI DATA",
+        "date": "2026-06-01"
+      },
+      {
         "symbol": "BBAI",
         "action": "STRONG BUY",
         "confidence": 1.0,
@@ -480,16 +490,6 @@
         "upside_pct": 0.35,
         "sector": "QUANTUM",
         "date": "2026-06-01"
-      },
-      {
-        "symbol": "PSTG",
-        "action": "HOLD",
-        "confidence": 0.0,
-        "reason": "Flat +0.00% \u2014 no clear edge today.",
-        "price": 79.51,
-        "upside_pct": 0.0,
-        "sector": "AI DATA",
-        "date": "2026-06-01"
       }
     ],
     "summary": {
@@ -499,6 +499,6 @@
       "SELL": 3,
       "STRONG SELL": 14
     },
-    "generated_at": "2026-06-01T19:57:47"
+    "generated_at": "2026-06-01T20:53:35"
   }
 }

@@ -1,0 +1,74 @@
+=== RESET STATE LOG === 
+Mon 06/01/2026 20:52:35.54 
+ 
+[1] Running reset_state_json.py 
+
+[reset] bitbot13.tech/state.json
+  starting_capital: 50000.0
+  snapshots reset to today (2026-06-01) only
+  bot13: reset to $50,000.00, inception=2026-06-01
+  oracle: reset to $50,000.00, inception=2026-06-01
+  wizard: reset to $50,000.00, inception=2026-06-01
+  equalizer: reset to $50,000.00, inception=2026-06-01
+  titan: reset to $50,000.00, inception=2026-06-01
+  written: C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Frontends\bitbot13.tech\data\state.json
+
+[reset] wallstbots.tech/state.json
+  starting_capital: 55000.0
+  snapshots reset to today (2026-06-01) only
+  bot13: reset to $55,000.00, inception=2026-06-01
+  oracle: reset to $55,000.00, inception=2026-06-01
+  wizard: reset to $55,000.00, inception=2026-06-01
+  equalizer: reset to $55,000.00, inception=2026-06-01
+  titan: reset to $55,000.00, inception=2026-06-01
+  written: C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Frontends\wallstbots.tech\data\state.json
+
+[reset] lvl13.tech/state.json
+  starting_capital: 49000.0
+  snapshots reset to today (2026-06-01) only
+  bot13: reset to $49,000.00, inception=2026-06-01
+  oracle: reset to $49,000.00, inception=2026-06-01
+  wizard: reset to $49,000.00, inception=2026-06-01
+  equalizer: reset to $49,000.00, inception=2026-06-01
+  titan: reset to $49,000.00, inception=2026-06-01
+  written: C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Frontends\lvl13.tech\data\state.json
+
+[done] All 3 state.json files reset to today as day 1.
+Run REFRESH-ALL-PLATFORMS-NOW.bat to push the reset state live.
+RESET EXIT: 0 
+ 
+[2] git add 
+warning: in the working copy of 'Project/scripts/reset_state_json.py', LF will be replaced by CRLF the next time Git touches it
+ADD EXIT: 0 
+ 
+[3] git commit 
+[master 5a8754c] reset: all 3 platforms reset to today as day 1 ΓÇö clean race start
+ 4 files changed, 1437 insertions(+), 1498 deletions(-)
+ create mode 100644 Project/scripts/reset_state_json.py
+COMMIT EXIT: 0 
+ 
+[4] git stash 
+No local changes to save
+ 
+[5] git pull --rebase 
+From https://github.com/lvl13tech/wallstbots
+ * branch            master     -> FETCH_HEAD
+Current branch master is up to date.
+PULL EXIT: 0 
+ 
+[6] git push 
+To https://github.com/lvl13tech/wallstbots.git
+   9b78579..5a8754c  master -> master
+PUSH EXIT: 0 
+ 
+[7] git stash pop 
+No stash entries found.
+ 
+[8] git log 
+5a8754c reset: all 3 platforms reset to today as day 1 ΓÇö clean race start
+9b78579 fix: leaderboard shows live gain/loss LOG 2>&1
+42963dd fix: comments load correctly on bot-detail across all 3 sites
+ca45b24 data: all 3 platforms refresh + portfolio simulations Mon 06/01/2026 19:58:26.46
+a5a5017 fix: simulation engine ΓÇö Oracle/Wizard day enforcement, Equalizer/Titan fixed entry prices, BOT13 session-aware carryover, column precision
+ 
+=== DONE === 

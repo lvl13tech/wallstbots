@@ -1,0 +1,37 @@
+=== PUSH LOG === 
+Mon 06/01/2026 20:33:25.65 
+ 
+[1] git add 
+warning: in the working copy of 'Frontends/bitbot13.tech/bot-detail.html', LF will be replaced by CRLF the next time Git touches it
+ADD EXIT: 0 
+ 
+[2] git commit 
+[master 42963dd] fix: comments load correctly on bot-detail across all 3 sites
+ 3 files changed, 42 insertions(+), 18 deletions(-)
+COMMIT EXIT: 0 
+ 
+[3] git stash 
+No local changes to save
+ 
+[4] git pull --rebase 
+From https://github.com/lvl13tech/wallstbots
+ * branch            master     -> FETCH_HEAD
+Current branch master is up to date.
+PULL EXIT: 0 
+ 
+[5] git push 
+To https://github.com/lvl13tech/wallstbots.git
+   ca45b24..42963dd  master -> master
+PUSH EXIT: 0 
+ 
+[6] git stash pop 
+No stash entries found.
+ 
+[7] git log 
+42963dd fix: comments load correctly on bot-detail across all 3 sites
+ca45b24 data: all 3 platforms refresh + portfolio simulations Mon 06/01/2026 19:58:26.46
+a5a5017 fix: simulation engine ΓÇö Oracle/Wizard day enforcement, Equalizer/Titan fixed entry prices, BOT13 session-aware carryover, column precision
+4627efd auto: bitbot13 data refresh [2026-06-01 23:54 UTC]
+c5e3e00 merge remote; keep local data
+ 
+=== DONE === 
