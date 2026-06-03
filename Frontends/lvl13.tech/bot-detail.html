@@ -981,24 +981,22 @@ function closeSearchModal() { document.getElementById('searchModal').classList.r
 const _searchCache = {};
 function onSearchInput(q) {
   clearTimeout(searchTimer);
-  const trimmed = q.trim().toUpperCase().replace(/[^A-Z0-9.^-]/g, '');
-  // Allow direct add as soon as user has typed a plausible ticker (1+ chars)
+  // Force uppercase and strip invalid chars as user types
+  const input = document.getElementById('searchInput');
+  const cursor = input.selectionStart;
+  const clean = q.toUpperCase().replace(/[^A-Z0-9.^-]/g, '');
+  if (clean !== q) { input.value = clean; try { input.setSelectionRange(cursor, cursor); } catch(_) {} }
+  const trimmed = clean.trim();
+  // Always keep selectedSymbol in sync with what's typed
+  selectedSymbol = trimmed || null;
   const addBtn = document.getElementById('addHoldingBtn');
-  if (trimmed.length >= 1 && !selectedSymbol) {
-    // Enable Add button with whatever they typed — don't force search selection
-    selectedSymbol = trimmed;
-    if (addBtn) addBtn.disabled = false;
-  } else if (!trimmed.length && !selectedSymbol) {
-    if (addBtn) addBtn.disabled = true;
-  }
-  if (trimmed.length < 1) {
-    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Type a ticker (e.g. IONQ, NVDA) or keyword</div>';
+  if (addBtn) addBtn.disabled = !trimmed;
+  if (trimmed.length < 2) {
+    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Type a ticker (e.g. AAPL, NVDA) or keyword</div>';
     return;
   }
-  // Use cache to avoid burning Polygon rate limit
   if (_searchCache[trimmed]) { renderSearchResults(_searchCache[trimmed]); return; }
   document.getElementById('searchResults').innerHTML = '<div class="search-empty">Searching…</div>';
-  // 800ms debounce — reduces Polygon calls on fast typing
   searchTimer = setTimeout(() => doSearch(trimmed), 800);
 }
 
