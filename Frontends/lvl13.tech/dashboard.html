@@ -1247,9 +1247,9 @@
     `;
 
     // Summary cards
-    const dayOpen = val.day_open  ?? 0;
-    const total   = val.total     ?? dayOpen;
-    const dayPnl  = val.day_pnl   ?? (total - dayOpen);
+    const dayOpen = val.day_open  ?? null;
+    const total   = val.total     ?? 0;
+    const dayPnl  = val.day_pnl   ?? (dayOpen != null ? (total - dayOpen) : 0);
     const dayPct  = val.day_pct   ?? (dayOpen ? (dayPnl / dayOpen * 100) : 0);
     const allPnl  = val.pnl       ?? 0;
     const allPct  = val.pnl_pct   ?? 0;

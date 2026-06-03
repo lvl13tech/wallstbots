@@ -579,7 +579,7 @@ function renderGetYours() {
     + '<div style="display:flex;justify-content:center;margin-bottom:28px">'
     + '<div style="display:flex;background:var(--surface2);border-radius:8px;padding:3px">'
     + '<button id="cycleMonthly" onclick="setGyCycle(\'monthly\')" style="border:none;cursor:pointer;padding:8px 22px;border-radius:6px;font-weight:600;font-size:13px;transition:all 0.15s">Monthly</button>'
-    + '<button id="cycleAnnual"  onclick="setGyCycle(\'annual\')"  style="border:none;cursor:pointer;padding:8px 22px;border-radius:6px;font-weight:600;font-size:13px;transition:all 0.15s">Annual <span style="font-size:11px;color:#10b981">SAVE 17%</span></button>'
+    + '<button id="cycleAnnual"  onclick="setGyCycle(\'annual\')"  style="border:none;cursor:pointer;padding:8px 22px;border-radius:6px;font-weight:600;font-size:13px;transition:all 0.15s">Annual <span style="font-size:11px;color:#10b981">SAVE UP TO 25%</span></button>'
     + '</div></div>'
 
     // ── FREE tier ──

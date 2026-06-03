@@ -1031,8 +1031,7 @@ async def validate_referral_code(code: str = Query(..., description="Referral co
         return {
             "valid":   True,
             "code":    row["code"],
-            "message": "Valid referral code — you'll save $75 on your subscription",
-            "discount": 75.00
+            "message": "Valid referral code — 50% off your first month, or $100 off an annual plan",
         }
     finally:
         cursor.close()
@@ -1143,7 +1142,42 @@ async def stripe_create_checkout(request: Request, current_user: dict = Depends(
         "ref_code": ref_code,
     }
 
-    session = _stripe.checkout.Session.create(
+    # If a referral code was provided, validate it and build a one-time Stripe coupon
+    # so the subscriber actually receives the advertised discount at checkout.
+    discounts = []
+    if ref_code:
+        conn2 = get_db_connection()
+        try:
+            cursor2 = conn2.cursor()
+            cursor2.execute("SELECT code FROM referral_codes WHERE code = %s", (ref_code.upper(),))
+            ref_valid = cursor2.fetchone() is not None
+        finally:
+            cursor2.close()
+            return_db_connection(conn2)
+
+        if ref_valid:
+            try:
+                if cycle == "annual":
+                    # $100 off annual — one-time, any currency amount in cents
+                    coupon = _stripe.Coupon.create(
+                        amount_off=10000,   # $100.00
+                        currency="usd",
+                        duration="once",
+                        name="Referral: $100 off annual",
+                    )
+                else:
+                    # 50% off first month
+                    coupon = _stripe.Coupon.create(
+                        percent_off=50,
+                        duration="once",
+                        name="Referral: 50% off first month",
+                    )
+                discounts = [{"coupon": coupon.id}]
+            except Exception as coupon_err:
+                # Non-fatal — log and continue without discount rather than blocking checkout
+                print(f"[stripe checkout] Coupon creation failed for ref_code={ref_code}: {coupon_err}")
+
+    session_kwargs = dict(
         mode="subscription",
         line_items=[{"price": price_id, "quantity": 1}],
         customer_email=customer_email,
@@ -1151,8 +1185,17 @@ async def stripe_create_checkout(request: Request, current_user: dict = Depends(
         cancel_url=origin + "/#/get-yours",
         metadata=metadata,
         subscription_data={"metadata": metadata},
-        allow_promotion_codes=True,
     )
+
+    # Stripe does not allow both `discounts` and `allow_promotion_codes` simultaneously.
+    # If a referral discount is being applied programmatically, skip the promo code box.
+    # Otherwise, leave the promo code entry open so users can use Stripe coupon codes.
+    if discounts:
+        session_kwargs["discounts"] = discounts
+    else:
+        session_kwargs["allow_promotion_codes"] = True
+
+    session = _stripe.checkout.Session.create(**session_kwargs)
 
     return {"success": True, "url": session.url}
 
