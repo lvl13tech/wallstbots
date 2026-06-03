@@ -342,7 +342,7 @@ const FUND_META = {
   wizard:    { name:'WIZARD',    icon:'WZ', color:'#10b981', kind:'MONTHLY HOLD',
                tagline:"Monthly hold bot. Buys the 1st trading day, sells the last. Slow and patient." },
   equalizer: { name:'EQUALIZER', icon:'EQ', color:'#00d4ff', kind:'EQUAL WEIGHT BASELINE',
-               tagline:"Equal weight. No favorites. $1,000 in every stock." },
+               tagline:"Equal weight. No favorites. $1,000 in every coin." },
   titan:     { name:'TITAN',     icon:'TT', color:'#ff8c00', kind:'CONCENTRATION BASELINE',
                tagline:"Half on the heavyweights. Half on the rest. Concentration meets coverage." },
 };
@@ -455,7 +455,7 @@ function renderContextStrip() {
   const name = botData.name || 'My Portfolio';
   document.getElementById('heroBackLabel').textContent    = name;
   document.getElementById('ctxPortfolioName').textContent = name;
-  document.getElementById('ctxHoldings').textContent      = holdings.length + ' stock' + (holdings.length !== 1 ? 's' : '');
+  document.getElementById('ctxHoldings').textContent      = holdings.length + ' coin' + (holdings.length !== 1 ? 's' : '');
 }
 
 async function loadSiteData() {
@@ -618,14 +618,14 @@ function renderPositions() {
       if (!hasSimulated) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:28px;line-height:1.8">'
           + '<strong style="color:var(--text);display:block;margin-bottom:6px">Awaiting first simulation</strong>'
-          + meta.name + ' will begin trading your ' + holdingTickers.length + ' stock' + (holdingTickers.length !== 1 ? 's' : '') + ' during the next trading session.</td></tr>';
+          + meta.name + ' will begin trading your ' + holdingTickers.length + ' coin' + (holdingTickers.length !== 1 ? 's' : '') + ' during the next session.</td></tr>';
       } else if (fundState && fundState.holding_cash) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:28px;line-height:1.8">'
           + '<strong style="color:var(--text);display:block;margin-bottom:6px">Holding Cash</strong>'
-          + meta.name + ' evaluated your ' + holdingTickers.length + ' stock' + (holdingTickers.length !== 1 ? 's' : '') + ' and is holding cash — no picks met the entry criteria today.</td></tr>';
+          + meta.name + ' evaluated your ' + holdingTickers.length + ' coin' + (holdingTickers.length !== 1 ? 's' : '') + ' and is holding cash — no picks met the entry criteria today.</td></tr>';
       } else {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">'
-          + meta.name + ' has no active positions in your stocks today.</td></tr>';
+          + meta.name + ' has no active positions in your coins today.</td></tr>';
       }
     }
     return;
@@ -656,9 +656,9 @@ function renderSignals() {
   const tickers = holdings.map(h => h.symbol);
   const filtered = tickers.length ? allSigs.filter(r => tickers.includes(r.symbol)) : [];
   const note = document.getElementById('signalsNote');
-  if (!tickers.length) { note.textContent = 'Add stocks to see signals filtered to your portfolio.'; }
-  else if (!filtered.length) { note.textContent = 'No signals today for your ' + tickers.length + ' stock' + (tickers.length !== 1 ? 's' : '') + '. Check back after the next refresh.'; }
-  else { note.textContent = 'Showing signals for your ' + tickers.length + ' stock' + (tickers.length !== 1 ? 's' : '') + ' only.'; }
+  if (!tickers.length) { note.textContent = 'Add coins to see signals filtered to your portfolio.'; }
+  else if (!filtered.length) { note.textContent = 'No signals today for your ' + tickers.length + ' coin' + (tickers.length !== 1 ? 's' : '') + '. Check back after the next refresh.'; }
+  else { note.textContent = 'Showing signals for your ' + tickers.length + ' coin' + (tickers.length !== 1 ? 's' : '') + ' only.'; }
   const col = (label, action, n) => {
     const items = filtered.filter(r => r.action === action).slice(0, n);
     const count = filtered.filter(r => r.action === action).length;
