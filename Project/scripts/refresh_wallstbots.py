@@ -774,8 +774,11 @@ def main():
     is_month_start  = today.day <= 3   # 1st-3rd trading day = month boundary
 
     # Force scoring on first run — no positions means never deployed yet
-    oracle_needs_seed = not funds.get("oracle", {}).get("value", {}).get("positions")
-    wizard_needs_seed = not funds.get("wizard", {}).get("value", {}).get("positions")
+    # Needs seed only if no positions AND past inception day — never trade on reset day itself
+    oracle_inception  = funds.get("oracle", {}).get("inception", today_iso)
+    wizard_inception  = funds.get("wizard", {}).get("inception", today_iso)
+    oracle_needs_seed = (not funds.get("oracle", {}).get("value", {}).get("positions")) and oracle_inception < today_iso
+    wizard_needs_seed = (not funds.get("wizard", {}).get("value", {}).get("positions")) and wizard_inception < today_iso
 
     # ── Fetch live prices ────────────────────────────────────────────────────
     need_syms = set(UNIVERSE)
@@ -829,7 +832,7 @@ def main():
         and not stops_triggered
         and not drawdown_hit
     )
-    if b13_inception > today_iso:
+    if b13_inception >= today_iso:  # do not trade on inception day itself
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = "HOLD", [], [], "Pre-inception hold", [], 0.0
         prev_b13_total = sc_global  # reset to SC so tomorrow starts clean
         print(f"  BOT13: HOLD (pre-inception, starts {b13_inception})")
@@ -903,7 +906,8 @@ def main():
     oracle_new_positions = None
     oracle_new_picks     = None
     oracle_new_rationale = None
-    if (is_monday or oracle_needs_seed) and hist_data:
+    oracle_past_inception = funds.get("oracle", {}).get("inception", today_iso) < today_iso
+    if (is_monday or oracle_needs_seed) and hist_data and oracle_past_inception:
         print(f"[wallstbots] {'Monday' if is_monday else 'first run'} — running ORACLE recompute...")
         oracle_new_positions, oracle_new_picks, oracle_new_rationale, oracle_new_proj = run_oracle_decision(
             prices, prev_closes, hist_data, sc_global, week_str
@@ -917,7 +921,8 @@ def main():
     wizard_new_positions = None
     wizard_new_picks     = None
     wizard_new_rationale = None
-    if (is_month_start or wizard_needs_seed) and hist_data:
+    wizard_past_inception = funds.get("wizard", {}).get("inception", today_iso) < today_iso
+    if (is_month_start or wizard_needs_seed) and hist_data and wizard_past_inception:
         print(f"[wallstbots] {'Month start' if is_month_start else 'first run'} ({today_iso}) — running WIZARD recompute...")
         wizard_new_positions, wizard_new_picks, wizard_new_rationale, wizard_new_proj = run_wizard_decision(
             prices, prev_closes, hist_data, sc_global, month_str

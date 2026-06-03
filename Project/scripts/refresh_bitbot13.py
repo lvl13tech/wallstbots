@@ -908,7 +908,7 @@ def main():
         and not drawdown_hit
     )
 
-    if b13_inception > today_iso:
+    if b13_inception >= today_iso:  # do not trade on inception day itself
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = "HOLD", [], [], "Pre-inception hold", [], 0.0
         prev_b13_total = sc_global
         print(f"  BOT13: HOLD (pre-inception, starts {b13_inception})")
