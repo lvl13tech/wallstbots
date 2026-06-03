@@ -239,6 +239,10 @@ class WallStBotsAPI {
     return this.request("/subscriptions/current", { method: "GET" });
   }
 
+  async getPortfolioLeaderboard() {
+    return this.request("/portfolios/leaderboard", { method: "GET" });
+  }
+
   // ========================================================================
   // REFERRAL ENDPOINTS
   // ========================================================================

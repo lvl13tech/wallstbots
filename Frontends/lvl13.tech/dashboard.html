@@ -1030,7 +1030,7 @@
   const MAX_SECURITIES = 50;
   const VALUE_PER_SECURITY = 1000;
 
-  let allBots = [], perfMap = {}, userProfile = null, subscription = null;
+  let allBots = [], perfMap = {}, lbMap = {}, userProfile = null, subscription = null;
   let tickers = [], maxPortfolios = 3, totalBotCount = 0;
 
   async function init() {
@@ -1138,8 +1138,14 @@
   }
 
   async function loadPerformance() {
-    const perf = await Promise.allSettled(allBots.map(b => api.getBot(b.id).then(d=>({id:b.id,data:d})).catch(()=>null)));
-    perf.forEach(r => { if (r.status==="fulfilled"&&r.value) perfMap[r.value.id]=r.value.data?.bot||r.value.data; });
+    const [perf, lb] = await Promise.allSettled([
+      Promise.allSettled(allBots.map(b => api.getBot(b.id).then(d=>({id:b.id,data:d})).catch(()=>null))),
+      api.getPortfolioLeaderboard().catch(()=>null)
+    ]);
+    if(perf.status==='fulfilled') perf.value.forEach(r => { if(r.status==="fulfilled"&&r.value) perfMap[r.value.id]=r.value.data?.bot||r.value.data; });
+    const lbData = lb.status==='fulfilled' ? lb.value : null;
+    if(lbData?.portfolios) lbData.portfolios.forEach(p => { lbMap[p.bot_id]=p.best_fund; });
+    lbMap._best_overall = lbData?.best_overall||null;
   }
 
   function sortAndRender() {
@@ -1167,17 +1173,15 @@
     grid.innerHTML = allBots.map(bot => {
       const p=perfMap[bot.id];
       const value=p?.performance?.total_value||0;
-      const retPct=p?.performance?.gain_loss_pct||0;
-      const retDollar=p?.performance?.gain_loss||0;
       const holdings=p?.holdings?.length||0;
-      const isPos=retPct>=0;
       const fmtVal=value>=1000?"$"+(value/1000).toFixed(1)+"k":"$"+value.toFixed(0);
-      const fmtRet=(isPos?"+":"")+retPct.toFixed(2)+"% ("+(isPos?"+":"")+"$"+Math.abs(retDollar).toFixed(0)+")";
+      const bestFund=lbMap[bot.id];
+      const bestLine=bestFund?`<span style="color:var(--accent);font-weight:600">${bestFund.display_name} +${bestFund.day_pct.toFixed(2)}%</span>`:`<span style="color:var(--muted)">—</span>`;
       const date=bot.created_at?new Date(bot.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"";
       return `<div class="portfolio-card" onclick="location.href='bot-detail.html?id=${bot.id}'">
         <div class="card-top"><div class="card-name">${escHtml(bot.name)}</div><div class="card-badge">${holdings} stocks</div></div>
         <div class="card-value">${fmtVal}</div>
-        <div class="card-return ${isPos?"pos":"neg"}">${fmtRet}</div>
+        <div class="card-return">${bestLine}</div>
         <div style="border-top:1px solid var(--border)"></div>
         <div class="card-footer">
           <div class="holdings-count"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V3.5a1 1 0 011-1h8z"/></svg>Created ${date}</div>
@@ -1188,19 +1192,15 @@
   }
 
   function updateStats() {
-    let total=0, bestRet=-Infinity, bestName="";
-    allBots.forEach(b => {
-      const p=perfMap[b.id]; if(!p) return;
-      total+=p?.performance?.total_value||0;
-      const r=p?.performance?.gain_loss_pct||0;
-      if(r>bestRet){bestRet=r;bestName=b.name;}
-    });
-    const tvEl=document.getElementById("statTotalValue");if(tvEl)tvEl.textContent="$"+total.toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0});
-    if(bestName){
-      document.getElementById("statBestName").textContent=bestName.length>14?bestName.slice(0,13)+"…":bestName;
-      const el=document.getElementById("statBestReturn");
-      el.textContent=(bestRet>=0?"+":"")+bestRet.toFixed(2)+"%";
-      el.className="stat-sub "+(bestRet>=0?"pos":"neg");
+    const best=lbMap._best_overall;
+    const nameEl=document.getElementById("statBestName");
+    const retEl=document.getElementById("statBestReturn");
+    if(best){
+      if(nameEl) nameEl.textContent=best.portfolio_name.length>14?best.portfolio_name.slice(0,13)+"…":best.portfolio_name;
+      if(retEl){retEl.textContent=best.display_name+" +"+best.day_pct.toFixed(2)+"%";retEl.className="stat-sub pos";}
+    } else {
+      if(nameEl) nameEl.textContent="—";
+      if(retEl){retEl.textContent="—";retEl.className="stat-sub";}
     }
   }
 
@@ -1769,41 +1769,4 @@
     btn.textContent = "Saving…"; btn.disabled = true;
     try {
       const token = auth.getToken ? auth.getToken() : (auth._token || localStorage.getItem("auth_token") || "");
-      const body = {
-        email_enabled:      document.getElementById("epEnabled").checked,
-        email_daily:        document.getElementById("epDaily").checked,
-        email_bot13_alerts: document.getElementById("epBot13").checked,
-        email_weekly:       document.getElementById("epWeekly").checked,
-        email_monthly:      document.getElementById("epMonthly").checked,
-        email_portfolio:    document.getElementById("epPortfolio").checked,
-        email_wallstbots:   document.getElementById("epSiteWallstbots").checked,
-        email_bitbot13:     document.getElementById("epSiteBitbot13").checked,
-        email_lvl13:        document.getElementById("epSiteLvl13").checked,
-      };
-      const resp = await fetch(BACKEND_URL + "/user/email-prefs", {
-        method: "PUT",
-        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!resp.ok) throw new Error(await resp.text());
-      showToast("✓ Email preferences saved", "success");
-    } catch(e) {
-      showToast("Error saving preferences: " + e.message, "error");
-    } finally {
-      btn.textContent = orig; btn.disabled = false;
-    }
-  }
-
-  // ── MOBILE NAV ─────────────────────────────────────────────
-  function toggleMobNav(){
-    document.getElementById("mobNav").classList.toggle("open");
-    document.getElementById("mobNavOverlay").classList.toggle("open");
-  }
-  function closeMobNav(){
-    document.getElementById("mobNav").classList.remove("open");
-    document.getElementById("mobNavOverlay").classList.remove("open");
-  }
-  document.addEventListener("DOMContentLoaded",init);
-</script>
-</body>
-</html>
+      const bod

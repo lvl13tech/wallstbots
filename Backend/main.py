@@ -1637,6 +1637,105 @@ async def get_portfolio_fund_state(
         return_db_connection(conn)
 
 
+@app.get("/portfolios/leaderboard")
+async def get_portfolio_leaderboard(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Return today's best-performing fund per portfolio for the current user.
+    Used by the dashboard to show:
+      - Best Bot Today stat card (best fund across all portfolios by day_pct)
+      - Per-portfolio card best bot line (best fund in that portfolio by day_pct)
+
+    Only returns funds with day_pct > 0 (green only — nothing shown if all red).
+    """
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+
+        # Get all active portfolios for this user
+        cursor.execute("""
+            SELECT b.id AS bot_id, b.name AS portfolio_name, b.platform
+            FROM bots b
+            WHERE b.user_id = %s AND b.status != 'deleted'
+            ORDER BY b.created_at
+        """, (current_user["user_id"],))
+        portfolios = cursor.fetchall()
+
+        if not portfolios:
+            return {"success": True, "portfolios": [], "best_overall": None}
+
+        bot_ids = [str(p["bot_id"]) for p in portfolios]
+        portfolio_map = {str(p["bot_id"]): p["portfolio_name"] for p in portfolios}
+
+        # Fetch latest fund state for all portfolios in one query
+        cursor.execute("""
+            SELECT bot_id, fund_name, day_pct, day_pnl, total_value, snapshot_date
+            FROM bot_fund_state
+            WHERE bot_id = ANY(%s)
+            ORDER BY bot_id, day_pct DESC
+        """, (bot_ids,))
+        rows = cursor.fetchall()
+
+        # Group by portfolio, pick best fund per portfolio
+        from collections import defaultdict
+        by_portfolio = defaultdict(list)
+        for row in rows:
+            by_portfolio[str(row["bot_id"])].append(row)
+
+        FUND_DISPLAY = {
+            "bot13":     "BOT13",
+            "oracle":    "ORACLE",
+            "wizard":    "WIZARD",
+            "equalizer": "EQUALIZER",
+            "titan":     "TITAN",
+        }
+
+        portfolio_results = []
+        best_overall = None
+        best_overall_pct = 0.0
+
+        for bot_id in bot_ids:
+            funds = by_portfolio.get(bot_id, [])
+            # Best green fund for this portfolio
+            best = next((f for f in funds if float(f["day_pct"] or 0) > 0), None)
+            portfolio_name = portfolio_map.get(bot_id, "Portfolio")
+
+            entry = {
+                "bot_id":         bot_id,
+                "portfolio_name": portfolio_name,
+                "best_fund":      None,
+            }
+            if best:
+                day_pct = float(best["day_pct"] or 0)
+                entry["best_fund"] = {
+                    "fund_name":    best["fund_name"],
+                    "display_name": FUND_DISPLAY.get(best["fund_name"], best["fund_name"].upper()),
+                    "day_pct":      round(day_pct, 2),
+                    "day_pnl":      round(float(best["day_pnl"] or 0), 2),
+                }
+                if day_pct > best_overall_pct:
+                    best_overall_pct = day_pct
+                    best_overall = {
+                        "portfolio_name": portfolio_name,
+                        "fund_name":      best["fund_name"],
+                        "display_name":   FUND_DISPLAY.get(best["fund_name"], best["fund_name"].upper()),
+                        "day_pct":        round(day_pct, 2),
+                        "day_pnl":        round(float(best["day_pnl"] or 0), 2),
+                    }
+
+            portfolio_results.append(entry)
+
+        return {
+            "success":      True,
+            "portfolios":   portfolio_results,
+            "best_overall": best_overall,   # None if everything is red
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
 @app.get("/internal/portfolio-fund-state/{bot_id}/{fund_name}")
 async def internal_get_portfolio_fund_state(
     bot_id: str,
