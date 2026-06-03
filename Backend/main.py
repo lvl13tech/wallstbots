@@ -901,7 +901,8 @@ async def add_holding(bot_id: str, req: BotHoldingCreate, current_user: dict = D
 
         symbol = req.symbol.upper().strip()
 
-        # Try to fetch the last close price from Polygon as entry_price baseline
+        # Try to fetch the last close price from Polygon as entry_price baseline.
+        # If Polygon is configured and returns no data, the ticker is invalid — reject it.
         entry_price = req.entry_price
         if entry_price is None and POLYGON_API_KEY:
             try:
@@ -913,8 +914,15 @@ async def add_holding(bot_id: str, req: BotHoldingCreate, current_user: dict = D
                     results = pr.json().get("results", [])
                     if results:
                         entry_price = results[0].get("c")  # previous close
+                    else:
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"'{symbol}' doesn't appear to be a valid or tradeable ticker. Please check the symbol and try again."
+                        )
+            except HTTPException:
+                raise
             except Exception:
-                pass
+                pass  # Polygon unavailable — allow add, yfinance will fill price on next refresh
 
         cursor.execute("""
             INSERT INTO bot_holdings (bot_id, symbol, asset_type, weight, quantity, entry_price)
@@ -1732,6 +1740,8 @@ async def search_stocks(q: str = "", limit: int = 15, market: str = "all"):
         return {"results": []}
     if not POLYGON_API_KEY:
         return {"results": [], "manual_entry": True}
+
+
 
     # Map the caller's market param to Polygon market values
     if market == "crypto":

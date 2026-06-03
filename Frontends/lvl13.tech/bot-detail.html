@@ -978,15 +978,28 @@ function openSearchModal() {
 }
 function closeSearchModal() { document.getElementById('searchModal').classList.remove('open'); }
 
+const _searchCache = {};
 function onSearchInput(q) {
   clearTimeout(searchTimer);
-  const trimmed = q.trim();
-  if (trimmed.length < 2) {
-    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Type 2+ characters to search AI, quantum, and tech stocks</div>';
+  const trimmed = q.trim().toUpperCase().replace(/[^A-Z0-9.^-]/g, '');
+  // Allow direct add as soon as user has typed a plausible ticker (1+ chars)
+  const addBtn = document.getElementById('addHoldingBtn');
+  if (trimmed.length >= 1 && !selectedSymbol) {
+    // Enable Add button with whatever they typed — don't force search selection
+    selectedSymbol = trimmed;
+    if (addBtn) addBtn.disabled = false;
+  } else if (!trimmed.length && !selectedSymbol) {
+    if (addBtn) addBtn.disabled = true;
+  }
+  if (trimmed.length < 1) {
+    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Type a ticker (e.g. IONQ, NVDA) or keyword</div>';
     return;
   }
+  // Use cache to avoid burning Polygon rate limit
+  if (_searchCache[trimmed]) { renderSearchResults(_searchCache[trimmed]); return; }
   document.getElementById('searchResults').innerHTML = '<div class="search-empty">Searching…</div>';
-  searchTimer = setTimeout(() => doSearch(trimmed), 350);
+  // 800ms debounce — reduces Polygon calls on fast typing
+  searchTimer = setTimeout(() => doSearch(trimmed), 800);
 }
 
 async function doSearch(q) {
@@ -1026,7 +1039,13 @@ function clearSelection() {
 }
 
 async function addSelectedHolding() {
-  if (!selectedSymbol) return;
+  // If nothing was selected from search, use whatever is in the input box
+  if (!selectedSymbol) {
+    const input = document.getElementById('searchInput');
+    const typed = (input ? input.value.trim().toUpperCase().replace(/[^A-Z0-9.^-]/g, '') : '');
+    if (!typed) return;
+    selectedSymbol = typed;
+  }
   const btn = document.getElementById('addHoldingBtn');
   btn.disabled = true; btn.textContent = 'Adding…';
   try {
