@@ -708,7 +708,7 @@ async function drawFundChart() {
   const values = snapshots.map(s => s.total_value);
   const retPct = snapshots[snapshots.length-1].gain_loss_pct || 0;
   const titleEl = document.getElementById('chartTitle');
-  if (titleEl && meta) titleEl.innerHTML = 'Performance Trajectory — ' + meta.name + ' &nbsp;<span style="font-size:0.85rem;font-weight:600;color:' + meta.color + '">' + (retPct >= 0 ? '+' : '') + retPct.toFixed(2) + '%</span>';
+  if (titleEl && meta) titleEl.textContent = 'Performance Trajectory — ' + meta.name;
   const color = (meta && meta.color) || '#00d4ff';
   CHARTS_F.fund = new Chart(ctx, {
     type: 'line',
