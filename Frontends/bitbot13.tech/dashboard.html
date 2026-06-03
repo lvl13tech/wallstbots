@@ -1387,7 +1387,7 @@
   <div class="stats-bar">
 
     <div class="stat-card">
-      <div class="stat-label">Best Portfolio</div>
+      <div class="stat-label">Best Bot Today</div>
       <div class="stat-value" id="statBestName">—</div>
       <div class="stat-sub pos" id="statBestReturn">—</div>
     </div>
@@ -1789,7 +1789,6 @@
       const p = perfMap[bot.id];
       const value = p?.performance?.total_value || 0;
       const holdings = p?.holdings?.length || 0;
-      const fmtVal = value >= 1000 ? "$" + (value/1000).toFixed(1) + "k" : "$" + value.toFixed(0);
       const bestFund = lbMap[bot.id];
       const bestLine = bestFund ? `<span style="color:var(--accent);font-weight:600">${bestFund.display_name} +${bestFund.day_pct.toFixed(2)}%</span>` : `<span style="color:var(--muted)">—</span>`;
       const date = bot.created_at ? new Date(bot.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "";
@@ -1799,7 +1798,6 @@
             <div class="card-name">${escHtml(bot.name)}</div>
             <div class="card-badge">${holdings} coins</div>
           </div>
-          <div class="card-value">${fmtVal}</div>
           <div class="card-return">${bestLine}</div>
           <div style="border-top:1px solid var(--border)"></div>
           <div class="card-footer">
