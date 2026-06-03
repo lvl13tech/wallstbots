@@ -1588,7 +1588,7 @@
 
   let allBots = [];
   let perfMap = {};
-  let lbMap = {};  // leaderboard data: best fund per portfolio by day_pct
+  let lbMap = {};
   let userProfile = null;
   let subscription = null;
   let tickers = [];
@@ -1736,23 +1736,18 @@
 
   async function loadPerformance() {
     const [perf, lb] = await Promise.allSettled([
-      Promise.allSettled(
-        allBots.map(b => api.getBot(b.id).then(d => ({ id: b.id, data: d })).catch(() => null))
-      ),
+      Promise.allSettled(allBots.map(b => api.getBot(b.id).then(d => ({ id: b.id, data: d })).catch(() => null))),
       api.getPortfolioLeaderboard().catch(() => null)
     ]);
     if (perf.status === 'fulfilled') {
       perf.value.forEach(r => {
-        if (r.status === 'fulfilled' && r.value) {
+        if (r.status === "fulfilled" && r.value) {
           perfMap[r.value.id] = r.value.data?.bot || r.value.data;
         }
       });
     }
-    // Build lbMap keyed by bot_id
     const lbData = lb.status === 'fulfilled' ? lb.value : null;
-    if (lbData?.portfolios) {
-      lbData.portfolios.forEach(p => { lbMap[p.bot_id] = p.best_fund; });
-    }
+    if (lbData?.portfolios) lbData.portfolios.forEach(p => { lbMap[p.bot_id] = p.best_fund; });
     lbMap._best_overall = lbData?.best_overall || null;
   }
 
@@ -1796,9 +1791,7 @@
       const holdings = p?.holdings?.length || 0;
       const fmtVal = value >= 1000 ? "$" + (value/1000).toFixed(1) + "k" : "$" + value.toFixed(0);
       const bestFund = lbMap[bot.id];
-      const bestLine = bestFund
-        ? `<span style="color:var(--accent);font-weight:600">${bestFund.display_name} +${bestFund.day_pct.toFixed(2)}%</span>`
-        : `<span style="color:var(--muted)">—</span>`;
+      const bestLine = bestFund ? `<span style="color:var(--accent);font-weight:600">${bestFund.display_name} +${bestFund.day_pct.toFixed(2)}%</span>` : `<span style="color:var(--muted)">—</span>`;
       const date = bot.created_at ? new Date(bot.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "";
       return `
         <div class="portfolio-card" onclick="location.href='bot-detail.html?id=${bot.id}'">
@@ -1822,16 +1815,14 @@
 
   function updateStats() {
     const best = lbMap._best_overall;
+    const nameEl = document.getElementById("statBestName");
+    const retEl  = document.getElementById("statBestReturn");
     if (best) {
-      const nameEl = document.getElementById("statBestName");
-      const retEl  = document.getElementById("statBestReturn");
-      if (nameEl) nameEl.textContent = (best.portfolio_name.length > 14 ? best.portfolio_name.slice(0,13) + "…" : best.portfolio_name);
-      if (retEl)  { retEl.textContent = best.display_name + " +" + best.day_pct.toFixed(2) + "%"; retEl.className = "stat-sub pos"; }
+      if (nameEl) nameEl.textContent = best.portfolio_name.length > 14 ? best.portfolio_name.slice(0,13) + "…" : best.portfolio_name;
+      if (retEl) { retEl.textContent = best.display_name + " +" + best.day_pct.toFixed(2) + "%"; retEl.className = "stat-sub pos"; }
     } else {
-      const nameEl = document.getElementById("statBestName");
-      const retEl  = document.getElementById("statBestReturn");
       if (nameEl) nameEl.textContent = "—";
-      if (retEl)  { retEl.textContent = "—"; retEl.className = "stat-sub"; }
+      if (retEl) { retEl.textContent = "—"; retEl.className = "stat-sub"; }
     }
   }
 
@@ -2267,4 +2258,51 @@
       toggleEmailMaster();
     } catch(e) { /* silently ignore */ }
   }
-  function tog
+  function toggleEmailMaster() {
+    const on = document.getElementById("epEnabled").checked;
+    document.getElementById("emailSubToggles").classList.toggle("disabled", !on);
+  }
+  async function saveEmailPrefs() {
+    const btn = document.querySelector(".email-save-btn");
+    const orig = btn.textContent;
+    btn.textContent = "Saving…"; btn.disabled = true;
+    try {
+      const token = auth.getToken ? auth.getToken() : (auth._token || localStorage.getItem("auth_token") || "");
+      const body = {
+        email_enabled:      document.getElementById("epEnabled").checked,
+        email_daily:        document.getElementById("epDaily").checked,
+        email_bot13_alerts: document.getElementById("epBot13").checked,
+        email_weekly:       document.getElementById("epWeekly").checked,
+        email_monthly:      document.getElementById("epMonthly").checked,
+        email_portfolio:    document.getElementById("epPortfolio").checked,
+        email_wallstbots:   document.getElementById("epSiteWallstbots").checked,
+        email_bitbot13:     document.getElementById("epSiteBitbot13").checked,
+        email_lvl13:        document.getElementById("epSiteLvl13").checked,
+      };
+      const resp = await fetch(BACKEND_URL + "/user/email-prefs", {
+        method: "PUT",
+        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!resp.ok) throw new Error(await resp.text());
+      showToast("✓ Email preferences saved", "success");
+    } catch(e) {
+      showToast("Error saving preferences: " + e.message, "error");
+    } finally {
+      btn.textContent = orig; btn.disabled = false;
+    }
+  }
+
+  // ── MOBILE NAV ─────────────────────────────────────────────
+  function toggleMobNav(){
+    document.getElementById("mobNav").classList.toggle("open");
+    document.getElementById("mobNavOverlay").classList.toggle("open");
+  }
+  function closeMobNav(){
+    document.getElementById("mobNav").classList.remove("open");
+    document.getElementById("mobNavOverlay").classList.remove("open");
+  }
+  document.addEventListener("DOMContentLoaded",init);
+</script>
+</body>
+</html>

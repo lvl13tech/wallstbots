@@ -1769,4 +1769,41 @@
     btn.textContent = "Saving…"; btn.disabled = true;
     try {
       const token = auth.getToken ? auth.getToken() : (auth._token || localStorage.getItem("auth_token") || "");
-      const bod
+      const body = {
+        email_enabled:      document.getElementById("epEnabled").checked,
+        email_daily:        document.getElementById("epDaily").checked,
+        email_bot13_alerts: document.getElementById("epBot13").checked,
+        email_weekly:       document.getElementById("epWeekly").checked,
+        email_monthly:      document.getElementById("epMonthly").checked,
+        email_portfolio:    document.getElementById("epPortfolio").checked,
+        email_wallstbots:   document.getElementById("epSiteWallstbots").checked,
+        email_bitbot13:     document.getElementById("epSiteBitbot13").checked,
+        email_lvl13:        document.getElementById("epSiteLvl13").checked,
+      };
+      const resp = await fetch(BACKEND_URL + "/user/email-prefs", {
+        method: "PUT",
+        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!resp.ok) throw new Error(await resp.text());
+      showToast("✓ Email preferences saved", "success");
+    } catch(e) {
+      showToast("Error saving preferences: " + e.message, "error");
+    } finally {
+      btn.textContent = orig; btn.disabled = false;
+    }
+  }
+
+  // ── MOBILE NAV ─────────────────────────────────────────────
+  function toggleMobNav(){
+    document.getElementById("mobNav").classList.toggle("open");
+    document.getElementById("mobNavOverlay").classList.toggle("open");
+  }
+  function closeMobNav(){
+    document.getElementById("mobNav").classList.remove("open");
+    document.getElementById("mobNavOverlay").classList.remove("open");
+  }
+  document.addEventListener("DOMContentLoaded",init);
+</script>
+</body>
+</html>
