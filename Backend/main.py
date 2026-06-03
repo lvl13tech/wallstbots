@@ -1355,6 +1355,7 @@ async def get_active_portfolios(
         cursor = conn.cursor(row_factory=dict_row)
         cursor.execute("""
             SELECT b.id AS bot_id,
+                   b.created_at AS bot_created_at,
                    h.symbol, h.entry_price
             FROM bots b
             JOIN bot_holdings h ON h.bot_id = b.id AND h.removed_at IS NULL
@@ -1367,7 +1368,11 @@ async def get_active_portfolios(
         for row in rows:
             bid = str(row["bot_id"])
             if bid not in portfolios:
-                portfolios[bid] = {"bot_id": bid, "holdings": []}
+                portfolios[bid] = {
+                    "bot_id":     bid,
+                    "created_at": str(row["bot_created_at"])[:10] if row["bot_created_at"] else None,
+                    "holdings":   [],
+                }
             portfolios[bid]["holdings"].append({
                 "symbol":      row["symbol"],
                 "entry_price": float(row["entry_price"] or 0),

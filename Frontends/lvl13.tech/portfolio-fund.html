@@ -209,6 +209,9 @@
     </div>
   </div>
 
+  <!-- Activation pending banner — shown until first simulation runs -->
+  <div id="activationBanner"></div>
+
   <!-- 3 stat cards — identical to renderFund() -->
   <div class="grid grid-3" style="margin-bottom:18px">
     <div class="card"><h3>Current Value</h3>
@@ -472,6 +475,23 @@ async function loadSiteData() {
 }
 
 function renderFundStats() {
+  // ── Activation pending banner ─────────────────────────────────────────────
+  const hasSimulated = fundState && fundState.snapshot_date;
+  const createdAt    = botData && botData.created_at ? botData.created_at.slice(0, 10) : null;
+  const todayIso     = new Date().toISOString().slice(0, 10);
+  const activationEl = document.getElementById('activationBanner');
+  if (activationEl) {
+    if (!hasSimulated) {
+      const isCreatedToday = createdAt === todayIso;
+      const msg = isCreatedToday
+        ? '🕐 Your portfolio activates next trading day. Bots begin simulating from market open (9:30 AM ET).'
+        : '⏳ Simulation data is being prepared. Check back after the next market open (9:30 AM ET).';
+      activationEl.innerHTML = `<div style="background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.25);border-radius:10px;padding:14px 18px;color:var(--blue);font-size:13px;margin-bottom:18px;line-height:1.6">${msg}</div>`;
+    } else {
+      activationEl.innerHTML = '';
+    }
+  }
+
   // ── 3 stat cards: use fundState (per-portfolio simulation) if available ──
   const cap    = holdings.length * 1000;
   const fs     = fundState;  // from /bots/{id}/fund/{slug}/state
@@ -493,7 +513,6 @@ function renderFundStats() {
   document.getElementById('fsDayPct').className    = 'fund-pnl ' + cls(dayPct);
 
   // ── Strategy panel: use per-portfolio simulation if available ──
-  const hasSimulated = fundState && fundState.snapshot_date;
   if (hasSimulated && ['bot13','oracle','wizard'].includes(BOT_SLUG) && fundState.strategy) {
     document.getElementById('strategyPanel').innerHTML = renderStrategyPanel(BOT_SLUG, fundState.strategy);
   } else {

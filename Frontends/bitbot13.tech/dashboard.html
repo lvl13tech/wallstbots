@@ -2100,8 +2100,11 @@
     } else if (tickers.length >= 40) {
       note.textContent = tickers.length + "/50 securities · " + (MAX_SECURITIES - tickers.length) + " slots remaining";
       note.className = "pvb-max-note warn";
+    } else if (tickers.length > 0 && tickers.length < 5) {
+      note.textContent = "⚠ Add at least 5 coins to activate your bots (" + tickers.length + "/5)";
+      note.className = "pvb-max-note warn";
     } else {
-      note.textContent = "$1,000 per security · max 50 securities = $50,000";
+      note.textContent = "$1,000 per coin · max 50 coins = $50,000";
       note.className = "pvb-max-note";
     }
   }
@@ -2110,7 +2113,7 @@
     const name = document.getElementById("createName").value.trim();
     const desc = document.getElementById("createDesc").value.trim();
     if (!name) { showToast("Please enter a portfolio name", "error"); document.getElementById("createName").focus(); return; }
-    if (tickers.length === 0) { showToast("Add at least one security", "error"); return; }
+    if (tickers.length < 5) { showToast("Add at least 5 coins to activate your bots", "error"); return; }
 
     const btn = document.getElementById("createSubmitBtn");
     btn.disabled = true;

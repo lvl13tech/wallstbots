@@ -492,6 +492,20 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
         if not universe:
             continue
 
+        # Skip portfolios created today — let them start fresh on the next trading day.
+        # This prevents stale or partial-day prices being locked in as the inception values.
+        portfolio_created = (portfolio.get("created_at") or "")[:10]
+        if portfolio_created == today_iso:
+            print(f"  [portfolios] skipping bot_id={bot_id} — created today ({today_iso}), activates next trading day")
+            continue
+
+        # Minimum 5 holdings required for meaningful simulation.
+        # Fewer than 5 assets makes BOT13 breadth checks unreliable and
+        # ORACLE/WIZARD scoring degenerate. Skip and log clearly.
+        if len(universe) < 5:
+            print(f"  [portfolios] skipping bot_id={bot_id} — only {len(universe)} holding(s), minimum 5 required")
+            continue
+
         # Original buy-in cost — always len(universe) × $1,000. Never changes.
         original_cost = len(universe) * 1000.0
 
@@ -524,8 +538,14 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
             b13_capital = prev_b13_total
 
         if is_equity:
+            # Scale min_picks to universe size so small member portfolios can trade.
+            # A 3-stock portfolio cannot satisfy min_picks=3 AND pass all filters
+            # simultaneously — the homescreen uses 49-55 stocks, members use 3-50.
+            # Rule: require at most 1/3 of the universe, floored at 1, capped at 3.
+            portfolio_cfg = dict(cfg)
+            portfolio_cfg["min_picks"] = max(1, min(3, max(1, round(len(universe) / 3))))
             b13_dec, b13_pos, b13_picks, b13_rat, b13_log, b13_proj = run_bot13_equity(
-                cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
+                portfolio_cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
             )
         else:
             b13_dec, b13_pos, b13_picks, b13_rat, b13_log, b13_proj = run_bot13_crypto(
