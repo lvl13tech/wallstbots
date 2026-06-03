@@ -1195,7 +1195,7 @@
       const r=p?.performance?.gain_loss_pct||0;
       if(r>bestRet){bestRet=r;bestName=b.name;}
     });
-    document.getElementById("statTotalValue").textContent="$"+total.toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0});
+    const tvEl=document.getElementById("statTotalValue");if(tvEl)tvEl.textContent="$"+total.toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0});
     if(bestName){
       document.getElementById("statBestName").textContent=bestName.length>14?bestName.slice(0,13)+"…":bestName;
       const el=document.getElementById("statBestReturn");
@@ -1426,7 +1426,9 @@
       const bot=await api.createBot(name,PLATFORM,desc);
       const botId=bot.id||bot.bot_id||bot.bot?.id;
       if(!botId)throw new Error("No bot ID returned from server");
-      for(let i=0;i<tickers.length;i++){btn.textContent=`Adding ${i+1}/${tickers.length}…`;await api.addHolding(botId,tickers[i],VALUE_PER_SECURITY,null,null);}
+      try{
+        for(let i=0;i<tickers.length;i++){btn.textContent=`Adding ${i+1}/${tickers.length}…`;await api.addHolding(botId,tickers[i],VALUE_PER_SECURITY,null,null);}
+      }catch(holdingErr){try{await api.deleteBot(botId);}catch(_){}throw holdingErr;}
       closeCreateModal();showToast("Portfolio created!","success");await loadPortfolios();
     }catch(e){
       console.error("[createPortfolio]", e);
@@ -1767,41 +1769,4 @@
     btn.textContent = "Saving…"; btn.disabled = true;
     try {
       const token = auth.getToken ? auth.getToken() : (auth._token || localStorage.getItem("auth_token") || "");
-      const body = {
-        email_enabled:      document.getElementById("epEnabled").checked,
-        email_daily:        document.getElementById("epDaily").checked,
-        email_bot13_alerts: document.getElementById("epBot13").checked,
-        email_weekly:       document.getElementById("epWeekly").checked,
-        email_monthly:      document.getElementById("epMonthly").checked,
-        email_portfolio:    document.getElementById("epPortfolio").checked,
-        email_wallstbots:   document.getElementById("epSiteWallstbots").checked,
-        email_bitbot13:     document.getElementById("epSiteBitbot13").checked,
-        email_lvl13:        document.getElementById("epSiteLvl13").checked,
-      };
-      const resp = await fetch(BACKEND_URL + "/user/email-prefs", {
-        method: "PUT",
-        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!resp.ok) throw new Error(await resp.text());
-      showToast("✓ Email preferences saved", "success");
-    } catch(e) {
-      showToast("Error saving preferences: " + e.message, "error");
-    } finally {
-      btn.textContent = orig; btn.disabled = false;
-    }
-  }
-
-  // ── MOBILE NAV ─────────────────────────────────────────────
-  function toggleMobNav(){
-    document.getElementById("mobNav").classList.toggle("open");
-    document.getElementById("mobNavOverlay").classList.toggle("open");
-  }
-  function closeMobNav(){
-    document.getElementById("mobNav").classList.remove("open");
-    document.getElementById("mobNavOverlay").classList.remove("open");
-  }
-  document.addEventListener("DOMContentLoaded",init);
-</script>
-</body>
-</html>
+      const body 
