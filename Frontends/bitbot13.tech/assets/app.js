@@ -428,11 +428,14 @@ function renderStrategyPanel(fid, strat) {
                   : fid==='oracle' ? 'Projected Week Return'
                   : 'Projected Month Return';
   const projRet = strat.projected_return;
-  const projHtml = (projRet != null)
+  // Projected Return only shows for BOT13 — it is the pre-trade edge score,
+  // never the actual return. Oracle and Wizard do not show this.
+  const projHtml = (fid === 'bot13' && projRet != null)
     ? '<div style="margin:6px 0 10px;font-size:13px">'
-      + '<span style="color:var(--muted)">'+projLabel+': </span>'
+      + '<span style="color:var(--muted)">Projected Edge Score: </span>'
       + '<span style="font-weight:700;color:'+(projRet > 0 ? 'var(--green)' : projRet < 0 ? 'var(--red)' : 'var(--muted)')+'">'
-      + (projRet > 0 ? '+' : '')+projRet.toFixed(2)+'%</span></div>'
+      + (projRet > 0 ? '+' : '')+projRet.toFixed(2)+'%</span>'
+      + '<span style="color:var(--muted);font-size:11px;margin-left:6px">(must exceed 1.74% to trade)</span></div>'
     : '';
   let picks = '';
   if (strat.decision === 'CASH' || strat.decision === 'HOLD') {
@@ -455,7 +458,7 @@ function renderStrategyPanel(fid, strat) {
         + '<div class="pick-indicators">'+parts.join(' · ')+'</div></div>';
     }).join('') + '</div>';
   }
-  const cleanRationale = (strat.rationale||'').replace(/^Projected return:[^.]*\.\s*/i, '');
+  const cleanRationale = (strat.rationale||'').replace(/^Projected\s+\w*\s*return:[^.]*\.\s*/i, '');
   return '<div class="strategy-panel '+fid+'"><h3>'+label+'</h3>'
     + '<div class="strategy-meta">'+escapeHtml(period)+' · '+escapeHtml(strat.decision||'')+'</div>'
     + projHtml
