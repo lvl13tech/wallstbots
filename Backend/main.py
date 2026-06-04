@@ -60,6 +60,39 @@ SUPPORT_NOTIFY_EMAIL     = "info@lvl13.tech"
 ADMIN_CODES = {'admin13', 'adminm13'}
 ADMIN_CODE_TIERS = {'admin13': 'insider', 'adminm13': 'syndicate'}
 
+# ── Verified coin universe for bitbot13 ──────────────────────────────────────
+# 278 coins verified against yfinance — no stablecoins, memecoins included.
+# Single source of truth for add_holding validation and simulation.
+VERIFIED_CRYPTO = {
+    "1INCH","AAVE","ACH","ACT","ADA","AERGO","AERO","AGENT","AGIX","AIDOGE",
+    "AKT","ALGO","ALICE","ANKR","APE","API3","APT","AR","ARB","ARDR","ARKM",
+    "AST","ASTR","ATOM","AUDIO","AVAX","AXS","BABYDOGE","BAL","BAND","BAT",
+    "BCH","BENDOG","BGB","BICO","BLUR","BMX","BNB","BODEN","BOME","BONK",
+    "BSV","BTC","BTG","BTRST","BTT","BURGER","CAKE","CELO","CELR","CFG","CFX",
+    "CHEEMS","CHILLGUY","CHZ","CLV","COMP","COQ","CORGI","COTI","CRO","CRV",
+    "CTSI","CTXC","CVX","DASH","DATA","DCR","DEXE","DGB","DNT","DOBO","DOGE",
+    "DOGGY","DOT","DUKO","DUSK","DYDX","EGLD","EIGEN","ENA","ENJ","ENS","ETC",
+    "ETH","ETHFI","ETHW","EWT","FARTCOIN","FET","FIL","FIO","FIRO","FLOKI",
+    "FLOW","FLR","FOR","FORTH","GALA","GAS","GHST","GLM","GLMR","GNO","GOAT",
+    "GODS","GRT","GT","HARAMBE","HBAR","HIGHER","HNT","HOGE","HONK","HOOK",
+    "HOT","ICP","ID","IDEX","ILV","IMX","INJ","IOST","IOTA","IOTX","JASMY",
+    "JST","JTO","JUP","KAIA","KAITO","KAS","KAVA","KCS","KEKIUS","KEY","KISHU",
+    "KSM","LADYS","LDO","LEO","LINK","LOOKS","LOOM","LPT","LQTY","LRC","LSK",
+    "LTC","LUNC","MANA","MAV","MBL","MBOX","MDT","MELANIA","MIGGLES","MINA",
+    "MITH","MKR","MNGO","MOG","MON","MOTHER","MOVR","MTL","MYRO","NEAR","NEO",
+    "NEXO","NKN","NMR","OCEAN","OGN","OKB","OMG","ONDO","ONE","ONT","OP",
+    "ORCA","ORN","PAXG","PENDLE","PEPE","PERP","PIT","PIVX","PNUT","POL",
+    "POLS","POND","PONKE","PUNDIX","PYR","PYTH","QNT","QTUM","RAD","RAY",
+    "REEF","REN","RENDER","REQ","RLB","RLC","ROSE","RPL","RSR","RUNE","RVN",
+    "SAMO","SAND","SC","SEI","SHIB","SHIBDOGE","SHPING","SHRUB","SKL","SLERF",
+    "SLP","SMOLE","SNT","SNX","SOL","SPELL","SPS","STMX","STORJ","STRAX",
+    "STRK","STX","SUI","SUNDOG","SUSHI","SXP","TAO","THETA","TIA","TLM","TON",
+    "TRAC","TRIBE","TRU","TRX","TURBO","TWT","UMA","UNI","VANRY","VET","VINE",
+    "VIRTUAL","VOLT","VOXEL","VRA","VTHO","WAN","WAVES","WBT","WIF","WIN",
+    "WLD","WOJAK","WOOF","XDC","XEC","XLM","XMR","XRP","XTZ","XVG","YFI",
+    "ZEC","ZEN","ZIL","ZRX",
+}
+
 # Stripe price IDs per tier per billing cycle
 STRIPE_PRICES = {
     "member":    {"monthly": "price_1TdiQz79ykntfWmWfuubQxGm", "annual": "price_1TdiSj79ykntfWmWtMfJsZGM"},
@@ -901,9 +934,27 @@ async def add_holding(bot_id: str, req: BotHoldingCreate, current_user: dict = D
 
         symbol = req.symbol.upper().strip()
 
-        # Entry price is optional at add time — the refresh script fetches live prices
-        # via yfinance on the next cycle. Polygon is not used here because its rate
-        # limits would block users from adding 50 holdings in a session.
+        # Validate symbol against verified universe.
+        # bitbot13: must be in the 278-coin verified crypto list.
+        # Stock platforms: basic format check only.
+        cursor.execute("SELECT platform FROM bots WHERE id = %s", (bot_id,))
+        bot_plat_row = cursor.fetchone()
+        bot_plat = (bot_plat_row["platform"] if bot_plat_row else "").lower()
+        if bot_plat == "bitbot13":
+            if symbol not in VERIFIED_CRYPTO:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"'{symbol}' is not in the supported coin list. Choose from the 278 verified coins."
+                )
+        else:
+            import re as _re
+            if not _re.match(r'^[A-Z0-9\.\^\-]{1,10}$', symbol):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"'{symbol}' doesn't look like a valid ticker symbol."
+                )
+
+        # Entry price fetched by refresh script on next cycle.
         entry_price = req.entry_price
 
         cursor.execute("""
