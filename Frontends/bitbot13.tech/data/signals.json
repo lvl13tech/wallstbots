@@ -5,16 +5,16 @@
         "symbol": "PEPE",
         "action": "STRONG SELL",
         "confidence": "High",
-        "rationale": "Down -7.33% in 24h \u2014 sharp decline.",
-        "price": 2.78e-06,
-        "target": 2.58e-06,
-        "upside_pct": -7.33,
-        "score": -36.7,
+        "rationale": "Down -9.00% in 24h \u2014 sharp decline.",
+        "price": 2.73e-06,
+        "target": 2.48e-06,
+        "upside_pct": -9.0,
+        "score": -45.0,
         "risk": "High",
         "sector": "CRYPTO",
         "date": "2026-06-09",
         "indicators": {
-          "mom_1d": -7.33,
+          "mom_1d": -9.0,
           "rsi_14": null,
           "macd_pct": null
         }
@@ -23,16 +23,16 @@
         "symbol": "SHIB",
         "action": "STRONG SELL",
         "confidence": "High",
-        "rationale": "Down -6.20% in 24h \u2014 sharp decline.",
-        "price": 4.69e-06,
-        "target": 4.4e-06,
-        "upside_pct": -6.2,
-        "score": -31.0,
-        "risk": "Medium",
+        "rationale": "Down -7.60% in 24h \u2014 sharp decline.",
+        "price": 4.62e-06,
+        "target": 4.27e-06,
+        "upside_pct": -7.6,
+        "score": -38.0,
+        "risk": "High",
         "sector": "CRYPTO",
         "date": "2026-06-09",
         "indicators": {
-          "mom_1d": -6.2,
+          "mom_1d": -7.6,
           "rsi_14": null,
           "macd_pct": null
         }
@@ -41,52 +41,34 @@
         "symbol": "RUNE",
         "action": "STRONG BUY",
         "confidence": "High",
-        "rationale": "Up +5.27% in 24h \u2014 strong upside momentum.",
-        "price": 0.3642,
-        "target": 0.3834,
-        "upside_pct": 5.27,
-        "score": 26.4,
+        "rationale": "Up +5.94% in 24h \u2014 strong upside momentum.",
+        "price": 0.3665,
+        "target": 0.3883,
+        "upside_pct": 5.94,
+        "score": 29.7,
         "risk": "Medium",
         "sector": "CRYPTO",
         "date": "2026-06-09",
         "indicators": {
-          "mom_1d": 5.27,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "THETA",
-        "action": "SELL",
-        "confidence": "Medium",
-        "rationale": "Down -3.21% in 24h \u2014 negative momentum.",
-        "price": 0.1499,
-        "target": 0.1451,
-        "upside_pct": -3.21,
-        "score": -16.1,
-        "risk": "Medium",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -3.21,
+          "mom_1d": 5.94,
           "rsi_14": null,
           "macd_pct": null
         }
       },
       {
         "symbol": "WLD",
-        "action": "BUY",
-        "confidence": "Medium",
-        "rationale": "Up +3.16% in 24h \u2014 positive momentum.",
-        "price": 0.5132,
-        "target": 0.5294,
-        "upside_pct": 3.16,
-        "score": 15.8,
+        "action": "STRONG BUY",
+        "confidence": "High",
+        "rationale": "Up +5.13% in 24h \u2014 strong upside momentum.",
+        "price": 0.523,
+        "target": 0.5498,
+        "upside_pct": 5.13,
+        "score": 25.6,
         "risk": "Medium",
         "sector": "CRYPTO",
         "date": "2026-06-09",
         "indicators": {
-          "mom_1d": 3.16,
+          "mom_1d": 5.13,
           "rsi_14": null,
           "macd_pct": null
         }
@@ -95,16 +77,628 @@
         "symbol": "SEI",
         "action": "SELL",
         "confidence": "Medium",
-        "rationale": "Down -2.77% in 24h \u2014 negative momentum.",
-        "price": 0.0478,
-        "target": 0.0465,
-        "upside_pct": -2.77,
-        "score": -13.9,
+        "rationale": "Down -4.85% in 24h \u2014 negative momentum.",
+        "price": 0.0468,
+        "target": 0.0446,
+        "upside_pct": -4.85,
+        "score": -24.2,
+        "risk": "Medium",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -4.85,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "THETA",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -4.77% in 24h \u2014 negative momentum.",
+        "price": 0.1475,
+        "target": 0.1405,
+        "upside_pct": -4.77,
+        "score": -23.9,
+        "risk": "Medium",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -4.77,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "AAVE",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -4.62% in 24h \u2014 negative momentum.",
+        "price": 60.42,
+        "target": 57.63,
+        "upside_pct": -4.62,
+        "score": -23.1,
+        "risk": "Medium",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -4.62,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "FET",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -4.45% in 24h \u2014 negative momentum.",
+        "price": 0.1999,
+        "target": 0.191,
+        "upside_pct": -4.45,
+        "score": -22.2,
+        "risk": "Medium",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -4.45,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "KAS",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -4.18% in 24h \u2014 negative momentum.",
+        "price": 0.0307,
+        "target": 0.0294,
+        "upside_pct": -4.18,
+        "score": -20.9,
+        "risk": "Medium",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -4.18,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "ARB",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -3.63% in 24h \u2014 negative momentum.",
+        "price": 0.079,
+        "target": 0.0761,
+        "upside_pct": -3.63,
+        "score": -18.1,
+        "risk": "Medium",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -3.63,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "BCH",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -3.44% in 24h \u2014 negative momentum.",
+        "price": 201.98,
+        "target": 195.03,
+        "upside_pct": -3.44,
+        "score": -17.2,
+        "risk": "Medium",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -3.44,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "ADA",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -3.43% in 24h \u2014 negative momentum.",
+        "price": 0.1645,
+        "target": 0.1589,
+        "upside_pct": -3.43,
+        "score": -17.1,
+        "risk": "Medium",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -3.43,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "SOL",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -3.39% in 24h \u2014 negative momentum.",
+        "price": 64.53,
+        "target": 62.34,
+        "upside_pct": -3.39,
+        "score": -17.0,
+        "risk": "Medium",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -3.39,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "NOT",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -3.30% in 24h \u2014 negative momentum.",
+        "price": 0.00036844,
+        "target": 0.0003563,
+        "upside_pct": -3.3,
+        "score": -16.5,
+        "risk": "Medium",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -3.3,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "ETH",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -3.27% in 24h \u2014 negative momentum.",
+        "price": 1634.81,
+        "target": 1581.28,
+        "upside_pct": -3.27,
+        "score": -16.4,
+        "risk": "Medium",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -3.27,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "XRP",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -3.22% in 24h \u2014 negative momentum.",
+        "price": 1.13,
+        "target": 1.09,
+        "upside_pct": -3.22,
+        "score": -16.1,
+        "risk": "Medium",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -3.22,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "AVAX",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -3.22% in 24h \u2014 negative momentum.",
+        "price": 6.54,
+        "target": 6.33,
+        "upside_pct": -3.22,
+        "score": -16.1,
+        "risk": "Medium",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -3.22,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "LINK",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -3.05% in 24h \u2014 negative momentum.",
+        "price": 7.74,
+        "target": 7.51,
+        "upside_pct": -3.05,
+        "score": -15.2,
+        "risk": "Medium",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -3.05,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "BTC",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -3.04% in 24h \u2014 negative momentum.",
+        "price": 61169.8,
+        "target": 59307.49,
+        "upside_pct": -3.04,
+        "score": -15.2,
+        "risk": "Medium",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -3.04,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "QNT",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.99% in 24h \u2014 negative momentum.",
+        "price": 64.85,
+        "target": 62.91,
+        "upside_pct": -2.99,
+        "score": -15.0,
         "risk": "Low",
         "sector": "CRYPTO",
         "date": "2026-06-09",
         "indicators": {
-          "mom_1d": -2.77,
+          "mom_1d": -2.99,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "DOT",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.82% in 24h \u2014 negative momentum.",
+        "price": 0.946,
+        "target": 0.9193,
+        "upside_pct": -2.82,
+        "score": -14.1,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.82,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "BNB",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.75% in 24h \u2014 negative momentum.",
+        "price": 585.1,
+        "target": 569.03,
+        "upside_pct": -2.75,
+        "score": -13.7,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.75,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "FIL",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.68% in 24h \u2014 negative momentum.",
+        "price": 0.753,
+        "target": 0.7328,
+        "upside_pct": -2.68,
+        "score": -13.4,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.68,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "VET",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.68% in 24h \u2014 negative momentum.",
+        "price": 0.0048,
+        "target": 0.00467153,
+        "upside_pct": -2.68,
+        "score": -13.4,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.68,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "ICP",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.66% in 24h \u2014 negative momentum.",
+        "price": 2.27,
+        "target": 2.21,
+        "upside_pct": -2.66,
+        "score": -13.3,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.66,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "WIF",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.65% in 24h \u2014 negative momentum.",
+        "price": 0.154,
+        "target": 0.1499,
+        "upside_pct": -2.65,
+        "score": -13.3,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.65,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "PENDLE",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.56% in 24h \u2014 negative momentum.",
+        "price": 1.24,
+        "target": 1.21,
+        "upside_pct": -2.56,
+        "score": -12.8,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.56,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "SUI",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.51% in 24h \u2014 negative momentum.",
+        "price": 0.735,
+        "target": 0.7166,
+        "upside_pct": -2.51,
+        "score": -12.5,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.51,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "HBAR",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.51% in 24h \u2014 negative momentum.",
+        "price": 0.0793,
+        "target": 0.0773,
+        "upside_pct": -2.51,
+        "score": -12.6,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.51,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "ALGO",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.47% in 24h \u2014 negative momentum.",
+        "price": 0.0898,
+        "target": 0.0876,
+        "upside_pct": -2.47,
+        "score": -12.4,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.47,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "EGLD",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.47% in 24h \u2014 negative momentum.",
+        "price": 2.88,
+        "target": 2.81,
+        "upside_pct": -2.47,
+        "score": -12.4,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.47,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "MKR",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.44% in 24h \u2014 negative momentum.",
+        "price": 1430.81,
+        "target": 1395.86,
+        "upside_pct": -2.44,
+        "score": -12.2,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.44,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "RENDER",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.35% in 24h \u2014 negative momentum.",
+        "price": 1.6,
+        "target": 1.56,
+        "upside_pct": -2.35,
+        "score": -11.8,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.35,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "ETC",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.27% in 24h \u2014 negative momentum.",
+        "price": 6.94,
+        "target": 6.78,
+        "upside_pct": -2.27,
+        "score": -11.4,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.27,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "LTC",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.24% in 24h \u2014 negative momentum.",
+        "price": 42.1,
+        "target": 41.16,
+        "upside_pct": -2.24,
+        "score": -11.2,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.24,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "ONDO",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.23% in 24h \u2014 negative momentum.",
+        "price": 0.3563,
+        "target": 0.3483,
+        "upside_pct": -2.23,
+        "score": -11.1,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.23,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "DOGE",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.20% in 24h \u2014 negative momentum.",
+        "price": 0.0844,
+        "target": 0.0825,
+        "upside_pct": -2.2,
+        "score": -11.0,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.2,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "APT",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.16% in 24h \u2014 negative momentum.",
+        "price": 0.656,
+        "target": 0.6418,
+        "upside_pct": -2.16,
+        "score": -10.8,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.16,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "NEAR",
+        "action": "SELL",
+        "confidence": "Medium",
+        "rationale": "Down -2.09% in 24h \u2014 negative momentum.",
+        "price": 2.08,
+        "target": 2.04,
+        "upside_pct": -2.09,
+        "score": -10.5,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -2.09,
           "rsi_14": null,
           "macd_pct": null
         }
@@ -113,34 +707,34 @@
         "symbol": "XLM",
         "action": "SELL",
         "confidence": "Medium",
-        "rationale": "Down -2.71% in 24h \u2014 negative momentum.",
-        "price": 0.1969,
-        "target": 0.1916,
-        "upside_pct": -2.71,
-        "score": -13.6,
+        "rationale": "Down -2.02% in 24h \u2014 negative momentum.",
+        "price": 0.1983,
+        "target": 0.1943,
+        "upside_pct": -2.02,
+        "score": -10.1,
         "risk": "Low",
         "sector": "CRYPTO",
         "date": "2026-06-09",
         "indicators": {
-          "mom_1d": -2.71,
+          "mom_1d": -2.02,
           "rsi_14": null,
           "macd_pct": null
         }
       },
       {
-        "symbol": "MANTA",
-        "action": "BUY",
-        "confidence": "Medium",
-        "rationale": "Up +2.28% in 24h \u2014 positive momentum.",
-        "price": 0.0784,
-        "target": 0.0802,
-        "upside_pct": 2.28,
-        "score": 11.4,
+        "symbol": "UNI",
+        "action": "HOLD",
+        "confidence": "Low",
+        "rationale": "Flat -1.93% \u2014 no clear edge right now.",
+        "price": 2.46,
+        "target": 2.42,
+        "upside_pct": -1.93,
+        "score": -9.6,
         "risk": "Low",
         "sector": "CRYPTO",
         "date": "2026-06-09",
         "indicators": {
-          "mom_1d": 2.28,
+          "mom_1d": -1.93,
           "rsi_14": null,
           "macd_pct": null
         }
@@ -164,235 +758,19 @@
         }
       },
       {
-        "symbol": "MKR",
+        "symbol": "CRV",
         "action": "HOLD",
         "confidence": "Low",
-        "rationale": "Flat -1.85% \u2014 no clear edge right now.",
-        "price": 1439.54,
-        "target": 1412.95,
-        "upside_pct": -1.85,
-        "score": -9.2,
+        "rationale": "Flat -1.72% \u2014 no clear edge right now.",
+        "price": 0.1947,
+        "target": 0.1914,
+        "upside_pct": -1.72,
+        "score": -8.6,
         "risk": "Low",
         "sector": "CRYPTO",
         "date": "2026-06-09",
         "indicators": {
-          "mom_1d": -1.85,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "NOT",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.85% \u2014 no clear edge right now.",
-        "price": 0.00037394,
-        "target": 0.00036701,
-        "upside_pct": -1.85,
-        "score": -9.3,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.85,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "ARB",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.80% \u2014 no clear edge right now.",
-        "price": 0.0805,
-        "target": 0.0791,
-        "upside_pct": -1.8,
-        "score": -9.0,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.8,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "KAS",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.69% \u2014 no clear edge right now.",
-        "price": 0.0315,
-        "target": 0.031,
-        "upside_pct": -1.69,
-        "score": -8.5,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.69,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "LINK",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.58% \u2014 no clear edge right now.",
-        "price": 7.86,
-        "target": 7.74,
-        "upside_pct": -1.58,
-        "score": -7.9,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.58,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "ETC",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.57% \u2014 no clear edge right now.",
-        "price": 6.99,
-        "target": 6.88,
-        "upside_pct": -1.57,
-        "score": -7.8,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.57,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "TRX",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.54% \u2014 no clear edge right now.",
-        "price": 0.3215,
-        "target": 0.3165,
-        "upside_pct": -1.54,
-        "score": -7.7,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.54,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "AAVE",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.53% \u2014 no clear edge right now.",
-        "price": 62.38,
-        "target": 61.43,
-        "upside_pct": -1.53,
-        "score": -7.6,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.53,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "ADA",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.49% \u2014 no clear edge right now.",
-        "price": 0.1678,
-        "target": 0.1653,
-        "upside_pct": -1.49,
-        "score": -7.4,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.49,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "LTC",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.47% \u2014 no clear edge right now.",
-        "price": 42.43,
-        "target": 41.81,
-        "upside_pct": -1.47,
-        "score": -7.4,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.47,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "FET",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.39% \u2014 no clear edge right now.",
-        "price": 0.2063,
-        "target": 0.2034,
-        "upside_pct": -1.39,
-        "score": -6.9,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.39,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "WIF",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.39% \u2014 no clear edge right now.",
-        "price": 0.156,
-        "target": 0.1538,
-        "upside_pct": -1.39,
-        "score": -7.0,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.39,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "HBAR",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.37% \u2014 no clear edge right now.",
-        "price": 0.0802,
-        "target": 0.0791,
-        "upside_pct": -1.37,
-        "score": -6.8,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.37,
+          "mom_1d": -1.72,
           "rsi_14": null,
           "macd_pct": null
         }
@@ -401,466 +779,34 @@
         "symbol": "ATOM",
         "action": "HOLD",
         "confidence": "Low",
-        "rationale": "Flat -1.36% \u2014 no clear edge right now.",
-        "price": 1.74,
-        "target": 1.72,
-        "upside_pct": -1.36,
-        "score": -6.8,
+        "rationale": "Flat -1.70% \u2014 no clear edge right now.",
+        "price": 1.73,
+        "target": 1.7,
+        "upside_pct": -1.7,
+        "score": -8.5,
         "risk": "Low",
         "sector": "CRYPTO",
         "date": "2026-06-09",
         "indicators": {
-          "mom_1d": -1.36,
+          "mom_1d": -1.7,
           "rsi_14": null,
           "macd_pct": null
         }
       },
       {
-        "symbol": "AVAX",
+        "symbol": "TRX",
         "action": "HOLD",
         "confidence": "Low",
-        "rationale": "Flat -1.30% \u2014 no clear edge right now.",
-        "price": 6.67,
-        "target": 6.58,
-        "upside_pct": -1.3,
-        "score": -6.5,
+        "rationale": "Flat -1.59% \u2014 no clear edge right now.",
+        "price": 0.3213,
+        "target": 0.3162,
+        "upside_pct": -1.59,
+        "score": -8.0,
         "risk": "Low",
         "sector": "CRYPTO",
         "date": "2026-06-09",
         "indicators": {
-          "mom_1d": -1.3,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "VET",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.26% \u2014 no clear edge right now.",
-        "price": 0.00487,
-        "target": 0.00480878,
-        "upside_pct": -1.26,
-        "score": -6.3,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.26,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "FLOKI",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat +1.25% \u2014 no clear edge right now.",
-        "price": 2.43e-05,
-        "target": 2.46e-05,
-        "upside_pct": 1.25,
-        "score": 6.2,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": 1.25,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "ETH",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.21% \u2014 no clear edge right now.",
-        "price": 1669.7,
-        "target": 1649.5,
-        "upside_pct": -1.21,
-        "score": -6.0,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.21,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "SUI",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.16% \u2014 no clear edge right now.",
-        "price": 0.7452,
-        "target": 0.7366,
-        "upside_pct": -1.16,
-        "score": -5.8,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.16,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "APT",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.13% \u2014 no clear edge right now.",
-        "price": 0.6629,
-        "target": 0.6554,
-        "upside_pct": -1.13,
-        "score": -5.7,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.13,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "EGLD",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.12% \u2014 no clear edge right now.",
-        "price": 2.92,
-        "target": 2.89,
-        "upside_pct": -1.12,
-        "score": -5.6,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.12,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "BCH",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.06% \u2014 no clear edge right now.",
-        "price": 206.95,
-        "target": 204.75,
-        "upside_pct": -1.06,
-        "score": -5.3,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.06,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "DOGE",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.05% \u2014 no clear edge right now.",
-        "price": 0.0854,
-        "target": 0.0845,
-        "upside_pct": -1.05,
-        "score": -5.3,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.05,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "SOL",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -1.01% \u2014 no clear edge right now.",
-        "price": 66.12,
-        "target": 65.45,
-        "upside_pct": -1.01,
-        "score": -5.1,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -1.01,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "ICP",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -0.99% \u2014 no clear edge right now.",
-        "price": 2.31,
-        "target": 2.29,
-        "upside_pct": -0.99,
-        "score": -4.9,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -0.99,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "CRV",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -0.91% \u2014 no clear edge right now.",
-        "price": 0.1963,
-        "target": 0.1945,
-        "upside_pct": -0.91,
-        "score": -4.6,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -0.91,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "DOT",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -0.87% \u2014 no clear edge right now.",
-        "price": 0.965,
-        "target": 0.9566,
-        "upside_pct": -0.87,
-        "score": -4.3,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -0.87,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "FIL",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -0.74% \u2014 no clear edge right now.",
-        "price": 0.768,
-        "target": 0.7623,
-        "upside_pct": -0.74,
-        "score": -3.7,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -0.74,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "XRP",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -0.69% \u2014 no clear edge right now.",
-        "price": 1.16,
-        "target": 1.15,
-        "upside_pct": -0.69,
-        "score": -3.5,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -0.69,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "BTC",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -0.64% \u2014 no clear edge right now.",
-        "price": 62684.33,
-        "target": 62280.68,
-        "upside_pct": -0.64,
-        "score": -3.2,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -0.64,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "ALGO",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -0.63% \u2014 no clear edge right now.",
-        "price": 0.0915,
-        "target": 0.0909,
-        "upside_pct": -0.63,
-        "score": -3.1,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -0.63,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "RENDER",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -0.52% \u2014 no clear edge right now.",
-        "price": 1.63,
-        "target": 1.62,
-        "upside_pct": -0.52,
-        "score": -2.6,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -0.52,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "UNI",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -0.38% \u2014 no clear edge right now.",
-        "price": 2.5,
-        "target": 2.49,
-        "upside_pct": -0.38,
-        "score": -1.9,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -0.38,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "PENDLE",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -0.35% \u2014 no clear edge right now.",
-        "price": 1.26,
-        "target": 1.26,
-        "upside_pct": -0.35,
-        "score": -1.8,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -0.35,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "INJ",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat +0.31% \u2014 no clear edge right now.",
-        "price": 5.65,
-        "target": 5.67,
-        "upside_pct": 0.31,
-        "score": 1.6,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": 0.31,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "NEAR",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat +0.30% \u2014 no clear edge right now.",
-        "price": 2.13,
-        "target": 2.14,
-        "upside_pct": 0.3,
-        "score": 1.5,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": 0.3,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "BNB",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -0.29% \u2014 no clear edge right now.",
-        "price": 599.9,
-        "target": 598.18,
-        "upside_pct": -0.29,
-        "score": -1.4,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -0.29,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "ONDO",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -0.13% \u2014 no clear edge right now.",
-        "price": 0.3639,
-        "target": 0.3635,
-        "upside_pct": -0.13,
-        "score": -0.6,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -0.13,
-          "rsi_14": null,
-          "macd_pct": null
-        }
-      },
-      {
-        "symbol": "QNT",
-        "action": "HOLD",
-        "confidence": "Low",
-        "rationale": "Flat -0.07% \u2014 no clear edge right now.",
-        "price": 66.8,
-        "target": 66.75,
-        "upside_pct": -0.07,
-        "score": -0.4,
-        "risk": "Low",
-        "sector": "CRYPTO",
-        "date": "2026-06-09",
-        "indicators": {
-          "mom_1d": -0.07,
+          "mom_1d": -1.59,
           "rsi_14": null,
           "macd_pct": null
         }
@@ -869,16 +815,70 @@
         "symbol": "JUP",
         "action": "HOLD",
         "confidence": "Low",
-        "rationale": "Flat -0.01% \u2014 no clear edge right now.",
-        "price": 0.00020299,
-        "target": 0.00020297,
-        "upside_pct": -0.01,
-        "score": -0.0,
+        "rationale": "Flat -0.61% \u2014 no clear edge right now.",
+        "price": 0.00020177,
+        "target": 0.00020054,
+        "upside_pct": -0.61,
+        "score": -3.0,
         "risk": "Low",
         "sector": "CRYPTO",
         "date": "2026-06-09",
         "indicators": {
-          "mom_1d": -0.01,
+          "mom_1d": -0.61,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "MANTA",
+        "action": "HOLD",
+        "confidence": "Low",
+        "rationale": "Flat +0.44% \u2014 no clear edge right now.",
+        "price": 0.077,
+        "target": 0.0773,
+        "upside_pct": 0.44,
+        "score": 2.2,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": 0.44,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "FLOKI",
+        "action": "HOLD",
+        "confidence": "Low",
+        "rationale": "Flat -0.42% \u2014 no clear edge right now.",
+        "price": 2.39e-05,
+        "target": 2.38e-05,
+        "upside_pct": -0.42,
+        "score": -2.1,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": -0.42,
+          "rsi_14": null,
+          "macd_pct": null
+        }
+      },
+      {
+        "symbol": "INJ",
+        "action": "HOLD",
+        "confidence": "Low",
+        "rationale": "Flat +0.01% \u2014 no clear edge right now.",
+        "price": 5.64,
+        "target": 5.64,
+        "upside_pct": 0.01,
+        "score": 0.1,
+        "risk": "Low",
+        "sector": "CRYPTO",
+        "date": "2026-06-09",
+        "indicators": {
+          "mom_1d": 0.01,
           "rsi_14": null,
           "macd_pct": null
         }
@@ -904,12 +904,12 @@
     ],
     "universe_size": 50,
     "summary": {
-      "STRONG BUY": 1,
-      "BUY": 2,
-      "HOLD": 42,
-      "SELL": 3,
+      "STRONG BUY": 2,
+      "BUY": 0,
+      "HOLD": 10,
+      "SELL": 36,
       "STRONG SELL": 2
     },
-    "generated_at": "2026-06-09T09:58:37"
+    "generated_at": "2026-06-09T16:10:38"
   }
 }
