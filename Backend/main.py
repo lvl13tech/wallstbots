@@ -1241,6 +1241,44 @@ async def stripe_create_checkout(request: Request, current_user: dict = Depends(
     return {"success": True, "url": session.url}
 
 
+@app.post("/stripe/portal")
+async def stripe_customer_portal(request: Request, current_user: dict = Depends(get_current_user)):
+    """
+    Generate a Stripe Customer Portal session URL for the logged-in user.
+    The portal lets them manage/cancel their subscription directly.
+    """
+    if _stripe is None:
+        raise HTTPException(status_code=500, detail="Stripe not installed")
+    if not STRIPE_SECRET_KEY:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+
+    _stripe.api_key = STRIPE_SECRET_KEY
+    user_id = str(current_user["id"])
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("SELECT stripe_customer_id FROM users WHERE id = %s", (user_id,))
+        row = cursor.fetchone()
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+    customer_id = (row or {}).get("stripe_customer_id", "")
+    if not customer_id:
+        raise HTTPException(status_code=404, detail="No Stripe subscription found. Please contact support.")
+
+    body = await request.json()
+    origin = body.get("origin", "https://lvl13.tech")
+
+    portal_session = _stripe.billing_portal.Session.create(
+        customer=customer_id,
+        return_url=origin + "/#/dashboard",
+    )
+
+    return {"success": True, "url": portal_session.url}
+
+
 @app.post("/stripe/webhook")
 async def stripe_webhook(request: Request):
     """
@@ -1298,6 +1336,8 @@ async def stripe_webhook(request: Request):
                     WHERE id = %s
                 """, (sub_tier, user_id))
 
+                stripe_customer_id = data.get("customer", "")
+
                 # Record subscription
                 cursor.execute("""
                     INSERT INTO subscriptions
@@ -1306,6 +1346,12 @@ async def stripe_webhook(request: Request):
                     VALUES (%s, 1, %s, 'active', %s, %s)
                     ON CONFLICT DO NOTHING
                 """, (user_id, amount_total, stripe_sub_id, platform))
+
+                # Store stripe_customer_id on user row for portal access
+                if stripe_customer_id:
+                    cursor.execute("""
+                        UPDATE users SET stripe_customer_id = %s WHERE id = %s
+                    """, (stripe_customer_id, user_id))
 
                 # Handle referral credit if code was used
                 if ref_code:

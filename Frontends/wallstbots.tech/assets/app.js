@@ -970,7 +970,7 @@ function renderReferral() {
     + '<h3>How It Works</h3>'
     + '<div class="grid grid-3" style="margin-bottom:32px">'
     + [['1. Share Your Link','Copy your personal referral link and send it to anyone who trades or invests. Works across all three Level 13 sites.'],
-       ['2. They Subscribe','Your friend clicks your link, sees their discount pre-applied, and subscribes with PayPal. No extra steps.'],
+       ['2. They Subscribe','Your friend clicks your link, sees their discount pre-applied, and subscribes with Stripe. No extra steps.'],
        ['3. You Both Win','They save on day one. You automatically get $35 credited to your account — reduces your next auto-bill.']].map(p =>
          '<div class="card"><h3 style="color:var(--blue);margin-bottom:8px">'+p[0]+'</h3>'
          + '<p style="color:var(--muted);font-size:13px;margin:0">'+p[1]+'</p></div>').join('')
@@ -1086,7 +1086,7 @@ async function loadReferralDashboard() {
 const FAQS = [
   { q: ['price','cost','how much','pricing','member','insider','syndicate'], a: "MEMBER: $49.99/mo or $499/yr (5 portfolios). INSIDER: $69.99/mo or $699/yr (10 portfolios). SYNDICATE: $99.99/mo or $899/yr (up to 25 portfolios, all 3 platforms). FREE tier: 1 portfolio included + daily signals by email at no cost." },
   { q: ['referral','refer','code','discount'], a: "Share your referral code and earn $35 credit per friend who subscribes — automatically applied to your next bill. Your friend gets 50% off their first month or $100 off an annual plan. No cap on referrals." },
-  { q: ['cancel','refund','stop'], a: "Cancel anytime from your PayPal account → Settings → Automatic Payments. No further charges after cancellation." },
+  { q: ['cancel','refund','stop'], a: "Cancel anytime through the Stripe billing portal — use the link in your subscription confirmation email, or go to Dashboard → Manage Billing. No further charges after cancellation." },
   { q: ['stocks','tickers','how many','add','holding','portfolio tracker'], a: "Add any U.S.-listed stock to your portfolio tracker — tech, biotech, energy, financials, REITs, and more. Covers Nasdaq, NYSE, OTC & Pink Sheet symbols. Up to 50 stocks per portfolio. Each holding gets a $1,000 paper allocation." },
   { q: ['sector','sectors','industries','what can i track'], a: "Any of the 11 GICS sectors — tech, biotech, energy, financials, industrials, real estate, utilities, you name it. We pull news and signals for the sectors your stocks belong to." },
   { q: ['portfolio','tracker','bot-detail','my portfolio','dashboard'], a: "Your portfolio page shows: your holdings table with live P&L, pie chart breakdown, bot signals on each stock, curated news for your picks, and a live leaderboard of all 5 bots competing on your exact stock list." },

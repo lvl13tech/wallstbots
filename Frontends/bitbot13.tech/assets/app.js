@@ -920,7 +920,7 @@ function renderReferral() {
     + '</div></section>'
     + '<h3>How It Works</h3><div class="grid grid-3" style="margin-bottom:32px">'
     + [['1. Share Your Link','Copy your personal referral link and share it. Works across all Level 13 sites — stocks, crypto, AI & Quantum.'],
-       ['2. They Subscribe','Your friend clicks your link, sees the discount pre-applied, and subscribes via PayPal. No extra steps needed.'],
+       ['2. They Subscribe','Your friend clicks your link, sees the discount pre-applied, and subscribes via Stripe. No extra steps needed.'],
        ['3. You Both Win','They save on day one. You get $35 credited automatically — deducted from your next auto-bill.']].map(p =>
          '<div class="card"><h3 style="color:var(--blue);margin-bottom:8px">'+p[0]+'</h3><p style="color:var(--muted);font-size:13px;margin:0">'+p[1]+'</p></div>').join('')
     + '</div>'
@@ -979,7 +979,7 @@ async function loadReferralDashboard() {
 const FAQS = [
   { q: ['price','cost','how much','pricing','member','insider','syndicate'], a: "MEMBER: $49.99/mo or $499/yr (5 portfolios). INSIDER: $69.99/mo or $699/yr (10 portfolios). SYNDICATE: $99.99/mo or $899/yr (up to 25 portfolios, all 3 platforms). FREE tier: 1 portfolio included + daily signals by email at no cost." },
   { q: ['referral','refer','code','discount'], a: "Share your referral code and earn $35 credit per friend who subscribes — automatically applied to your next bill. Your friend gets 50% off their first month or 20% off annual. No cap on referrals." },
-  { q: ['cancel','refund','stop'], a: "Cancel anytime from your PayPal account → Settings → Automatic Payments. No further charges after cancellation." },
+  { q: ['cancel','refund','stop'], a: "Cancel anytime through the Stripe billing portal — use the link in your subscription confirmation email, or go to Dashboard → Manage Billing. No further charges after cancellation." },
   { q: ['coin','coins','tickers','how many','add','holding','what can i add'], a: "Add any tradeable crypto — BTC, ETH, altcoins, DeFi, Layer 2, gaming tokens, meme coins, and more. Search by name or ticker symbol. Excludes stablecoins. Up to 50 coins per portfolio. Each coin gets a $1,000 paper allocation." },
   { q: ['chain','chains','layer','defi','category','what can i track'], a: "Any chain or category — Layer 1, Layer 2, DeFi protocols, exchanges, gaming, meme coins, and more. We pull crypto news for the projects you choose." },
   { q: ['portfolio','tracker','bot-detail','my portfolio','dashboard'], a: "Your portfolio page shows: your coin holdings with live P&L, pie chart breakdown, bot signals on each coin, curated crypto news for your picks, and a live leaderboard of all 5 bots competing on your exact coin list." },
