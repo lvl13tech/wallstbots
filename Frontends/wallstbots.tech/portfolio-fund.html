@@ -439,7 +439,7 @@ async function loadFundState() {
     try {
       const token = await auth.getToken();
       if (!token) break;
-      const res = await fetch(BACKEND_URL + '/portfolios/' + BOT_ID + '/fund/' + BOT_SLUG + '/state', {
+      const res = await fetch(BACKEND_URL + '/bots/' + BOT_ID + '/fund/' + BOT_SLUG + '/state', {
         headers: { 'Authorization': 'Bearer ' + token }
       });
       if (res.status === 401 && attempt === 0) continue;  // retry once on auth fail
