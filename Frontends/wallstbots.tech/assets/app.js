@@ -643,9 +643,9 @@ function renderGetYours() {
     + '<p style="color:var(--muted);font-size:15px">Pick up to 50 stocks from ANY sector. Daily, weekly, and monthly AI bots. Custom news feed. Sunday auto-reports.</p>'
     + '<div id="activePriceLabel" style="color:var(--blue);font-weight:700;font-size:15px"></div>'
     + '</div><div class="sales-hero-right">'
-    + '<h3>Subscribe with PayPal</h3>'
+    + '<h3>Subscribe with Stripe</h3>'
     + '<div id="paypalFormWrap"></div>'
-    + '<div class="powered">POWERED BY PAYPAL BUSINESS</div>'
+    + '<div class="powered">SECURED BY STRIPE</div>'
     + '</div></div>'
 
     // ── Feature grid ──
@@ -663,7 +663,7 @@ function renderGetYours() {
          + '<p style="color:var(--muted);font-size:13px;margin:0">'+p[1]+'</p></div>').join('')
     + '</div>'
     + '<div class="panel" style="margin-top:24px">'
-    + '<p style="color:var(--muted);font-size:13px;margin:0 0 8px 0">Built by an operator who runs the same system on his own portfolio. Cancel anytime from your PayPal account. Questions? <a href="#" onclick="chatbotOpen();return false;" style="color:var(--blue)">Open a support ticket ↓</a></p>'
+    + '<p style="color:var(--muted);font-size:13px;margin:0 0 8px 0">Built by an operator who runs the same system on his own portfolio. Cancel anytime — managed through your Stripe billing portal. Questions? <a href="#" onclick="chatbotOpen();return false;" style="color:var(--blue)">Open a support ticket ↓</a></p>'
     + '<p style="font-size:13px;margin:0">Refer a friend → they get <strong style="color:var(--blue)">50% off their first month</strong> or <strong style="color:var(--blue)">$100 off annual</strong> and you earn a <strong style="color:var(--blue)">$35 bill credit</strong>. <a href="#/referral" style="color:var(--blue)">Learn more →</a></p>'
     + '</div>';
 
