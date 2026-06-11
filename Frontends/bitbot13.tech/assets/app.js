@@ -31,6 +31,12 @@ const FUND_META = {
 const FUND_ORDER = ['bot13','oracle','wizard','equalizer','titan'];
 
 const TRACKER_API = 'https://wallstbots-backend-868128114349.us-east1.run.app/public/tracker';
+const API_BASE    = 'https://wallstbots-backend-868128114349.us-east1.run.app';
+
+const JWT_KEY = 'bitbot13_jwt';
+function getJWT()      { try { return localStorage.getItem(JWT_KEY) || localStorage.getItem('auth_token'); } catch(e) { return null; } }
+function setJWT(token) { try { localStorage.setItem(JWT_KEY, token); } catch(e) {} }
+function clearJWT()    { try { localStorage.removeItem(JWT_KEY); } catch(e) {} }
 
 function fetchWithTimeout(url, opts = {}, ms = 8000) {
   const ctrl = new AbortController();
