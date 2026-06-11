@@ -745,16 +745,26 @@ const FUND_STATES = {};  // keyed by fund slug, populated by loadFundStates()
 
 async function loadFundStates() {
   try {
-    const token = await auth.getToken().catch(() => null);
+    // Retry once on auth failure (token may need refresh)
+    let token = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try { token = await auth.getToken(); } catch(e) {}
+      if (token) break;
+      await new Promise(r => setTimeout(r, 500));
+    }
     const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
     await Promise.all(FUND_ORDER.map(async fid => {
-      try {
-        const res = await fetch(API_BASE + '/bots/' + BOT_ID + '/fund/' + fid + '/state', { headers });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.state) FUND_STATES[fid] = data.state;
-        }
-      } catch(e) {}
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const res = await fetch(API_BASE + '/bots/' + BOT_ID + '/fund/' + fid + '/state', { headers });
+          if (res.status === 401 && attempt === 0) continue;  // retry once on auth fail
+          if (res.ok) {
+            const data = await res.json();
+            if (data.state) FUND_STATES[fid] = data.state;
+          }
+          break;
+        } catch(e) { break; }
+      }
     }));
     renderLeaderboard();  // re-render with real data once loaded
     renderRace();         // re-render race grid with actual fund values
@@ -766,13 +776,14 @@ async function loadFundStates() {
 // Reads from FUND_STATES populated by loadFundStates().
 function renderLeaderboard() {
   const strip = FUND_ORDER.map(fid => {
-    const m  = FUND_META[fid];
-    const fs = FUND_STATES[fid];
+    const m         = FUND_META[fid];
+    const trackerFd = STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null;
+    const tv        = trackerFd && trackerFd.value ? trackerFd.value : null;
     let pctHtml = '<div class="lb-pct" style="color:var(--muted)">—</div>';
-    if (fs && fs.gain_loss_pct != null) {
-      const pct    = parseFloat(fs.gain_loss_pct);
-      const cls    = pct >= 0 ? 'pos' : 'neg';
-      const sign   = pct >= 0 ? '+' : '';
+    if (tv && tv.pnl_pct != null) {
+      const pct  = tv.pnl_pct;
+      const cls  = pct >= 0 ? 'pos' : 'neg';
+      const sign = pct >= 0 ? '+' : '';
       pctHtml = '<div class="lb-pct ' + cls + '">' + sign + pct.toFixed(2) + '%</div>';
     }
     return '<a class="card clickable" href="portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid + '">'
@@ -859,19 +870,21 @@ function renderNews() {
 // Shows allocated capital as starting value. Uses real simulation data when available.
 // Links go to portfolio-scoped bot pages.
 function fundCard(fid) {
-  const meta = FUND_META[fid];
-  const cap  = holdings.length * 1000;
-  const fs   = FUND_STATES[fid];
-  // Use real simulation data if available, otherwise show pending state
+  const meta      = FUND_META[fid];
+  const cap       = holdings.length * 1000;
+  // Use tracker data (same source as homescreen) scaled to member capital
+  const trackerFd = STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null;
+  const tv        = trackerFd && trackerFd.value ? trackerFd.value : null;
   let valueHtml, pnlHtml, todayHtml;
-  if (fs && fs.total_value != null) {
-    const tv    = parseFloat(fs.total_value);
-    const gl    = parseFloat(fs.gain_loss   || 0);
-    const glPct = parseFloat(fs.gain_loss_pct || 0);
-    const td    = parseFloat(fs.day_pnl      || 0);
+  if (tv && tv.pnl_pct != null) {
+    const glPct = tv.pnl_pct;
+    const dayPct = tv.day_pct || 0;
+    const gl    = cap * glPct / 100;
+    const td    = cap * dayPct / 100;
+    const total = cap + gl;
     const pos   = gl >= 0;
     const tdPos = td >= 0;
-    valueHtml = '<div class="fund-value">' + fmt$0(tv) + '</div>';
+    valueHtml = '<div class="fund-value">' + fmt$0(total) + '</div>';
     pnlHtml   = '<div class="fund-pnl ' + (pos ? 'pos' : 'neg') + '">'
       + (pos ? '+' : '') + fmt$(gl) + ' (' + (pos ? '+' : '') + glPct.toFixed(2) + '%)</div>';
     todayHtml = '<div class="stat-row"><span class="stat-label">Today</span>'
@@ -879,7 +892,7 @@ function fundCard(fid) {
       + (tdPos ? '+' : '') + fmt$(td) + '</span></div>';
   } else {
     valueHtml = '<div class="fund-value">' + fmt$0(cap) + '</div>';
-    pnlHtml   = '<div class="fund-pnl" style="color:var(--muted)">' + holdings.length + ' holdings · simulation pending</div>';
+    pnlHtml   = '<div class="fund-pnl" style="color:var(--muted)">' + holdings.length + ' holdings · loading...</div>';
     todayHtml = '<div class="stat-row"><span class="stat-label">Today</span><span class="stat-val">—</span></div>';
   }
   return '<a class="card clickable fund-card" href="portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid + '">'
@@ -901,13 +914,40 @@ async function drawPortfolioChart() {
   if (!wrap) return;
   if (ctx && CHARTS_BD.portfolio) CHARTS_BD.portfolio.destroy();
 
-  let snapshots = [];
-  try {
-    const data = await api.getBotPerformance(BOT_ID, 90);
-    snapshots = data?.snapshots || [];
-  } catch(e) {}
+  // Fetch performance for all 5 fund strategies in parallel
+  const results = await Promise.allSettled(
+    FUND_ORDER.map(fid => api.getBotPerformance(BOT_ID, 90).then(d => ({ fid, snapshots: d?.snapshots || [] })).catch(() => ({ fid, snapshots: [] })))
+  );
 
-  if (!snapshots.length) {
+  // Use the longest snapshot date range as labels
+  let allDates = [];
+  results.forEach(r => {
+    if (r.status === 'fulfilled') {
+      r.value.snapshots.forEach(s => { if (!allDates.includes(s.date)) allDates.push(s.date); });
+    }
+  });
+  allDates.sort();
+
+  // Filter to only funds that have data
+  const datasets = [];
+  results.forEach(r => {
+    if (r.status !== 'fulfilled' || !r.value.snapshots.length) return;
+    const { fid, snapshots } = r.value;
+    const meta = FUND_META[fid];
+    const byDate = {};
+    snapshots.forEach(s => { byDate[s.date] = s.total_value; });
+    datasets.push({
+      label: meta.name,
+      data: allDates.map(d => byDate[d] ?? null),
+      borderColor: meta.color,
+      backgroundColor: 'transparent',
+      tension: 0.3, borderWidth: 2, fill: false,
+      pointRadius: allDates.length > 30 ? 0 : 3,
+      spanGaps: true,
+    });
+  });
+
+  if (!datasets.length) {
     const created = botData?.created_at
       ? new Date(botData.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
       : 'today';
@@ -915,31 +955,20 @@ async function drawPortfolioChart() {
     return;
   }
 
-  const labels = snapshots.map(s => s.date);
-  const values = snapshots.map(s => s.total_value);
-  const last   = snapshots[snapshots.length - 1];
-  const retPct = last.gain_loss_pct;
-  const color  = retPct >= 0 ? '#00d4ff' : '#ef4444';
-
   const titleEl = document.getElementById('chartTitle');
-  if (titleEl) titleEl.innerHTML = 'Performance Trajectory — All 5 Strategies &nbsp;<span style="font-size:0.85rem;font-weight:600;color:' + color + '">' + (retPct >= 0 ? '+' : '') + retPct.toFixed(2) + '%</span>';
+  if (titleEl) titleEl.innerHTML = 'Performance Trajectory — All 5 Strategies';
 
   CHARTS_BD.portfolio = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: botData?.name || 'Portfolio Value',
-        data: values,
-        borderColor: color,
-        backgroundColor: color + '18',
-        tension: 0.3, borderWidth: 2, fill: true,
-        pointRadius: values.length > 30 ? 0 : 3,
-      }]
-    },
+    data: { labels: allDates, datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: '#9ca3af', boxWidth: 12, font: { size: 11 } }
+        }
+      },
       scales: {
         x: { ticks: { color:'#7d8590', maxTicksLimit:8 }, grid: { color:'#1e2633' } },
         y: { ticks: { color:'#7d8590', callback: v => '$'+v.toLocaleString() }, grid: { color:'#1e2633' } }
