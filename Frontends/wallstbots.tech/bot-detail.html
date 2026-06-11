@@ -908,59 +908,50 @@ function renderRace() {
 }
 
 // ── Performance Trajectory chart ──────────────────────────────────────────────
-async function drawPortfolioChart() {
+function drawPortfolioChart() {
   const wrap = document.getElementById('chartWrap');
   const ctx  = document.getElementById('chartPortfolio');
   if (!wrap) return;
   if (ctx && CHARTS_BD.portfolio) CHARTS_BD.portfolio.destroy();
 
-  // Fetch performance for all 5 fund strategies in parallel
-  const results = await Promise.allSettled(
-    FUND_ORDER.map(fid => api.getBotPerformance(BOT_ID, 90).then(d => ({ fid, snapshots: d?.snapshots || [] })).catch(() => ({ fid, snapshots: [] })))
-  );
+  // Use tracker snapshots — same source as homescreen, scaled to member capital
+  const cap   = holdings.length * 1000;
+  const snaps = (STATE.funds && STATE.funds.snapshots) || [];
 
-  // Use the longest snapshot date range as labels
-  let allDates = [];
-  results.forEach(r => {
-    if (r.status === 'fulfilled') {
-      r.value.snapshots.forEach(s => { if (!allDates.includes(s.date)) allDates.push(s.date); });
-    }
-  });
-  allDates.sort();
-
-  // Filter to only funds that have data
-  const datasets = [];
-  results.forEach(r => {
-    if (r.status !== 'fulfilled' || !r.value.snapshots.length) return;
-    const { fid, snapshots } = r.value;
-    const meta = FUND_META[fid];
-    const byDate = {};
-    snapshots.forEach(s => { byDate[s.date] = s.total_value; });
-    datasets.push({
-      label: meta.name,
-      data: allDates.map(d => byDate[d] ?? null),
-      borderColor: meta.color,
-      backgroundColor: 'transparent',
-      tension: 0.3, borderWidth: 2, fill: false,
-      pointRadius: allDates.length > 30 ? 0 : 3,
-      spanGaps: true,
-    });
-  });
-
-  if (!datasets.length) {
+  if (!snaps.length) {
     const created = botData?.created_at
       ? new Date(botData.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
       : 'today';
-    wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.8">Portfolio started ' + created + '.<br>Performance history appears after the first trading day.<br><span style="font-size:0.78rem;color:var(--muted);opacity:0.7">All 5 strategy lines will plot here as data comes in.</span></div>';
+    wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.8">Portfolio started ' + created + '.<br>Performance history appears after the first trading day.</div>';
     return;
   }
+
+  const platformCap = (STATE.funds && STATE.funds.starting_capital) || 49000;
+  const labels   = snaps.map(s => s.date);
+  const datasets = FUND_ORDER.map(fid => {
+    const meta = FUND_META[fid];
+    return {
+      label: meta.name,
+      data: snaps.map(s => {
+        const v = s[fid];
+        if (v == null) return null;
+        const pct = (v - platformCap) / platformCap;
+        return Math.round(cap + cap * pct);
+      }),
+      borderColor: meta.color,
+      backgroundColor: 'transparent',
+      tension: 0.3, borderWidth: 2, fill: false,
+      pointRadius: snaps.length > 30 ? 0 : 3,
+      spanGaps: true,
+    };
+  });
 
   const titleEl = document.getElementById('chartTitle');
   if (titleEl) titleEl.innerHTML = 'Performance Trajectory — All 5 Strategies';
 
   CHARTS_BD.portfolio = new Chart(ctx, {
     type: 'line',
-    data: { labels: allDates, datasets },
+    data: { labels, datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
