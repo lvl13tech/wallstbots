@@ -749,7 +749,7 @@ async function loadFundStates() {
     const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
     await Promise.all(FUND_ORDER.map(async fid => {
       try {
-        const res = await fetch(API_BASE + '/bots/' + BOT_ID + '/fund/' + fid + '/state', { headers });
+        const res = await fetch(API_BASE + '/portfolios/' + BOT_ID + '/fund/' + fid + '/state', { headers });
         if (res.ok) {
           const data = await res.json();
           if (data.state) FUND_STATES[fid] = data.state;
@@ -757,6 +757,7 @@ async function loadFundStates() {
       } catch(e) {}
     }));
     renderLeaderboard();  // re-render with real data once loaded
+    renderRace();         // re-render race grid with actual fund values
   } catch(e) {}
 }
 
@@ -855,20 +856,37 @@ function renderNews() {
 }
 
 // ── The Race — fundCards (portfolio-scoped) ───────────────────────────────────
-// Shows allocated capital as starting value. P&L is $0 on day 1.
+// Shows allocated capital as starting value. Uses real simulation data when available.
 // Links go to portfolio-scoped bot pages.
 function fundCard(fid) {
   const meta = FUND_META[fid];
   const cap  = holdings.length * 1000;
-  // Show member's allocated capital only — global P&L belongs on home screen, not here
+  const fs   = FUND_STATES[fid];
+  // Use real simulation data if available, otherwise show pending state
+  let valueHtml, pnlHtml, todayHtml;
+  if (fs && fs.total_value != null) {
+    const tv    = parseFloat(fs.total_value);
+    const gl    = parseFloat(fs.gain_loss   || 0);
+    const glPct = parseFloat(fs.gain_loss_pct || 0);
+    const td    = parseFloat(fs.day_pnl      || 0);
+    const pos   = gl >= 0;
+    const tdPos = td >= 0;
+    valueHtml = '<div class="fund-value">' + fmt$0(tv) + '</div>';
+    pnlHtml   = '<div class="fund-pnl ' + (pos ? 'pos' : 'neg') + '">'
+      + (pos ? '+' : '') + fmt$(gl) + ' (' + (pos ? '+' : '') + glPct.toFixed(2) + '%)</div>';
+    todayHtml = '<div class="stat-row"><span class="stat-label">Today</span>'
+      + '<span class="stat-val ' + (tdPos ? 'pos' : 'neg') + '">'
+      + (tdPos ? '+' : '') + fmt$(td) + '</span></div>';
+  } else {
+    valueHtml = '<div class="fund-value">' + fmt$0(cap) + '</div>';
+    pnlHtml   = '<div class="fund-pnl" style="color:var(--muted)">' + holdings.length + ' holdings · simulation pending</div>';
+    todayHtml = '<div class="stat-row"><span class="stat-label">Today</span><span class="stat-val">—</span></div>';
+  }
   return '<a class="card clickable fund-card" href="portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid + '">'
     + '<div class="fund-head"><span class="fund-icon ' + fid + '">' + meta.icon + '</span>'
     + '<div style="min-width:0"><div class="fund-name">' + meta.name + '</div><div class="fund-kind" style="color:' + meta.color + '">' + meta.kind + '</div></div></div>'
     + '<div class="fund-tag">' + meta.tagline + '</div>'
-    + '<div class="fund-value">' + fmt$0(cap) + '</div>'
-    + '<div class="fund-pnl">' + holdings.length + ' holdings · simulation pending</div>'
-    + '<div class="stat-row"><span class="stat-label">Today</span>'
-    + '<span class="stat-val">—</span></div></a>';
+    + valueHtml + pnlHtml + todayHtml + '</a>';
 }
 
 function renderRace() {
