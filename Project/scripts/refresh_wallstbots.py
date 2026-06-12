@@ -140,7 +140,7 @@ def get_live_prices(symbols):
     try:
         raw = yf.download(
             yf_syms,
-            period="2d",
+            period="5d",
             auto_adjust=True,
             progress=False,
         )
@@ -1003,7 +1003,7 @@ def main():
                 fund_copy["value"]["positions"] = raw_pos
                 fund = fund_copy
             else:
-                strategy = fund.get("current_strategy")
+                strategy = {**(fund.get("current_strategy") or {}), "week": week_str}
 
             raw_pos  = fund.get("value", {}).get("positions", [])
             # On inception day, reset entry prices to prev_close so pnl starts at 0
@@ -1043,7 +1043,7 @@ def main():
                 fund = fund_copy
             else:
                 # Intra-month: check for -12% stop flags
-                strategy = fund.get("current_strategy")
+                strategy = {**(fund.get("current_strategy") or {}), "month": month_str}
 
             raw_pos  = fund.get("value", {}).get("positions", [])
             # On inception day, reset entry prices to prev_close so pnl starts at 0
@@ -1117,7 +1117,7 @@ def main():
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
                         "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2), "positions": enriched}
-            strategy = fund.get("current_strategy")
+            strategy = {**(fund.get("current_strategy") or {}), "month": month_str}
 
         funds_out[fid] = {
             "id":               fid,

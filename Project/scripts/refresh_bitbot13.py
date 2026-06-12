@@ -168,7 +168,7 @@ def get_live_prices(state_symbols):
     yf_syms   = [UNIVERSE_MAP.get(s, f"{s}-USD") for s in state_symbols]
     sym_map   = {UNIVERSE_MAP.get(s, f"{s}-USD"): s for s in state_symbols}
     try:
-        raw = yf.download(yf_syms, period="2d", auto_adjust=True, progress=False)
+        raw = yf.download(yf_syms, period="5d", auto_adjust=True, progress=False)
         if not raw.empty:
             for yf_sym in yf_syms:
                 state_sym = sym_map.get(yf_sym, yf_sym)
@@ -1086,7 +1086,8 @@ def main():
                     "projected_return": round(oracle_new_proj, 2),
                 }
             else:
-                strategy = fund.get("current_strategy")
+                strategy = fund.get("current_strategy") or {}
+                strategy = {**strategy, "week": week_str}
 
             raw_pos = fund.get("value", {}).get("positions", [])
             if fund.get("inception") == today_iso:
@@ -1123,7 +1124,8 @@ def main():
                     "projected_return": round(wizard_new_proj, 2),
                 }
             else:
-                strategy = fund.get("current_strategy")
+                strategy = fund.get("current_strategy") or {}
+                strategy = {**strategy, "month": month_str}
 
             raw_pos = fund.get("value", {}).get("positions", [])
             if fund.get("inception") == today_iso:
