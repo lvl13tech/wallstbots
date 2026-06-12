@@ -492,15 +492,13 @@ function renderFundStats() {
     }
   }
 
-  // ── 3 stat cards: use tracker data (same source as homescreen) scaled to member capital ──
-  const cap       = holdings.length * 1000;
-  const trackerFd = STATE.funds && STATE.funds.funds ? STATE.funds.funds[BOT_SLUG] : null;
-  const tv        = trackerFd && trackerFd.value ? trackerFd.value : null;
-  const pnlPct    = tv && tv.pnl_pct != null ? tv.pnl_pct : 0;
-  const dayPct    = tv && tv.day_pct  != null ? tv.day_pct  : 0;
-  const pnl       = cap * pnlPct / 100;
-  const dayPnl    = cap * dayPct  / 100;
-  const total     = cap + pnl;
+  // ── 3 stat cards: read from bot_fund_state (single source of truth) ──
+  const cap    = holdings.length * 1000;
+  const total  = fundState && fundState.total_value   != null ? fundState.total_value   : cap;
+  const pnl    = fundState && fundState.gain_loss     != null ? fundState.gain_loss     : 0;
+  const pnlPct = fundState && fundState.gain_loss_pct != null ? fundState.gain_loss_pct : 0;
+  const dayPnl = fundState && fundState.day_pnl       != null ? fundState.day_pnl       : 0;
+  const dayPct = fundState && fundState.day_pct       != null ? fundState.day_pct       : 0;
 
   document.getElementById('fsTotal').textContent   = fmt$0(total);
   document.getElementById('fsStarted').textContent = 'Started at ' + fmt$0(cap);
