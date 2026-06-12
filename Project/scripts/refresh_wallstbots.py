@@ -1140,6 +1140,7 @@ def main():
         if fid in funds_out:
             today_snap[fid] = funds_out[fid]["value"]["total"]
     snapshots = [s for s in snapshots if s.get("date") != today_iso]
+    snapshots = [s for s in snapshots if s.get("date", "") <= today_iso]  # guard: strip any future-dated snapshots
     snapshots.append(today_snap)
     snapshots.sort(key=lambda s: s.get("date", ""))
     snapshots = snapshots[-90:]
@@ -1192,32 +1193,4 @@ def main():
     news_data = {
         "items":        news_items,
         "sectors":      sorted({it["sector"] for it in news_items}) if news_items else [],
-        "generated_at": dt.datetime.utcnow().isoformat() + "Z",
-    }
-    print(f"[wallstbots] news — {len(news_items)} articles")
-    push_to_api("news", news_data, secrets)
-
-    # ── Reports (placeholder — keeps API consistent) ──────────────────────────
-    push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
-
-    # ── Portfolio performance snapshots ───────────────────────────────────────
-    trigger_portfolio_snapshots(secrets)
-
-    # ── Per-portfolio bot simulations ─────────────────────────────────────────
-    refresh_portfolios.run(
-        platform="wallstbots",
-        prices=prices,
-        prev_closes=prev_closes,
-        hist_data=hist_data,
-        secrets=secrets,
-    )
-
-    # ── Git push (optional — static files as backup) ─────────────────────────
-    if args.push:
-        git_push("wallstbots.tech data refresh")
-
-    print("\n[wallstbots] ALL DONE")
-
-
-if __name__ == "__main__":
-    main()
+        "generated_at": dt.date
