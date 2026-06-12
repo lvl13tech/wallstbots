@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-06-11T20:45:00",
+    "last_refresh": "2026-06-12T01:21:00",
     "snapshots": [
       {
         "date": "2026-06-02",
@@ -95,39 +95,8 @@
         "current_strategy": {
           "day": "2026-06-11",
           "decision": "HOLD",
-          "rationale": "Deployed into 5 high-conviction names (ALB +6.79%, ARM +5.90%, ALAB +3.87%, VST +3.76%, BIRK +3.01%). Market breadth: 19/55 green. Weighted by signal strength. Stop -1.5% | Target +3.0%.",
-          "picks": [
-            {
-              "symbol": "ALB",
-              "weight": 0.261,
-              "score": 54.3,
-              "rationale": "ALB: STRONG momentum +6.79% \u2014 26% allocation ($17,538). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "ARM",
-              "weight": 0.2271,
-              "score": 47.2,
-              "rationale": "ARM: STRONG momentum +5.90% \u2014 23% allocation ($15,259). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "ALAB",
-              "weight": 0.1862,
-              "score": 38.7,
-              "rationale": "ALAB: solid momentum +3.87% \u2014 19% allocation ($12,508). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "VST",
-              "weight": 0.1808,
-              "score": 37.6,
-              "rationale": "VST: solid momentum +3.76% \u2014 18% allocation ($12,149). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "BIRK",
-              "weight": 0.145,
-              "score": 30.1,
-              "rationale": "BIRK: solid momentum +3.01% \u2014 14% allocation ($9,740). Stop: -1.5% | Target: +3.0%."
-            }
-          ],
+          "rationale": "Market closed \u2014 waiting for next trading session.",
+          "picks": [],
           "stop_pct": -1.5,
           "target_pct": 3.0,
           "session_log": [
@@ -138,7 +107,7 @@
               "detail": "Current positions: ALB +6.79%, ARM +5.90%, ALAB +3.87%, VST +3.76%, BIRK +3.01%. Breadth: 19/55 green. Monitoring for stop/target triggers. Any position through -1.35% (internal) exits immediately."
             }
           ],
-          "projected_return": 4.95
+          "projected_return": 0.0
         },
         "top10": null,
         "per_top_dollars": null,
