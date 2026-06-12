@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 49000.0,
-    "last_refresh": "2026-06-11T22:11:49",
+    "last_refresh": "2026-06-12T00:54:14",
     "snapshots": [
       {
         "date": "2026-06-02",
@@ -66,6 +66,14 @@
         "wizard": 45297.7,
         "equalizer": 43268.19,
         "titan": 43637.07
+      },
+      {
+        "date": "2026-06-12",
+        "bot13": 64373.23,
+        "oracle": 48937.78,
+        "wizard": 45297.7,
+        "equalizer": 43301.47,
+        "titan": 43657.97
       }
     ],
     "funds": {
@@ -79,113 +87,22 @@
         "starting_capital": 49000.0,
         "value": {
           "total": 64373.23,
-          "cash": 0.0,
-          "pos_val": 64373.23,
+          "cash": 64373.23,
+          "pos_val": 0.0,
           "pnl": 15373.23,
           "pnl_pct": 31.37,
-          "day_pnl": 5617.79,
-          "day_pct": 9.56,
-          "day_open": 58755.44,
+          "day_pnl": 0.0,
+          "day_pct": 0.0,
+          "day_open": 64373.23,
           "holding_cash": true,
           "window_open": false,
           "session_open_et": "9:30",
           "session_close_et": "16:00",
-          "positions": [
-            {
-              "symbol": "AMD",
-              "shares": 26.952952,
-              "entry_price": 452.4,
-              "current_price": 488.45,
-              "cost_basis": 12193.52,
-              "price": 488.45,
-              "value": 13165.17,
-              "pnl": 971.65,
-              "pnl_pct": 7.97,
-              "day_pnl": 971.65,
-              "day_pct": 7.97,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-11T19:28:24",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "ARM",
-              "shares": 38.544696,
-              "entry_price": 307.43,
-              "current_price": 342.23,
-              "cost_basis": 11849.8,
-              "price": 342.23,
-              "value": 13191.15,
-              "pnl": 1341.36,
-              "pnl_pct": 11.32,
-              "day_pnl": 1341.36,
-              "day_pct": 11.32,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-11T19:28:24",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "RGTI",
-              "shares": 602.027481,
-              "entry_price": 19.445,
-              "current_price": 20.63,
-              "cost_basis": 11706.42,
-              "price": 20.63,
-              "value": 12419.83,
-              "pnl": 713.4,
-              "pnl_pct": 6.09,
-              "day_pnl": 713.4,
-              "day_pct": 6.09,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-11T19:28:24",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "CRDO",
-              "shares": 48.769803,
-              "entry_price": 237.68,
-              "current_price": 264.76,
-              "cost_basis": 11591.61,
-              "price": 264.76,
-              "value": 12912.29,
-              "pnl": 1320.69,
-              "pnl_pct": 11.39,
-              "day_pnl": 1320.69,
-              "day_pct": 11.39,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-11T19:28:24",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "MRVL",
-              "shares": 45.18824,
-              "entry_price": 252.59,
-              "current_price": 280.71,
-              "cost_basis": 11414.1,
-              "price": 280.71,
-              "value": 12684.79,
-              "pnl": 1270.69,
-              "pnl_pct": 11.13,
-              "day_pnl": 1270.69,
-              "day_pct": 11.13,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-11T19:28:24",
-              "stop_triggered": false,
-              "exit_reason": null
-            }
-          ]
+          "positions": []
         },
         "current_strategy": {
-          "day": "2026-06-11",
-          "decision": "TRADE",
+          "day": "2026-06-12",
+          "decision": "HOLD",
           "rationale": "Deployed into 5 high-conviction names (AMD +7.79%, ARM +11.02%, RGTI +7.48%, CRDO +10.78%, MRVL +10.61%). Market breadth: 36/49 green. Weighted by signal strength. Stop -1.5% | Target +3.0%.",
           "picks": [
             {
@@ -321,7 +238,7 @@
           ]
         },
         "current_strategy": {
-          "week": "2026-06-08",
+          "week": "(2026, 24)",
           "decision": "TRADE",
           "rationale": "Projected week return: +-5.15%. Top 5 names by composite momentum. Score-weighted (not equal weight). Sector cap enforced (max 2 per sector). Quality gate: 20d momentum positive required.",
           "picks": [
@@ -562,13 +479,13 @@
         "inception": "2026-06-02",
         "starting_capital": 49000.0,
         "value": {
-          "total": 43268.19,
+          "total": 43301.47,
           "cash": 0.0,
-          "pos_val": 43268.19,
-          "pnl": -5731.81,
-          "pnl_pct": -11.7,
-          "day_pnl": 1429.74,
-          "day_pct": 3.42,
+          "pos_val": 43301.47,
+          "pnl": -5698.53,
+          "pnl_pct": -11.63,
+          "day_pnl": 1463.01,
+          "day_pct": 3.5,
           "positions": [
             {
               "symbol": "NVDA",
@@ -1003,14 +920,14 @@
               "symbol": "PSTG",
               "shares": 11.841326,
               "entry_price": 84.45,
-              "current_price": 66.53,
+              "current_price": 69.34,
               "cost_basis": 1000.0,
-              "price": 66.53,
-              "value": 787.8,
-              "pnl": -212.2,
-              "pnl_pct": -21.22,
-              "day_pnl": 0.0,
-              "day_pct": 0.0
+              "price": 69.34,
+              "value": 821.08,
+              "pnl": -178.92,
+              "pnl_pct": -17.89,
+              "day_pnl": 33.27,
+              "day_pct": 4.22
             },
             {
               "symbol": "TSLA",
@@ -1209,7 +1126,9 @@
             }
           ]
         },
-        "current_strategy": {},
+        "current_strategy": {
+          "month": "2026-06"
+        },
         "top10": null,
         "per_top_dollars": null,
         "per_rest_dollars": null
@@ -1223,13 +1142,13 @@
         "inception": "2026-06-02",
         "starting_capital": 49000.0,
         "value": {
-          "total": 43637.07,
+          "total": 43657.97,
           "cash": 0.0,
-          "pos_val": 43637.26,
-          "pnl": -5362.93,
-          "pnl_pct": -10.94,
-          "day_pnl": 1358.26,
-          "day_pct": 3.21,
+          "pos_val": 43658.16,
+          "pnl": -5342.03,
+          "pnl_pct": -10.9,
+          "day_pnl": 1379.16,
+          "day_pct": 3.26,
           "positions": [
             {
               "symbol": "NVDA",
@@ -1690,14 +1609,14 @@
               "symbol": "PSTG",
               "shares": 7.43884,
               "entry_price": 84.45,
-              "current_price": 66.53,
+              "current_price": 69.34,
               "cost_basis": 628.21,
-              "price": 66.53,
-              "value": 494.91,
-              "pnl": -133.3,
-              "pnl_pct": -21.22,
-              "day_pnl": 0.0,
-              "day_pct": 0.0
+              "price": 69.34,
+              "value": 515.81,
+              "pnl": -112.4,
+              "pnl_pct": -17.89,
+              "day_pnl": 20.9,
+              "day_pct": 4.22
             },
             {
               "symbol": "ISRG",
@@ -1870,7 +1789,9 @@
             }
           ]
         },
-        "current_strategy": {},
+        "current_strategy": {
+          "month": "2026-06"
+        },
         "top10": [
           "NVDA",
           "MSFT",
@@ -1909,14 +1830,14 @@
         },
         {
           "fund": "titan",
-          "week_pnl": -1157.25,
-          "week_pct": -2.58,
+          "week_pnl": -1136.35,
+          "week_pct": -2.54,
           "week_grade": "F"
         },
         {
           "fund": "equalizer",
-          "week_pnl": -1260.8,
-          "week_pct": -2.83,
+          "week_pnl": -1227.52,
+          "week_pct": -2.76,
           "week_grade": "F"
         }
       ],
@@ -1941,14 +1862,14 @@
         },
         {
           "fund": "titan",
-          "all_pnl": -5362.93,
-          "all_pct": -10.94,
+          "all_pnl": -5342.03,
+          "all_pct": -10.9,
           "overall_grade": "F"
         },
         {
           "fund": "equalizer",
-          "all_pnl": -5731.81,
-          "all_pct": -11.7,
+          "all_pnl": -5698.53,
+          "all_pct": -11.63,
           "overall_grade": "F"
         }
       ]
