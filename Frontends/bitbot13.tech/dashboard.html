@@ -1855,8 +1855,8 @@
       if (!resp.ok) throw new Error("No session data");
       const json = await resp.json();
       const state = json.data || {};
-      const funds = state.funds || [];
-      const bot13 = funds.find(f => f.id === "bot13") || null;
+      const funds = state.funds || {};
+      const bot13 = funds["bot13"] || null;
       renderBotSession(bot13);
     } catch(e) {
       document.getElementById("botSessionBanner").innerHTML = `<div class="session-banner-dot"></div><span class="session-banner-label" style="color:var(--muted)">Session data unavailable</span>`;
