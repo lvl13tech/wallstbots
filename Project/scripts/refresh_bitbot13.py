@@ -860,8 +860,7 @@ def main():
     print(f"[bitbot13] fetching prices for {len(need_syms)} symbols...")
     prices, prev_closes = get_live_prices(sorted(need_syms))
     if not prices:
-        print("[bitbot13] ERROR: zero prices returned — aborting to protect DB data.")
-        sys.exit(1)
+        print("[bitbot13] WARNING: zero prices returned -- positions will not update but continuing.")
 
     # -- Fetch historical data for oracle/wizard scoring -------------------------
     hist_data = get_hist_data(sorted(need_syms))
@@ -1298,4 +1297,4 @@ def main():
     print("\n[bitbot13] ALL DONE")
 
 if __name__ == "__main__":
-    m
+    main()

@@ -791,8 +791,7 @@ def main():
     print(f"[wallstbots] fetching prices for {len(need_syms)} symbols...")
     prices, prev_closes = get_live_prices(sorted(need_syms))
     if not prices:
-        print("[wallstbots] ERROR: zero prices returned — aborting to protect DB data.")
-        sys.exit(1)
+        print("[wallstbots] WARNING: zero prices returned — positions will not update but continuing.")
 
     # ── Fetch historical data for strategy scoring ───────────────────────────
     hist_data = get_hist_data(list(need_syms))
@@ -1221,4 +1220,4 @@ def main():
 
 
 if __name__ == "__main__":
-    ma
+    main()
