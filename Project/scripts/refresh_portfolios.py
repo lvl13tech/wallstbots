@@ -463,63 +463,66 @@ def build_baseline_positions(universe, prices, prev_closes, original_cost, prev_
 
 # ── Main simulation loop ──────────────────────────────────────────────────────
 
-def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_data):
+
+# ── Main simulation loop ──────────────────────────────────────────────────────
+
+def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_data, secrets=None):
     """
-    Compute per-portfolio fund state by scaling platform tracker ratios to member capital.
+    Compute per-member portfolio values by scaling from the platform tracker state.
 
-    Formula for every fund:
-        member_value   = entry_cost * (platform_fund_total / platform_starting_capital)
-        gain_loss      = member_value - entry_cost
-        gain_loss_pct  = gain_loss / entry_cost * 100
-        day_pct        = same as platform day_pct (percentage is capital-neutral)
-        day_pnl        = member_value * (day_pct / 100)
+    Formula (confirmed correct):
+        member_value  = entry_cost × (platform_fund_total / platform_starting_capital)
+        gain_loss     = member_value - entry_cost
+        gain_loss_pct = gain_loss / entry_cost × 100
+        day_pct       = platform day_pct (capital-neutral — same % regardless of member size)
+        day_pnl       = member_value × (day_pct / 100)
 
-    BOT13 strategy/picks/rationale still come from the bot engine (for display only).
-    All dollar values are derived from the platform tracker — no independent simulation drift.
+    BOT13/Oracle/Wizard engines still run for strategy/picks/rationale display.
+    Equalizer/Titan reuse stored inception positions for holdings table.
+    All dollar values come from tracker ratios — single source of truth.
     """
-    today_iso  = et_now().date().isoformat()
-    win_open   = _window_open(PLATFORM_CFG.get(platform, {}).get("cfg", EQUITY_CFG))
-    is_equity  = PLATFORM_CFG.get(platform, {}).get("market") == "equity"
-    cfg        = PLATFORM_CFG.get(platform, {}).get("cfg", EQUITY_CFG)
+    if secrets is None:
+        secrets = load_secrets()
 
-    # ── Fetch platform tracker state ─────────────────────────────────────────
+    today         = et_now().date()
+    today_iso     = today.isoformat()
+    week_str      = str(today.isocalendar()[0:2])
+    month_str     = today.strftime("%Y-%m")
+    is_equity     = PLATFORM_CFG.get(platform, {}).get("market") == "equity"
+    cfg           = PLATFORM_CFG.get(platform, {}).get("cfg", EQUITY_CFG)
+    win_open      = _window_open(cfg)
+    session_ended = is_session_closed(platform)
+    oracle_day    = is_oracle_rebalance_day()
+    wizard_day    = is_wizard_rebalance_day()
+
+    # ── Fetch platform tracker state ──────────────────────────────────────────
     tracker_funds = {}
     platform_sc   = None
     try:
-        r = _requests.get(
-            f"{BACKEND_URL}/public/tracker/state?platform={platform}",
-            timeout=15
-        )
-        if r.status_code == 200:
-            data = r.json().get("data", {})
-            platform_sc   = float(data.get("starting_capital") or 0)
-            raw_funds     = data.get("funds", {})
-            for fid, fdata in raw_funds.items():
-                v = fdata.get("value", {})
-                tracker_funds[fid] = {
-                    "total":    float(v.get("total")   or 0),
-                    "day_pct":  float(v.get("day_pct") or 0),
-                    "day_pnl":  float(v.get("day_pnl") or 0),
-                }
-            print(f"  [portfolios] tracker loaded: sc={platform_sc}, funds={list(tracker_funds.keys())}")
-        else:
-            print(f"  [portfolios] tracker HTTP {r.status_code} — skipping")
-            return []
+        r    = _requests.get(f"{BACKEND_URL}/public/tracker/state?platform={platform}", timeout=15)
+        data = r.json().get("data", {})
+        platform_sc = float(data.get("starting_capital") or 0)
+        for fid, fdata in data.get("funds", {}).items():
+            v = fdata.get("value", {})
+            tracker_funds[fid] = {
+                "total":   float(v.get("total")   or 0),
+                "day_pct": float(v.get("day_pct") or 0),
+                "day_pnl": float(v.get("day_pnl") or 0),
+            }
+        print(f"  [portfolios] tracker loaded: sc={platform_sc}, funds={list(tracker_funds.keys())}")
     except Exception as e:
-        print(f"  [portfolios] tracker fetch error: {e} — skipping")
-        return []
+        print(f"  [portfolios] WARNING: could not fetch tracker state: {e}")
 
     if not platform_sc or platform_sc <= 0:
-        print(f"  [portfolios] platform starting_capital is 0 or missing — skipping")
+        print(f"  [portfolios] ERROR: platform_sc={platform_sc} — cannot scale member values. Aborting.")
         return []
 
     results = []
 
     for portfolio in portfolios:
-        bot_id     = portfolio["bot_id"]
-        holdings   = portfolio.get("holdings", [])
+        bot_id      = portfolio["bot_id"]
+        holdings    = portfolio.get("holdings", [])
         prev_states = portfolio.get("prev_states", {})
-
         if not holdings:
             continue
 
@@ -527,134 +530,139 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
         if not universe:
             continue
 
-        # Skip portfolios created today
         portfolio_created = (portfolio.get("created_at") or "")[:10]
         if portfolio_created == today_iso:
             print(f"  [portfolios] skipping bot_id={bot_id} — created today, activates next trading day")
             continue
 
-        # Minimum 5 holdings required
         if len(universe) < 5:
-            print(f"  [portfolios] skipping bot_id={bot_id} — only {len(universe)} holdings, minimum 5 required")
+            print(f"  [portfolios] skipping bot_id={bot_id} — only {len(universe)} holding(s), minimum 5 required")
             continue
 
-        # Member's cost basis — always $1,000 per holding, fixed at inception
         original_cost = len(universe) * 1000.0
 
-        for fund_name in ("bot13", "oracle", "wizard", "equalizer", "titan"):
+        b13_state    = prev_states.get("bot13")     or {}
+        oracle_state = prev_states.get("oracle")    or {}
+        wizard_state = prev_states.get("wizard")    or {}
+        eq_state     = prev_states.get("equalizer") or {}
+        titan_state  = prev_states.get("titan")     or {}
+
+        prev_oracle_total = float(oracle_state.get("total_value") or original_cost)
+        prev_wizard_total = float(wizard_state.get("total_value") or original_cost)
+
+        for fund_name in ["bot13", "oracle", "wizard", "equalizer", "titan"]:
             tf = tracker_funds.get(fund_name)
             if not tf or tf["total"] <= 0:
-                print(f"  [portfolios] no tracker data for {fund_name} — skipping")
+                print(f"  [portfolios] WARNING: no tracker data for {fund_name} — skipping")
                 continue
 
-            # Scale platform performance to member capital
+            # Core scaling formula
             ratio        = tf["total"] / platform_sc
             member_value = round(original_cost * ratio, 2)
             gain_loss    = round(member_value - original_cost, 2)
-            gain_loss_pct= round(gain_loss / original_cost * 100, 4) if original_cost > 0 else 0
+            gain_loss_pct= round(gain_loss / original_cost * 100, 4)
             day_pct      = tf["day_pct"]   # percentage is capital-neutral
             day_pnl      = round(member_value * (day_pct / 100), 2)
 
-            # BOT13: also run engine for strategy display (picks/rationale) — not for dollar values
-            strategy  = {}
+            # ── Strategy / positions (for display only — not used for dollar values) ──
             positions = []
-            holding_cash = False
+            strategy  = {}
 
             if fund_name == "bot13":
-                b13_state   = prev_states.get("bot13") or {}
                 b13_capital = float(b13_state.get("total_value") or original_cost)
-                try:
-                    if is_equity:
-                        portfolio_cfg = dict(cfg)
-                        portfolio_cfg["min_picks"] = max(1, min(3, max(1, round(len(universe) / 3))))
-                        b13_dec, b13_pos, b13_picks, b13_rat, b13_log, b13_proj = run_bot13_equity(
-                            portfolio_cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
-                        )
-                    else:
-                        b13_dec, b13_pos, b13_picks, b13_rat, b13_log, b13_proj = run_bot13_crypto(
-                            cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
-                        )
-                    strategy     = {"decision": b13_dec, "picks": b13_picks, "rationale": b13_rat,
-                                    "projected_return": b13_proj, "day": today_iso}
-                    positions    = b13_pos or []
-                    holding_cash = b13_dec in ("CASH", "HOLD")
-                except Exception as e:
-                    print(f"  [portfolios] bot13 engine error for {bot_id}: {e}")
-                    strategy     = {"decision": "HOLD", "picks": [], "rationale": "Engine error.", "day": today_iso}
-                    holding_cash = True
+                if is_equity:
+                    portfolio_cfg = dict(cfg)
+                    portfolio_cfg["min_picks"] = max(1, min(3, max(1, round(len(universe) / 3))))
+                    b13_dec, b13_pos, b13_picks, b13_rat, b13_log, b13_proj = run_bot13_equity(
+                        portfolio_cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
+                    )
+                else:
+                    b13_dec, b13_pos, b13_picks, b13_rat, b13_log, b13_proj = run_bot13_crypto(
+                        cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
+                    )
+                positions = b13_pos if b13_dec == "TRADE" and b13_pos else []
+                strategy  = {
+                    "decision": b13_dec, "picks": b13_picks, "rationale": b13_rat,
+                    "projected_return": b13_proj, "day": today_iso,
+                    "session_ended": session_ended,
+                }
+                holding_cash = b13_dec in ("CASH", "HOLD")
 
             elif fund_name == "oracle":
-                oracle_state = prev_states.get("oracle") or {}
-                oracle_day   = is_oracle_rebalance_day()
-                prev_oracle_total = float(oracle_state.get("total_value") or original_cost)
                 if oracle_day or not oracle_state.get("positions"):
-                    try:
-                        week_str = str(et_now().date().isocalendar()[0:2])
-                        o_dec, o_pos, o_picks, o_rat, o_proj = run_oracle_for_universe(
-                            universe, prices, prev_closes, hist_data, prev_oracle_total,
-                            week_str
-                        )
-                        strategy  = {"decision": o_dec, "picks": o_picks, "rationale": o_rat,
-                                     "projected_return": o_proj, "week": week_str}
-                        positions = o_pos or []
-                    except Exception as e:
-                        print(f"  [portfolios] oracle engine error for {bot_id}: {e}")
-                        strategy  = {"decision": "HOLD", "picks": [], "rationale": "Engine error."}
-                        positions = oracle_state.get("positions") or []
+                    oracle_dec, oracle_pos, oracle_picks, oracle_rat, oracle_proj = run_oracle_for_universe(
+                        universe, prices, prev_closes, hist_data, prev_oracle_total, week_str
+                    )
+                    positions = oracle_pos if oracle_dec == "TRADE" and oracle_pos else []
                 else:
-                    strategy  = oracle_state.get("strategy") or {"decision": "TRADE"}
-                    positions = oracle_state.get("positions") or []
+                    positions  = oracle_state.get("positions") or []
+                    oracle_dec = oracle_state.get("strategy", {}).get("decision", "TRADE")
+                    oracle_picks = oracle_state.get("strategy", {}).get("picks", [])
+                    oracle_rat   = oracle_state.get("strategy", {}).get("rationale", "Holding weekly positions.")
+                    oracle_proj  = oracle_state.get("strategy", {}).get("projected_return", 0.0)
+                strategy = {
+                    "decision": oracle_dec, "picks": oracle_picks, "rationale": oracle_rat,
+                    "projected_return": oracle_proj, "week": week_str,
+                }
+                holding_cash = oracle_dec in ("CASH", "HOLD")
 
             elif fund_name == "wizard":
-                wizard_state = prev_states.get("wizard") or {}
-                wizard_day   = is_wizard_rebalance_day()
-                prev_wizard_total = float(wizard_state.get("total_value") or original_cost)
                 if wizard_day or not wizard_state.get("positions"):
-                    try:
-                        month_str = et_now().date().strftime("%Y-%m")
-                        w_dec, w_pos, w_picks, w_rat, w_proj = run_wizard_for_universe(
-                            universe, prices, prev_closes, hist_data, prev_wizard_total,
-                            month_str
-                        )
-                        strategy  = {"decision": w_dec, "picks": w_picks, "rationale": w_rat,
-                                     "projected_return": w_proj, "month": month_str}
-                        positions = w_pos or []
-                    except Exception as e:
-                        print(f"  [portfolios] wizard engine error for {bot_id}: {e}")
-                        strategy  = {"decision": "HOLD", "picks": [], "rationale": "Engine error."}
-                        positions = wizard_state.get("positions") or []
+                    wizard_dec, wizard_pos, wizard_picks, wizard_rat, wizard_proj = run_wizard_for_universe(
+                        universe, prices, prev_closes, hist_data, prev_wizard_total, month_str
+                    )
+                    positions = wizard_pos if wizard_dec == "TRADE" and wizard_pos else []
                 else:
-                    strategy  = wizard_state.get("strategy") or {"decision": "TRADE"}
-                    positions = wizard_state.get("positions") or []
+                    positions  = wizard_state.get("positions") or []
+                    wizard_dec = wizard_state.get("strategy", {}).get("decision", "TRADE")
+                    wizard_picks = wizard_state.get("strategy", {}).get("picks", [])
+                    wizard_rat   = wizard_state.get("strategy", {}).get("rationale", "Holding monthly positions.")
+                    wizard_proj  = wizard_state.get("strategy", {}).get("projected_return", 0.0)
+                strategy = {
+                    "decision": wizard_dec, "picks": wizard_picks, "rationale": wizard_rat,
+                    "projected_return": wizard_proj, "month": month_str,
+                }
+                holding_cash = wizard_dec in ("CASH", "HOLD")
 
-            elif fund_name in ("equalizer", "titan"):
-                prev_state = prev_states.get(fund_name) or {}
-                positions  = prev_state.get("positions") or []
-                strategy   = prev_state.get("strategy") or {"decision": "TRADE"}
-                # First run: build inception positions from current prices
-                if not positions:
-                    if fund_name == "equalizer":
-                        positions, _, _ = build_baseline_positions(
-                            universe, prices, prev_closes, original_cost, []
-                        )
-                    else:  # titan
-                        n       = len(universe)
-                        top_n   = max(1, round(n * 0.20))
-                        sorted_u= sorted(universe, key=lambda s: prices.get(s, 0), reverse=True)
-                        raw_w   = [2.0 if i < top_n else 1.0 for i in range(n)]
-                        total_w = sum(raw_w)
-                        weights = {sym: raw_w[i] / total_w for i, sym in enumerate(sorted_u)}
-                        positions = []
-                        for sym in universe:
-                            w     = weights.get(sym, 1.0 / n)
-                            alloc = original_cost * w
-                            price = prices.get(sym, 0)
-                            entry = price if price > 0 else 1.0
-                            shares= alloc / entry if entry > 0 else 0
-                            positions.append({
-                                "symbol": sym, "shares": round(shares, 6),
-                                "entry_price": round(entry, 4), "cost_basis": round(alloc, 2),
-                            })
+            elif fund_name == "equalizer":
+                eq_prev_positions = eq_state.get("positions") or []
+                positions, _, _ = build_baseline_positions(
+                    universe, prices, prev_closes, original_cost, eq_prev_positions
+                )
+                strategy     = {"decision": "TRADE"}
+                holding_cash = False
+
+            elif fund_name == "titan":
+                titan_prev_positions = titan_state.get("positions") or []
+                if titan_prev_positions:
+                    positions, _, _ = build_baseline_positions(
+                        universe, prices, prev_closes, original_cost, titan_prev_positions
+                    )
+                else:
+                    n      = len(universe)
+                    top_n  = max(1, round(n * 0.20))
+                    sorted_u = sorted(universe, key=lambda s: prices.get(s, 0), reverse=True)
+                    raw_w    = [2.0 if i < top_n else 1.0 for i in range(n)]
+                    total_w  = sum(raw_w)
+                    weights  = {sym: raw_w[i] / total_w for i, sym in enumerate(sorted_u)}
+                    inception_positions = []
+                    for sym in universe:
+                        w     = weights.get(sym, 1.0 / n)
+                        alloc = original_cost * w
+                        price = prices.get(sym, 0)
+                        entry = price if price > 0 else 1.0
+                        shares = alloc / entry if entry > 0 else 0
+                        inception_positions.append({
+                            "symbol":      sym,
+                            "shares":      round(shares, 6),
+                            "entry_price": round(entry, 4),
+                            "cost_basis":  round(alloc, 2),
+                        })
+                    positions, _, _ = build_baseline_positions(
+                        universe, prices, prev_closes, original_cost, inception_positions
+                    )
+                strategy     = {"decision": "TRADE"}
+                holding_cash = False
 
             results.append({
                 "bot_id":        bot_id,
@@ -670,6 +678,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 "window_open":   win_open,
                 "holding_cash":  holding_cash,
             })
+            print(f"  [portfolios] bot_id={bot_id} {fund_name}: value=${member_value} gain={gain_loss_pct:.2f}% today={day_pct:.2f}%")
 
     print(f"  [simulation] {len(portfolios)} portfolios × 5 bots = {len(results)} states computed")
     return results
@@ -685,13 +694,11 @@ def run(platform, prices=None, prev_closes=None, hist_data=None, secrets=None):
 
     print(f"\n[portfolios] running simulations for platform={platform}")
 
-    # Fetch portfolios (includes prev_states for all 5 funds)
     portfolios = get_all_portfolios(secrets, platform)
     if not portfolios:
         print(f"  [portfolios] no active portfolios — skipping")
         return
 
-    # Collect all unique symbols across all portfolios
     all_symbols = set()
     for p in portfolios:
         for h in p.get("holdings", []):
@@ -699,16 +706,30 @@ def run(platform, prices=None, prev_closes=None, hist_data=None, secrets=None):
             if sym:
                 all_symbols.add(sym)
 
-    # Fetch prices if not provided (standalone mode)
     if prices is None or not prices:
         print(f"  [portfolios] fetching prices for {len(all_symbols)} unique symbols...")
         prices, prev_closes = get_prices_for_symbols(all_symbols)
         hist_data = get_hist_for_symbols(all_symbols)
     else:
-        # Inline mode: supplement with any missing symbols
         missing = all_symbols - set(prices.keys())
         if missing:
             print(f"  [portfolios] fetching {len(missing)} additional symbols not in global state...")
             extra_p, extra_pc = get_prices_for_symbols(missing)
             extra_h = get_hist_for_symbols(missing)
-            p
+            prices      = {**prices, **extra_p}
+            prev_closes = {**prev_closes, **extra_pc}
+            hist_data   = {**hist_data, **extra_h}
+
+    results = run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_data or {}, secrets)
+    push_bot_states(secrets, results)
+
+
+# ── Standalone ────────────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("platform", nargs="?", default="lvl13",
+                        choices=["lvl13", "wallstbots", "bitbot13"])
+    args = parser.parse_args()
+    run(args.platform)
