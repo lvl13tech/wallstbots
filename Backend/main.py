@@ -1629,6 +1629,14 @@ async def upsert_portfolio_bot_state(
                 PRIMARY KEY (bot_id, fund_name)
             )
         """)
+        # Add columns that may be missing from older table versions (safe — IF NOT EXISTS)
+        for col_ddl in [
+            "ALTER TABLE bot_fund_state ADD COLUMN IF NOT EXISTS day_pnl      NUMERIC(14,2)",
+            "ALTER TABLE bot_fund_state ADD COLUMN IF NOT EXISTS day_pct      NUMERIC(10,4)",
+            "ALTER TABLE bot_fund_state ADD COLUMN IF NOT EXISTS window_open  BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE bot_fund_state ADD COLUMN IF NOT EXISTS holding_cash BOOLEAN DEFAULT FALSE",
+        ]:
+            cursor.execute(col_ddl)
 
         upserted = 0
         for r in results:

@@ -23,6 +23,11 @@ import json
 import os
 import sys
 from datetime import date, datetime
+from zoneinfo import ZoneInfo
+
+def _et_today():
+    """Current date in US/Eastern (DST-aware). Use instead of date.today()."""
+    return datetime.now(ZoneInfo("America/New_York")).date()
 from pathlib import Path
 
 import requests
@@ -68,7 +73,7 @@ def load_platform_data(platform: str) -> dict:
     if ts_str:
         try:
             data_date = datetime.fromisoformat(ts_str).date()
-            is_fresh  = (data_date == date.today())
+            is_fresh  = (data_date == _et_today())
         except Exception:
             pass
     if not is_fresh:
@@ -114,7 +119,7 @@ def match_signals(holdings: list[str], all_signals: list[dict]) -> list[dict]:
 
 
 def run(is_weekly: bool = False, is_monthly: bool = False):
-    today = date.today()
+    today = _et_today()
     print(f"[send_emails] consolidated | {today} | weekly={is_weekly} monthly={is_monthly}")
 
     # Load all three platforms
@@ -167,7 +172,7 @@ if __name__ == "__main__":
     parser.add_argument("--monthly", action="store_true")
     args = parser.parse_args()
 
-    today      = date.today()
+    today      = _et_today()
     is_monday  = today.weekday() == 0
     is_first   = today.day == 1
 

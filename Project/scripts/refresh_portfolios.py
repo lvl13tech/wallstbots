@@ -465,26 +465,61 @@ def build_baseline_positions(universe, prices, prev_closes, original_cost, prev_
 
 def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_data):
     """
-    Run all 5 bot engines against each portfolio's custom universe.
-    Returns list of state dicts ready to push to /internal/portfolio-bot-state/upsert.
+    Compute per-portfolio fund state by scaling platform tracker ratios to member capital.
+
+    Formula for every fund:
+        member_value   = entry_cost * (platform_fund_total / platform_starting_capital)
+        gain_loss      = member_value - entry_cost
+        gain_loss_pct  = gain_loss / entry_cost * 100
+        day_pct        = same as platform day_pct (percentage is capital-neutral)
+        day_pnl        = member_value * (day_pct / 100)
+
+    BOT13 strategy/picks/rationale still come from the bot engine (for display only).
+    All dollar values are derived from the platform tracker — no independent simulation drift.
     """
-    today         = et_now().date()  # ET date — avoids UTC midnight rollover
-    today_iso     = today.isoformat()
-    week_str      = str(today.isocalendar()[0:2])
-    month_str     = today.strftime("%Y-%m")
-    is_equity     = PLATFORM_CFG.get(platform, {}).get("market") == "equity"
-    cfg           = PLATFORM_CFG.get(platform, {}).get("cfg", EQUITY_CFG)
-    win_open      = _window_open(cfg)
-    session_ended = is_session_closed(platform)
-    oracle_day    = is_oracle_rebalance_day()
-    wizard_day    = is_wizard_rebalance_day()
+    today_iso  = et_now().date().isoformat()
+    win_open   = _window_open(PLATFORM_CFG.get(platform, {}).get("cfg", EQUITY_CFG))
+    is_equity  = PLATFORM_CFG.get(platform, {}).get("market") == "equity"
+    cfg        = PLATFORM_CFG.get(platform, {}).get("cfg", EQUITY_CFG)
+
+    # ── Fetch platform tracker state ─────────────────────────────────────────
+    tracker_funds = {}
+    platform_sc   = None
+    try:
+        r = _requests.get(
+            f"{BACKEND_URL}/public/tracker/state?platform={platform}",
+            timeout=15
+        )
+        if r.status_code == 200:
+            data = r.json().get("data", {})
+            platform_sc   = float(data.get("starting_capital") or 0)
+            raw_funds     = data.get("funds", {})
+            for fid, fdata in raw_funds.items():
+                v = fdata.get("value", {})
+                tracker_funds[fid] = {
+                    "total":    float(v.get("total")   or 0),
+                    "day_pct":  float(v.get("day_pct") or 0),
+                    "day_pnl":  float(v.get("day_pnl") or 0),
+                }
+            print(f"  [portfolios] tracker loaded: sc={platform_sc}, funds={list(tracker_funds.keys())}")
+        else:
+            print(f"  [portfolios] tracker HTTP {r.status_code} — skipping")
+            return []
+    except Exception as e:
+        print(f"  [portfolios] tracker fetch error: {e} — skipping")
+        return []
+
+    if not platform_sc or platform_sc <= 0:
+        print(f"  [portfolios] platform starting_capital is 0 or missing — skipping")
+        return []
 
     results = []
 
     for portfolio in portfolios:
-        bot_id      = portfolio["bot_id"]
-        holdings    = portfolio.get("holdings", [])
+        bot_id     = portfolio["bot_id"]
+        holdings   = portfolio.get("holdings", [])
         prev_states = portfolio.get("prev_states", {})
+
         if not holdings:
             continue
 
@@ -492,275 +527,149 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
         if not universe:
             continue
 
-        # Skip portfolios created today — let them start fresh on the next trading day.
-        # This prevents stale or partial-day prices being locked in as the inception values.
+        # Skip portfolios created today
         portfolio_created = (portfolio.get("created_at") or "")[:10]
         if portfolio_created == today_iso:
-            print(f"  [portfolios] skipping bot_id={bot_id} — created today ({today_iso}), activates next trading day")
+            print(f"  [portfolios] skipping bot_id={bot_id} — created today, activates next trading day")
             continue
 
-        # Minimum 5 holdings required for meaningful simulation.
-        # Fewer than 5 assets makes BOT13 breadth checks unreliable and
-        # ORACLE/WIZARD scoring degenerate. Skip and log clearly.
+        # Minimum 5 holdings required
         if len(universe) < 5:
-            print(f"  [portfolios] skipping bot_id={bot_id} — only {len(universe)} holding(s), minimum 5 required")
+            print(f"  [portfolios] skipping bot_id={bot_id} — only {len(universe)} holdings, minimum 5 required")
             continue
 
-        # Original buy-in cost — always len(universe) × $1,000. Never changes.
+        # Member's cost basis — always $1,000 per holding, fixed at inception
         original_cost = len(universe) * 1000.0
 
-        # Pull previous state for each fund
-        b13_state    = prev_states.get("bot13")    or {}
-        oracle_state = prev_states.get("oracle")   or {}
-        wizard_state = prev_states.get("wizard")   or {}
-        eq_state     = prev_states.get("equalizer") or {}
-        titan_state  = prev_states.get("titan")    or {}
+        for fund_name in ("bot13", "oracle", "wizard", "equalizer", "titan"):
+            tf = tracker_funds.get(fund_name)
+            if not tf or tf["total"] <= 0:
+                print(f"  [portfolios] no tracker data for {fund_name} — skipping")
+                continue
 
-        prev_b13_total    = float(b13_state.get("total_value")    or original_cost)
-        prev_oracle_total = float(oracle_state.get("total_value") or original_cost)
-        prev_wizard_total = float(wizard_state.get("total_value") or original_cost)
+            # Scale platform performance to member capital
+            ratio        = tf["total"] / platform_sc
+            member_value = round(original_cost * ratio, 2)
+            gain_loss    = round(member_value - original_cost, 2)
+            gain_loss_pct= round(gain_loss / original_cost * 100, 4) if original_cost > 0 else 0
+            day_pct      = tf["day_pct"]   # percentage is capital-neutral
+            day_pnl      = round(member_value * (day_pct / 100), 2)
 
-        # ── BOT13 ─────────────────────────────────────────────────────────────
-        # Capital = yesterday's closing total_value (locked after session close).
-        # During the session, we mark-to-market but don't change carryover yet.
-        # After session close, today's final total becomes tomorrow's opening capital.
-        b13_prev_date = (b13_state.get("snapshot_date") or "")[:10]
-        same_day      = (b13_prev_date == today_iso)
+            # BOT13: also run engine for strategy display (picks/rationale) — not for dollar values
+            strategy  = {}
+            positions = []
+            holding_cash = False
 
-        if same_day and not session_ended:
-            # Intraday: use yesterday's (or session open) capital as base
-            b13_capital = prev_b13_total
-        elif same_day and session_ended:
-            # Session just closed — today's final value will be stored as carryover
-            b13_capital = prev_b13_total
-        else:
-            # New day: yesterday's closing total_value becomes today's opening capital
-            b13_capital = prev_b13_total
+            if fund_name == "bot13":
+                b13_state   = prev_states.get("bot13") or {}
+                b13_capital = float(b13_state.get("total_value") or original_cost)
+                try:
+                    if is_equity:
+                        portfolio_cfg = dict(cfg)
+                        portfolio_cfg["min_picks"] = max(1, min(3, max(1, round(len(universe) / 3))))
+                        b13_dec, b13_pos, b13_picks, b13_rat, b13_log, b13_proj = run_bot13_equity(
+                            portfolio_cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
+                        )
+                    else:
+                        b13_dec, b13_pos, b13_picks, b13_rat, b13_log, b13_proj = run_bot13_crypto(
+                            cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
+                        )
+                    strategy     = {"decision": b13_dec, "picks": b13_picks, "rationale": b13_rat,
+                                    "projected_return": b13_proj, "day": today_iso}
+                    positions    = b13_pos or []
+                    holding_cash = b13_dec in ("CASH", "HOLD")
+                except Exception as e:
+                    print(f"  [portfolios] bot13 engine error for {bot_id}: {e}")
+                    strategy     = {"decision": "HOLD", "picks": [], "rationale": "Engine error.", "day": today_iso}
+                    holding_cash = True
 
-        if is_equity:
-            # Scale min_picks to universe size so small member portfolios can trade.
-            # A 3-stock portfolio cannot satisfy min_picks=3 AND pass all filters
-            # simultaneously — the homescreen uses 49-55 stocks, members use 3-50.
-            # Rule: require at most 1/3 of the universe, floored at 1, capped at 3.
-            portfolio_cfg = dict(cfg)
-            portfolio_cfg["min_picks"] = max(1, min(3, max(1, round(len(universe) / 3))))
-            b13_dec, b13_pos, b13_picks, b13_rat, b13_log, b13_proj = run_bot13_equity(
-                portfolio_cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
-            )
-        else:
-            b13_dec, b13_pos, b13_picks, b13_rat, b13_log, b13_proj = run_bot13_crypto(
-                cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
-            )
+            elif fund_name == "oracle":
+                oracle_state = prev_states.get("oracle") or {}
+                oracle_day   = is_oracle_rebalance_day()
+                prev_oracle_total = float(oracle_state.get("total_value") or original_cost)
+                if oracle_day or not oracle_state.get("positions"):
+                    try:
+                        week_str = str(et_now().date().isocalendar()[0:2])
+                        o_dec, o_pos, o_picks, o_rat, o_proj = run_oracle_for_universe(
+                            universe, prices, prev_closes, hist_data, prev_oracle_total,
+                            week_str
+                        )
+                        strategy  = {"decision": o_dec, "picks": o_picks, "rationale": o_rat,
+                                     "projected_return": o_proj, "week": week_str}
+                        positions = o_pos or []
+                    except Exception as e:
+                        print(f"  [portfolios] oracle engine error for {bot_id}: {e}")
+                        strategy  = {"decision": "HOLD", "picks": [], "rationale": "Engine error."}
+                        positions = oracle_state.get("positions") or []
+                else:
+                    strategy  = oracle_state.get("strategy") or {"decision": "TRADE"}
+                    positions = oracle_state.get("positions") or []
 
-        if b13_dec == "TRADE" and b13_pos:
-            b13_total = round(sum(p.get("value", p.get("cost_basis", 0)) for p in b13_pos), 2)
-        else:
-            # CASH or HOLD: balance sits flat
-            b13_total = round(b13_capital, 2)
+            elif fund_name == "wizard":
+                wizard_state = prev_states.get("wizard") or {}
+                wizard_day   = is_wizard_rebalance_day()
+                prev_wizard_total = float(wizard_state.get("total_value") or original_cost)
+                if wizard_day or not wizard_state.get("positions"):
+                    try:
+                        month_str = et_now().date().strftime("%Y-%m")
+                        w_dec, w_pos, w_picks, w_rat, w_proj = run_wizard_for_universe(
+                            universe, prices, prev_closes, hist_data, prev_wizard_total,
+                            month_str
+                        )
+                        strategy  = {"decision": w_dec, "picks": w_picks, "rationale": w_rat,
+                                     "projected_return": w_proj, "month": month_str}
+                        positions = w_pos or []
+                    except Exception as e:
+                        print(f"  [portfolios] wizard engine error for {bot_id}: {e}")
+                        strategy  = {"decision": "HOLD", "picks": [], "rationale": "Engine error."}
+                        positions = wizard_state.get("positions") or []
+                else:
+                    strategy  = wizard_state.get("strategy") or {"decision": "TRADE"}
+                    positions = wizard_state.get("positions") or []
 
-        b13_day_pnl  = round(b13_total - b13_capital, 2)
-        b13_day_pct  = round(b13_day_pnl / b13_capital * 100, 4) if b13_capital > 0 else 0
-        b13_gain     = round(b13_total - original_cost, 2)
-        b13_gain_pct = round(b13_gain / original_cost * 100, 4) if original_cost > 0 else 0
+            elif fund_name in ("equalizer", "titan"):
+                prev_state = prev_states.get(fund_name) or {}
+                positions  = prev_state.get("positions") or []
+                strategy   = prev_state.get("strategy") or {"decision": "TRADE"}
+                # First run: build inception positions from current prices
+                if not positions:
+                    if fund_name == "equalizer":
+                        positions, _, _ = build_baseline_positions(
+                            universe, prices, prev_closes, original_cost, []
+                        )
+                    else:  # titan
+                        n       = len(universe)
+                        top_n   = max(1, round(n * 0.20))
+                        sorted_u= sorted(universe, key=lambda s: prices.get(s, 0), reverse=True)
+                        raw_w   = [2.0 if i < top_n else 1.0 for i in range(n)]
+                        total_w = sum(raw_w)
+                        weights = {sym: raw_w[i] / total_w for i, sym in enumerate(sorted_u)}
+                        positions = []
+                        for sym in universe:
+                            w     = weights.get(sym, 1.0 / n)
+                            alloc = original_cost * w
+                            price = prices.get(sym, 0)
+                            entry = price if price > 0 else 1.0
+                            shares= alloc / entry if entry > 0 else 0
+                            positions.append({
+                                "symbol": sym, "shares": round(shares, 6),
+                                "entry_price": round(entry, 4), "cost_basis": round(alloc, 2),
+                            })
 
-        results.append({
-            "bot_id": bot_id, "fund_name": "bot13",
-            "positions": b13_pos,
-            "strategy": {
-                "decision": b13_dec, "picks": b13_picks, "rationale": b13_rat,
-                "projected_return": b13_proj, "day": today_iso,
-                "session_ended": session_ended,
-            },
-            "total_value":   b13_total,
-            "entry_cost":    round(original_cost, 2),
-            "gain_loss":     b13_gain,
-            "gain_loss_pct": b13_gain_pct,
-            "day_pnl":       b13_day_pnl,
-            "day_pct":       b13_day_pct,
-            "window_open":   win_open,
-            "holding_cash":  b13_dec in ("CASH", "HOLD"),
-        })
-
-        # ── ORACLE ────────────────────────────────────────────────────────────
-        # Rebalances ONLY on Monday. All other days: mark existing positions to
-        # market using stored shares + entry_price. Balance carries forward.
-        if oracle_day or not oracle_state.get("positions"):
-            # Monday or first ever run — pick new positions
-            oracle_dec, oracle_pos, oracle_picks, oracle_rat, oracle_proj = run_oracle_for_universe(
-                universe, prices, prev_closes, hist_data, prev_oracle_total, week_str
-            )
-            if oracle_dec == "TRADE" and oracle_pos:
-                oracle_total = round(sum(
-                    p["shares"] * prices.get(p["symbol"], p["entry_price"])
-                    for p in oracle_pos
-                ), 2)
-            else:
-                oracle_total = round(prev_oracle_total, 2)
-        else:
-            # Non-Monday: mark existing positions to market, no rebalance
-            stored_positions = oracle_state.get("positions") or []
-            oracle_total, _ = mark_positions_to_market(stored_positions, prices, prev_closes)
-            oracle_pos    = stored_positions
-            oracle_dec    = oracle_state.get("strategy", {}).get("decision", "TRADE")
-            oracle_picks  = oracle_state.get("strategy", {}).get("picks", [])
-            oracle_rat    = oracle_state.get("strategy", {}).get("rationale", "Holding weekly positions.")
-            oracle_proj   = oracle_state.get("strategy", {}).get("projected_return", 0.0)
-
-        # Day P&L for Oracle = change since yesterday's close
-        oracle_prev_close_val = float(oracle_state.get("total_value") or prev_oracle_total)
-        oracle_day_pnl = round(oracle_total - oracle_prev_close_val, 2)
-        oracle_day_pct = round(oracle_day_pnl / oracle_prev_close_val * 100, 4) if oracle_prev_close_val > 0 else 0
-        oracle_gain    = round(oracle_total - original_cost, 2)
-        oracle_gain_pct= round(oracle_gain / original_cost * 100, 4) if original_cost > 0 else 0
-
-        results.append({
-            "bot_id": bot_id, "fund_name": "oracle",
-            "positions": oracle_pos,
-            "strategy": {
-                "decision": oracle_dec, "picks": oracle_picks, "rationale": oracle_rat,
-                "projected_return": oracle_proj, "week": week_str,
-            },
-            "total_value":   oracle_total,
-            "entry_cost":    round(original_cost, 2),
-            "gain_loss":     oracle_gain,
-            "gain_loss_pct": oracle_gain_pct,
-            "day_pnl":       oracle_day_pnl,
-            "day_pct":       oracle_day_pct,
-            "window_open":   win_open,
-            "holding_cash":  oracle_dec in ("CASH", "HOLD"),
-        })
-
-        # ── WIZARD ────────────────────────────────────────────────────────────
-        # Rebalances ONLY on the 1st of the month. All other days: mark to market.
-        if wizard_day or not wizard_state.get("positions"):
-            # 1st of month or first ever run — pick new positions
-            wizard_dec, wizard_pos, wizard_picks, wizard_rat, wizard_proj = run_wizard_for_universe(
-                universe, prices, prev_closes, hist_data, prev_wizard_total, month_str
-            )
-            if wizard_dec == "TRADE" and wizard_pos:
-                wizard_total = round(sum(
-                    p["shares"] * prices.get(p["symbol"], p["entry_price"])
-                    for p in wizard_pos
-                ), 2)
-            else:
-                wizard_total = round(prev_wizard_total, 2)
-        else:
-            # Non-1st: mark existing positions to market, no rebalance
-            stored_positions = wizard_state.get("positions") or []
-            wizard_total, _ = mark_positions_to_market(stored_positions, prices, prev_closes)
-            wizard_pos    = stored_positions
-            wizard_dec    = wizard_state.get("strategy", {}).get("decision", "TRADE")
-            wizard_picks  = wizard_state.get("strategy", {}).get("picks", [])
-            wizard_rat    = wizard_state.get("strategy", {}).get("rationale", "Holding monthly positions.")
-            wizard_proj   = wizard_state.get("strategy", {}).get("projected_return", 0.0)
-
-        wizard_prev_close_val = float(wizard_state.get("total_value") or prev_wizard_total)
-        wizard_day_pnl = round(wizard_total - wizard_prev_close_val, 2)
-        wizard_day_pct = round(wizard_day_pnl / wizard_prev_close_val * 100, 4) if wizard_prev_close_val > 0 else 0
-        wizard_gain    = round(wizard_total - original_cost, 2)
-        wizard_gain_pct= round(wizard_gain / original_cost * 100, 4) if original_cost > 0 else 0
-
-        results.append({
-            "bot_id": bot_id, "fund_name": "wizard",
-            "positions": wizard_pos,
-            "strategy": {
-                "decision": wizard_dec, "picks": wizard_picks, "rationale": wizard_rat,
-                "projected_return": wizard_proj, "month": month_str,
-            },
-            "total_value":   wizard_total,
-            "entry_cost":    round(original_cost, 2),
-            "gain_loss":     wizard_gain,
-            "gain_loss_pct": wizard_gain_pct,
-            "day_pnl":       wizard_day_pnl,
-            "day_pct":       wizard_day_pct,
-            "window_open":   win_open,
-            "holding_cash":  wizard_dec in ("CASH", "HOLD"),
-        })
-
-        # ── EQUALIZER ─────────────────────────────────────────────────────────
-        # Buy once at inception. Entry prices stored permanently on first run.
-        # Every subsequent run just marks current value — never changes shares or entry.
-        eq_prev_positions = eq_state.get("positions") or []
-        eq_pos, eq_total, eq_day_pnl = build_baseline_positions(
-            universe, prices, prev_closes, original_cost, eq_prev_positions
-        )
-        eq_prev_close_val = float(eq_state.get("total_value") or original_cost)
-        eq_gain     = round(eq_total - original_cost, 2)
-        eq_gain_pct = round(eq_gain / original_cost * 100, 4) if original_cost > 0 else 0
-        eq_day_pct  = round(eq_day_pnl / eq_prev_close_val * 100, 4) if eq_prev_close_val > 0 else 0
-
-        results.append({
-            "bot_id": bot_id, "fund_name": "equalizer",
-            "positions": eq_pos,
-            "strategy": {"decision": "TRADE"},
-            "total_value":   eq_total,
-            "entry_cost":    round(original_cost, 2),
-            "gain_loss":     eq_gain,
-            "gain_loss_pct": eq_gain_pct,
-            "day_pnl":       eq_day_pnl,
-            "day_pct":       eq_day_pct,
-            "window_open":   win_open,
-            "holding_cash":  False,
-        })
-
-        # ── TITAN ─────────────────────────────────────────────────────────────
-        # Same as Equalizer: buy once, entry prices fixed at inception forever.
-        # Titan weighting: top 20% by price (market-cap proxy) get 2x allocation.
-        # Weight is calculated ONCE at inception from prev_positions if available,
-        # otherwise computed fresh today and then locked.
-        titan_prev_positions = titan_state.get("positions") or []
-
-        if titan_prev_positions:
-            # Reuse stored inception shares and entry prices — just mark to market
-            tt_pos, tt_total, tt_day_pnl = build_baseline_positions(
-                universe, prices, prev_closes, original_cost, titan_prev_positions
-            )
-        else:
-            # First run — compute Titan weighting now and lock it
-            n      = len(universe)
-            top_n  = max(1, round(n * 0.20))
-            sorted_u = sorted(universe, key=lambda s: prices.get(s, 0), reverse=True)
-            raw_w    = [2.0 if i < top_n else 1.0 for i in range(n)]
-            total_w  = sum(raw_w)
-            weights  = {sym: raw_w[i] / total_w for i, sym in enumerate(sorted_u)}
-
-            inception_positions = []
-            for sym in universe:
-                w      = weights.get(sym, 1.0 / n)
-                alloc  = original_cost * w
-                price  = prices.get(sym, 0)
-                prev   = prev_closes.get(sym, price)
-                entry  = price if price > 0 else 1.0
-                shares = alloc / entry if entry > 0 else 0
-                inception_positions.append({
-                    "symbol":      sym,
-                    "shares":      round(shares, 6),
-                    "entry_price": round(entry, 4),
-                    "cost_basis":  round(alloc, 2),
-                })
-
-            tt_pos, tt_total, tt_day_pnl = build_baseline_positions(
-                universe, prices, prev_closes, original_cost, inception_positions
-            )
-
-        titan_prev_close_val = float(titan_state.get("total_value") or original_cost)
-        tt_gain     = round(tt_total - original_cost, 2)
-        tt_gain_pct = round(tt_gain / original_cost * 100, 4) if original_cost > 0 else 0
-        tt_day_pct  = round(tt_day_pnl / titan_prev_close_val * 100, 4) if titan_prev_close_val > 0 else 0
-
-        results.append({
-            "bot_id": bot_id, "fund_name": "titan",
-            "positions": tt_pos,
-            "strategy": {"decision": "TRADE"},
-            "total_value":   tt_total,
-            "entry_cost":    round(original_cost, 2),
-            "gain_loss":     tt_gain,
-            "gain_loss_pct": tt_gain_pct,
-            "day_pnl":       tt_day_pnl,
-            "day_pct":       tt_day_pct,
-            "window_open":   win_open,
-            "holding_cash":  False,
-        })
+            results.append({
+                "bot_id":        bot_id,
+                "fund_name":     fund_name,
+                "positions":     positions,
+                "strategy":      strategy,
+                "total_value":   member_value,
+                "entry_cost":    round(original_cost, 2),
+                "gain_loss":     gain_loss,
+                "gain_loss_pct": gain_loss_pct,
+                "day_pnl":       day_pnl,
+                "day_pct":       day_pct,
+                "window_open":   win_open,
+                "holding_cash":  holding_cash,
+            })
 
     print(f"  [simulation] {len(portfolios)} portfolios × 5 bots = {len(results)} states computed")
     return results
@@ -802,23 +711,4 @@ def run(platform, prices=None, prev_closes=None, hist_data=None, secrets=None):
             print(f"  [portfolios] fetching {len(missing)} additional symbols not in global state...")
             extra_p, extra_pc = get_prices_for_symbols(missing)
             extra_h = get_hist_for_symbols(missing)
-            prices      = {**prices, **extra_p}
-            prev_closes = {**prev_closes, **extra_pc}
-            hist_data   = {**hist_data, **extra_h}
-
-    # Run simulations
-    results = run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_data or {})
-
-    # Push to backend
-    push_bot_states(secrets, results)
-
-
-# ── Standalone ────────────────────────────────────────────────────────────────
-
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--platform", default="lvl13",
-                        choices=["lvl13", "wallstbots", "bitbot13"])
-    args = parser.parse_args()
-    run(args.platform)
+            p

@@ -14,6 +14,10 @@ import json
 import sys
 import datetime as dt
 from pathlib import Path
+from zoneinfo import ZoneInfo
+
+def _et_now():
+    return dt.datetime.now(ZoneInfo("America/New_York"))
 
 try:
     import requests as _requests
@@ -189,7 +193,7 @@ def main():
         }
 
     # Update today's snapshot to reflect live prices
-    today_iso = dt.date.today().isoformat()
+    today_iso = _et_now().date().isoformat()  # ET date — avoids UTC midnight rollover
     today_snap = {"date": today_iso}
     for fid in FUND_ORDER:
         if fid in funds_out:
@@ -199,7 +203,7 @@ def main():
     snapshots.sort(key=lambda s: s.get("date", ""))
 
     # Build leaderboards
-    today = dt.date.today()
+    today = _et_now().date()  # ET date — avoids UTC midnight rollover
     week_start = today - dt.timedelta(days=today.weekday())
     cands = [s for s in snapshots if s.get("date", "") <= week_start.isoformat()]
     start_snap = cands[-1] if cands else None

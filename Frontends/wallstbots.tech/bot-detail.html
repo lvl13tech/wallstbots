@@ -773,15 +773,14 @@ async function loadFundStates() {
 
 // ── Leaderboard strip ─────────────────────────────────────────────────────────
 // Shows per-portfolio all-time gain/loss % for each bot strategy.
-// Reads from FUND_STATES populated by loadFundStates().
+// Reads from FUND_STATES populated by loadFundStates() — bot_fund_state table.
 function renderLeaderboard() {
   const strip = FUND_ORDER.map(fid => {
-    const m         = FUND_META[fid];
-    const trackerFd = STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null;
-    const tv        = trackerFd && trackerFd.value ? trackerFd.value : null;
+    const m  = FUND_META[fid];
+    const fs = FUND_STATES[fid];  // from /bots/{id}/fund/{fid}/state → bot_fund_state
     let pctHtml = '<div class="lb-pct" style="color:var(--muted)">—</div>';
-    if (tv && tv.pnl_pct != null) {
-      const pct  = tv.pnl_pct;
+    if (fs && fs.gain_loss_pct != null) {
+      const pct  = fs.gain_loss_pct;
       const cls  = pct >= 0 ? 'pos' : 'neg';
       const sign = pct >= 0 ? '+' : '';
       pctHtml = '<div class="lb-pct ' + cls + '">' + sign + pct.toFixed(2) + '%</div>';
@@ -870,27 +869,26 @@ function renderNews() {
 // Shows allocated capital as starting value. Uses real simulation data when available.
 // Links go to portfolio-scoped bot pages.
 function fundCard(fid) {
-  const meta      = FUND_META[fid];
-  const cap       = holdings.length * 1000;
-  // Use tracker data (same source as homescreen) scaled to member capital
-  const trackerFd = STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null;
-  const tv        = trackerFd && trackerFd.value ? trackerFd.value : null;
+  const meta = FUND_META[fid];
+  const fs   = FUND_STATES[fid];  // from bot_fund_state — same source as portfolio-fund.html
   let valueHtml, pnlHtml, todayHtml;
-  if (tv && tv.pnl_pct != null) {
-    const glPct = tv.pnl_pct;
-    const dayPct = tv.day_pct || 0;
-    const gl    = cap * glPct / 100;
-    const td    = cap * dayPct / 100;
-    const total = cap + gl;
-    const pos   = gl >= 0;
-    const tdPos = td >= 0;
+  if (fs && fs.total_value != null) {
+    const total  = fs.total_value;
+    const cost   = fs.entry_cost || 0;
+    const gl     = fs.gain_loss || 0;
+    const glPct  = fs.gain_loss_pct || 0;
+    const dayPnl = fs.day_pnl || 0;
+    const dayPct = fs.day_pct || 0;
+    const pos    = gl >= 0;
+    const tdPos  = dayPnl >= 0;
     valueHtml = '<div class="fund-value">' + fmt$0(total) + '</div>';
     pnlHtml   = '<div class="fund-pnl ' + (pos ? 'pos' : 'neg') + '">'
       + (pos ? '+' : '') + fmt$(gl) + ' (' + (pos ? '+' : '') + glPct.toFixed(2) + '%)</div>';
     todayHtml = '<div class="stat-row"><span class="stat-label">Today</span>'
       + '<span class="stat-val ' + (tdPos ? 'pos' : 'neg') + '">'
-      + (tdPos ? '+' : '') + fmt$(td) + '</span></div>';
+      + (tdPos ? '+' : '') + dayPct.toFixed(2) + '%</span></div>';
   } else {
+    const cap = holdings.length * 1000;
     valueHtml = '<div class="fund-value">' + fmt$0(cap) + '</div>';
     pnlHtml   = '<div class="fund-pnl" style="color:var(--muted)">' + holdings.length + ' holdings · loading...</div>';
     todayHtml = '<div class="stat-row"><span class="stat-label">Today</span><span class="stat-val">—</span></div>';

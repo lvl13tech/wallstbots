@@ -13,7 +13,12 @@ Sends from: info@lvl13.tech (verified Resend domain)
 import os
 import requests
 from datetime import datetime, date
+from zoneinfo import ZoneInfo
 from typing import Optional
+
+def _et_now():
+    """Current datetime in US/Eastern (DST-aware). Use for all date logic."""
+    return datetime.now(ZoneInfo("America/New_York"))
 
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 FROM_EMAIL     = "Wall St. Bots <info@lvl13.tech>"
@@ -85,7 +90,7 @@ def send_batch(recipients: list[dict], subject: str, html_fn) -> dict:
 # ── Visual helpers ─────────────────────────────────────────────────────────────
 
 def _mkt_status() -> str:
-    return "MKT CLOSED" if datetime.utcnow().weekday() >= 5 else "MKT OPEN"
+    return "MKT CLOSED" if _et_now().weekday() >= 5 else "MKT OPEN"
 
 
 def _signal_pill(action: str) -> str:
@@ -454,8 +459,8 @@ def _build_footer_row(site_name: str, site_url: str, year: int, extra: str = "")
 def _wrap(platform: str, preheader: str, body_html: str) -> str:
     site_name = SITE_NAMES.get(platform, "WallStBots")
     site_url  = SITE_URLS.get(platform, "https://wallstbots.tech")
-    year      = datetime.now().year
-    now       = datetime.now()
+    now       = _et_now()
+    year      = now.year
     date_str  = now.strftime("%b %d, %Y").upper()
     time_str  = now.strftime("%H:%M ET")
     logos     = {"wallstbots": "WALL ST. BOTS", "bitbot13": "BITBOT13", "lvl13": "LEVEL XIII"}
@@ -494,8 +499,8 @@ def _wrap(platform: str, preheader: str, body_html: str) -> str:
 
 
 def _wrap_consolidated(preheader: str, body_html: str) -> str:
-    year     = datetime.now().year
-    now      = datetime.now()
+    now      = _et_now()
+    year     = now.year
     date_str = now.strftime("%b %d, %Y").upper()
     time_str = now.strftime("%H:%M ET")
     extra    = """
@@ -559,7 +564,7 @@ def build_daily_signals_email(
     leaderboard: list[dict],
     recipient: dict,
 ) -> str:
-    today_str  = date.today().strftime("%B %d, %Y")
+    today_str  = _et_now().date().strftime("%B %d, %Y")
     decision   = bot13_strategy.get("decision", "HOLD")
     rationale  = bot13_strategy.get("rationale", "")
     picks      = bot13_strategy.get("picks", [])
@@ -599,7 +604,7 @@ def build_daily_signals_email(
 # EMAIL TEMPLATE 2 — Bot13 Trade Alert
 # ═══════════════════════════════════════════════════════════════════
 def build_bot13_alert_email(platform: str, strategy: dict, recipient: dict) -> str:
-    today_str  = date.today().strftime("%B %d, %Y")
+    today_str  = _et_now().date().strftime("%B %d, %Y")
     decision   = strategy.get("decision", "HOLD")
     rationale  = strategy.get("rationale", "")
     picks      = strategy.get("picks", [])
@@ -629,8 +634,8 @@ def build_weekly_email(
     leaderboard: list[dict],
     recipient: dict,
 ) -> str:
-    today_str  = date.today().strftime("%B %d, %Y")
-    week       = oracle_strategy.get("week", str(date.today()))
+    today_str  = _et_now().date().strftime("%B %d, %Y")
+    week       = oracle_strategy.get("week", str(_et_now().date()))
     decision   = oracle_strategy.get("decision", "HOLD")
     rationale  = oracle_strategy.get("rationale", "")
     picks      = oracle_strategy.get("picks", [])
@@ -659,8 +664,8 @@ def build_monthly_email(
     leaderboard: list[dict],
     recipient: dict,
 ) -> str:
-    month      = date.today().strftime("%B %Y")
-    today_str  = date.today().strftime("%B %d, %Y")
+    month      = _et_now().date().strftime("%B %Y")
+    today_str  = _et_now().date().strftime("%B %d, %Y")
     decision   = wizard_strategy.get("decision", "HOLD")
     rationale  = wizard_strategy.get("rationale", "")
     picks      = wizard_strategy.get("picks", [])
@@ -689,7 +694,7 @@ def build_consolidated_email(
     is_weekly: bool = False,
     is_monthly: bool = False,
 ) -> str:
-    today_str = date.today().strftime("%B %d, %Y")
+    today_str = _et_now().date().strftime("%B %d, %Y")
     preheader = f"BOT13 Daily Report &mdash; {today_str}"
 
     show_portfolio  = recipient.get("email_portfolio",  True)
