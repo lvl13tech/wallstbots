@@ -1522,7 +1522,8 @@ async def refresh_portfolio_fund_snapshots(
     """
     body = await request.json()
     platform = body.get("platform", "wallstbots")
-    today_str = datetime.utcnow().strftime("%Y-%m-%d")
+    from zoneinfo import ZoneInfo
+    today_str = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")  # ET date — avoids UTC midnight rollover
 
     conn = get_db_connection()
     try:
@@ -1601,7 +1602,8 @@ async def upsert_portfolio_bot_state(
     """
     body = await request.json()
     results = body.get("results", [])  # list of state dicts
-    today_str = datetime.utcnow().strftime("%Y-%m-%d")
+    from zoneinfo import ZoneInfo
+    today_str = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")  # ET date — avoids UTC midnight rollover
 
     conn = get_db_connection()
     try:

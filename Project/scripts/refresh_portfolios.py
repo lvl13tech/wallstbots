@@ -106,12 +106,12 @@ def is_session_closed(platform):
 
 def is_oracle_rebalance_day():
     """Oracle rebalances on Monday only."""
-    return dt.date.today().weekday() == 0  # 0 = Monday
+    return et_now().date().weekday() == 0  # 0 = Monday — uses ET not UTC
 
 
 def is_wizard_rebalance_day():
     """Wizard rebalances on the 1st of the month only."""
-    return dt.date.today().day == 1
+    return et_now().date().day == 1  # uses ET not UTC
 
 
 def mark_positions_to_market(positions, prices, prev_closes):
@@ -468,7 +468,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
     Run all 5 bot engines against each portfolio's custom universe.
     Returns list of state dicts ready to push to /internal/portfolio-bot-state/upsert.
     """
-    today         = dt.date.today()
+    today         = et_now().date()  # ET date — avoids UTC midnight rollover
     today_iso     = today.isoformat()
     week_str      = str(today.isocalendar()[0:2])
     month_str     = today.strftime("%Y-%m")
