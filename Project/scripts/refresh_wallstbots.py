@@ -520,7 +520,7 @@ def generate_signals(prices, prev_closes, hist_data):
     Enhanced signal generator — combines day momentum with trend context.
     Strong signals require both day move AND multi-day trend alignment.
     """
-    today_iso = dt.date.today().isoformat()
+    today_iso = et_now().date().isoformat()
     recs    = []
     summary = {"STRONG BUY": 0, "BUY": 0, "HOLD": 0, "SELL": 0, "STRONG SELL": 0}
 
@@ -763,7 +763,7 @@ def main():
     snapshots  = list(state_data.get("snapshots", []))
     sc_global  = float(state_data.get("starting_capital") or 55000)
 
-    today      = dt.date.today()
+    today      = et_now().date()
     today_iso  = today.isoformat()
     now_iso    = dt.datetime.now().isoformat(timespec="seconds")
     week_str   = today.isocalendar()[0:2].__str__()    # (year, week)

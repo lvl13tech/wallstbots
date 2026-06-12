@@ -597,7 +597,7 @@ def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_
 
 # ── Signals ────────────────────────────────────────────────────────────────────
 def generate_signals(prices, prev_closes):
-    today_iso = dt.date.today().isoformat()
+    today_iso = et_now().date().isoformat()
     recs    = []
     summary = {"STRONG BUY": 0, "BUY": 0, "HOLD": 0, "SELL": 0, "STRONG SELL": 0}
 
@@ -836,7 +836,7 @@ def main():
     snapshots  = list(state_data.get("snapshots", []))
     sc_global  = float(state_data.get("starting_capital") or 50000)
 
-    today      = dt.date.today()
+    today      = et_now().date()
     today_iso  = today.isoformat()
     now_iso    = dt.datetime.now().isoformat(timespec="seconds")
     week_str   = today.isocalendar()[0:2].__str__()
@@ -1266,37 +1266,4 @@ def main():
     print(f"[bitbot13] signals -- {len(signals['recommendations'])} signals")
     push_to_api("signals", signals_data, secrets)
 
-    # -- News --------------------------------------------------------------------
-    print("[bitbot13] fetching news...")
-    news_items = fetch_news(newsapi_key)
-    news_data  = {
-        "items":        news_items,
-        "sectors":      sorted({it["sector"] for it in news_items}) if news_items else [],
-        "generated_at": dt.datetime.utcnow().isoformat() + "Z",
-    }
-    print(f"[bitbot13] news -- {len(news_items)} articles")
-    push_to_api("news", news_data, secrets)
-
-    # -- Reports -----------------------------------------------------------------
-    push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
-
-    # -- Portfolio performance snapshots -----------------------------------------
-    trigger_portfolio_snapshots(secrets)
-
-    # ── Per-portfolio bot simulations ─────────────────────────────────────────
-    refresh_portfolios.run(
-        platform="bitbot13",
-        prices=prices,
-        prev_closes=prev_closes,
-        hist_data=hist_data,
-        secrets=secrets,
-    )
-
-    # -- Git push (optional) -----------------------------------------------------
-    if args.push:
-        git_push("bitbot13.tech data refresh")
-
-    print("\n[bitbot13] ALL DONE")
-
-if __name__ == "__main__":
-    main()
+    # -- News -------------------------------------------------------
