@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 49000.0,
-    "last_refresh": "2026-06-11T20:45:00",
+    "last_refresh": "2026-06-12T01:21:53",
     "snapshots": [
       {
         "date": "2026-06-02",
@@ -64,8 +64,8 @@
         "bot13": 64373.23,
         "oracle": 48937.78,
         "wizard": 45297.7,
-        "equalizer": 43268.19,
-        "titan": 43637.07
+        "equalizer": 43301.47,
+        "titan": 43657.97
       }
     ],
     "funds": {
@@ -95,39 +95,8 @@
         "current_strategy": {
           "day": "2026-06-11",
           "decision": "HOLD",
-          "rationale": "Deployed into 5 high-conviction names (AMD +7.79%, ARM +11.02%, RGTI +7.48%, CRDO +10.78%, MRVL +10.61%). Market breadth: 36/49 green. Weighted by signal strength. Stop -1.5% | Target +3.0%.",
-          "picks": [
-            {
-              "symbol": "AMD",
-              "weight": 0.2075,
-              "score": 62.4,
-              "rationale": "AMD: STRONG momentum +7.79% \u2014 21% allocation ($12,194). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "ARM",
-              "weight": 0.2017,
-              "score": 60.6,
-              "rationale": "ARM: STRONG momentum +11.02% \u2014 20% allocation ($11,850). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "RGTI",
-              "weight": 0.1992,
-              "score": 59.9,
-              "rationale": "RGTI: STRONG momentum +7.48% \u2014 20% allocation ($11,706). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "CRDO",
-              "weight": 0.1973,
-              "score": 59.3,
-              "rationale": "CRDO: STRONG momentum +10.78% \u2014 20% allocation ($11,592). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "MRVL",
-              "weight": 0.1943,
-              "score": 58.4,
-              "rationale": "MRVL: STRONG momentum +10.61% \u2014 19% allocation ($11,414). Stop: -1.5% | Target: +3.0%."
-            }
-          ],
+          "rationale": "Market closed \u2014 waiting for next trading session.",
+          "picks": [],
           "stop_pct": -1.5,
           "target_pct": 3.0,
           "session_log": [
@@ -138,7 +107,7 @@
               "detail": "Final session positions: AMD +7.79%, ARM +11.02%, RGTI +7.48%, CRDO +10.78%, MRVL +10.61%. Day P&L: $+5,592. Breadth: 36/49 green. All positions conceptually closed at session end."
             }
           ],
-          "projected_return": 9.52
+          "projected_return": 0.0
         },
         "top10": null,
         "per_top_dollars": null,
