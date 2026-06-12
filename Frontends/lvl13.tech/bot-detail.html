@@ -772,15 +772,15 @@ async function loadFundStates() {
 }
 
 // ── Leaderboard strip ─────────────────────────────────────────────────────────
-// Shows per-portfolio all-time gain/loss % for each bot strategy.
+// Shows today's day_pct for each bot strategy in this portfolio.
 // Reads from FUND_STATES populated by loadFundStates() — bot_fund_state table.
 function renderLeaderboard() {
   const strip = FUND_ORDER.map(fid => {
     const m  = FUND_META[fid];
     const fs = FUND_STATES[fid];  // from /bots/{id}/fund/{fid}/state → bot_fund_state
     let pctHtml = '<div class="lb-pct" style="color:var(--muted)">—</div>';
-    if (fs && fs.gain_loss_pct != null) {
-      const pct  = fs.gain_loss_pct;
+    if (fs && fs.day_pct != null) {
+      const pct  = fs.day_pct;
       const cls  = pct >= 0 ? 'pos' : 'neg';
       const sign = pct >= 0 ? '+' : '';
       pctHtml = '<div class="lb-pct ' + cls + '">' + sign + pct.toFixed(2) + '%</div>';
@@ -1385,32 +1385,4 @@ window.toggleMobNav           = toggleMobNav;
 window.closeMobNav            = closeMobNav;
 window.togglePlatformMenu     = togglePlatformMenu;
 window.openDeleteModal        = openDeleteModal;
-window.closeDeleteModal       = closeDeleteModal;
-window.confirmDeletePortfolio = confirmDeletePortfolio;
-window.openSearchModal        = openSearchModal;
-window.closeSearchModal       = closeSearchModal;
-window.onSearchInput          = onSearchInput;
-window.selectTicker           = selectTicker;
-window.clearSelection         = clearSelection;
-window.addSelectedHolding     = addSelectedHolding;
-window.removeHolding          = removeHolding;
-window.openShareSheet         = openShareSheet;
-window.closeShareSheet        = closeShareSheet;
-window.shareAction            = shareAction;
-window.addShare               = addShare;
-window.togglePrivacyPill      = togglePrivacyPill;
-window.postComment            = postComment;
-window.deleteComment          = deleteComment;
-window.openDrawer             = openDrawer;
-window.closeDrawer            = closeDrawer;
-window.openPwModal            = openPwModal;
-window.closePwModal           = closePwModal;
-window.sendPasswordReset      = sendPasswordReset;
-window.copyReferral           = copyReferral;
-window.logout                 = logout;
-
-// ── Boot ──────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', init);
-</script>
-</body>
-</html>
+window.c

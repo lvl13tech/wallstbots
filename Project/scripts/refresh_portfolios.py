@@ -586,7 +586,8 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                     "projected_return": b13_proj, "day": today_iso,
                     "session_ended": session_ended,
                 }
-                holding_cash = b13_dec in ("CASH", "HOLD")
+                # BOT13 always sells before close — after session ends it is in cash
+                holding_cash = b13_dec in ("CASH", "HOLD") or session_ended
 
             elif fund_name == "oracle":
                 if oracle_day or not oracle_state.get("positions"):
