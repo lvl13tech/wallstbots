@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-06-11T22:10:56",
+    "last_refresh": "2026-06-12T00:55:04",
     "snapshots": [
       {
         "date": "2026-06-02",
@@ -66,6 +66,14 @@
         "wizard": 52611.25,
         "equalizer": 54043.05,
         "titan": 53681.35
+      },
+      {
+        "date": "2026-06-12",
+        "bot13": 72904.5,
+        "oracle": 55841.06,
+        "wizard": 52611.25,
+        "equalizer": 54043.05,
+        "titan": 53681.35
       }
     ],
     "funds": {
@@ -79,113 +87,22 @@
         "starting_capital": 55000.0,
         "value": {
           "total": 72904.5,
-          "cash": 0.0,
-          "pos_val": 72904.51,
+          "cash": 72904.5,
+          "pos_val": 0.0,
           "pnl": 17904.5,
           "pnl_pct": 32.55,
-          "day_pnl": 5710.14,
-          "day_pct": 8.5,
-          "day_open": 67194.36,
+          "day_pnl": 0.0,
+          "day_pct": 0.0,
+          "day_open": 72904.5,
           "holding_cash": true,
           "window_open": false,
           "session_open_et": "9:30",
           "session_close_et": "16:00",
-          "positions": [
-            {
-              "symbol": "ALB",
-              "shares": 119.128691,
-              "entry_price": 147.22,
-              "current_price": 159.06,
-              "cost_basis": 17538.13,
-              "price": 159.06,
-              "value": 18948.61,
-              "pnl": 1410.48,
-              "pnl_pct": 8.04,
-              "day_pnl": 1410.48,
-              "day_pct": 8.04,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-11T17:07:18",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "ARM",
-              "shares": 49.632785,
-              "entry_price": 307.43,
-              "current_price": 342.23,
-              "cost_basis": 15258.61,
-              "price": 342.23,
-              "value": 16985.83,
-              "pnl": 1727.22,
-              "pnl_pct": 11.32,
-              "day_pnl": 1727.22,
-              "day_pct": 11.32,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-11T17:07:18",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "ALAB",
-              "shares": 37.805512,
-              "entry_price": 330.86,
-              "current_price": 367.47,
-              "cost_basis": 12508.33,
-              "price": 367.47,
-              "value": 13892.39,
-              "pnl": 1384.06,
-              "pnl_pct": 11.07,
-              "day_pnl": 1384.06,
-              "day_pct": 11.07,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-11T17:07:18",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "VST",
-              "shares": 87.696422,
-              "entry_price": 138.54,
-              "current_price": 146.38,
-              "cost_basis": 12149.46,
-              "price": 146.38,
-              "value": 12837.0,
-              "pnl": 687.54,
-              "pnl_pct": 5.66,
-              "day_pnl": 687.54,
-              "day_pct": 5.66,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-11T17:07:18",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "BIRK",
-              "shares": 221.611676,
-              "entry_price": 43.95,
-              "current_price": 46.21,
-              "cost_basis": 9739.83,
-              "price": 46.21,
-              "value": 10240.68,
-              "pnl": 500.84,
-              "pnl_pct": 5.14,
-              "day_pnl": 500.84,
-              "day_pct": 5.14,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-11T17:07:18",
-              "stop_triggered": false,
-              "exit_reason": null
-            }
-          ]
+          "positions": []
         },
         "current_strategy": {
-          "day": "2026-06-11",
-          "decision": "TRADE",
+          "day": "2026-06-12",
+          "decision": "HOLD",
           "rationale": "Deployed into 5 high-conviction names (ALB +6.79%, ARM +5.90%, ALAB +3.87%, VST +3.76%, BIRK +3.01%). Market breadth: 19/55 green. Weighted by signal strength. Stop -1.5% | Target +3.0%.",
           "picks": [
             {
@@ -321,7 +238,7 @@
           ]
         },
         "current_strategy": {
-          "week": "2026-06-08",
+          "week": "(2026, 24)",
           "decision": "TRADE",
           "rationale": "Projected week return: +-1.96%. Top 5 names by composite momentum. Score-weighted (not equal weight). Sector cap enforced (max 2 per sector). Quality gate: 20d momentum positive required.",
           "picks": [
@@ -1286,7 +1203,9 @@
             }
           ]
         },
-        "current_strategy": {},
+        "current_strategy": {
+          "month": "2026-06"
+        },
         "top10": null,
         "per_top_dollars": null,
         "per_rest_dollars": null
@@ -2025,7 +1944,9 @@
             }
           ]
         },
-        "current_strategy": {},
+        "current_strategy": {
+          "month": "2026-06"
+        },
         "top10": [
           "NVDA",
           "AMZN",
