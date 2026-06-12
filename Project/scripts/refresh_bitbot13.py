@@ -860,7 +860,8 @@ def main():
     print(f"[bitbot13] fetching prices for {len(need_syms)} symbols...")
     prices, prev_closes = get_live_prices(sorted(need_syms))
     if not prices:
-        print("[bitbot13] WARNING: zero prices returned -- positions will not update but continuing.")
+        print("[bitbot13] ERROR: zero prices returned — aborting to protect DB data.")
+        sys.exit(1)
 
     # -- Fetch historical data for oracle/wizard scoring -------------------------
     hist_data = get_hist_data(sorted(need_syms))
@@ -1243,4 +1244,28 @@ def main():
         wp  = v["total"] - sv
         wpc = (v["total"] / sv - 1) * 100 if sv else 0
         wk_lb.append({"fund": fid, "week_pnl": round(wp,2), "week_pct": round(wpc,2), "week_grade": grade(wpc)})
-        all_lb.append({"fund"
+        all_lb.append({"fund": fid, "all_pnl": v["pnl"], "all_pct": v["pnl_pct"],
+                        "overall_grade": grade_overall(v["pnl_pct"], funds_out[fid].get("inception", today_iso), today)})
+    wk_lb.sort(key=lambda r: -r["week_pct"])
+    all_lb.sort(key=lambda r: -r["all_pct"])
+
+    # -- Build and write state.json ----------------------------------------------
+    state_data = {
+        "starting_capital": sc_global,
+        "last_refresh":     now_iso,
+        "snapshots":        snapshots,
+        "funds":            funds_out,
+        "leaderboards":     {"week": wk_lb, "all": all_lb},
+    }
+    STATE_FILE.write_text(json.dumps({"data": state_data}, indent=2))
+    print(f"[bitbot13] state -- {len(funds_out)} funds, {len(snapshots)} snapshots")
+    push_to_api("state", state_data, secrets)
+
+    # -- Signals -----------------------------------------------------------------
+    signals      = generate_signals(prices, prev_closes)
+    signals_data = signals
+    (DATA_DIR / "signals.json").write_text(json.dumps({"data": signals_data}, indent=2))
+    print(f"[bitbot13] signals -- {len(signals['recommendations'])} signals")
+    push_to_api("signals", signals_data, secrets)
+
+    # -- News -------------------------------------------------------

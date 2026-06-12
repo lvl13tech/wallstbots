@@ -795,7 +795,8 @@ def main():
     print(f"[wallstbots] fetching prices for {len(need_syms)} symbols...")
     prices, prev_closes = get_live_prices(sorted(need_syms))
     if not prices:
-        print("[wallstbots] WARNING: zero prices returned — positions will not update but continuing.")
+        print("[lvl13] ERROR: zero prices returned — aborting to protect DB data.")
+        sys.exit(1)
 
     # ── Fetch historical data for strategy scoring ───────────────────────────
     hist_data = get_hist_data(list(need_syms))
@@ -1197,4 +1198,32 @@ def main():
     news_data = {
         "items":        news_items,
         "sectors":      sorted({it["sector"] for it in news_items}) if news_items else [],
-       
+        "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+    }
+    print(f"[lvl13] news — {len(news_items)} articles")
+    push_to_api("news", news_data, secrets)
+
+    # ── Reports (placeholder — keeps API consistent) ──────────────────────────
+    push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
+
+    # ── Portfolio performance snapshots ───────────────────────────────────────
+    trigger_portfolio_snapshots(secrets)
+
+    # ── Per-portfolio bot simulations ─────────────────────────────────────────
+    refresh_portfolios.run(
+        platform="lvl13",
+        prices=prices,
+        prev_closes=prev_closes,
+        hist_data=hist_data,
+        secrets=secrets,
+    )
+
+    # ── Git push (optional — static files as backup) ─────────────────────────
+    if args.push:
+        git_push("lvl13.tech data refresh")
+
+    print("\n[lvl13] ALL DONE")
+
+
+if __name__ == "__main__":
+    main()
