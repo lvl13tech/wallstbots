@@ -926,7 +926,7 @@ function drawPortfolioChart() {
 
   // Tracker snapshots store absolute values based on platform starting capital.
   // Convert to % return then scale to member capital so lines reflect their portfolio.
-  const platformCap = (STATE.funds && STATE.funds.starting_capital) || 49000;
+  const platformCap = (STATE.funds && STATE.funds.starting_capital) || 50000;
   const labels   = snaps.map(s => s.date);
   const datasets = FUND_ORDER.map(fid => {
     const meta = FUND_META[fid];

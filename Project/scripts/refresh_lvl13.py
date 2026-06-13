@@ -3,7 +3,7 @@
 """
 refresh_wallstbots.py  (v2 — enhanced strategy engine)
 =======================================================
-Fetches live prices + 90-day history for the 49-stock AI & Quantum universe.
+Fetches live prices + 90-day history for the 50-stock AI & Quantum universe.
 Runs three bot strategy engines:
   - BOT13  : Precision Intraday Momentum (3 runs/day: open, midday, close)
   - ORACLE : Adaptive Weekly Momentum    (recomputes every Monday)
@@ -69,6 +69,8 @@ UNIVERSE = [
     "XNDU","INFQ","HQ",
     # AI — 2026 IPO
     "CBRS",
+    # Space — 2026 IPO
+    "SPCX",
 ]
 
 YF_OVERRIDE = {}
@@ -95,6 +97,8 @@ SECTORS = {
     "ARQQ":"QUANTUM","IBM":"QUANTUM","XNDU":"QUANTUM","INFQ":"QUANTUM","HQ":"QUANTUM",
     # AI — 2026 IPO
     "CBRS":"AI SEMIS",
+    # Space — 2026 IPO
+    "SPCX":"AI SPACE",
 }
 
 FUND_ORDER = ["bot13", "oracle", "wizard", "equalizer", "titan"]

@@ -25,6 +25,7 @@ TODAY       = dt.date.today().isoformat()
 SITES = {
     "wallstbots": ROOT / "Frontends" / "wallstbots.tech" / "data" / "state.json",
     "bitbot13":   ROOT / "Frontends" / "bitbot13.tech"   / "data" / "state.json",
+    "lvl13":      ROOT / "Frontends" / "lvl13.tech"      / "data" / "state.json",
 }
 
 # Crypto symbols need -USD suffix for yfinance
