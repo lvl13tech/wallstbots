@@ -219,20 +219,6 @@ class WallStBotsAPI {
   // ========================================================================
 
   /**
-   * Calculate final price with discounts
-   */
-  async calculateSubscriptionPrice(botCount, promoCode = null, referralCode = null) {
-    return this.request("/subscriptions/calculate-price", {
-      method: "POST",
-      body: JSON.stringify({
-        bot_count: botCount,
-        promo_code: promoCode,
-        referral_code: referralCode,
-      }),
-    });
-  }
-
-  /**
    * Get user's subscription info
    */
   async getSubscription() {

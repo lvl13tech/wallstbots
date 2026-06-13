@@ -1098,7 +1098,7 @@
     document.getElementById("drawerStatus").textContent = status.charAt(0).toUpperCase() + status.slice(1);
     const billDate = subscription.current_period_end || subscription.next_billing_date || subscription.renewal_date;
     document.getElementById("drawerBillDate").textContent = billDate
-      ? new Date(billDate * 1000 || billDate).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"})
+      ? new Date(typeof billDate === 'number' ? billDate * 1000 : Date.parse(billDate)).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"})
       : "—";
     document.getElementById("statMembership").textContent = plan;
     document.getElementById("statMembershipSub").textContent = maxPortfolios + " portfolios max";

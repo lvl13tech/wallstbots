@@ -1123,10 +1123,10 @@
             <div style="font-size:0.75rem;color:var(--muted)">Stock Market</div>
           </div>
         </a>
-        <a href="https://lvl13.tech/dashboard.html" class="platform-menu-item" style="text-decoration:none">
-          <span class="platform-badge" style="background:var(--panel2);color:var(--muted);border:1px solid var(--border)">L13</span>
+        <a href="https://aistocks.tech/dashboard.html" class="platform-menu-item" style="text-decoration:none">
+          <span class="platform-badge" style="background:var(--panel2);color:var(--muted);border:1px solid var(--border)">AIS</span>
           <div>
-            <div style="font-weight:600">Level XIII Tech</div>
+            <div style="font-weight:600">AI Stocks</div>
             <div style="font-size:0.75rem;color:var(--muted)">AI & Quantum</div>
           </div>
         </a>
@@ -1201,13 +1201,52 @@
 
   <!-- Referral -->
   <div class="drawer-section">
-    <div class="drawer-section-title">Referral Program</div>
-    <div class="referral-box">
-      <span class="referral-code" id="drawerRefCode">———</span>
-      <button class="btn-copy" onclick="copyReferral()">Copy</button>
+    <div class="drawer-section-title">Invite &amp; Earn</div>
+
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:1.2rem;font-weight:700;color:var(--accent)" id="drawerRefCount">0</div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:2px">Referrals</div>
+      </div>
+      <div style="background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:1.2rem;font-weight:700;color:var(--accent)" id="drawerCreditBalance">$0</div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:2px">Credit Balance</div>
+      </div>
+      <div style="background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:1.2rem;font-weight:700;color:var(--accent)" id="drawerTotalEarned">$0</div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:2px">Total Earned</div>
+      </div>
     </div>
-    <div class="referral-stats">
-      <span id="drawerRefCount">0</span> referrals · Earn 1 free month per 3 referrals
+
+    <!-- Referral code -->
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">Your Referral Code</div>
+    <div class="referral-box" style="margin-bottom:10px">
+      <span class="referral-code" id="drawerRefCode">———</span>
+      <button class="btn-copy" onclick="copyRefCode()">Copy Code</button>
+    </div>
+
+    <!-- Share link -->
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">Your Invite Link</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <input id="drawerRefLink" type="text" readonly
+        style="flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--accent);font-size:0.78rem;font-family:monospace;min-width:0"
+        value="—">
+      <button class="btn-copy" onclick="copyRefLink()">Copy Link</button>
+    </div>
+
+    <!-- Email invite -->
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">Invite by Email</div>
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <input id="inviteEmailInput" type="email" placeholder="friend@email.com"
+        style="flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--fg);font-size:0.85rem;min-width:0">
+      <button class="btn-copy" onclick="sendInviteEmail()" id="inviteEmailBtn">Send</button>
+    </div>
+    <div id="inviteEmailMsg" style="font-size:0.75rem;min-height:16px;color:var(--muted)"></div>
+
+    <!-- How it works -->
+    <div style="margin-top:14px;padding:10px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;font-size:0.75rem;color:var(--muted);line-height:1.6">
+      <strong style="color:var(--fg)">How it works:</strong> Your friend gets <strong style="color:var(--accent)">50% off their first month</strong> or <strong style="color:var(--accent)">$100 off annual</strong>. You earn <strong style="color:var(--accent)">$35 credit</strong> per signup — automatically applied to your next bill. No cap.
     </div>
   </div>
 
@@ -1298,11 +1337,11 @@
       </div>
       <div class="email-toggle-row">
         <div>
-          <div class="email-toggle-label">Level XIII</div>
+          <div class="email-toggle-label">AI Stocks</div>
           <div class="email-toggle-sub">AI &amp; quantum signals &amp; BOT13 picks</div>
         </div>
         <label class="toggle-switch">
-          <input type="checkbox" id="epSiteLvl13">
+          <input type="checkbox" id="epSiteAistocks">
           <span class="toggle-track"></span>
         </label>
       </div>
@@ -1439,9 +1478,9 @@
       <a href="https://wallstbots.tech/dashboard.html" class="explore-card-link">Open Dashboard →</a>
     </div>
     <div class="explore-card">
-      <div class="explore-card-name">Level XIII <span>Tech</span></div>
+      <div class="explore-card-name">AI <span>Stocks</span></div>
       <div class="explore-card-desc">Focus on AI, quantum computing, and next-gen tech stocks. Track the companies building the future of technology.</div>
-      <a href="https://lvl13.tech/dashboard.html" class="explore-card-link">Open Dashboard →</a>
+      <a href="https://aistocks.tech/dashboard.html" class="explore-card-link">Open Dashboard →</a>
     </div>
   </div>
 
@@ -1691,10 +1730,13 @@
     // Referral
     try {
       api.getReferralStats().then(r => {
-        const code = r?.referral_code || "—";
-        const count = r?.referred_count || r?.referral_count || 0;
-        document.getElementById("drawerRefCode").textContent = code;
-        document.getElementById("drawerRefCount").textContent = count;
+        if (!r) return;
+        document.getElementById("drawerRefCode").textContent   = r.referral_code   || "—";
+        document.getElementById("drawerRefCount").textContent  = r.referred_count  || 0;
+        document.getElementById("drawerCreditBalance").textContent = "$" + (parseFloat(r.credit_balance  || 0).toFixed(2));
+        document.getElementById("drawerTotalEarned").textContent   = "$" + (parseFloat(r.total_earned    || 0).toFixed(2));
+        document.getElementById("drawerRefLink").value =
+          r.share_link || ("https://wallstbots.tech/#/get-yours?ref=" + (r.referral_code || ""));
       });
     } catch(e) {}
   }
@@ -2017,10 +2059,46 @@
   }
 
   /* ─── REFERRAL ─── */
-  function copyReferral() {
+  function copyRefCode(){
     const code = document.getElementById("drawerRefCode").textContent;
-    if (code === "———") return;
-    navigator.clipboard.writeText(code).then(() => showToast("Referral code copied!", "success")).catch(() => showToast("Could not copy", "error"));
+    if(!code||code==="———") return;
+    navigator.clipboard.writeText(code).then(()=>showToast("Referral code copied!","success")).catch(()=>showToast("Could not copy","error"));
+  }
+  function copyRefLink(){
+    const link = document.getElementById("drawerRefLink").value;
+    if(!link||link==="—") return;
+    navigator.clipboard.writeText(link).then(()=>showToast("Invite link copied!","success")).catch(()=>showToast("Could not copy","error"));
+  }
+  async function sendInviteEmail(){
+    const email = document.getElementById("inviteEmailInput").value.trim();
+    const refCode = document.getElementById("drawerRefCode").textContent.trim();
+    const msg = document.getElementById("inviteEmailMsg");
+    const btn = document.getElementById("inviteEmailBtn");
+    msg.textContent = "";
+    if(!email){msg.style.color="var(--red)";msg.textContent="Enter an email address.";return;}
+    if(!refCode||refCode==="—"||refCode==="———"){msg.style.color="var(--red)";msg.textContent="Referral code not loaded yet — try again in a moment.";return;}
+    btn.disabled=true; btn.textContent="Sending…";
+    try{
+      const token = localStorage.getItem("auth_token")||localStorage.getItem("bitbot13_jwt");
+      const res = await fetch(BACKEND_URL+"/account/invite",{
+        method:"POST",
+        headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
+        body:JSON.stringify({email, referral_code:refCode})
+      });
+      const data = await res.json();
+      if(res.ok){
+        msg.style.color="var(--accent)";
+        msg.textContent="Invite sent to "+email+"!";
+        document.getElementById("inviteEmailInput").value="";
+      } else {
+        msg.style.color="var(--red)";
+        msg.textContent=data.detail||"Failed to send invite.";
+      }
+    } catch(e){
+      msg.style.color="var(--red)";
+      msg.textContent="Network error — please try again.";
+    }
+    btn.disabled=false; btn.textContent="Send";
   }
 
   /* ─── PLATFORM MENU ─── */
@@ -2265,55 +2343,8 @@
       document.getElementById("epPortfolio").checked      = d.email_portfolio     !== false;
       document.getElementById("epSiteWallstbots").checked = d.email_wallstbots    !== false;
       document.getElementById("epSiteBitbot13").checked   = d.email_bitbot13      !== false;
-      document.getElementById("epSiteLvl13").checked      = d.email_lvl13         !== false;
+      document.getElementById("epSiteAistocks").checked      = d.email_aistocks         !== false;
       toggleEmailMaster();
     } catch(e) { /* silently ignore */ }
   }
-  function toggleEmailMaster() {
-    const on = document.getElementById("epEnabled").checked;
-    document.getElementById("emailSubToggles").classList.toggle("disabled", !on);
-  }
-  async function saveEmailPrefs() {
-    const btn = document.querySelector(".email-save-btn");
-    const orig = btn.textContent;
-    btn.textContent = "Saving…"; btn.disabled = true;
-    try {
-      const token = auth.getToken ? auth.getToken() : (auth._token || localStorage.getItem("auth_token") || "");
-      const body = {
-        email_enabled:      document.getElementById("epEnabled").checked,
-        email_daily:        document.getElementById("epDaily").checked,
-        email_bot13_alerts: document.getElementById("epBot13").checked,
-        email_weekly:       document.getElementById("epWeekly").checked,
-        email_monthly:      document.getElementById("epMonthly").checked,
-        email_portfolio:    document.getElementById("epPortfolio").checked,
-        email_wallstbots:   document.getElementById("epSiteWallstbots").checked,
-        email_bitbot13:     document.getElementById("epSiteBitbot13").checked,
-        email_lvl13:        document.getElementById("epSiteLvl13").checked,
-      };
-      const resp = await fetch(BACKEND_URL + "/user/email-prefs", {
-        method: "PUT",
-        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!resp.ok) throw new Error(await resp.text());
-      showToast("✓ Email preferences saved", "success");
-    } catch(e) {
-      showToast("Error saving preferences: " + e.message, "error");
-    } finally {
-      btn.textContent = orig; btn.disabled = false;
-    }
-  }
-
-  // ── MOBILE NAV ─────────────────────────────────────────────
-  function toggleMobNav(){
-    document.getElementById("mobNav").classList.toggle("open");
-    document.getElementById("mobNavOverlay").classList.toggle("open");
-  }
-  function closeMobNav(){
-    document.getElementById("mobNav").classList.remove("open");
-    document.getElementById("mobNavOverlay").classList.remove("open");
-  }
-  document.addEventListener("DOMContentLoaded",init);
-</script>
-</body>
-</html>
+  f

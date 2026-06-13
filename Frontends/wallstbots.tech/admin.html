@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin — Wall St. Bots</title>
+  <title>Admin — Wall St Bots</title>
   <style>
     :root {
       --bg: #0a0a0f; --surface: #12121a; --border: #1e1e2e;
@@ -14,22 +14,16 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; overflow-x: hidden; }
     a { color: var(--blue); text-decoration: none; }
-
-    /* ── Layout ── */
     .admin-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
     .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
     .admin-header h1 { font-size: 22px; font-weight: 700; }
     .admin-header .badge { background: #7c3aed; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: 1px; margin-left: 10px; }
     .logout-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
     .logout-btn:hover { color: var(--red); border-color: var(--red); }
-
-    /* ── Tabs ── */
     .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
     .tab { padding: 10px 20px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; }
     .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
     .tab:hover { color: var(--text); }
-
-    /* ── Stat cards ── */
     .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
     .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
     .stat-card .label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
@@ -39,14 +33,10 @@
     .value.blue  { color: var(--blue); }
     .value.orange{ color: var(--orange); }
     .value.purple{ color: var(--purple); }
-
-    /* ── Search bar ── */
     .search-row { display: flex; gap: 12px; margin-bottom: 20px; }
     .search-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; }
     .search-row input:focus { outline: none; border-color: var(--blue); }
     .search-row button { background: var(--blue); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
-
-    /* ── Tables ── */
     .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th { text-align: left; padding: 10px 12px; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); background: var(--surface); }
@@ -63,28 +53,19 @@
     .action-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
     .action-btn:hover { border-color: var(--blue); color: var(--blue); }
     .action-btn.danger:hover { border-color: var(--red); color: var(--red); }
-
-    /* ── Pagination ── */
     .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; font-size: 13px; color: var(--muted); }
     .pager button { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
     .pager button:disabled { opacity: .4; cursor: default; }
-
-    /* ── Panel ── */
     .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
     .panel h3 { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
-
-    /* ── Auth gate ── */
     #authGate { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 16px; }
     #authGate h2 { font-size: 20px; font-weight: 700; }
     #authGate p  { color: var(--muted); font-size: 14px; }
     #authGate .not-admin { color: var(--red); font-size: 14px; }
-
     .loading { color: var(--muted); text-align: center; padding: 40px; }
     .error   { color: var(--red);   text-align: center; padding: 20px; font-size: 13px; }
     .section { display: none; }
     .section.active { display: block; }
-
-    /* ── Mobile ── */
     @media (max-width: 700px) {
       .admin-wrap { padding: 16px 12px; }
       .admin-header { flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding-bottom: 14px; }
@@ -135,20 +116,19 @@
     <div class="tab" onclick="switchTab('users',this)">Users</div>
     <div class="tab" onclick="switchTab('payments',this)">Payments</div>
     <div class="tab" onclick="switchTab('promos',this)">Promo Codes</div>
+    <div class="tab" onclick="switchTab('invite',this)">Send Invite</div>
   </div>
 
-  <!-- ── STATS TAB ── -->
+  <!-- STATS TAB -->
   <div id="tab-stats" class="section active">
-    <div class="stat-grid" id="statsGrid">
-      <div class="loading">Loading stats…</div>
-    </div>
+    <div class="stat-grid" id="statsGrid"><div class="loading">Loading stats…</div></div>
     <div class="panel">
       <h3>Tracker Data Coverage</h3>
       <div id="trackerTable" class="loading">Loading…</div>
     </div>
   </div>
 
-  <!-- ── USERS TAB ── -->
+  <!-- USERS TAB -->
   <div id="tab-users" class="section">
     <div class="search-row">
       <input type="text" id="userSearch" placeholder="Search by email or name…" onkeydown="if(event.key==='Enter')searchUsers()">
@@ -157,10 +137,7 @@
     <div class="panel" style="padding:0">
       <div class="table-wrap">
         <table>
-          <thead><tr>
-            <th>Email</th><th>Name</th><th>Role</th>
-            <th>Platforms</th><th>Total Paid</th><th>Joined</th><th>Actions</th>
-          </tr></thead>
+          <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Platforms</th><th>Total Paid</th><th>Joined</th><th>Actions</th></tr></thead>
           <tbody id="usersBody"><tr><td colspan="7" class="loading">Loading…</td></tr></tbody>
         </table>
       </div>
@@ -172,15 +149,12 @@
     </div>
   </div>
 
-  <!-- ── PAYMENTS TAB ── -->
+  <!-- PAYMENTS TAB -->
   <div id="tab-payments" class="section">
     <div class="panel" style="padding:0">
       <div class="table-wrap">
         <table>
-          <thead><tr>
-            <th>Date</th><th>Email</th><th>Name</th>
-            <th>Bots</th><th>Amount</th><th>Status</th><th>PayPal TXN</th>
-          </tr></thead>
+          <thead><tr><th>Date</th><th>Email</th><th>Name</th><th>Bots</th><th>Amount</th><th>Status</th><th>PayPal TXN</th></tr></thead>
           <tbody id="paymentsBody"><tr><td colspan="7" class="loading">Loading…</td></tr></tbody>
         </table>
       </div>
@@ -192,15 +166,66 @@
     </div>
   </div>
 
-  <!-- ── PROMOS TAB ── -->
+  <!-- INVITE TAB -->
+  <div id="tab-invite" class="section">
+    <div class="panel" style="max-width:560px">
+      <h3>Send Admin Invite</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">
+        Send a free lifetime account invite directly from your webmaster account.<br>
+        Choose the tier the recipient will receive upon signup.
+      </p>
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:6px">Recipient Email</label>
+        <input id="inviteAdminEmail" type="email" placeholder="recipient@email.com"
+          style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:14px">
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:10px">Invite Tier</label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:12px 16px;background:var(--bg);border:1px solid var(--blue);border-radius:8px;flex:1;min-width:160px" id="tierInsiderLabel">
+            <input type="radio" name="inviteTier" value="admin13" checked onchange="updateTierUI()">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--blue)">Insider</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">Free lifetime · Up to 10 portfolios</div>
+            </div>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:8px;flex:1;min-width:160px" id="tierSyndicateLabel">
+            <input type="radio" name="inviteTier" value="adminm13" onchange="updateTierUI()">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--purple)">Syndicate</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">Free lifetime · Up to 25 portfolios</div>
+            </div>
+          </label>
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:6px">Personal Note <span style="font-weight:400;text-transform:none">(optional)</span></label>
+        <textarea id="inviteAdminNote" placeholder="Add a personal message to the invite email…"
+          style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;resize:vertical;min-height:72px;font-family:inherit"></textarea>
+      </div>
+      <button onclick="sendAdminInvite()" id="adminInviteBtn"
+        style="background:var(--blue);color:#fff;border:none;padding:11px 28px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%">
+        Send Invite
+      </button>
+      <div id="adminInviteMsg" style="margin-top:12px;font-size:13px;min-height:18px;text-align:center"></div>
+    </div>
+    <div class="panel" style="max-width:560px">
+      <h3>How Admin Invites Work</h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.8">
+        <div>• <strong style="color:var(--text)">Insider</strong> invite embeds code <code style="background:var(--bg);padding:1px 6px;border-radius:4px;color:var(--blue)">admin13</code> — recipient signs up and gets free Insider tier for life.</div>
+        <div>• <strong style="color:var(--text)">Syndicate</strong> invite embeds code <code style="background:var(--bg);padding:1px 6px;border-radius:4px;color:var(--purple)">adminm13</code> — recipient signs up and gets free Syndicate tier for life.</div>
+        <div style="margin-top:8px">• The signup link in the invite email pre-fills the admin code automatically — recipient just clicks and signs up.</div>
+        <div>• These invites do <strong style="color:var(--text)">not</strong> require a credit card and bypass Stripe entirely.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMOS TAB -->
   <div id="tab-promos" class="section">
     <div class="panel" style="padding:0">
       <div class="table-wrap">
         <table>
-          <thead><tr>
-            <th>Code</th><th>Type</th><th>Discount</th>
-            <th>Uses</th><th>Max Uses</th><th>Status</th><th>Expires</th>
-          </tr></thead>
+          <thead><tr><th>Code</th><th>Type</th><th>Discount</th><th>Uses</th><th>Max Uses</th><th>Status</th><th>Expires</th></tr></thead>
           <tbody id="promosBody"><tr><td colspan="7" class="loading">Loading…</td></tr></tbody>
         </table>
       </div>
@@ -214,10 +239,9 @@ let userOffset = 0, userTotal = 0, userLimit = 25;
 let payOffset  = 0, payTotal  = 0, payLimit  = 25;
 let currentTab = 'stats';
 
-// ── Auth ──
 function getToken() {
-  // Try the site's own key first, then legacy keys for back-compat
   return localStorage.getItem('wallstbots_jwt')
+      || localStorage.getItem('aistocks_jwt')
       || localStorage.getItem('auth_token');
 }
 function doLogout() { localStorage.clear(); location.href = '/login'; }
@@ -226,17 +250,13 @@ async function checkAdminAccess() {
   const token = getToken();
   if (!token) { showAuthGate('Not logged in.'); return; }
   try {
-    const r = await fetch(`${API_BASE}/admin/stats`, {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
+    const r = await fetch(`${API_BASE}/admin/stats`, { headers: { 'Authorization': 'Bearer ' + token } });
     if (r.status === 401) { showAuthGate('Session expired. Please log in again.'); return; }
     if (r.status === 403) { showAuthGate('Your account does not have admin access.'); return; }
     if (!r.ok) { showAuthGate('Server error (' + r.status + ').'); return; }
     const d = await r.json();
-    // Authed — show admin panel
     document.getElementById('authGate').style.display  = 'none';
     document.getElementById('adminWrap').style.display = 'block';
-    // Set email
     try {
       const prof = await fetch(`${API_BASE}/user/profile`, { headers: { 'Authorization': 'Bearer ' + token } });
       const pd   = await prof.json();
@@ -244,9 +264,7 @@ async function checkAdminAccess() {
     } catch(e) {}
     renderStats(d);
     loadUsers();
-  } catch(e) {
-    showAuthGate('Network error: ' + e.message);
-  }
+  } catch(e) { showAuthGate('Network error: ' + e.message); }
 }
 
 function showAuthGate(msg) {
@@ -255,7 +273,6 @@ function showAuthGate(msg) {
   document.getElementById('authMsg').textContent = msg;
 }
 
-// ── Tab routing ──
 function switchTab(name, el) {
   currentTab = name;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -266,7 +283,6 @@ function switchTab(name, el) {
   if (name === 'promos')   loadPromos();
 }
 
-// ── Stats ──
 function renderStats(d) {
   document.getElementById('statsGrid').innerHTML = `
     <div class="stat-card"><div class="label">Total Users</div>
@@ -283,14 +299,12 @@ function renderStats(d) {
       <div class="sub">Across all platforms</div></div>
   `;
   const rows = Object.entries(d.tracker_data || {}).map(([p,c]) =>
-    `<tr><td>${p}</td><td>${c} data types live</td>
-     <td><span class="badge-status active">live</span></td></tr>`
+    `<tr><td>${p}</td><td>${c} data types live</td><td><span class="badge-status active">live</span></td></tr>`
   ).join('') || '<tr><td colspan="3" style="color:var(--muted)">No tracker data yet</td></tr>';
   document.getElementById('trackerTable').innerHTML =
     `<table><thead><tr><th>Platform</th><th>Records</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-// ── Users ──
 async function loadUsers(reset) {
   if (reset) userOffset = 0;
   const search = document.getElementById('userSearch')?.value.trim() || '';
@@ -343,7 +357,7 @@ async function removeAdmin(id, email) {
 }
 
 async function grantAccess(id, email) {
-  const plat = prompt(`Grant ${email} access to which platform?\n(lvl13 / wallstbots / bitbot13)`, 'lvl13');
+  const plat = prompt(`Grant ${email} access to which platform?\n(aistocks / wallstbots / bitbot13)`, 'aistocks');
   if (!plat) return;
   const r = await fetch(`${API_BASE}/admin/users/${id}/grant-access?platform=${plat}`, {
     method: 'POST', headers: { 'Authorization': 'Bearer '+getToken() }
@@ -353,7 +367,6 @@ async function grantAccess(id, email) {
   loadUsers();
 }
 
-// ── Payments ──
 async function loadPayments(reset) {
   if (reset) payOffset = 0;
   const r = await fetch(`${API_BASE}/admin/payments?limit=${payLimit}&offset=${payOffset}`, {
@@ -383,7 +396,6 @@ async function loadPayments(reset) {
 
 function changePayPage(dir) { payOffset = Math.max(0, payOffset + dir * payLimit); loadPayments(); }
 
-// ── Promo Codes ──
 async function loadPromos() {
   const r = await fetch(`${API_BASE}/admin/promo-codes`, { headers: { 'Authorization': 'Bearer ' + getToken() } });
   const d = await r.json();
@@ -394,7 +406,6 @@ async function loadPromos() {
   tbody.innerHTML = d.promo_codes.map(p => {
     const disc = p.discount_amount ? '$'+Number(p.discount_amount).toFixed(0)+' off'
                : p.discount_percentage ? p.discount_percentage+'% off' : 'Full price';
-    const uses = p.max_uses ? `${p.current_uses}/${p.max_uses}` : `${p.current_uses}/∞`;
     return `<tr>
       <td style="font-family:monospace;font-weight:700;color:var(--orange)">${p.code}</td>
       <td style="color:var(--muted)">${p.code_type}</td>
@@ -407,5 +418,46 @@ async function loadPromos() {
   }).join('');
 }
 
-// ── Boot ──
-checkAdmi
+// ── Admin Invite ──
+function updateTierUI() {
+  const val = document.querySelector('input[name="inviteTier"]:checked').value;
+  document.getElementById('tierInsiderLabel').style.borderColor   = val === 'admin13'  ? 'var(--blue)'   : 'var(--border)';
+  document.getElementById('tierSyndicateLabel').style.borderColor = val === 'adminm13' ? 'var(--purple)' : 'var(--border)';
+}
+
+async function sendAdminInvite() {
+  const email = document.getElementById('inviteAdminEmail').value.trim();
+  const code  = document.querySelector('input[name="inviteTier"]:checked').value;
+  const note  = document.getElementById('inviteAdminNote').value.trim();
+  const msg   = document.getElementById('adminInviteMsg');
+  const btn   = document.getElementById('adminInviteBtn');
+  msg.textContent = '';
+  if (!email) { msg.style.color = 'var(--red)'; msg.textContent = 'Enter a recipient email.'; return; }
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const r = await fetch(`${API_BASE}/admin/send-invite`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+      body: JSON.stringify({ email, admin_code: code, note })
+    });
+    const d = await r.json();
+    if (r.ok) {
+      msg.style.color = 'var(--green)';
+      msg.textContent = '✓ Invite sent to ' + email;
+      document.getElementById('inviteAdminEmail').value = '';
+      document.getElementById('inviteAdminNote').value  = '';
+    } else {
+      msg.style.color = 'var(--red)';
+      msg.textContent = d.detail || 'Failed to send invite.';
+    }
+  } catch(e) {
+    msg.style.color = 'var(--red)';
+    msg.textContent = 'Network error — please try again.';
+  }
+  btn.disabled = false; btn.textContent = 'Send Invite';
+}
+
+checkAdminAccess();
+</script>
+</body>
+</html>

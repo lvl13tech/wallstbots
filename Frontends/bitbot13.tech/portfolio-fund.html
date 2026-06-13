@@ -100,8 +100,8 @@
 
 <header class="site-header">
   <div class="brand">
-    <a href="/" class="brand-link" aria-label="Level XIII Tech home">
-      <img src="assets/logo.svg" alt="Level XIII Tech" class="brand-logo">
+    <a href="/" class="brand-link" aria-label="AI Stocks home">
+      <img src="assets/logo.svg" alt="AI Stocks" class="brand-logo">
     </a>
   </div>
   <button class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false">
@@ -285,7 +285,7 @@
   <div class="footer-inner">
     <div class="footer-brand">
       <img src="assets/favicon.svg" alt="" class="footer-robot">
-      <span>Level XIII Tech</span>
+      <span>AI Stocks</span>
     </div>
     <div class="footer-links">
       <a href="dashboard.html">My Portfolios</a>
@@ -297,11 +297,11 @@
       <div class="footer-network-links">
         <a href="https://wallstbots.tech" target="_blank" rel="noopener">Wall St. Bots</a>
         <a href="https://bitbot13.tech" target="_blank" rel="noopener">bitbot13.tech</a>
-        <span class="footer-network-current">lvl13.tech</span>
+        <span class="footer-network-current">aistocks.tech</span>
       </div>
     </div>
     <div class="footer-fine">
-      <span>&copy; 2026 lvl13.tech</span><span class="dot">·</span>
+      <span>&copy; 2026 aistocks.tech</span><span class="dot">·</span>
       <span>Not investment advice</span>
     </div>
   </div>
@@ -1002,33 +1002,4 @@ function showToast(msg, type = 'success') {
   t._timer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ── Nav toggle (mobile) ───────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  const toggle = document.getElementById('menuToggle');
-  const nav    = document.getElementById('siteNav');
-  if (toggle && nav) {
-    toggle.addEventListener('click', () => {
-      const open = nav.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', open);
-    });
-  }
-  init();
-});
-
-window.togglePrivacy     = togglePrivacy;
-window.toggleLeaderboard = toggleLeaderboard;
-window.sharePortfolio    = sharePortfolio;
-window.addShare          = addShare;
-window.revokeShare       = revokeShare;
-window.postComment       = postComment;
-window.deleteComment     = deleteComment;
-window.openDrawer        = openDrawer;
-window.closeDrawer       = closeDrawer;
-window.openPwModal       = openPwModal;
-window.closePwModal      = closePwModal;
-window.sendPasswordReset = sendPasswordReset;
-window.copyReferral      = copyReferral;
-</script>
-</body>
-</html>
-
+// ── Nav toggle (mobile) ───────────────────────────�

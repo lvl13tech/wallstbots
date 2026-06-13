@@ -1,6 +1,6 @@
 """
 Wall St. Bots FastAPI Backend
-Unified API for lvl13.tech, bitbot13.tech, wallstbots.tech
+Unified API for wallstbots.tech (platform) · aistocks.tech · bitbot13.tech
 
 Author: Claude (AI Senior Engineer)
 Date: 2026-05-20 — v2 (admin system + bug fixes)
@@ -147,9 +147,11 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "https://lvl13.tech",
+        "https://aistocks.tech",
         "https://bitbot13.tech",
         "https://wallstbots.tech",
         "https://www.lvl13.tech",
+        "https://www.aistocks.tech",
         "https://www.bitbot13.tech",
         "https://www.wallstbots.tech",
     ],
@@ -215,7 +217,7 @@ class PayPalWebhookEvent(BaseModel):
 
 class TrackerPushRequest(BaseModel):
     data_type: str   # 'state' | 'news' | 'signals' | 'reports'
-    platform:  str   # 'lvl13' | 'bitbot13' | 'wallstbots'
+    platform:  str   # 'aistocks' | 'bitbot13' | 'wallstbots'
     data:      Any
 
 class StockPick(BaseModel):
@@ -224,7 +226,7 @@ class StockPick(BaseModel):
 
 class SaveStocksRequest(BaseModel):
     stocks: List[StockPick]
-    platform: str = "lvl13"
+    platform: str = "aistocks"
 
 class AdminUserUpdate(BaseModel):
     role: Optional[str] = None          # 'user' | 'admin'
@@ -526,21 +528,7 @@ async def signup_with_admin_code(request: AdminCodeClaimRequest):
     if request.code.lower() not in ADMIN_CODES:
         raise HTTPException(status_code=400, detail="Invalid admin code")
 
-    # Enforce 5-account cap on admin code signups
-    ADMIN_CODE_MAX = 5
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM users WHERE admin_code_used = TRUE")
-        used_count = cursor.fetchone()[0]
-    finally:
-        cursor.close()
-        return_db_connection(conn)
-    if used_count >= ADMIN_CODE_MAX:
-        raise HTTPException(
-            status_code=403,
-            detail="This code has reached its maximum number of uses. Contact the admin."
-        )
+    # No cap — admin codes are sent privately via invite links, not shared publicly
 
     # Create Supabase auth user
     try:
@@ -603,8 +591,8 @@ async def signup_with_admin_code(request: AdminCodeClaimRequest):
     return {
         "success":      True,
         "access_token": access_token,
-        "tier":         "insider",
-        "message":      "Welcome! You have free lifetime INSIDER access.",
+        "tier":         admin_tier,
+        "message":      f"Welcome! You have free lifetime {admin_tier.upper()} access.",
         "needs_confirm": access_token is None,
     }
 
@@ -725,11 +713,169 @@ async def get_referral_info(current_user: dict = Depends(get_current_user)):
             "referred_count":   row["used_count"] or 0,
             "total_earned":     float(row["total_referral_credits"] or 0),
             # Build shareable link
-            "share_link":       f"https://lvl13.tech/#/get-yours?ref={row['referral_code']}",
+            "share_link":       f"https://wallstbots.tech/#/get-yours?ref={row['referral_code']}",
         }
     finally:
         cursor.close()
         return_db_connection(conn)
+
+# ============================================================================
+# INVITE ENDPOINTS
+# ============================================================================
+
+class MemberInviteRequest(BaseModel):
+    email: str
+    referral_code: str
+
+@app.post("/account/invite")
+async def send_member_invite(request: MemberInviteRequest, current_user: dict = Depends(get_current_user)):
+    """
+    Member sends a referral invite email. The invite link embeds their referral
+    code so the new signup is automatically attributed to them.
+    """
+    email = request.email.strip().lower()
+    ref_code = request.referral_code.strip().upper()
+
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Invalid email address.")
+    if not ref_code:
+        raise HTTPException(status_code=400, detail="Referral code missing.")
+
+    signup_link = f"https://wallstbots.tech/#/get-yours?ref={ref_code}"
+
+    html = f"""
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#0a0a0f;font-family:'Inter',system-ui,sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#12121a;border:1px solid #1e1e2e;border-radius:16px;overflow:hidden;">
+    <div style="background:#0a0a0f;padding:28px 32px;border-bottom:1px solid #1e1e2e;text-align:center;">
+      <div style="font-size:22px;font-weight:800;color:#38bdf8;letter-spacing:-0.5px;">Wall St Bots</div>
+      <div style="font-size:12px;color:#6b7280;margin-top:4px;letter-spacing:1px;text-transform:uppercase;">AI · Stocks · Crypto</div>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="color:#e8e8f0;font-size:20px;font-weight:700;margin:0 0 12px;">You've been invited!</h2>
+      <p style="color:#9ca3af;font-size:14px;line-height:1.7;margin:0 0 24px;">
+        Someone on Wall St Bots thinks you'd love it — and they're sharing their discount with you.
+      </p>
+      <div style="background:#0a0a0f;border:1px solid #1e1e2e;border-radius:10px;padding:20px;margin-bottom:24px;">
+        <div style="color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Your exclusive offer</div>
+        <div style="color:#38bdf8;font-size:16px;font-weight:700;margin-bottom:4px;">50% off your first month</div>
+        <div style="color:#6b7280;font-size:13px;">or $100 off any annual plan</div>
+      </div>
+      <div style="text-align:center;margin-bottom:28px;">
+        <a href="{signup_link}" style="display:inline-block;background:#38bdf8;color:#0a0a0f;font-weight:700;font-size:15px;padding:14px 36px;border-radius:10px;text-decoration:none;letter-spacing:0.3px;">
+          Claim Your Discount →
+        </a>
+      </div>
+      <p style="color:#4b5563;font-size:12px;line-height:1.6;margin:0;">
+        Wall St Bots gives you AI-powered stock &amp; crypto signals, live portfolio bots, and real-time leaderboards — across <a href="https://aistocks.tech" style="color:#38bdf8;text-decoration:none;">AI Stocks</a>, <a href="https://wallstbots.tech" style="color:#38bdf8;text-decoration:none;">Wall St Bots</a>, and <a href="https://bitbot13.tech" style="color:#38bdf8;text-decoration:none;">BitBot13</a>. One login, all three platforms.
+      </p>
+    </div>
+    <div style="padding:20px 32px;border-top:1px solid #1e1e2e;text-align:center;">
+      <p style="color:#4b5563;font-size:11px;margin:0;">Questions? <a href="mailto:info@lvl13.tech" style="color:#38bdf8;text-decoration:none;">info@lvl13.tech</a></p>
+    </div>
+  </div>
+</body>
+</html>
+"""
+
+    sent = _send_resend_email(
+        to=email,
+        subject="You've been invited to Wall St Bots — 50% off inside",
+        html=html,
+    )
+    if not sent:
+        raise HTTPException(status_code=500, detail="Failed to send invite email. Please try again.")
+    return {"success": True, "message": f"Invite sent to {email}"}
+
+
+class AdminInviteRequest(BaseModel):
+    email: str
+    admin_code: str          # "admin13" or "adminm13"
+    note: Optional[str] = None
+
+@app.post("/admin/send-invite")
+async def send_admin_invite(request: AdminInviteRequest, current_user: dict = Depends(get_current_user)):
+    """
+    Webmaster-only: send a free lifetime account invite with an embedded admin code.
+    admin13  → Insider tier (free lifetime)
+    adminm13 → Syndicate tier (free lifetime)
+    """
+    # Must be admin/webmaster
+    if current_user.get("role") not in ("admin", "webmaster"):
+        raise HTTPException(status_code=403, detail="Admin access required.")
+
+    code = request.admin_code.lower()
+    if code not in ADMIN_CODES:
+        raise HTTPException(status_code=400, detail="Invalid admin code.")
+
+    email = request.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Invalid email address.")
+
+    tier_name  = "Syndicate" if code == "adminm13" else "Insider"
+    tier_color = "#a855f7"   if code == "adminm13" else "#38bdf8"
+    tier_perks = "Up to 25 portfolios" if code == "adminm13" else "Up to 10 portfolios"
+
+    # Signup link routes through get-yours with ref= so applyRefCode() auto-validates the admin code
+    signup_link = f"https://wallstbots.tech/#/get-yours?ref={code}"
+
+    note_block = ""
+    if request.note and request.note.strip():
+        note_block = f"""
+      <div style="background:#0a0a0f;border-left:3px solid #38bdf8;border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:24px;">
+        <div style="color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Personal note</div>
+        <div style="color:#e8e8f0;font-size:14px;line-height:1.6;">{request.note.strip()}</div>
+      </div>"""
+
+    html = f"""
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#0a0a0f;font-family:'Inter',system-ui,sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#12121a;border:1px solid #1e1e2e;border-radius:16px;overflow:hidden;">
+    <div style="background:#0a0a0f;padding:28px 32px;border-bottom:1px solid #1e1e2e;text-align:center;">
+      <div style="font-size:22px;font-weight:800;color:#38bdf8;letter-spacing:-0.5px;">Wall St Bots</div>
+      <div style="font-size:12px;color:#6b7280;margin-top:4px;letter-spacing:1px;text-transform:uppercase;">AI · Stocks · Crypto</div>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="color:#e8e8f0;font-size:20px;font-weight:700;margin:0 0 12px;">You're invited — free account inside</h2>
+      <p style="color:#9ca3af;font-size:14px;line-height:1.7;margin:0 0 24px;">
+        You've been personally invited to join Wall St Bots with a complimentary lifetime account. No credit card required.
+      </p>
+      {note_block}
+      <div style="background:#0a0a0f;border:1px solid #1e1e2e;border-radius:10px;padding:20px;margin-bottom:24px;">
+        <div style="color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Your account</div>
+        <div style="display:inline-block;background:rgba(56,189,248,0.1);border:1px solid {tier_color};border-radius:20px;padding:4px 14px;font-size:13px;font-weight:700;color:{tier_color};margin-bottom:8px;">{tier_name}</div>
+        <div style="color:#9ca3af;font-size:13px;margin-top:6px;">Free for life · {tier_perks} · No billing ever</div>
+      </div>
+      <div style="text-align:center;margin-bottom:28px;">
+        <a href="{signup_link}" style="display:inline-block;background:#38bdf8;color:#0a0a0f;font-weight:700;font-size:15px;padding:14px 36px;border-radius:10px;text-decoration:none;letter-spacing:0.3px;">
+          Create Your Free Account →
+        </a>
+      </div>
+      <p style="color:#4b5563;font-size:12px;line-height:1.6;margin:0;">
+        Wall St Bots gives you AI-powered stock &amp; crypto signals, live portfolio bots, and real-time leaderboards — across <a href="https://aistocks.tech" style="color:#38bdf8;text-decoration:none;">AI Stocks</a>, <a href="https://wallstbots.tech" style="color:#38bdf8;text-decoration:none;">Wall St Bots</a>, and <a href="https://bitbot13.tech" style="color:#38bdf8;text-decoration:none;">BitBot13</a>. One login, all three platforms.
+      </p>
+    </div>
+    <div style="padding:20px 32px;border-top:1px solid #1e1e2e;text-align:center;">
+      <p style="color:#4b5563;font-size:11px;margin:0;">Questions? <a href="mailto:info@lvl13.tech" style="color:#38bdf8;text-decoration:none;">info@lvl13.tech</a></p>
+    </div>
+  </div>
+</body>
+</html>
+"""
+
+    sent = _send_resend_email(
+        to=email,
+        subject=f"Your free Wall St Bots {tier_name} account is waiting",
+        html=html,
+    )
+    if not sent:
+        raise HTTPException(status_code=500, detail="Failed to send invite email. Please try again.")
+    return {"success": True, "message": f"Admin invite sent to {email} ({tier_name})"}
+
 
 # ============================================================================
 # BOT ENDPOINTS
@@ -1082,55 +1228,6 @@ async def validate_referral_code(code: str = Query(..., description="Referral co
 # PAYMENT & SUBSCRIPTION ENDPOINTS
 # ============================================================================
 
-@app.post("/subscriptions/calculate-price")
-async def calculate_subscription_price(
-    bot_count: int,
-    promo_code: Optional[str] = None,
-    referral_code: Optional[str] = None,
-    current_user: dict = Depends(get_current_user)
-):
-    base_price    = 799.00 if bot_count == 1 else 799.00 + (bot_count - 1) * 349.00
-    discount_amount = 0.0
-    applied_promo   = None
-    applied_referral= None
-
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor(row_factory=dict_row)
-
-        if promo_code:
-            cursor.execute("""
-                SELECT discount_amount, discount_percentage, max_uses, current_uses
-                FROM promo_codes WHERE code = %s AND active = TRUE
-            """, (promo_code,))
-            promo = cursor.fetchone()
-            if promo and (not promo["max_uses"] or promo["current_uses"] < promo["max_uses"]):
-                if promo["discount_amount"]:
-                    discount_amount += float(promo["discount_amount"])
-                if promo["discount_percentage"]:
-                    discount_amount += base_price * (float(promo["discount_percentage"]) / 100)
-                applied_promo = promo_code
-
-        if referral_code:
-            cursor.execute("SELECT code FROM referral_codes WHERE code = %s", (referral_code,))
-            if cursor.fetchone():
-                discount_amount += 75.00
-                applied_referral = referral_code
-
-    finally:
-        cursor.close()
-        return_db_connection(conn)
-
-    final_price = max(0, base_price - discount_amount)
-    return {
-        "success":         True,
-        "base_price":      base_price,
-        "discount_amount": discount_amount,
-        "final_price":     final_price,
-        "applied_promo":   applied_promo,
-        "applied_referral": applied_referral,
-    }
-
 
 @app.post("/stripe/create-checkout")
 async def stripe_create_checkout(request: Request, current_user: dict = Depends(get_current_user)):
@@ -1149,7 +1246,7 @@ async def stripe_create_checkout(request: Request, current_user: dict = Depends(
     body = await request.json()
     tier     = body.get("tier", "member").lower()
     cycle    = body.get("cycle", "monthly").lower()
-    platform = body.get("platform", "lvl13").lower()
+    platform = body.get("platform", "aistocks").lower()
     ref_code = body.get("ref_code", "")
 
     price_id = (STRIPE_PRICES.get(tier) or {}).get(cycle)
@@ -1158,11 +1255,11 @@ async def stripe_create_checkout(request: Request, current_user: dict = Depends(
 
     # Build success/cancel URLs per platform
     platform_origins = {
-        "lvl13":      "https://lvl13.tech",
+        "aistocks":   "https://aistocks.tech",
         "bitbot13":   "https://bitbot13.tech",
         "wallstbots": "https://wallstbots.tech",
     }
-    origin = platform_origins.get(platform, "https://lvl13.tech")
+    origin = platform_origins.get(platform, "https://wallstbots.tech")
 
     # Get user email for prefill
     conn = get_db_connection()
@@ -1269,7 +1366,7 @@ async def stripe_customer_portal(request: Request, current_user: dict = Depends(
         raise HTTPException(status_code=404, detail="No Stripe subscription found. Please contact support.")
 
     body = await request.json()
-    origin = body.get("origin", "https://lvl13.tech")
+    origin = body.get("origin", "https://wallstbots.tech")
 
     portal_session = _stripe.billing_portal.Session.create(
         customer=customer_id,
@@ -1308,7 +1405,7 @@ async def stripe_webhook(request: Request):
         meta         = data.get("metadata") or {}
         user_id      = meta.get("user_id")
         tier         = meta.get("tier", "member")
-        platform     = meta.get("platform", "lvl13")
+        platform     = meta.get("platform", "aistocks")
         ref_code     = meta.get("ref_code", "")
         amount_total = (data.get("amount_total") or 0) / 100.0  # cents → dollars
         stripe_sub_id = data.get("subscription", "")
@@ -1430,7 +1527,7 @@ def verify_internal_key(x_internal_key: str = Header(...)):
 
 @app.get("/internal/portfolios/active")
 async def get_active_portfolios(
-    platform: str = "lvl13",
+    platform: str = "aistocks",
     _: None = Depends(verify_internal_key)
 ):
     """
@@ -1884,7 +1981,7 @@ async def internal_get_portfolio_fund_state(
 
 
 @app.get("/public/tracker/{data_type}")
-async def tracker_read(data_type: str, platform: str = "lvl13"):
+async def tracker_read(data_type: str, platform: str = "aistocks"):
     if data_type not in VALID_DATA_TYPES:
         raise HTTPException(status_code=400,
             detail=f"Invalid data_type. Must be one of: {', '.join(VALID_DATA_TYPES)}")
@@ -2002,7 +2099,7 @@ async def save_user_stocks(request: SaveStocksRequest, current_user: dict = Depe
 
 
 @app.get("/user/stocks")
-async def get_user_stocks(platform: str = "lvl13", current_user: dict = Depends(get_current_user)):
+async def get_user_stocks(platform: str = "aistocks", current_user: dict = Depends(get_current_user)):
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
@@ -2022,7 +2119,7 @@ async def get_user_stocks(platform: str = "lvl13", current_user: dict = Depends(
 
 @app.get("/user/subscription")
 async def get_user_subscription(
-    platform: str = "lvl13",
+    platform: str = "aistocks",
     current_user: dict = Depends(get_current_user_with_role)
 ):
     """
@@ -2358,7 +2455,7 @@ async def admin_grant_platform_access(
     admin: dict = Depends(require_admin)
 ):
     """Manually grant a user active subscription for a platform (no payment needed)."""
-    if platform not in ("lvl13", "bitbot13", "wallstbots"):
+    if platform not in ("aistocks", "bitbot13", "wallstbots"):
         raise HTTPException(status_code=400, detail="Invalid platform")
     conn = get_db_connection()
     try:
@@ -3540,201 +3637,4 @@ async def delete_comment(
     current_user: dict = Depends(get_current_user),
 ):
     """Soft-delete own comment."""
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor(row_factory=dict_row)
-        cursor.execute("""
-            UPDATE portfolio_comments SET is_deleted = TRUE
-            WHERE id = %s AND bot_id = %s AND user_id = %s AND is_deleted = FALSE
-            RETURNING id
-        """, (comment_id, bot_id, current_user["user_id"]))
-        if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Comment not found or already deleted")
-        conn.commit()
-        return {"deleted": True}
-    finally:
-        cursor.close()
-        return_db_connection(conn)
-
-
-@app.patch("/portfolio/{bot_id}/settings")
-async def update_portfolio_settings(
-    bot_id: str,
-    body: LeaderboardSettings,
-    current_user: dict = Depends(get_current_user),
-):
-    """Update portfolio privacy settings — owner only.
-    Accepts is_private and/or public_leaderboard. Forcing private also disables leaderboard."""
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor(row_factory=dict_row)
-        # Build dynamic SET clause
-        updates = []
-        params = []
-        if body.is_private is not None:
-            updates.append("is_private = %s")
-            params.append(body.is_private)
-            if body.is_private:
-                # Private portfolio can't be on leaderboard
-                updates.append("public_leaderboard = FALSE")
-        if body.public_leaderboard is not None and body.is_private is not True:
-            updates.append("public_leaderboard = %s")
-            params.append(body.public_leaderboard)
-        if not updates:
-            raise HTTPException(status_code=400, detail="No settings provided")
-        updates.append("updated_at = NOW()")
-        params.extend([bot_id, current_user["user_id"]])
-        cursor.execute(
-            f"UPDATE bots SET {', '.join(updates)} WHERE id = %s AND user_id = %s RETURNING id, public_leaderboard, is_private",
-            params
-        )
-        row = cursor.fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="Portfolio not found or not yours")
-        conn.commit()
-        return {
-            "bot_id": str(row["id"]),
-            "public_leaderboard": row["public_leaderboard"],
-            "is_private": row["is_private"],
-        }
-    finally:
-        cursor.close()
-        return_db_connection(conn)
-
-
-@app.get("/portfolio/{bot_id}/shares")
-async def get_portfolio_shares(
-    bot_id: str,
-    current_user: dict = Depends(get_current_user),
-):
-    """List users this portfolio has been shared with — owner only."""
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor(row_factory=dict_row)
-        cursor.execute("SELECT id FROM bots WHERE id = %s AND user_id = %s", (bot_id, current_user["user_id"]))
-        if not cursor.fetchone():
-            raise HTTPException(status_code=403, detail="Not your portfolio")
-        cursor.execute("""
-            SELECT ps.id AS share_id, ps.shared_with_user_id,
-                   COALESCE(u.display_name, 'Trader #' || SUBSTRING(u.id::text, 1, 6)) AS handle,
-                   ps.created_at
-            FROM portfolio_shares ps
-            JOIN users u ON u.id = ps.shared_with_user_id
-            WHERE ps.bot_id = %s
-            ORDER BY ps.created_at DESC
-        """, (bot_id,))
-        rows = cursor.fetchall()
-        return {"shares": [
-            {
-                "share_id":  str(r["share_id"]),
-                "user_id":   str(r["shared_with_user_id"]),
-                "handle":    r["handle"],
-                "shared_at": r["created_at"].isoformat(),
-            }
-            for r in rows
-        ]}
-    finally:
-        cursor.close()
-        return_db_connection(conn)
-
-
-@app.post("/portfolio/{bot_id}/share")
-async def share_portfolio(
-    bot_id: str,
-    body: ShareCreate,
-    current_user: dict = Depends(get_current_user),
-):
-    """Share a portfolio with another user by their @handle — owner only."""
-    handle = body.handle.strip().lstrip("@")
-    if not handle:
-        raise HTTPException(status_code=400, detail="Handle is required")
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor(row_factory=dict_row)
-        # Must own the portfolio
-        cursor.execute("SELECT id FROM bots WHERE id = %s AND user_id = %s", (bot_id, current_user["user_id"]))
-        if not cursor.fetchone():
-            raise HTTPException(status_code=403, detail="Not your portfolio")
-        # Find target user by handle
-        cursor.execute("SELECT id, display_name FROM users WHERE display_name = %s", (handle,))
-        target = cursor.fetchone()
-        if not target:
-            raise HTTPException(status_code=404, detail=f"No user found with handle @{handle}")
-        if str(target["id"]) == current_user["user_id"]:
-            raise HTTPException(status_code=400, detail="You can't share a portfolio with yourself")
-        # Insert share (ignore duplicate)
-        cursor.execute("""
-            INSERT INTO portfolio_shares (bot_id, shared_by_user_id, shared_with_user_id)
-            VALUES (%s, %s, %s)
-            ON CONFLICT (bot_id, shared_with_user_id) DO NOTHING
-            RETURNING id
-        """, (bot_id, current_user["user_id"], str(target["id"])))
-        conn.commit()
-        return {"shared_with": f"@{handle}", "user_id": str(target["id"])}
-    finally:
-        cursor.close()
-        return_db_connection(conn)
-
-
-@app.delete("/portfolio/{bot_id}/share/{share_id}")
-async def revoke_portfolio_share(
-    bot_id: str,
-    share_id: str,
-    current_user: dict = Depends(get_current_user),
-):
-    """Revoke a portfolio share — owner only."""
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor(row_factory=dict_row)
-        cursor.execute("""
-            DELETE FROM portfolio_shares
-            WHERE id = %s AND bot_id = %s AND shared_by_user_id = %s
-            RETURNING id
-        """, (share_id, bot_id, current_user["user_id"]))
-        if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Share not found or not yours")
-        conn.commit()
-        return {"revoked": True}
-    finally:
-        cursor.close()
-        return_db_connection(conn)
-
-
-# ============================================================================
-# HEALTH CHECK
-# ============================================================================
-
-@app.get("/health")
-async def health_check():
-    return {"status": "ok", "service": "Wall St. Bots API", "version": "2.0.0"}
-
-
-@app.get("/health/db")
-async def health_check_db():
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor(row_factory=dict_row)
-        cursor.execute("SELECT 1")
-        cursor.fetchone()
-        return {
-            "status":    "healthy",
-            "database":  "connected",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-    finally:
-        cursor.close()
-        return_db_connection(conn)
-
-# ============================================================================
-# SHUTDOWN
-# ============================================================================
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    if db_pool:
-        db_pool.close()
-
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    conn = get_db_connec

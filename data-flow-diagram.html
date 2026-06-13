@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WallStBots — Data Flow & Field Integrity Map</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; line-height: 1.5; }
+  h1 { font-size: 20px; font-weight: 700; padding: 24px 32px 4px; color: #fff; }
+  .subtitle { padding: 0 32px 20px; color: #8b949e; font-size: 13px; }
+
+  /* ── LEGEND ── */
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; padding: 0 32px 24px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #8b949e; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .dot-tracker { background: #3b82f6; }
+  .dot-db      { background: #a855f7; }
+  .dot-formula { background: #f59e0b; }
+  .dot-same    { background: #22d3ae; }
+  .dot-user    { background: #f87171; }
+
+  /* ── SECTION HEADERS ── */
+  .zone-header { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #8b949e; padding: 8px 32px 6px; border-top: 1px solid #21262d; margin-top: 8px; }
+
+  /* ── MAIN GRID ── */
+  .flow-grid { display: grid; grid-template-columns: 220px 1fr; gap: 0; }
+
+  /* ── SOURCE COLUMN ── */
+  .source-col { background: #141b27; border-right: 1px solid #21262d; padding: 16px; }
+  .source-box { border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
+  .source-tracker { background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); }
+  .source-db      { background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3); }
+  .source-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .source-tracker .source-title { color: #3b82f6; }
+  .source-db .source-title      { color: #a855f7; }
+  .source-url { font-size: 10px; color: #8b949e; font-family: monospace; margin-bottom: 8px; word-break: break-all; }
+  .source-field { display: flex; justify-content: space-between; align-items: baseline; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 11px; }
+  .source-field:last-child { border-bottom: none; }
+  .field-name { font-family: monospace; color: #e6edf3; }
+  .field-type { font-size: 10px; color: #6e7681; }
+  .formula-box { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+  .formula-title { font-size: 11px; font-weight: 700; color: #f59e0b; margin-bottom: 6px; }
+  .formula-line { font-family: monospace; font-size: 10px; color: #fbbf24; padding: 2px 0; }
+
+  /* ── PAGES COLUMN ── */
+  .pages-col { padding: 16px 24px; }
+  .page-section { margin-bottom: 20px; }
+  .page-label { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .page-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; }
+  .badge-public  { background: rgba(34,211,174,0.15); color: #22d3ae; border: 1px solid rgba(34,211,174,0.3); }
+  .badge-members { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+
+  /* ── FIELD TABLE ── */
+  table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 4px; }
+  th { background: #141b27; color: #8b949e; font-weight: 600; text-align: left; padding: 5px 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #21262d; }
+  td { padding: 5px 8px; border-bottom: 1px solid #21262d; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .f-name { font-family: monospace; color: #79c0ff; white-space: nowrap; }
+  .f-label { color: #e6edf3; }
+  .f-source { font-family: monospace; font-size: 10px; }
+  .f-src-tracker { color: #3b82f6; }
+  .f-src-db      { color: #a855f7; }
+  .f-src-formula { color: #f59e0b; }
+  .f-src-user    { color: #f87171; }
+  .f-src-api     { color: #22d3ae; }
+  .f-note { color: #6e7681; font-size: 10px; font-style: italic; }
+  .f-same { color: #22d3ae; font-size: 10px; font-weight: 600; }
+
+  /* ── MATCH INDICATOR ── */
+  .match-badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px; margin-left: 4px; vertical-align: middle; }
+  .match-same    { background: rgba(34,211,174,0.15); color: #22d3ae; }
+  .match-scaled  { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  .match-diff    { background: rgba(248,113,113,0.15); color: #f87171; }
+
+  /* ── DIVIDER ── */
+  .page-divider { border: none; border-top: 1px solid #21262d; margin: 16px 0; }
+
+  /* ── ARROWS ── */
+  .arrow-row { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #6e7681; padding: 3px 0; }
+  .arrow { color: #3b82f6; }
+
+  /* ── INTEGRITY RULES ── */
+  .rules-section { background: #0d1117; border: 1px solid #21262d; border-radius: 10px; margin: 16px 32px 32px; padding: 16px 20px; }
+  .rules-title { font-size: 13px; font-weight: 700; color: #f59e0b; margin-bottom: 12px; }
+  .rule { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid #21262d; font-size: 11px; }
+  .rule:last-child { border-bottom: none; }
+  .rule-num { color: #f59e0b; font-weight: 700; flex-shrink: 0; width: 18px; }
+  .rule-text { color: #e6edf3; }
+  .rule-text code { font-family: monospace; color: #79c0ff; background: rgba(121,192,255,0.08); padding: 1px 4px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<h1>WallStBots — Data Flow & Field Integrity Map</h1>
+<p class="subtitle">Every data field on every page — where it comes from, how it's calculated, and where the same value must match. Read this before touching any data path.</p>
+
+<div class="legend">
+  <div class="legend-item"><div class="dot dot-tracker"></div> Source: Platform Tracker API</div>
+  <div class="legend-item"><div class="dot dot-db"></div> Source: bot_fund_state DB (refresh_portfolios.py)</div>
+  <div class="legend-item"><div class="dot dot-formula"></div> Source: Calculated / Formula</div>
+  <div class="legend-item"><div class="dot dot-same"></div> SAME VALUE — must match across pages</div>
+  <div class="legend-item"><div class="dot dot-user"></div> Source: User input / auth</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="zone-header">▶ DATA SOURCES</div>
+
+<div class="flow-grid">
+  <div class="source-col">
+
+    <div class="source-box source-tracker">
+      <div class="source-title">📡 Platform Tracker API</div>
+      <div class="source-url">GET /public/tracker/state?platform={platform}</div>
+      <div style="font-size:10px;color:#8b949e;margin-bottom:6px">Written by: refresh_data.py (GitHub Actions)</div>
+      <div class="source-field"><span class="field-name">starting_capital</span><span class="field-type">number</span></div>
+      <div class="source-field"><span class="field-name">funds[fid].value.total</span><span class="field-type">number</span></div>
+      <div class="source-field"><span class="field-name">funds[fid].value.pnl</span><span class="field-type">number</span></div>
+      <div class="source-field"><span class="field-name">funds[fid].value.pnl_pct</span><span class="field-type">%</span></div>
+      <div class="source-field"><span class="field-name">funds[fid].value.day_pnl</span><span class="field-type">number</span></div>
+      <div class="source-field"><span class="field-name">funds[fid].value.day_pct</span><span class="field-type">%</span></div>
+      <div class="source-field"><span class="field-name">funds[fid].positions[]</span><span class="field-type">array</span></div>
+      <div class="source-field"><span class="field-name">snapshots[]</span><span class="field-type">array</span></div>
+    </div>
+
+    <div class="source-box source-db">
+      <div class="source-title">🗄 bot_fund_state (DB)</div>
+      <div class="source-url">GET /bots/{id}/fund/{fid}/state</div>
+      <div style="font-size:10px;color:#8b949e;margin-bottom:6px">Written by: refresh_portfolios.py (GitHub Actions)</div>
+      <div class="source-field"><span class="field-name">total_value</span><span class="field-type">number</span></div>
+      <div class="source-field"><span class="field-name">entry_cost</span><span class="field-type">number</span></div>
+      <div class="source-field"><span class="field-name">gain_loss</span><span class="field-type">number</span></div>
+      <div class="source-field"><span class="field-name">gain_loss_pct</span><span class="field-type">%</span></div>
+      <div class="source-field"><span class="field-name">day_pnl</span><span class="field-type">number</span></div>
+      <div class="source-field"><span class="field-name">day_pct</span><span class="field-type">%</span></div>
+      <div class="source-field"><span class="field-name">holding_cash</span><span class="field-type">bool</span></div>
+      <div class="source-field"><span class="field-name">strategy</span><span class="field-type">object</span></div>
+      <div class="source-field"><span class="field-name">positions[]</span><span class="field-type">array</span></div>
+      <div class="source-field"><span class="field-name">snapshot_date</span><span class="field-type">date</span></div>
+    </div>
+
+    <div class="formula-box">
+      <div class="formula-title">⚡ Core Scaling Formula</div>
+      <div class="formula-line">entry_cost = len(holdings) × $1,000</div>
+      <div class="formula-line">ratio = tracker.total / starting_capital</div>
+      <div class="formula-line">total_value = entry_cost × ratio</div>
+      <div class="formula-line">gain_loss = total_value − entry_cost</div>
+      <div class="formula-line">gain_loss_pct = gain_loss / entry_cost × 100</div>
+      <div class="formula-line">day_pct = tracker.day_pct  ← capital-neutral</div>
+      <div class="formula-line">day_pnl = total_value × (day_pct / 100)</div>
+    </div>
+
+    <div class="formula-box" style="background:rgba(248,113,113,0.06);border-color:rgba(248,113,113,0.2)">
+      <div class="formula-title" style="color:#f87171;">🔴 Starting Capitals</div>
+      <div class="formula-line" style="color:#fca5a5">wallstbots: $55,000</div>
+      <div class="formula-line" style="color:#fca5a5">lvl13:      $50,000</div>
+      <div class="formula-line" style="color:#fca5a5">bitbot13:   $50,000</div>
+    </div>
+
+  </div>
+
+  <!-- ═══════ PAGES ═══════ -->
+  <div class="pages-col">
+
+    <!-- ══ PUBLIC SECTION ══ -->
+    <div class="zone-header" style="padding:0 0 8px;border:none;margin:0 0 8px">PUBLIC PAGES</div>
+
+    <!-- HOME / FUND CARDS ON HOMEPAGE -->
+    <div class="page-section">
+      <div class="page-label">
+        🏠 Homepage — Fund Cards (renderHome) &amp; The Race (renderRace)
+        <span class="page-badge badge-public">PUBLIC</span>
+      </div>
+      <table>
+        <tr><th>UI Label</th><th>Field / Element</th><th>Source</th><th>Notes</th></tr>
+        <tr>
+          <td class="f-label">Today's %</td>
+          <td class="f-name">v.day_pct</td>
+          <td class="f-source f-src-tracker">tracker: funds[fid].value.day_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as members day_pct</td>
+        </tr>
+        <tr>
+          <td class="f-label">Fund Total Value</td>
+          <td class="f-name">v.total</td>
+          <td class="f-source f-src-tracker">tracker: funds[fid].value.total</td>
+          <td><span class="match-badge match-scaled">PLATFORM SCALE</span> not member scale</td>
+        </tr>
+        <tr>
+          <td class="f-label">All-Time P&amp;L $</td>
+          <td class="f-name">v.pnl</td>
+          <td class="f-source f-src-tracker">tracker: funds[fid].value.pnl</td>
+          <td><span class="match-badge match-scaled">PLATFORM SCALE</span></td>
+        </tr>
+        <tr>
+          <td class="f-label">All-Time P&amp;L %</td>
+          <td class="f-name">v.pnl_pct</td>
+          <td class="f-source f-src-tracker">tracker: funds[fid].value.pnl_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as members gain_loss_pct</td>
+        </tr>
+        <tr>
+          <td class="f-label">Today's P&amp;L $</td>
+          <td class="f-name">v.day_pnl</td>
+          <td class="f-source f-src-tracker">tracker: funds[fid].value.day_pnl</td>
+          <td><span class="match-badge match-scaled">PLATFORM SCALE</span></td>
+        </tr>
+        <tr>
+          <td class="f-label">Fallback Cap</td>
+          <td class="f-name">starting_capital</td>
+          <td class="f-source f-src-tracker">tracker: starting_capital || hardcoded per-site</td>
+          <td class="f-note">wallstbots=55k, lvl13=49k, bitbot13=50k</td>
+        </tr>
+      </table>
+    </div>
+
+    <hr class="page-divider">
+
+    <!-- PUBLIC FUND DETAIL PAGE -->
+    <div class="page-section">
+      <div class="page-label">
+        📊 Homepage — Individual Fund Page (renderFund: #/fund/bot13 etc.)
+        <span class="page-badge badge-public">PUBLIC</span>
+      </div>
+      <table>
+        <tr><th>UI Label</th><th>Field / Element</th><th>Source</th><th>Notes</th></tr>
+        <tr>
+          <td class="f-label">Current Value</td>
+          <td class="f-name">v.total</td>
+          <td class="f-source f-src-tracker">tracker: funds[fid].value.total</td>
+          <td><span class="match-badge match-scaled">PLATFORM SCALE</span></td>
+        </tr>
+        <tr>
+          <td class="f-label">All-Time P&amp;L $</td>
+          <td class="f-name">v.pnl</td>
+          <td class="f-source f-src-tracker">tracker: funds[fid].value.pnl</td>
+          <td><span class="match-badge match-scaled">PLATFORM SCALE</span></td>
+        </tr>
+        <tr>
+          <td class="f-label">All-Time P&amp;L %</td>
+          <td class="f-name">v.pnl_pct</td>
+          <td class="f-source f-src-tracker">tracker: funds[fid].value.pnl_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as members gain_loss_pct</td>
+        </tr>
+        <tr>
+          <td class="f-label">Today's Change $</td>
+          <td class="f-name">v.day_pnl</td>
+          <td class="f-source f-src-tracker">tracker: funds[fid].value.day_pnl</td>
+          <td><span class="match-badge match-scaled">PLATFORM SCALE</span></td>
+        </tr>
+        <tr>
+          <td class="f-label">Today's Change %</td>
+          <td class="f-name">v.day_pct</td>
+          <td class="f-source f-src-tracker">tracker: funds[fid].value.day_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as members day_pct</td>
+        </tr>
+        <tr>
+          <td class="f-label">Positions Table: Price</td>
+          <td class="f-name">p.price</td>
+          <td class="f-source f-src-tracker">tracker: funds[fid].positions[].price</td>
+          <td><span class="match-badge match-same">SAME</span> as members positions</td>
+        </tr>
+        <tr>
+          <td class="f-label">Positions Table: Value</td>
+          <td class="f-name">p.value</td>
+          <td class="f-source f-src-tracker">tracker: funds[fid].positions[].value</td>
+          <td><span class="match-badge match-scaled">PLATFORM SCALE</span></td>
+        </tr>
+        <tr>
+          <td class="f-label">Positions Table: P&amp;L $</td>
+          <td class="f-name">p.pnl</td>
+          <td class="f-source f-src-tracker">tracker: funds[fid].positions[].pnl</td>
+          <td><span class="match-badge match-scaled">PLATFORM SCALE</span></td>
+        </tr>
+        <tr>
+          <td class="f-label">Positions Table: P&amp;L %</td>
+          <td class="f-name">p.pnl_pct</td>
+          <td class="f-source f-src-tracker">tracker: funds[fid].positions[].pnl_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as members</td>
+        </tr>
+        <tr>
+          <td class="f-label">Positions Table: Today %</td>
+          <td class="f-name">p.day_pct</td>
+          <td class="f-source f-src-tracker">tracker: funds[fid].positions[].day_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as members</td>
+        </tr>
+      </table>
+    </div>
+
+    <hr class="page-divider">
+
+    <!-- PUBLIC LEADERBOARD -->
+    <div class="page-section">
+      <div class="page-label">
+        🏆 Leaderboard Page (leaderboard.html)
+        <span class="page-badge badge-public">PUBLIC</span>
+      </div>
+      <table>
+        <tr><th>UI Label</th><th>Field / Element</th><th>Source</th><th>Notes</th></tr>
+        <tr>
+          <td class="f-label">Rank</td>
+          <td class="f-name">r.rank</td>
+          <td class="f-source f-src-api">GET /leaderboard?fund={fid}</td>
+          <td class="f-note">Computed server-side by gain_loss_pct desc</td>
+        </tr>
+        <tr>
+          <td class="f-label">Handle</td>
+          <td class="f-name">r.handle</td>
+          <td class="f-source f-src-user">User profile (auth)</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="f-label">Portfolio Name</td>
+          <td class="f-name">r.portfolio_name</td>
+          <td class="f-source f-src-user">User-set bot name</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="f-label">Fund Badge</td>
+          <td class="f-name">r.fund</td>
+          <td class="f-source f-src-db">bot_fund_state: fund slug</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="f-label">All-Time Return %</td>
+          <td class="f-name">r.gain_loss_pct</td>
+          <td class="f-source f-src-db">bot_fund_state: gain_loss_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund all-time %</td>
+        </tr>
+        <tr>
+          <td class="f-label">Days Active</td>
+          <td class="f-name">r.days_active</td>
+          <td class="f-source f-src-db">bot created_at → days since</td>
+          <td></td>
+        </tr>
+      </table>
+    </div>
+
+    <hr class="page-divider">
+
+    <!-- ══ MEMBERS SECTION ══ -->
+    <div class="zone-header" style="padding:0 0 8px;border:none;margin:0 0 8px">MEMBERS AREA</div>
+
+    <!-- DASHBOARD -->
+    <div class="page-section">
+      <div class="page-label">
+        📋 Dashboard (dashboard.html) — Stat Cards
+        <span class="page-badge badge-members">MEMBERS</span>
+      </div>
+      <table>
+        <tr><th>UI Label</th><th>Element ID</th><th>Source</th><th>Notes</th></tr>
+        <tr>
+          <td class="f-label">Best Portfolio Name</td>
+          <td class="f-name">#statBestName</td>
+          <td class="f-source f-src-db">bot_fund_state: lbMap._best_overall.portfolio_name</td>
+          <td class="f-note">Bot with highest day_pct across all funds</td>
+        </tr>
+        <tr>
+          <td class="f-label">Best Return Today %</td>
+          <td class="f-name">#statBestReturn</td>
+          <td class="f-source f-src-db">bot_fund_state: lbMap._best_overall.day_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund day_pct</td>
+        </tr>
+        <tr>
+          <td class="f-label">Portfolio Count</td>
+          <td class="f-name">#statPortfolioCount</td>
+          <td class="f-source f-src-user">User subscription / bot count</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="f-label">Membership Tier</td>
+          <td class="f-name">#statMembership</td>
+          <td class="f-source f-src-user">Stripe subscription plan</td>
+          <td></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="page-section">
+      <div class="page-label">
+        📋 Dashboard (dashboard.html) — Portfolio Cards
+        <span class="page-badge badge-members">MEMBERS</span>
+      </div>
+      <table>
+        <tr><th>UI Label</th><th>Field</th><th>Source</th><th>Notes</th></tr>
+        <tr>
+          <td class="f-label">Portfolio Name</td>
+          <td class="f-name">bot.name</td>
+          <td class="f-source f-src-user">User-set name (bots table)</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="f-label">Holdings Count</td>
+          <td class="f-name">holdings.length</td>
+          <td class="f-source f-src-user">bots.holdings[] count</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="f-label">Total Value</td>
+          <td class="f-name">p.performance.total_value</td>
+          <td class="f-source f-src-db">bot_fund_state: total_value</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund Current Value</td>
+        </tr>
+        <tr>
+          <td class="f-label">All-Time Return % (sort)</td>
+          <td class="f-name">p.performance.gain_loss_pct</td>
+          <td class="f-source f-src-db">bot_fund_state: gain_loss_pct</td>
+          <td class="f-note">Used for sort only, not displayed on card</td>
+        </tr>
+        <tr>
+          <td class="f-label">Best Fund Today (footer line)</td>
+          <td class="f-name">bestFund.display_name + day_pct</td>
+          <td class="f-source f-src-db">bot_fund_state: lbMap[bot.id].day_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as bot-detail leaderboard day_pct</td>
+        </tr>
+        <tr>
+          <td class="f-label">Created Date</td>
+          <td class="f-name">bot.created_at</td>
+          <td class="f-source f-src-user">bots table</td>
+          <td></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="page-section">
+      <div class="page-label">
+        📋 Dashboard (dashboard.html) — BOT13 Session Banner
+        <span class="page-badge badge-members">MEMBERS</span>
+      </div>
+      <table>
+        <tr><th>UI Label</th><th>Field</th><th>Source</th><th>Notes</th></tr>
+        <tr>
+          <td class="f-label">Session Open/Closed</td>
+          <td class="f-name">val.window_open</td>
+          <td class="f-source f-src-db">bot_fund_state: window_open</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="f-label">Session Open Time</td>
+          <td class="f-name">val.session_open_et</td>
+          <td class="f-source f-src-db">bot_fund_state</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="f-label">Today's P&amp;L $</td>
+          <td class="f-name">val.day_pnl</td>
+          <td class="f-source f-src-db">bot_fund_state: day_pnl</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund Today's Change $</td>
+        </tr>
+        <tr>
+          <td class="f-label">Today's P&amp;L %</td>
+          <td class="f-name">val.day_pct</td>
+          <td class="f-source f-src-db">bot_fund_state: day_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund Today's Change %</td>
+        </tr>
+        <tr>
+          <td class="f-label">All-Time P&amp;L $</td>
+          <td class="f-name">val.pnl</td>
+          <td class="f-source f-src-db">bot_fund_state: gain_loss</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund Total P&amp;L $</td>
+        </tr>
+        <tr>
+          <td class="f-label">All-Time P&amp;L %</td>
+          <td class="f-name">val.pnl_pct</td>
+          <td class="f-source f-src-db">bot_fund_state: gain_loss_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund Total P&amp;L %</td>
+        </tr>
+        <tr>
+          <td class="f-label">Holding Cash flag</td>
+          <td class="f-name">val.holding_cash</td>
+          <td class="f-source f-src-db">bot_fund_state: holding_cash</td>
+          <td class="f-note">BOT13 only — always true after session end</td>
+        </tr>
+        <tr>
+          <td class="f-label">Positions (ticker, P&amp;L, day%)</td>
+          <td class="f-name">val.positions[]</td>
+          <td class="f-source f-src-db">bot_fund_state: positions[]</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund holdings table</td>
+        </tr>
+      </table>
+    </div>
+
+    <hr class="page-divider">
+
+    <!-- BOT-DETAIL -->
+    <div class="page-section">
+      <div class="page-label">
+        🤖 Bot Detail (bot-detail.html) — Leaderboard Strip
+        <span class="page-badge badge-members">MEMBERS</span>
+      </div>
+      <table>
+        <tr><th>UI Label</th><th>Field</th><th>Source</th><th>Notes</th></tr>
+        <tr>
+          <td class="f-label">Fund Name (each of 5)</td>
+          <td class="f-name">FUND_META[fid].name</td>
+          <td class="f-source f-src-formula">Hardcoded metadata</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="f-label">Today's % (each of 5 funds)</td>
+          <td class="f-name">FUND_STATES[fid].day_pct</td>
+          <td class="f-source f-src-db">bot_fund_state: day_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund Today's Change % and dashboard best return</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="page-section">
+      <div class="page-label">
+        🤖 Bot Detail (bot-detail.html) — Fund Popover (click a fund chip)
+        <span class="page-badge badge-members">MEMBERS</span>
+      </div>
+      <table>
+        <tr><th>UI Label</th><th>Field</th><th>Source</th><th>Notes</th></tr>
+        <tr>
+          <td class="f-label">Current Value</td>
+          <td class="f-name">fs.total_value</td>
+          <td class="f-source f-src-db">bot_fund_state: total_value</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund Current Value</td>
+        </tr>
+        <tr>
+          <td class="f-label">Entry Cost</td>
+          <td class="f-name">fs.entry_cost</td>
+          <td class="f-source f-src-db">bot_fund_state: entry_cost</td>
+          <td class="f-note">= len(holdings) × $1,000</td>
+        </tr>
+        <tr>
+          <td class="f-label">All-Time Gain $</td>
+          <td class="f-name">fs.gain_loss</td>
+          <td class="f-source f-src-db">bot_fund_state: gain_loss</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund Total P&amp;L $</td>
+        </tr>
+        <tr>
+          <td class="f-label">All-Time Gain %</td>
+          <td class="f-name">fs.gain_loss_pct</td>
+          <td class="f-source f-src-db">bot_fund_state: gain_loss_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund Total P&amp;L %</td>
+        </tr>
+        <tr>
+          <td class="f-label">Today's Change $</td>
+          <td class="f-name">fs.day_pnl</td>
+          <td class="f-source f-src-db">bot_fund_state: day_pnl</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund Today's Change $</td>
+        </tr>
+        <tr>
+          <td class="f-label">Today's Change %</td>
+          <td class="f-name">fs.day_pct</td>
+          <td class="f-source f-src-db">bot_fund_state: day_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund Today's Change %</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="page-section">
+      <div class="page-label">
+        🤖 Bot Detail (bot-detail.html) — Header / Hero Stats
+        <span class="page-badge badge-members">MEMBERS</span>
+      </div>
+      <table>
+        <tr><th>UI Label</th><th>Field</th><th>Source</th><th>Notes</th></tr>
+        <tr>
+          <td class="f-label">Total Value (hero)</td>
+          <td class="f-name">perf.total_value</td>
+          <td class="f-source f-src-db">bot_fund_state (active fund): total_value</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund Current Value</td>
+        </tr>
+        <tr>
+          <td class="f-label">Entry Cost</td>
+          <td class="f-name">perf.entry_cost</td>
+          <td class="f-source f-src-db">bot_fund_state: entry_cost</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="f-label">Gain/Loss $</td>
+          <td class="f-name">perf.gain_loss</td>
+          <td class="f-source f-src-db">bot_fund_state: gain_loss</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund Total P&amp;L $</td>
+        </tr>
+        <tr>
+          <td class="f-label">Gain/Loss %</td>
+          <td class="f-name">perf.gain_loss_pct</td>
+          <td class="f-source f-src-db">bot_fund_state: gain_loss_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as portfolio-fund Total P&amp;L %</td>
+        </tr>
+        <tr>
+          <td class="f-label">Holdings count · $ allocated</td>
+          <td class="f-name">holdings.length × $1,000</td>
+          <td class="f-source f-src-formula">Calculated: len(holdings) × 1000</td>
+          <td></td>
+        </tr>
+      </table>
+    </div>
+
+    <hr class="page-divider">
+
+    <!-- PORTFOLIO-FUND -->
+    <div class="page-section">
+      <div class="page-label">
+        💼 Portfolio Fund Page (portfolio-fund.html) — Stat Cards
+        <span class="page-badge badge-members">MEMBERS</span>
+      </div>
+      <table>
+        <tr><th>UI Label</th><th>Element ID</th><th>Source</th><th>Notes</th></tr>
+        <tr>
+          <td class="f-label">Current Value</td>
+          <td class="f-name">#fsTotal</td>
+          <td class="f-source f-src-db">bot_fund_state: total_value</td>
+          <td><span class="match-badge match-same">SAME</span> as bot-detail popover &amp; dashboard card</td>
+        </tr>
+        <tr>
+          <td class="f-label">Started at $X</td>
+          <td class="f-name">#fsStarted</td>
+          <td class="f-source f-src-formula">len(holdings) × $1,000</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="f-label">Total P&amp;L $</td>
+          <td class="f-name">#fsPnl</td>
+          <td class="f-source f-src-db">bot_fund_state: gain_loss</td>
+          <td><span class="match-badge match-same">SAME</span> as bot-detail popover gain_loss</td>
+        </tr>
+        <tr>
+          <td class="f-label">Total P&amp;L % all-time</td>
+          <td class="f-name">#fsPnlPct</td>
+          <td class="f-source f-src-db">bot_fund_state: gain_loss_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as leaderboard gain_loss_pct</td>
+        </tr>
+        <tr>
+          <td class="f-label">Today's Change $</td>
+          <td class="f-name">#fsDayPnl</td>
+          <td class="f-source f-src-db">bot_fund_state: day_pnl</td>
+          <td><span class="match-badge match-same">SAME</span> as dashboard banner day_pnl</td>
+        </tr>
+        <tr>
+          <td class="f-label">Today's Change %</td>
+          <td class="f-name">#fsDayPct</td>
+          <td class="f-source f-src-db">bot_fund_state: day_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as bot-detail leaderboard &amp; homepage day_pct</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="page-section">
+      <div class="page-label">
+        💼 Portfolio Fund Page (portfolio-fund.html) — Holdings Table
+        <span class="page-badge badge-members">MEMBERS</span>
+      </div>
+      <table>
+        <tr><th>UI Label</th><th>Field</th><th>Source</th><th>Notes</th></tr>
+        <tr>
+          <td class="f-label">Ticker</td>
+          <td class="f-name">p.ticker</td>
+          <td class="f-source f-src-db">bot_fund_state: positions[].ticker</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="f-label">Price</td>
+          <td class="f-name">p.price</td>
+          <td class="f-source f-src-db">bot_fund_state: positions[].price</td>
+          <td><span class="match-badge match-same">SAME</span> as public fund page positions price</td>
+        </tr>
+        <tr>
+          <td class="f-label">Value</td>
+          <td class="f-name">p.value</td>
+          <td class="f-source f-src-db">bot_fund_state: positions[].value</td>
+          <td><span class="match-badge match-scaled">MEMBER SCALE</span> (≠ public)</td>
+        </tr>
+        <tr>
+          <td class="f-label">Today % (each position)</td>
+          <td class="f-name">p.day_pct / h.day_pct</td>
+          <td class="f-source f-src-db">bot_fund_state: positions[].day_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as public fund page positions day_pct</td>
+        </tr>
+        <tr>
+          <td class="f-label">P&amp;L $ (per position)</td>
+          <td class="f-name">p.pnl</td>
+          <td class="f-source f-src-db">bot_fund_state: positions[].pnl</td>
+          <td><span class="match-badge match-scaled">MEMBER SCALE</span></td>
+        </tr>
+        <tr>
+          <td class="f-label">P&amp;L % (per position)</td>
+          <td class="f-name">p.pnl_pct</td>
+          <td class="f-source f-src-db">bot_fund_state: positions[].pnl_pct</td>
+          <td><span class="match-badge match-same">SAME</span> as public fund page</td>
+        </tr>
+        <tr>
+          <td class="f-label">Holding Cash message</td>
+          <td class="f-name">fundState.holding_cash</td>
+          <td class="f-source f-src-db">bot_fund_state: holding_cash</td>
+          <td class="f-note">BOT13 only — shows "End of trading — holding cash"</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="page-section">
+      <div class="page-label">
+        💼 Portfolio Fund Page (portfolio-fund.html) — Performance Chart
+        <span class="page-badge badge-members">MEMBERS</span>
+      </div>
+      <table>
+        <tr><th>UI Label</th><th>Field</th><th>Source</th><th>Notes</th></tr>
+        <tr>
+          <td class="f-label">Chart data points (value over time)</td>
+          <td class="f-name">snapshots[].total_value</td>
+          <td class="f-source f-src-db">bot_fund_state historical snapshots</td>
+          <td><span class="match-badge match-scaled">MEMBER SCALE</span></td>
+        </tr>
+        <tr>
+          <td class="f-label">Chart label (final return %)</td>
+          <td class="f-name">snapshots[-1].gain_loss_pct</td>
+          <td class="f-source f-src-db">bot_fund_state snapshots</td>
+          <td><span class="match-badge match-same">SAME</span> as stat card Total P&amp;L %</td>
+        </tr>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="rules-section">
+  <div class="rules-title">⚠️ Data Integrity Rules — Read Before Making Any Change</div>
+
+  <div class="rule">
+    <span class="rule-num">1</span>
+    <span class="rule-text"><strong>Single source of truth for member dollar values is <code>bot_fund_state</code>.</strong> Written exclusively by <code>refresh_portfolios.py</code>. Never hardcode or compute member dollar values in the frontend — always read from this table.</span>
+  </div>
+  <div class="rule">
+    <span class="rule-num">2</span>
+    <span class="rule-text"><strong><code>day_pct</code> is capital-neutral</strong> — it is the same number on the public homepage, bot-detail leaderboard, portfolio-fund stat card, and dashboard best return. If you change how <code>day_pct</code> is calculated in <code>refresh_portfolios.py</code>, all 4 locations update automatically. If you change it only in the frontend on one page, the pages will diverge.</span>
+  </div>
+  <div class="rule">
+    <span class="rule-num">3</span>
+    <span class="rule-text"><strong>Dollar values differ by scale.</strong> Public pages show platform-scale dollars (tracker). Members pages show member-scale dollars (bot_fund_state). <em>Never</em> compare or cross-display these dollar amounts. Percentages (<code>day_pct</code>, <code>gain_loss_pct</code>, position <code>pnl_pct</code>) are the same on both sides.</span>
+  </div>
+  <div class="rule">
+    <span class="rule-num">4</span>
+    <span class="rule-text"><strong>Starting capital hardcoded per platform:</strong> <code>wallstbots=$55,000</code>, <code>lvl13=$49,000</code>, <code>bitbot13=$50,000</code>. This value appears in <code>refresh_portfolios.py</code> and as fallback in <code>app.js fundCard()</code>. If it changes, update both places.</span>
+  </div>
+  <div class="rule">
+    <span class="rule-num">5</span>
+    <span class="rule-text"><strong><code>entry_cost = len(holdings) × $1,000</code> always.</strong> It is never stored as a variable dependent on anything else. If a member adds or removes a holding, <code>entry_cost</code> changes and <code>refresh_portfolios.py</code> must re-run to recalculate all derived values.</span>
+  </div>
+  <div class="rule">
+    <span class="rule-num">6</span>
+    <span class="rule-text"><strong>BOT13 <code>holding_cash</code> must always be <code>true</code> after session end</strong>, regardless of the trading decision made that day. Formula: <code>holding_cash = decision in ("CASH","HOLD") OR session_ended</code>. This flag controls the "End of trading — holding cash" message on portfolio-fund and suppresses positions on the dashboard banner.</span>
+  </div>
+  <div class="rule">
+    <span class="rule-num">7</span>
+    <span class="rule-text"><strong>The leaderboard (<code>leaderboard.html</code>) ranks by <code>gain_loss_pct</code> (all-time).</strong> The bot-detail leaderboard strip shows <code>day_pct</code> (today). These are intentionally different and serve different purposes. Do not conflate them.</span>
+  </div>
+  <div class="rule">
+    <span class="rule-num">8</span>
+    <span class="rule-text"><strong>All timezone-sensitive operations must use ET (<code>America/New_York</code>).</strong> This applies to session open/close detection, <code>snapshot_date</code>, and <code>holding_cash</code> determination in <code>refresh_portfolios.py</code>.</span>
+  </div>
+  <div class="rule">
+    <span class="rule-num">9</span>
+    <span class="rule-text"><strong>Public fund pages (homepage) only show Bot13, Oracle, Wizard.</strong> Equalizer and Titan are members-only. If you add a public-facing view for baselines, ensure their tracker data is included in <code>/public/tracker/state</code>.</span>
+  </div>
+  <div class="rule">
+    <span class="rule-num">10</span>
+    <span class="rule-text"><strong>Any frontend fallback value must use the same formula as the backend.</strong> E.g. the dashboard's <code>dayPnl</code> fallback is <code>total - day_open</code>. If the backend formula changes, the frontend fallback must be updated to match, or removed.</span>
+  </div>
+</div>
+
+</body>
+</html>

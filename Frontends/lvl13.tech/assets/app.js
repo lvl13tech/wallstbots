@@ -148,7 +148,7 @@ function isAIQ(item) {
   return s.includes('ai') || s.includes('quantum');
 }
 function getYoursHint(msg) {
-  msg = msg || 'Like what you see? Build this on YOUR stocks.';
+  msg = msg || 'Like what you see? Join and run the same system on your own stocks.';
   return '<a class="get-yours-hint" href="#/get-yours" style="text-decoration:none"><span class="arrow">→</span><span class="msg">'+msg+'</span><span class="pill">GET YOURS</span></a>';
 }
 function fundCard(fid, data) {
@@ -266,7 +266,7 @@ function renderHome() {
     + '</div>'
     + '<p style="text-align:center;color:var(--muted);font-size:13px;margin:0 0 36px;line-height:1.6">One login for stocks or cryptocurrencies. Your trading market research platform — Level 13.</p>'
 
-    + getYoursHint('Run this exact dashboard on YOUR stocks. Custom bots, custom news.');
+    + getYoursHint('Join and run the same 5 bots on your own stock picks.');
   drawTrajectory();
 }
 
@@ -300,7 +300,7 @@ function renderNewsAll() {
          '<div class="card"><h3 style="color:var(--blue)">✓ '+p[0]+'</h3>'
          + '<p style="color:var(--muted);font-size:13px;margin:0">'+p[1]+'</p></div>').join('')
     + '</div>'
-    + getYoursHint('Build the same news feed on YOUR sectors.');
+    + getYoursHint('Join and get this news feed filtered to your own sectors.');
 }
 
 // ============ PAGE: HOW IT WORKS ============
@@ -332,7 +332,7 @@ function renderHowItWorks() {
     + '<h3>What You Get</h3><div class="grid grid-3">'+featureCards+'</div>'
     + '<div class="sales-strip" style="margin-top:24px"><div><h3>The Challenge.</h3>'
     + '<p>Can three Claude-built bots beat two passive strategies on the same universe with the same money?</p></div></div>'
-    + getYoursHint('Want this on YOUR stocks, with YOUR sectors?');
+    + getYoursHint('Join and get these signals on your own stock list.');
 }
 
 // ============ PAGE: THE RACE ============
@@ -340,7 +340,7 @@ function renderRace() {
   const cards = FUND_ORDER.map(fid =>
     fundCard(fid, STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null)).join('');
   $('app').innerHTML = '<h1>The Race</h1>'
-    + '<p class="sub">Five strategies. '+fmt$0((STATE.funds&&STATE.funds.starting_capital)||49000)+' each. Same 50-stock universe. Refreshed live.</p>'
+    + '<p class="sub">Five strategies. '+fmt$0((STATE.funds&&STATE.funds.starting_capital)||50000)+' each. Same 50-stock universe. Refreshed live.</p>'
     + '<div class="grid grid-5">'+cards+'</div>'
     + '<div class="panel" style="margin-top:24px"><h3>Performance Trajectory — All 5 Strategies</h3>'
     + '<div class="chart-wrap"><canvas id="chartRace"></canvas></div></div>'
@@ -616,6 +616,7 @@ let GY_TIER       = 'member';
 let GY_REF        = '';
 let GY_VALID      = false;
 let GY_ADMIN_CODE = '';   // set when an admin lifetime code is applied
+let GY_ADMIN_TIER = 'insider'; // tier granted by the admin code ('insider' or 'syndicate')
 
 function renderGetYours() {
   const urlRef = new URLSearchParams(location.search).get('ref')
@@ -682,7 +683,7 @@ function renderGetYours() {
 
     // ── Subscribe box ──
     + '<div class="sales-hero"><div class="sales-hero-left">'
-    + '<h2 style="font-size:28px;letter-spacing:-0.5px">BUILD YOUR OWN</h2>'
+    + '<h2 style="font-size:28px;letter-spacing:-0.5px">YOUR PORTFOLIO. YOUR STOCKS.</h2>'
     + '<p style="color:var(--muted);font-size:15px">Pick up to 50 AI &amp; Quantum stocks. Daily, weekly, and monthly AI bots. Custom news feed. Sunday auto-reports.</p>'
     + '<div id="activePriceLabel" style="color:var(--blue);font-weight:700;font-size:15px"></div>'
     + '</div><div class="sales-hero-right">'
@@ -715,6 +716,7 @@ function renderGetYours() {
   GY_REF        = '';
   GY_VALID      = false;
   GY_ADMIN_CODE = '';
+  GY_ADMIN_TIER = 'insider';
   updateGyPricing();
   if (urlRef) { const inp = $('refInput'); if (inp) inp.value = urlRef.toUpperCase(); applyRefCode(); }
 }
@@ -810,8 +812,9 @@ async function applyRefCode() {
     const d = await r.json();
     if (d.valid && d.type === 'admin_lifetime') {
       GY_ADMIN_CODE = code;
+      GY_ADMIN_TIER = d.tier || 'insider';
       GY_REF = ''; GY_VALID = false;
-      msg.innerHTML = '<span style="color:#ff8c00;font-weight:700">🎉 Admin code verified — free lifetime INSIDER access! Enter your details below to claim.</span>';
+      msg.innerHTML = '<span style="color:#ff8c00;font-weight:700">🎉 Admin code verified — free lifetime ' + GY_ADMIN_TIER.toUpperCase() + ' access! Enter your details below to claim.</span>';
       renderPaypalForm();
     } else if (d.valid) {
       GY_ADMIN_CODE = '';
@@ -840,12 +843,12 @@ function renderPaypalForm() {
   if (GY_ADMIN_CODE) {
     wrap.innerHTML =
       '<div style="background:var(--surface2);border-radius:12px;padding:24px;max-width:360px">'
-      + '<p style="color:#ff8c00;font-weight:700;margin-bottom:16px">🎉 Free Lifetime INSIDER Access</p>'
+      + '<p style="color:#ff8c00;font-weight:700;margin-bottom:16px">🎉 Free Lifetime ' + GY_ADMIN_TIER.toUpperCase() + ' Access</p>'
       + '<div style="margin-bottom:12px"><label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px">EMAIL</label>'
       + '<input type="email" id="admin-email" placeholder="you@example.com" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:10px 14px;font-size:14px;box-sizing:border-box"></div>'
       + '<div style="margin-bottom:16px"><label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px">PASSWORD</label>'
       + '<input type="password" id="admin-password" placeholder="At least 8 characters" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:10px 14px;font-size:14px;box-sizing:border-box"></div>'
-      + '<button onclick="claimAdminAccess()" style="width:100%;background:#ff8c00;color:#fff;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:700;cursor:pointer">Claim Free INSIDER Access</button>'
+      + '<button onclick="claimAdminAccess()" style="width:100%;background:#ff8c00;color:#fff;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:700;cursor:pointer">Claim Free ' + GY_ADMIN_TIER.toUpperCase() + ' Access</button>'
       + '<p id="admin-claim-msg" style="margin-top:10px;font-size:13px;color:var(--muted)"></p>'
       + '</div>';
     return;
@@ -1019,11 +1022,11 @@ async function renderMyTracker() {
         + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
         + '<span style="background:' + f.color + ';color:#000;font-weight:700;font-size:11px;padding:3px 8px;border-radius:5px">' + f.name + '</span>'
         + '<span style="color:var(--muted);font-size:11px">' + f.current_strategy + '</span></div>'
-        + '<div style="font-size:22px;font-weight:700;margin-bottom:2px">$' + v.total.toLocaleString() + '</div>'
+        + '<div style="font-size:22px;font-weight:700;margin-bottom:2px">' + fmt$0(v.total) + '</div>'
         + '<div style="font-size:13px;color:' + (v.pnl >= 0 ? 'var(--green)' : 'var(--red)') + '">'
-        + sign + '$' + Math.abs(v.pnl).toLocaleString() + ' (' + sign + v.pnl_pct.toFixed(1) + '%)</div>'
+        + fmt$0(v.pnl) + ' (' + fmtPct(v.pnl_pct) + ')</div>'
         + '<div style="font-size:12px;color:var(--muted);margin-top:4px">Today: '
-        + (v.day_pnl >= 0 ? '+' : '') + '$' + Math.abs(v.day_pnl).toFixed(0) + '</div></div>';
+        + fmtPct(v.day_pct) + '</div></div>';
     });
     html += '</div>';
 
@@ -1215,19 +1218,22 @@ async function claimAdminAccess() {
 }
 
 function renderThanksAdmin() {
-  $('app').innerHTML =
-    '<section class="hero"><div class="hero-content">'
-    + '<h1>You\'re in. 🎉</h1>'
-    + '<p style="font-size:1.15rem;margin-bottom:8px"><strong style="color:var(--blue)">INSIDER FREE · LIFETIME</strong></p>'
-    + '<p>Your free lifetime INSIDER access has been activated. Log in now to get started.</p>'
-    + '<div class="hero-ctas">'
-    + '<a class="btn btn-primary" href="https://lvl13.tech/login.html">Log In →</a>'
-    + '</div></div></section>'
-    + '<div class="panel" style="margin-top:24px;border:2px solid var(--blue)">'
+  const tierLabel = GY_ADMIN_TIER.toUpperCase();
+  const upsell = GY_ADMIN_TIER === 'syndicate' ? '' :
+    '<div class="panel" style="margin-top:24px;border:2px solid var(--blue)">'
     + '<h3 style="color:var(--blue);margin-bottom:8px">Want even more?</h3>'
     + '<p style="color:var(--muted);margin-bottom:16px">Upgrade to <strong style="color:var(--fg)">SYNDICATE</strong> for just <strong style="color:var(--fg)">$30/mo more</strong> and unlock our full signal suite, priority alerts, and exclusive syndicate reports.</p>'
     + '<a class="btn btn-primary" href="#/get-yours">Upgrade to SYNDICATE — $30/mo</a>'
     + '</div>';
+  $('app').innerHTML =
+    '<section class="hero"><div class="hero-content">'
+    + '<h1>You\'re in. 🎉</h1>'
+    + '<p style="font-size:1.15rem;margin-bottom:8px"><strong style="color:var(--blue)">' + tierLabel + ' FREE · LIFETIME</strong></p>'
+    + '<p>Your free lifetime ' + tierLabel + ' access has been activated. Log in now to get started.</p>'
+    + '<div class="hero-ctas">'
+    + '<a class="btn btn-primary" href="https://lvl13.tech/login.html">Log In →</a>'
+    + '</div></div></section>'
+    + upsell;
 }
 
 // ============ PAGE: THANKS ============
@@ -1262,6 +1268,7 @@ const FAQS = [
   { q: ['real money','live trade','execute','broker'], a: "No — these are paper portfolios for research and signals only. We never touch a brokerage account. You see what the bots would do, then decide for yourself." },
   { q: ['mobile','phone','app','iphone','android'], a: "Fully mobile-optimized. Open it in your phone's browser — no app download needed. Your dashboard, portfolio, and all bot data work on any screen size." },
   { q: ['data','privacy','share','sell my'], a: "Your data stays yours. We don't share or sell it. Your tracker runs on a private endpoint — only you see it." },
+  { q: ['custom bot','custom strategy','build your own','bespoke','custom plan','custom setup'], a: "Interested in a custom bot or strategy? Fill out a support ticket below and we'll reach out to discuss your setup." },
   { q: ['contact','support','help','email','reach'], a: "Use this chat to open a support ticket anytime — just type 'support ticket' or click the Support button above." },
   { q: ['how long','setup','time','when'], a: "Your tracker is live within 24 hours of checkout. You'll get an email with your private dashboard link." },
 ];

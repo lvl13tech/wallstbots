@@ -224,14 +224,14 @@ function platformBadge(platform) {
   const map = {
     wallstbots: { label: 'WSB',  color: '#00d4ff', bg: 'rgba(0,212,255,0.1)',  border: 'rgba(0,212,255,0.25)'  },
     bitbot13:   { label: 'BB13', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)' },
-    lvl13:      { label: 'L13',  color: '#a855f7', bg: 'rgba(168,85,247,0.1)', border: 'rgba(168,85,247,0.25)' },
+    aistocks:   { label: 'AIS',  color: '#a855f7', bg: 'rgba(168,85,247,0.1)', border: 'rgba(168,85,247,0.25)' },
   };
   const p = map[platform] || map.wallstbots;
   return `<span style="display:inline-block;font-size:0.62rem;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:0.5px;background:${p.bg};color:${p.color};border:1px solid ${p.border}">${p.label}</span>`;
 }
 
 function portfolioUrl(platform, botId) {
-  const bases = { wallstbots:'https://wallstbots.tech', bitbot13:'https://bitbot13.tech', lvl13:'https://lvl13.tech' };
+  const bases = { wallstbots:'https://wallstbots.tech', bitbot13:'https://bitbot13.tech', aistocks:'https://aistocks.tech' };
   return (bases[platform] || 'https://wallstbots.tech') + '/portfolio-fund.html?id=' + botId + '&public=1';
 }
 

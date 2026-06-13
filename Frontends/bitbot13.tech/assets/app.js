@@ -1,6 +1,6 @@
 /* ================================================================
    bitbot13.tech — single-page app  v1
-   Identical engine to lvl13.tech — top 50 crypto universe
+   Part of the Wall St. Bots platform — crypto universe — top 50 crypto universe
    ================================================================ */
 
 const STATE = { funds: null, news: null, signals: null, reports: null,
@@ -243,16 +243,16 @@ function renderHome() {
 
     + '<div class="card" style="display:flex;flex-direction:column">'
     + '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--blue);margin-bottom:12px;text-transform:uppercase">Our<br>AI &amp; Quantum<br>Bots</div>'
-    + '<a href="https://lvl13.tech" target="_blank" rel="noopener">'
-    + '<img src="assets/logo-lvl13.png" alt="lvl13.tech" style="width:100%;max-width:200px;height:auto;display:block;margin-bottom:14px;border-radius:8px"></a>'
+    + '<a href="https://aistocks.tech" target="_blank" rel="noopener">'
+    + '<img src="assets/logo-aistocks.png" alt="aistocks.tech" style="width:100%;max-width:200px;height:auto;display:block;margin-bottom:14px;border-radius:8px"></a>'
     + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 14px;flex:1">The same AI intelligence applied to 43 hand-picked AI &amp; Quantum stocks. Daily signals, live leaderboards, and weekly performance reports.</p>'
-    + '<a class="btn btn-secondary" href="https://lvl13.tech" target="_blank" rel="noopener" style="font-size:12px;margin-top:auto">Visit lvl13.tech →</a>'
+    + '<a class="btn btn-secondary" href="https://aistocks.tech" target="_blank" rel="noopener" style="font-size:12px;margin-top:auto">Visit aistocks.tech →</a>'
     + '</div>'
 
     + '</div>'
     + '<p style="text-align:center;color:var(--muted);font-size:13px;margin:0 0 36px;line-height:1.6">One login for stocks or cryptocurrencies. Your trading market research platform — Level 13.</p>'
 
-    + getYoursHint('Run this exact dashboard on YOUR coins. Custom bots, custom news.');
+    + getYoursHint('Join and run the same 5 bots on your own crypto picks.');
   drawTrajectory();
 }
 
@@ -283,7 +283,7 @@ function renderNewsAll() {
          '<div class="card"><h3 style="color:var(--blue)">✓ '+p[0]+'</h3>'
          + '<p style="color:var(--muted);font-size:13px;margin:0">'+p[1]+'</p></div>').join('')
     + '</div>'
-    + getYoursHint('Build the same news feed on YOUR coins.');
+    + getYoursHint('Join and get this news feed filtered to your own crypto picks.');
 }
 
 // ============ PAGE: HOW IT WORKS ============
@@ -315,7 +315,7 @@ function renderHowItWorks() {
     + '<h3>What You Get</h3><div class="grid grid-3">'+featureCards+'</div>'
     + '<div class="sales-strip" style="margin-top:24px"><div><h3>The Challenge.</h3>'
     + '<p>Can three bots beat two passive strategies on the same 50-coin universe with the same money? Crypto never sleeps — neither do the bots.</p></div></div>'
-    + getYoursHint('Want this on YOUR coins, with YOUR picks?');
+    + getYoursHint('Join and get these signals running on your own coin picks.');
 }
 
 // ============ PAGE: THE RACE ============
@@ -639,8 +639,8 @@ function renderGetYours() {
 
     // ── Subscribe box ──
     + '<div class="sales-hero"><div class="sales-hero-left">'
-    + '<h2 style="font-size:28px;letter-spacing:-0.5px">BUILD YOUR OWN</h2>'
-    + '<p style="color:var(--muted);font-size:15px">Pick up to 50 coins from any chain. Daily, weekly, and monthly AI bots. Custom crypto news. Sunday auto-reports.</p>'
+    + '<h2 style="font-size:28px;letter-spacing:-0.5px">YOUR PORTFOLIO. YOUR COINS.</h2>'
+    + '<p style="color:var(--muted);font-size:15px">Pick up to 50 coins from any chain. Daily, weekly, and monthly AI bots. Crypto news filtered to your picks. Sunday auto-reports.</p>'
     + '<div id="activePriceLabel" style="color:var(--blue);font-weight:700;font-size:15px"></div>'
     + '</div><div class="sales-hero-right">'
     + '<h3>Subscribe with Stripe</h3>'
@@ -993,6 +993,7 @@ const FAQS = [
   { q: ['data','privacy','share','sell my'], a: "Your data stays yours. We don't share or sell it. Your tracker runs on a private endpoint — only you see it." },
   { q: ['contact','support','help','email','reach'], a: "Use this chat to open a support ticket anytime — just type 'support ticket' or click the Support button above." },
   { q: ['how long','setup','time','when'], a: "Your tracker is live within 24 hours of checkout. You'll get an email with your private dashboard link." },
+  { q: ['custom bot','custom strategy','bespoke','custom plan','custom setup','custom crypto','custom coin'], a: "Interested in a custom bot or strategy for your own domain? Fill out a support ticket below and we'll reach out to discuss your setup." },
 ];
 function botAnswer(input) {
   const q = (input || '').toLowerCase().trim();
@@ -1015,12 +1016,12 @@ function chatbotAddMsg(text, who) {
 let _ticketState = null;
 let _ticketIssue = '';
 function _ticketEmail() {
-  const tok = localStorage.getItem('auth_token') || localStorage.getItem('lvl13_jwt');
+  const tok = localStorage.getItem('auth_token') || localStorage.getItem('aistocks_jwt');
   if (!tok) return null;
   try { return JSON.parse(atob(tok.split('.')[1])).email || null; } catch { return null; }
 }
 function _ticketName() {
-  const tok = localStorage.getItem('auth_token') || localStorage.getItem('lvl13_jwt');
+  const tok = localStorage.getItem('auth_token') || localStorage.getItem('aistocks_jwt');
   if (!tok) return null;
   try {
     const p = JSON.parse(atob(tok.split('.')[1]));
@@ -1145,20 +1146,5 @@ function updateNavAuthState() {
 }
 
 function navSignOut() {
-  ['bitbot13_jwt','auth_token','lvl13_jwt','wallstbots_jwt',
-   'wallstbots_refresh','wallstbots_user'].forEach(k => localStorage.removeItem(k));
-  window.location.href = '/';
-}
-
-function boot() {
-  wireUI();
-  updateNavAuth();
-  updateNavAuthState();
-  loadAll();
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', boot);
-} else {
-  boot();
-}
+  ['bitbot13_jwt','auth_token','aistocks_jwt','wallstbots_jwt',
+   'wallstbots_refresh','wal
