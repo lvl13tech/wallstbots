@@ -1482,6 +1482,20 @@
     btn.disabled = false; btn.textContent = "Save";
   }
 
+  async function openStripePortal() {
+    try {
+      const jwt = auth.getToken ? auth.getToken() : (auth._token || localStorage.getItem('auth_token') || '');
+      const r = await fetch(BACKEND_URL + '/stripe/portal', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + jwt, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ origin: location.origin })
+      });
+      const d = await r.json();
+      if (d.url) { window.open(d.url, '_blank'); }
+      else { alert(d.detail || 'Could not open billing portal. Please contact support.'); }
+    } catch(e) { alert('Error opening billing portal. Please contact support.'); }
+  }
+
   async function loadSubscription() {
     try { subscription = await api.getSubscription(); renderSubscription(); } catch(e) {}
   }
