@@ -1255,4 +1255,30 @@ function wireUI() {
     if (e.key === 'Escape') { closeMenu(); chatbotClose(); }
   });
   window.addEventListener('hashchange', () => {
-    try { route()
+    try { route(); } catch(e) { console.error('Route error', e); }
+  });
+}
+
+function updateNavAuth() {
+  const nav = document.getElementById('siteNav');
+  if (!nav) return;
+  const existing = nav.querySelector('[data-route="/my-tracker"]');
+  if (existing) existing.remove();
+}
+
+function updateNavAuthState() {
+  const loginBtn   = document.getElementById('navLoginBtn');
+  const dashBtn    = document.getElementById('navDashBtn');
+  const signOutBtn = document.getElementById('navSignOutBtn');
+  if (!loginBtn || !dashBtn) return;
+  const loggedIn = !!(localStorage.getItem('wallstbots_jwt') || localStorage.getItem('auth_token'));
+  loginBtn.style.display   = loggedIn ? 'none' : '';
+  dashBtn.style.display    = loggedIn ? ''     : 'none';
+  if (signOutBtn) signOutBtn.style.display = loggedIn ? '' : 'none';
+}
+
+function navSignOut() {
+  ['wallstbots_jwt','auth_token','aistocks_jwt','bitbot13_jwt','wallstbots_refresh'].forEach(k => localStorage.removeItem(k));
+  window.location.hash = '#/';
+  updateNavAuthState();
+}

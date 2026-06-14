@@ -1146,5 +1146,7 @@ function updateNavAuthState() {
 }
 
 function navSignOut() {
-  ['bitbot13_jwt','auth_token','aistocks_jwt','wallstbots_jwt',
-   'wallstbots_refresh','wal
+  ['bitbot13_jwt','auth_token','aistocks_jwt','wallstbots_jwt','wallstbots_refresh'].forEach(k => localStorage.removeItem(k));
+  window.location.hash = '#/';
+  updateNavAuthState();
+}

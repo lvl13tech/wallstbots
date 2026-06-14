@@ -1432,12 +1432,11 @@ function updateNavAuthState() {
 }
 
 function navSignOut() {
-  ['lvl13_jwt','auth_token','wallstbots_jwt','bitbot13_jwt',
-   'wallstbots_refresh','wallstbots_user'].forEach(k => localStorage.removeItem(k));
-  window.location.href = '/';
+  ['lvl13_jwt','auth_token','aistocks_jwt','wallstbots_jwt','bitbot13_jwt','wallstbots_refresh'].forEach(k => localStorage.removeItem(k));
+  window.location.hash = '#/';
+  updateNavAuthState();
 }
 
-function boot() {
   wireUI();
   updateNavAuth();
   updateNavAuthState();

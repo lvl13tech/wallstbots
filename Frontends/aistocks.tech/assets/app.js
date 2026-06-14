@@ -1426,4 +1426,13 @@ function updateNavAuthState() {
   const signOutBtn = document.getElementById('navSignOutBtn');
   if (!loginBtn || !dashBtn) return;
   const loggedIn = !!(localStorage.getItem('aistocks_jwt') || localStorage.getItem('auth_token'));
-  loginBtn.style.display   = loggedIn ? 'none' 
+  loginBtn.style.display   = loggedIn ? 'none' : '';
+  dashBtn.style.display    = loggedIn ? ''     : 'none';
+  if (signOutBtn) signOutBtn.style.display = loggedIn ? '' : 'none';
+}
+
+function navSignOut() {
+  ['aistocks_jwt','auth_token','wallstbots_jwt','bitbot13_jwt','wallstbots_refresh'].forEach(k => localStorage.removeItem(k));
+  window.location.hash = '#/';
+  updateNavAuthState();
+}
