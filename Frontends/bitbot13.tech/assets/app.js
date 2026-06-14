@@ -1150,3 +1150,9 @@ function navSignOut() {
   window.location.hash = '#/';
   updateNavAuthState();
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  wireUI();
+  updateNavAuthState();
+  loadAll();
+});
