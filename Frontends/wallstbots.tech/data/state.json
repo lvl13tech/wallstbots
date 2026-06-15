@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-06-12T22:19:02",
+    "last_refresh": "2026-06-15T04:01:13",
     "snapshots": [
       {
         "date": "2026-06-02",
@@ -74,6 +74,14 @@
         "wizard": 53489.83,
         "equalizer": 54373.79,
         "titan": 53827.84
+      },
+      {
+        "date": "2026-06-15",
+        "bot13": 77049.71,
+        "oracle": 55000.0,
+        "wizard": 53489.83,
+        "equalizer": 54373.79,
+        "titan": 53827.84
       }
     ],
     "funds": {
@@ -87,113 +95,22 @@
         "starting_capital": 55000.0,
         "value": {
           "total": 77049.71,
-          "cash": 0.0,
-          "pos_val": 77049.71,
+          "cash": 77049.71,
+          "pos_val": 0.0,
           "pnl": 22049.71,
           "pnl_pct": 40.09,
-          "day_pnl": 4145.21,
-          "day_pct": 5.69,
-          "day_open": 72904.5,
+          "day_pnl": 0.0,
+          "day_pct": 0.0,
+          "day_open": 77049.71,
           "holding_cash": true,
           "window_open": false,
           "session_open_et": "9:30",
           "session_close_et": "16:00",
-          "positions": [
-            {
-              "symbol": "ALB",
-              "shares": 121.713063,
-              "entry_price": 159.06,
-              "current_price": 170.42,
-              "cost_basis": 19359.68,
-              "price": 170.42,
-              "value": 20742.34,
-              "pnl": 1382.66,
-              "pnl_pct": 7.14,
-              "day_pnl": 1382.66,
-              "day_pct": 7.14,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-12T16:32:08",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "ARM",
-              "shares": 42.35015,
-              "entry_price": 342.23,
-              "current_price": 380.81,
-              "cost_basis": 14493.49,
-              "price": 380.81,
-              "value": 16127.36,
-              "pnl": 1633.87,
-              "pnl_pct": 11.27,
-              "day_pnl": 1633.87,
-              "day_pct": 11.27,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-12T16:32:08",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "BIRK",
-              "shares": 310.14946,
-              "entry_price": 46.21,
-              "current_price": 48.75,
-              "cost_basis": 14332.01,
-              "price": 48.75,
-              "value": 15119.79,
-              "pnl": 787.78,
-              "pnl_pct": 5.5,
-              "day_pnl": 787.78,
-              "day_pct": 5.5,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-12T16:32:08",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "ALAB",
-              "shares": 36.518625,
-              "entry_price": 367.47,
-              "current_price": 367.15,
-              "cost_basis": 13419.5,
-              "price": 367.15,
-              "value": 13407.81,
-              "pnl": -11.69,
-              "pnl_pct": -0.09,
-              "day_pnl": -11.69,
-              "day_pct": -0.09,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-12T16:32:08",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "FCX",
-              "shares": 170.331968,
-              "entry_price": 66.34,
-              "current_price": 68.41,
-              "cost_basis": 11299.82,
-              "price": 68.41,
-              "value": 11652.41,
-              "pnl": 352.59,
-              "pnl_pct": 3.12,
-              "day_pnl": 352.59,
-              "day_pct": 3.12,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-12T16:32:08",
-              "stop_triggered": false,
-              "exit_reason": null
-            }
-          ]
+          "positions": []
         },
         "current_strategy": {
-          "day": "2026-06-12",
-          "decision": "TRADE",
+          "day": "2026-06-15",
+          "decision": "HOLD",
           "rationale": "Deployed into 5 high-conviction names (ALB +7.42%, ARM +8.09%, BIRK +5.50%, ALAB +4.12%, FCX +3.47%). Market breadth: 25/55 green. Weighted by signal strength. Stop -1.5% | Target +3.0%.",
           "picks": [
             {
@@ -252,119 +169,119 @@
         "inception": "2026-06-02",
         "starting_capital": 55000.0,
         "value": {
-          "total": 57081.23,
-          "cash": 0.0,
-          "pos_val": 57081.25,
-          "pnl": 2081.23,
-          "pnl_pct": 3.78,
-          "day_pnl": 1240.2,
-          "day_pct": 2.22,
+          "total": 55000.0,
+          "cash": 0.01,
+          "pos_val": 54999.99,
+          "pnl": 0.0,
+          "pnl_pct": 0.0,
+          "day_pnl": 2447.87,
+          "day_pct": 4.66,
           "holding_cash": false,
           "positions": [
             {
-              "symbol": "ALAB",
-              "shares": 53.812466,
-              "entry_price": 346.33,
-              "current_price": 367.15,
-              "cost_basis": 18636.87,
-              "price": 367.15,
-              "value": 19757.25,
-              "pnl": 1120.38,
-              "pnl_pct": 6.01,
-              "day_pnl": -17.22,
-              "day_pct": -0.09
-            },
-            {
               "symbol": "ARM",
-              "shares": 38.962358,
-              "entry_price": 346.39,
+              "shares": 45.052161,
+              "entry_price": 380.81,
               "current_price": 380.81,
-              "cost_basis": 13496.17,
+              "cost_basis": 17156.31,
               "price": 380.81,
-              "value": 14837.26,
-              "pnl": 1341.08,
-              "pnl_pct": 9.94,
-              "day_pnl": 1503.17,
+              "value": 17156.31,
+              "pnl": 0.0,
+              "pnl_pct": 0.0,
+              "day_pnl": 1738.11,
               "day_pct": 11.27
             },
             {
-              "symbol": "LLY",
-              "shares": 8.643104,
-              "entry_price": 1149.15,
-              "current_price": 1133.0,
-              "cost_basis": 9932.22,
-              "price": 1133.0,
-              "value": 9792.64,
-              "pnl": -139.59,
-              "pnl_pct": -1.41,
-              "day_pnl": -241.57,
-              "day_pct": -2.41
+              "symbol": "BIRK",
+              "shares": 273.260669,
+              "entry_price": 48.75,
+              "current_price": 48.75,
+              "cost_basis": 13321.46,
+              "price": 48.75,
+              "value": 13321.46,
+              "pnl": 0.0,
+              "pnl_pct": 0.0,
+              "day_pnl": 694.08,
+              "day_pct": 5.5
             },
             {
-              "symbol": "SPOT",
-              "shares": 12.856161,
-              "entry_price": 503.13,
-              "current_price": 482.0,
-              "cost_basis": 6468.32,
-              "price": 482.0,
-              "value": 6196.67,
-              "pnl": -271.65,
-              "pnl_pct": -4.2,
-              "day_pnl": -51.42,
-              "day_pct": -0.82
+              "symbol": "ALAB",
+              "shares": 32.826095,
+              "entry_price": 367.15,
+              "current_price": 367.15,
+              "cost_basis": 12052.1,
+              "price": 367.15,
+              "value": 12052.1,
+              "pnl": 0.0,
+              "pnl_pct": 0.0,
+              "day_pnl": -10.5,
+              "day_pct": -0.09
             },
             {
-              "symbol": "UNH",
-              "shares": 15.9048,
-              "entry_price": 406.57,
-              "current_price": 408.52,
-              "cost_basis": 6466.41,
-              "price": 408.52,
-              "value": 6497.43,
-              "pnl": 31.01,
-              "pnl_pct": 0.48,
-              "day_pnl": 47.24,
-              "day_pct": 0.73
+              "symbol": "GE",
+              "shares": 18.595479,
+              "entry_price": 335.3,
+              "current_price": 335.3,
+              "cost_basis": 6235.06,
+              "price": 335.3,
+              "value": 6235.06,
+              "pnl": 0.0,
+              "pnl_pct": 0.0,
+              "day_pnl": 47.23,
+              "day_pct": 0.76
+            },
+            {
+              "symbol": "LINE",
+              "shares": 140.366146,
+              "entry_price": 44.42,
+              "current_price": 44.42,
+              "cost_basis": 6235.06,
+              "price": 44.42,
+              "value": 6235.06,
+              "pnl": 0.0,
+              "pnl_pct": 0.0,
+              "day_pnl": -21.05,
+              "day_pct": -0.34
             }
           ]
         },
         "current_strategy": {
-          "week": "(2026, 24)",
+          "week": "2026-06-15",
           "decision": "TRADE",
-          "rationale": "Projected week return: +-1.96%. Top 5 names by composite momentum. Score-weighted (not equal weight). Sector cap enforced (max 2 per sector). Quality gate: 20d momentum positive required.",
+          "rationale": "Projected week return: +8.28%. Top 5 names by composite momentum. Score-weighted (not equal weight). Sector cap enforced (max 2 per sector). Quality gate: 20d momentum positive required.",
           "picks": [
             {
-              "symbol": "ALAB",
-              "weight": 0.3389,
-              "score": 20.5,
-              "rationale": "ALAB: 5d -2.7% | 20d +67.0% | RSI 70 | Vol x0.87. Allocated 34%."
-            },
-            {
               "symbol": "ARM",
-              "weight": 0.2454,
-              "score": 14.9,
-              "rationale": "ARM: 5d -14.0% | 20d +62.9% | RSI 70 | Vol x1.00. Allocated 25%."
+              "weight": 0.3119,
+              "score": 29.2,
+              "rationale": "ARM: 5d +9.9% | 20d +82.1% | RSI 59 | Vol x0.86. Allocated 31%."
             },
             {
-              "symbol": "LLY",
-              "weight": 0.1806,
-              "score": 10.9,
-              "rationale": "LLY: 5d +8.0% | 20d +19.0% | RSI 75 | Vol x1.06. Allocated 18%."
+              "symbol": "BIRK",
+              "weight": 0.2422,
+              "score": 22.7,
+              "rationale": "BIRK: 5d +11.7% | 20d +56.3% | RSI 66 | Vol x0.83. Allocated 24%."
             },
             {
-              "symbol": "SPOT",
-              "weight": 0.1176,
-              "score": 7.1,
-              "rationale": "SPOT: 5d +0.3% | 20d +19.9% | RSI 66 | Vol x0.72. Allocated 12%."
+              "symbol": "ALAB",
+              "weight": 0.2191,
+              "score": 20.5,
+              "rationale": "ALAB: 5d +6.0% | 20d +57.8% | RSI 60 | Vol x0.93. Allocated 22%."
             },
             {
-              "symbol": "UNH",
-              "weight": 0.1176,
-              "score": 5.9,
-              "rationale": "UNH: 5d +7.6% | 20d +5.8% | RSI 63 | Vol x1.12. Allocated 12%."
+              "symbol": "GE",
+              "weight": 0.1134,
+              "score": 8.3,
+              "rationale": "GE: 5d +4.1% | 20d +19.1% | RSI 64 | Vol x0.86. Allocated 11%."
+            },
+            {
+              "symbol": "LINE",
+              "weight": 0.1134,
+              "score": 7.7,
+              "rationale": "LINE: 5d +5.0% | 20d +15.5% | RSI 62 | Vol x1.05. Allocated 11%."
             }
           ],
-          "projected_return": -1.96
+          "projected_return": 8.28
         },
         "top10": null,
         "per_top_dollars": null,
@@ -574,8 +491,8 @@
           "pos_val": 54373.79,
           "pnl": -626.21,
           "pnl_pct": -1.14,
-          "day_pnl": 330.74,
-          "day_pct": 0.61,
+          "day_pnl": 342.66,
+          "day_pct": 0.63,
           "positions": [
             {
               "symbol": "XOM",
@@ -704,8 +621,8 @@
               "value": 995.85,
               "pnl": -4.15,
               "pnl_pct": -0.41,
-              "day_pnl": 66.38,
-              "day_pct": 7.14
+              "day_pnl": 68.75,
+              "day_pct": 7.42
             },
             {
               "symbol": "CAT",
@@ -1263,8 +1180,8 @@
               "value": 998.13,
               "pnl": -1.87,
               "pnl_pct": -0.19,
-              "day_pnl": -11.36,
-              "day_pct": -1.13
+              "day_pnl": -1.81,
+              "day_pct": -0.18
             },
             {
               "symbol": "LINE",
@@ -1315,8 +1232,8 @@
           "pos_val": 53827.8,
           "pnl": -1172.16,
           "pnl_pct": -2.13,
-          "day_pnl": 146.52,
-          "day_pct": 0.27,
+          "day_pnl": 153.79,
+          "day_pct": 0.29,
           "positions": [
             {
               "symbol": "NVDA",
@@ -1575,8 +1492,8 @@
               "value": 608.57,
               "pnl": -2.54,
               "pnl_pct": -0.41,
-              "day_pnl": 40.57,
-              "day_pct": 7.14
+              "day_pnl": 42.01,
+              "day_pct": 7.42
             },
             {
               "symbol": "CAT",
@@ -2004,8 +1921,8 @@
               "value": 609.97,
               "pnl": -1.14,
               "pnl_pct": -0.19,
-              "day_pnl": -6.94,
-              "day_pct": -1.13
+              "day_pnl": -1.11,
+              "day_pct": -0.18
             },
             {
               "symbol": "LINE",
@@ -2058,33 +1975,33 @@
       "week": [
         {
           "fund": "bot13",
-          "week_pnl": 13759.76,
-          "week_pct": 21.74,
-          "week_grade": "A+"
+          "week_pnl": 0.0,
+          "week_pct": 0.0,
+          "week_grade": "C"
         },
         {
           "fund": "oracle",
-          "week_pnl": 2081.23,
-          "week_pct": 3.78,
-          "week_grade": "A"
+          "week_pnl": 0.0,
+          "week_pct": 0.0,
+          "week_grade": "C"
         },
         {
           "fund": "wizard",
-          "week_pnl": 1410.92,
-          "week_pct": 2.71,
-          "week_grade": "B"
+          "week_pnl": 0.0,
+          "week_pct": 0.0,
+          "week_grade": "C"
         },
         {
           "fund": "equalizer",
-          "week_pnl": 516.37,
-          "week_pct": 0.96,
+          "week_pnl": 0.0,
+          "week_pct": 0.0,
           "week_grade": "C"
         },
         {
           "fund": "titan",
-          "week_pnl": -38.07,
-          "week_pct": -0.07,
-          "week_grade": "D"
+          "week_pnl": 0.0,
+          "week_pct": 0.0,
+          "week_grade": "C"
         }
       ],
       "all": [
@@ -2096,9 +2013,9 @@
         },
         {
           "fund": "oracle",
-          "all_pnl": 2081.23,
-          "all_pct": 3.78,
-          "overall_grade": "B"
+          "all_pnl": 0.0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
         },
         {
           "fund": "equalizer",
