@@ -1221,24 +1221,14 @@ def main():
 
     # ── Reports (placeholder — keeps API consistent) ──────────────────────────
     push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
+    # ── Member portfolio simulations ──────────────────────────────────────────
+    print("[lvl13] running member portfolio simulations...")
+    refresh_portfolios.run("lvl13", prices, prev_closes, hist_data, secrets)
 
-    # ── Portfolio performance snapshots ───────────────────────────────────────
+    # ── Portfolio snapshots ───────────────────────────────────────────────────
     trigger_portfolio_snapshots(secrets)
 
-    # ── Per-portfolio bot simulations ─────────────────────────────────────────
-    refresh_portfolios.run(
-        platform="lvl13",
-        prices=prices,
-        prev_closes=prev_closes,
-        hist_data=hist_data,
-        secrets=secrets,
-    )
-
-    # ── Git push (optional — static files as backup) ─────────────────────────
-    if args.push:
-        git_push("lvl13.tech data refresh")
-
-    print("\n[lvl13] ALL DONE")
+    print("[lvl13] refresh complete.")
 
 
 if __name__ == "__main__":
