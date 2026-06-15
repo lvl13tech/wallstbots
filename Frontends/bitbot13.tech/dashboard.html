@@ -2347,4 +2347,7 @@
       toggleEmailMaster();
     } catch(e) { /* silently ignore */ }
   }
-  f
+  document.addEventListener("DOMContentLoaded", () => { init(); loadNews(); loadBotSession(); loadEmailPrefs(); });
+</script>
+</body>
+</html>

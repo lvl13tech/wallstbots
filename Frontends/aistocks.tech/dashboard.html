@@ -1173,7 +1173,7 @@
       const data = await api.getBots();
       const allBotsAll = ((data?.bots || data) || []).filter(b => b.status !== 'deleted');
       totalBotCount = allBotsAll.length;
-      allBots = allBotsAll.filter(b => b.platform === PLATFORM);
+      allBots = allBotsAll.filter(b => b.platform === PLATFORM || (PLATFORM === "aistocks" && b.platform === "lvl13"));
       updateUsageDisplay(totalBotCount); // total across all platforms
       await loadPerformance();
       sortAndRender();
@@ -1769,11 +1769,9 @@
     wmTab("lookup", document.querySelector('.wm-tab[onclick*="lookup"]'));
     wmLookupUser();
   }
-
   async function wmLoadSystem() {
     try {
       const data = await wmFetch("/webmaster/system");
-      // Status panel
       const services = [
         { name: "Backend API (Cloud Run)", ok: data.db_status === "healthy" },
         { name: "Database (Supabase)", ok: data.db_status === "healthy", sub: data.db_latency_ms != null ? data.db_latency_ms + "ms" : null },
@@ -1783,12 +1781,10 @@
           <span><span class="wm-dot ${s.ok?"g":"y"}"></span>${s.name}</span>
           <span style="color:${s.ok?"#22d3ae":"#f59e0b"};font-size:11px">${s.ok?"Operational":"Degraded"}${s.sub?" · "+s.sub:""}</span>
         </div>`).join("") + `<div class="wm-row"><span class="wm-row-label">Checked at</span><span style="font-size:11px">${new Date().toLocaleTimeString()}</span></div>`;
-      // Data freshness
       const fresh = data.data_freshness || [];
       document.getElementById("wmDataFresh").innerHTML = fresh.length
         ? fresh.map(f=>`<div class="wm-row"><span class="wm-row-label">${f.platform} tracker</span><span style="font-size:11px">${f.last_refresh?new Date(f.last_refresh).toLocaleString():"No data"} · ${f.records} records</span></div>`).join("")
         : '<div style="color:var(--muted);font-size:12px;padding:8px 0">No tracker data yet</div>';
-      // Stats
       document.getElementById("wmSysStats").innerHTML = `
         <div class="wm-row"><span class="wm-row-label">Total users in DB</span><span>${(data.total_users||0).toLocaleString()}</span></div>
         <div class="wm-row"><span class="wm-row-label">DB latency</span><span>${data.db_latency_ms != null ? data.db_latency_ms + "ms" : "—"}</span></div>
@@ -1804,60 +1800,7 @@
     }
   }
 
-
-
-    async function openStripePortal() {
-      try {
-        const jwt = api.token || localStorage.getItem('aistocks_jwt') || localStorage.getItem('auth_token');
-        const r = await fetch(api.base + '/stripe/portal', {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + jwt, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ origin: location.origin })
-        });
-        const d = await r.json();
-        if (d.url) { window.open(d.url, '_blank'); }
-        else { alert(d.detail || 'Could not open billing portal. Please contact support.'); }
-      } catch(e) { alert('Error opening billing portal. Please contact support.'); }
-    }
-
-    function checkWebmaster() {
-    const subPlan = (subscription?.plan_name||subscription?.plan||subscription?.tier||"").toLowerCase();
-    const profTier = (userProfile?.tier||"").toLowerCase();
-    const profRole = (userProfile?.role||"").toLowerCase();
-    const isWM = subPlan.includes("webmaster") || profTier.includes("webmaster") || profRole === "admin";
-    if (isWM) {
-      const link = document.getElementById("wmNavLink"); if(link) link.style.display="";
-      const mob = document.getElementById("wmNavLinkMob"); if(mob) mob.style.display="";
-    }
-  }
-  // ── Email preferences ───────────────────────────────────────────────────
-  async function loadEmailPrefs() {
-    try {
-      const token = auth.getToken ? auth.getToken() : (auth._token || localStorage.getItem("auth_token") || "");
-      const resp = await fetch(BACKEND_URL + "/user/email-prefs", {
-        headers: { "Authorization": "Bearer " + token }
-      });
-      if (!resp.ok) return;
-      const d = await resp.json();
-      document.getElementById("epEnabled").checked  = d.email_enabled       !== false;
-      document.getElementById("epDaily").checked    = d.email_daily         !== false;
-      document.getElementById("epBot13").checked    = d.email_bot13_alerts  !== false;
-      document.getElementById("epWeekly").checked         = d.email_weekly        !== false;
-      document.getElementById("epMonthly").checked        = d.email_monthly       !== false;
-      document.getElementById("epPortfolio").checked      = d.email_portfolio     !== false;
-      document.getElementById("epSiteWallstbots").checked = d.email_wallstbots    !== false;
-      document.getElementById("epSiteBitbot13").checked   = d.email_bitbot13      !== false;
-      document.getElementById("epSiteAistocks").checked      = d.email_aistocks         !== false;
-      toggleEmailMaster();
-    } catch(e) { /* silently ignore */ }
-  }
-  function toggleEmailMaster() {
-    const on = document.getElementById("epEnabled").checked;
-    document.getElementById("emailSubToggles").classList.toggle("disabled", !on);
-  }
-  async function saveEmailPrefs() {
-    const btn = document.querySelector(".email-save-btn");
-    const orig = btn.textContent;
-    btn.textContent = "Saving…"; btn.disabled = true;
-    try {
-      const token = auth.getToken ? auth.getToken() : (auth._token || localS
+  document.addEventListener("DOMContentLoaded", () => { init(); loadNews(); loadBotSession(); loadEmailPrefs(); });
+</script>
+</body>
+</html>
