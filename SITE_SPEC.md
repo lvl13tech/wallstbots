@@ -1,20 +1,31 @@
-# Level 13 Sites — Master Spec & Parity Checklist
+# Wall St Bots Product Sites — Master Spec & Parity Checklist
 
-**Last updated:** 2026-05-20
-**Owner:** Level 13 Tech
-**Purpose:** Single source of truth for what each section on each site must do, so any future change can be checked across all three sites at once.
+**Last updated:** 2026-06-15 (model corrected)
+**Owner:** JBM Capital LLC
+**Purpose:** Single source of truth for what each section on each **product** site must do, so any future change can be checked across all three product sites at once.
 
 ---
 
-## 1. The Three Sites — What Each One Is
+> **⚠️ Model note:** The three product sites below were specced when the AI/quantum site was
+> still `lvl13.tech`. That site is now **aistocks.tech** (migrated; lvl13.tech was rebuilt as
+> the parent-company landing page and is OUT of this spec — 🔒 Rule 10). Everywhere this doc
+> says "lvl13" as a *trading/product* site, read **aistocks**. Checkout is **Stripe** (PayPal
+> references are legacy). Universe counts may have changed (e.g. AI site is now ~50) — treat
+> exact counts as (VERIFY). See `ARCHITECTURE.md` + `HANDOFF_2026-06-15.md`.
 
-**Core rule (user-stated):** All three sites are IDENTICAL in layout, sections, auth, and admin. The only difference is the asset class they simulate trades for.
+---
+
+## 1. The Three Product Sites — What Each One Is
+
+**Core rule (user-stated):** All three product sites are IDENTICAL in layout, sections, auth, and admin. The only differences are the asset class each simulates and, for bitbot13, crypto trading hours.
 
 | Site | Asset Class | Universe |
 |------|-------------|----------|
-| **lvl13.tech** | AI & Quantum stocks | 43 hand-picked AI/quantum names |
-| **bitbot13.tech** | Cryptocurrency | Top 50 by market cap |
-| **wallstbots.tech** | Sector stocks | Top 3 per S&P 500 sector + IPOs (~55) |
+| **wallstbots.tech** (reference) | Sector stocks | Top 3 per S&P 500 sector + IPOs (~55) |
+| **aistocks.tech** (was lvl13.tech) | AI & Quantum stocks | hand-picked AI/quantum names (~50, VERIFY) |
+| **bitbot13.tech** | Cryptocurrency (crypto hours) | Top 50 by market cap |
+
+> **lvl13.tech is NOT in this spec** — it is the parent-company landing page, not a product site.
 
 All three sites share:
 - The same SPA shell (`index.html` + `assets/app.js` + `assets/style.css`)
@@ -141,7 +152,7 @@ This is non-negotiable for the user. Each site shows only news relevant to its u
 |------|-------|-----------------|----------------|
 | **bitbot13** | Cryptocurrency only | CoinDesk, CoinTelegraph, Decrypt, The Block, Bitcoin Magazine, U.Today, BeInCrypto, Crypto Briefing | "stocks", "equities", "S&P 500", "Dow Jones" (unless co-occurring with crypto term) |
 | **wallstbots** | Stock market only | Reuters Business, Bloomberg, WSJ, MarketWatch, CNBC, Yahoo Finance, Seeking Alpha, Barron's | "crypto", "bitcoin", "ethereum", "NFT", "blockchain", "Web3" |
-| **lvl13** | AI & Quantum stocks only | Reuters Tech, Bloomberg Tech, MIT Tech Review, IEEE Spectrum, The Verge, Ars Technica, Nature, Nvidia/IonQ/Rigetti PR | "crypto", "bitcoin", "ethereum", and generic non-AI stocks |
+| **aistocks** (was lvl13) | AI & Quantum stocks only | Reuters Tech, Bloomberg Tech, MIT Tech Review, IEEE Spectrum, The Verge, Ars Technica, Nature, Nvidia/IonQ/Rigetti PR | "crypto", "bitcoin", "ethereum", and generic non-AI stocks |
 
 **Implementation:** add a `domains` param to the NewsAPI request AND a post-fetch keyword filter that strips off-topic articles.
 
@@ -189,7 +200,7 @@ These are the issues this spec drives fixes for.
 - The backend `/auth/login` endpoint accepts email + password, calls Supabase, returns a JWT. It does NOT check which site originated the request.
 - The JWT is valid against every protected endpoint (`/user/*`, `/account/*`, `/admin/*`).
 - `require_admin` only checks the user's `role` column, not the site of origin → admin login works on any site.
-- **Limitation:** browsers scope `localStorage` to the site origin, so a JWT stored on `lvl13.tech` is not visible to JS on `bitbot13.tech`. The user must log in once per site (the credentials are the same). True cross-domain SSO would need a shared auth subdomain or redirect-based handoff — flagged for future work.
+- **Limitation:** browsers scope `localStorage` to the site origin, so a JWT stored on `wallstbots.tech` is not visible to JS on `bitbot13.tech`. The user must log in once per site (the credentials are the same). True cross-domain SSO would need a shared auth subdomain or redirect-based handoff — flagged for future work.
 
 **JWT storage keys (per site):**
 - `lvl13_jwt` (lvl13.tech)
@@ -199,7 +210,11 @@ These are the issues this spec drives fixes for.
 
 **Sales / subscriptions:**
 - A subscription record (`subscriptions` table) is keyed on `user_id`, not on which site placed the order. So a customer who buys on bitbot13.tech is recognized as a paying customer on all 3 sites. ✅ Works as the user wants.
-- **Gap (flagged for backend work):** the `subscriptions` table does NOT have an `origin_platform` column. So although sales are shared, you can't currently report "how many sales came from which site". To track origin, the backend schema needs an `origin_platform` column added and the `/paypal/webhook` insert updated to set it. This is recorded in section 9.
+- **Origin tracking:** to report "how many sales came from which site", the `subscriptions`
+  table needs an `origin_platform` column. A migration now exists
+  (`Backend/origin_platform_migration.sql`) — **VERIFY it has been applied** and that the
+  Stripe webhook insert sets `origin_platform`. (Checkout is Stripe; the old `/paypal/webhook`
+  is legacy.)
 
 ---
 
@@ -212,7 +227,7 @@ Before merging any change that touches site code, check each row:
 - [ ] If you added a hash route → is it handled in `route()` on both SPA sites?
 - [ ] If you added a function reference in `wireUI()` or HTML inline → is that function actually defined in the file?
 - [ ] If you changed news queries → did you keep bitbot13 = crypto-only and wallstbots = stocks-only?
-- [ ] If you changed pricing or PayPal config → did you update all 3 `renderGetYours()` blocks?
+- [ ] If you changed pricing or Stripe checkout config → did you update all 3 product-site `renderGetYours()` blocks?
 - [ ] If you changed the JWT key naming → did you update admin.html's `getToken()` fallback on all 3 sites?
 
 ---
@@ -224,7 +239,8 @@ WallStBots/
 ├── Backend/                         # FastAPI service (Cloud Run)
 │   └── main.py                      # ES256 JWT, /auth, /public/tracker, /internal/tracker, /admin
 ├── Frontends/
-│   ├── lvl13.tech/                  # Account hub + AI & Quantum dashboard
+│   ├── aistocks.tech/               # AI & Quantum product site (was lvl13.tech)
+│   ├── lvl13.tech/                  # PARENT landing page (not a product; 🔒 Rule 10)
 │   │   ├── index.html               # Post-login bot dashboard
 │   │   ├── login.html, signup.html  # Auth pages (stale — needs sync)
 │   │   ├── admin.html               # Admin panel (needs JWT fallback fix)

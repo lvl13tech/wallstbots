@@ -1,8 +1,17 @@
 # Wall St. Bots — Unified Multi-Tenant Trading Platform
 
-**Status:** Phase 1 Complete (Foundation Built)  
-**Last Updated:** 2026-05-16  
+**Status:** Phase 1 Complete (Foundation Built)
+**Last Updated:** 2026-06-15 (model corrected)
 **Owner:** Jamil Flowers (M13)
+
+---
+
+> **⚠️ CURRENT MODEL (read first — supersedes older statements below).** The product is **three**
+> trading sites: **wallstbots.tech** (sector stocks, reference), **aistocks.tech** (AI/quantum),
+> **bitbot13.tech** (crypto + crypto hours). **lvl13.tech is the parent-company landing page,
+> not a trading site** (🔒 hands off — CLAUDE.md Rule 10). aistocks.tech was originally
+> lvl13.tech (migrated; lvl13 rebuilt as parent). Checkout is **Stripe**; PayPal references
+> below are legacy. See `ARCHITECTURE.md` + `HANDOFF_2026-06-15.md`.
 
 ---
 
@@ -10,9 +19,11 @@
 
 **Wall St. Bots** is a unified platform connecting three independent trading tracker sites under one login:
 
-1. **lvl13.tech** — AI & Quantum stock trading (already live, refactored)
-2. **bitbot13.tech** — Top 50 crypto coins (new)
-3. **wallstbots.tech** — NYSE/NASDAQ stocks by sector + IPOs (new)
+1. **wallstbots.tech** — NYSE/NASDAQ stocks by sector + IPOs (the reference site)
+2. **aistocks.tech** — AI & Quantum stocks (was originally lvl13.tech)
+3. **bitbot13.tech** — Top 50 crypto coins (crypto trading hours)
+
+(**lvl13.tech** is the parent-company landing page — not one of the three product trackers.)
 
 **Key Feature:** One email/password works across all three platforms. Create an account once, access all three trackers.
 
@@ -94,10 +105,10 @@ Wall St Bots/
 
 ### Step 3: Deploy Frontends
 
-1. Point `lvl13.tech`, `bitbot13.tech`, `wallstbots.tech` to Cloudflare Pages
+1. Point the three product sites — `wallstbots.tech`, `aistocks.tech`, `bitbot13.tech` — to Cloudflare Pages (auto-deploy from GitHub). (lvl13.tech is the parent landing page, hosted separately and disconnected from GitHub — 🔒 do not deploy it from this repo.)
 2. Update `API_BASE_URL` in `auth.js` to production URL
-3. Deploy each frontend
-4. Test signup/login on one site, verify it works on all three
+3. Deploy each product frontend
+4. Test signup/login on one site, verify it works on all three product sites
 
 ### Step 4: Wire Tracker Engine
 
@@ -118,8 +129,8 @@ Wall St Bots/
 - Holdings endpoints: add, update, remove
 - Promo codes: validate
 - Subscriptions: calculate price, check status
-- PayPal webhooks: handle payment events
-- **Lines of code:** ~700, fully documented
+- **Stripe** checkout + webhooks: handle payment events (active). PayPal webhook code still exists but is legacy/inactive.
+- **Lines of code:** grown well beyond the original ~700; fully documented
 
 **`schema.sql`** — Database structure
 - 15+ tables (users, bots, holdings, subscriptions, etc.)

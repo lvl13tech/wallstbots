@@ -1,8 +1,15 @@
 # Wall St. Bots - Technical Reference Guide
 
-**Purpose:** Deep technical documentation for developers continuing the project  
-**Audience:** Backend/DevOps engineers, frontend developers  
-**Last Updated:** May 17, 2026
+**Purpose:** Deep technical documentation for developers continuing the project
+**Audience:** Backend/DevOps engineers, frontend developers
+**Last Updated:** 2026-06-15 (model note added)
+
+---
+
+> **⚠️ Model note:** Product = **3** sites (wallstbots / aistocks / bitbot13); **lvl13.tech is
+> the parent landing page**, 🔒 hands-off (Rule 10). aistocks was originally lvl13. Active
+> checkout is **Stripe** — any `PAYPAL_*` env vars below are legacy and not the live payment
+> path. See `ARCHITECTURE.md` + `HANDOFF_2026-06-15.md` for the authoritative model.
 
 ---
 

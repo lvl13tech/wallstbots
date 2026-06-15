@@ -1,7 +1,11 @@
 # Deployment Guide: FastAPI Backend to GCP Cloud Run
 
 **Status:** Phase 1 Foundation
-**Date:** 2026-05-16
+**Date:** 2026-05-16 (payment note added 2026-06-15)
+
+> **⚠️ Payments:** active checkout is **Stripe** — set the `STRIPE_*` env vars/secrets (secret
+> key + webhook signing secret). The `PAYPAL_*` vars shown below are **legacy** and not the
+> live payment path; include them only if you still need the old webhook stub.
 
 ## Overview
 

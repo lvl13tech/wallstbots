@@ -1,7 +1,15 @@
 # Wall St. Bots - Quick Start Guide for New Developers
 
-**Goal:** Get up to speed on the Wall St. Bots project in 30 minutes  
+**Goal:** Get up to speed on the Wall St. Bots project in 30 minutes
 **Prerequisites:** Git, Docker (optional), basic knowledge of web development
+
+---
+
+> **⚠️ Model note:** Product = **3** sites — **wallstbots.tech** (reference), **aistocks.tech**
+> (AI/quantum; was originally lvl13.tech), **bitbot13.tech** (crypto + crypto hours).
+> **lvl13.tech is the parent-company landing page**, not a product — 🔒 do not modify it
+> (Rule 10). Checkout is **Stripe** (PayPal legacy). Authoritative: `ARCHITECTURE.md` +
+> `HANDOFF_2026-06-15.md`. References to "lvl13" as a tracker below mean **aistocks**.
 
 ---
 

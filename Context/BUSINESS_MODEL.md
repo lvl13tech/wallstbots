@@ -1,8 +1,15 @@
 # WallStBots — Business Model & Product Vision
 
-**Owner:** Jamil Flowers (M13) · lvl13cs@gmail.com  
-**Last updated:** May 2026  
+**Owner:** Jamil Flowers (M13) · lvl13cs@gmail.com
+**Last updated:** 2026-06-15 (model corrected)
 **READ THIS FIRST in every session. Every decision must be made with paying customers in mind.**
+
+---
+
+> **⚠️ Model note:** The three demo/product sites are **wallstbots.tech**, **aistocks.tech**
+> (AI/quantum — was originally lvl13.tech), and **bitbot13.tech**. **lvl13.tech is now the
+> parent-company landing page** for JBM Capital LLC (the SaaS firm itself), not a demo tracker.
+> Payments run through **Stripe** (PayPal is legacy). See `ARCHITECTURE.md`.
 
 ---
 
@@ -19,10 +26,12 @@ The three public-facing sites are **marketing demos** — they show M13's own li
 | Site | Universe | Purpose |
 |------|----------|---------|
 | **wallstbots.tech** | 55 stocks (full market) | Shows stock trading bots in action |
+| **aistocks.tech** | ~50 AI & Quantum stocks | Shows niche/themed tracker — proves any segment works |
 | **bitbot13.tech** | 50 crypto coins | Shows crypto trading bots in action |
-| **lvl13.tech** | 43 AI & Quantum stocks | Shows niche/themed tracker — proves any segment works |
 
-**lvl13.tech is the proof of concept for the upsell:** "Look — I built one just for AI and quantum stocks. You can have one built around whatever you care about most."
+**aistocks.tech is the proof of concept for the upsell:** "Look — I built one just for AI and quantum stocks. You can have one built around whatever you care about most." (This site was originally lvl13.tech before the parent-company rebrand.)
+
+**lvl13.tech (parent landing page)** is itself part of the pitch: it presents JBM Capital LLC as the company behind the platform and offers custom bot/app development — the top of the upsell funnel.
 
 ### Customer flow
 1. Customer lands on any site → sees live bot performance (updated automatically)
@@ -73,7 +82,7 @@ After purchase, the customer receives:
 
 ## Revenue Architecture
 
-- **One payment processor account** (PayPal, `lvl13cs@gmail.com`) handles all purchases
+- **One payment processor** (Stripe) handles all purchases across the product sites; subscriptions are keyed on `user_id`, so a sale counts platform-wide regardless of which site sold it. (PayPal config is legacy.)
 - **One login system** — customer authenticates once, sees all their trackers
 - Stocks and crypto are **separate purchases** — customer pays for what they want
 - Backend scopes data by `platform` — `wallstbots`, `bitbot13`, `lvl13`

@@ -774,8 +774,26 @@ def main():
     secrets     = load_secrets()
     newsapi_key = secrets.get("newsapi_key") or os.environ.get("NEWSAPI_KEY", "")
 
-    print("[wallstbots] loading state.json...")
-    raw        = json.loads(STATE_FILE.read_text())
+    print("[lvl13] loading state.json...")
+    raw = None
+    if STATE_FILE.exists():
+        try:
+            raw = json.loads(STATE_FILE.read_text())
+        except Exception as e:
+            print(f"  [state.json] parse error ({e}) — falling back to live API")
+    if raw is None:
+        # Fallback: fetch current state from live backend API so a corrupted
+        # state.json never silently kills the entire refresh run.
+        try:
+            api_url = secrets.get("api_url") or os.environ.get("TRACKER_API_URL", BACKEND_URL)
+            _fb = _requests.get(
+                f"{api_url}/public/tracker/state?platform=lvl13", timeout=15
+            )
+            raw = {"data": _fb.json().get("data", {})}
+            print("  [state.json] recovered from live API ✅")
+        except Exception as e2:
+            print(f"  [state.json] API fallback also failed ({e2}) — using empty state")
+            raw = {"data": {}}
     state_data = raw.get("data", raw)
     funds      = state_data.get("funds", {})
     snapshots  = list(state_data.get("snapshots", []))
