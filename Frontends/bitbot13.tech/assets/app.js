@@ -111,8 +111,15 @@ function escapeHtml(s) {
 }
 function relTime(iso) {
   if (!iso) return '';
-  const t = new Date(iso); if (isNaN(t)) return iso;
-  const m = Math.round((Date.now() - t) / 60000);
+  // Backend timestamps (e.g. "2026-06-15T20:32:15") are UTC but often lack a
+  // timezone marker. JS would otherwise parse them as LOCAL time, which makes
+  // them look hours in the future (showing "-226m ago"). If there's no timezone
+  // suffix (Z or +/-hh:mm), treat the value as UTC by appending "Z".
+  let s = String(iso).trim();
+  if (/\d{2}:\d{2}/.test(s) && !/(Z|[+-]\d{2}:?\d{2})$/.test(s)) s = s.replace(' ', 'T') + 'Z';
+  const t = new Date(s); if (isNaN(t)) return iso;
+  let m = Math.round((Date.now() - t) / 60000);
+  if (m < 0) m = 0;                       // guard tiny clock skew → never negative
   if (m < 60)      return m + 'm ago';
   if (m < 1440)    return Math.round(m/60) + 'h ago';
   if (m < 10080)   return Math.round(m/1440) + 'd ago';
@@ -606,7 +613,9 @@ function renderGetYours() {
     + '<div style="flex:1 1 240px;min-width:0">'
     + '<input id="freeEmail" type="email" placeholder="Enter your email" '
     + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:8px">'
-    + '<button onclick="gyFreeSignup()" style="width:100%;background:var(--surface2);color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:10px 0;font-weight:700;cursor:pointer;font-size:14px">Get Free Signals →</button>'
+    + '<input id="freePassword" type="password" placeholder="Create a password (8+ characters)" minlength="8" '
+    + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:8px">'
+    + '<button onclick="gyFreeSignup()" style="width:100%;background:var(--surface2);color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:10px 0;font-weight:700;cursor:pointer;font-size:14px">Create Free Account →</button>'
     + '<div id="freeMsg" style="font-size:12px;margin-top:6px;min-height:16px"></div>'
     + '</div></div></div>'
 
@@ -680,25 +689,40 @@ function renderGetYours() {
 
 async function gyFreeSignup() {
   const inp = $('freeEmail');
+  const pwInp = $('freePassword');
   const msg = $('freeMsg');
   if (!inp || !msg) return;
   const email = inp.value.trim();
+  const password = pwInp ? pwInp.value : '';
   if (!email || !email.includes('@')) {
     msg.innerHTML = '<span style="color:var(--red)">Please enter a valid email.</span>';
     return;
   }
-  msg.innerHTML = '<span style="color:var(--muted)">Signing you up…</span>';
+  if (!password || password.length < 8) {
+    msg.innerHTML = '<span style="color:var(--red)">Choose a password (at least 8 characters).</span>';
+    return;
+  }
+  msg.innerHTML = '<span style="color:var(--muted)">Creating your free account…</span>';
   try {
-    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/subscriptions/free-signup', {
+    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/auth/signup-free', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, platform: 'bitbot13' })
+      body: JSON.stringify({ email, password, platform: 'bitbot13' })
     });
-    if (r.ok) {
-      msg.innerHTML = '<span style="color:#10b981;font-weight:700">✓ You\'re in! Check your inbox for your first signal.</span>';
-      inp.value = '';
+    const data = await r.json().catch(() => ({}));
+    if (r.ok && data.success) {
+      if (data.access_token) {
+        setJWT(data.access_token);
+        if (typeof updateNavAuth === 'function') updateNavAuth();
+        msg.innerHTML = '<span style="color:#10b981;font-weight:700">✓ Account created! Taking you to your dashboard…</span>';
+        location.hash = '#/my-picks';
+      } else {
+        msg.innerHTML = '<span style="color:#10b981;font-weight:700">✓ Account created! Check your inbox to confirm your email, then log in.</span>';
+      }
+      inp.value = ''; if (pwInp) pwInp.value = '';
     } else {
-      msg.innerHTML = '<span style="color:var(--muted)">Something went wrong — try again or <a href="#" onclick="chatbotOpen();return false;" style="color:var(--blue)">open a support ticket</a></span>';
+      const detail = data.detail || 'Something went wrong';
+      msg.innerHTML = '<span style="color:var(--muted)">' + escapeHtml(detail) + ' — try again or <a href="#" onclick="chatbotOpen();return false;" style="color:var(--blue)">open a support ticket</a></span>';
     }
   } catch (_) {
     msg.innerHTML = '<span style="color:var(--muted)">Could not connect — check your connection.</span>';

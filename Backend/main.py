@@ -242,6 +242,12 @@ class AdminCodeClaimRequest(BaseModel):
     password: str
     full_name: Optional[str] = None
 
+class FreeSignupRequest(BaseModel):
+    email: EmailStr
+    password: str
+    full_name: Optional[str] = None
+    platform: Optional[str] = None   # which site they signed up from (informational)
+
 class SupportTicketCreate(BaseModel):
     email: str
     name: Optional[str] = None
@@ -593,6 +599,80 @@ async def signup_with_admin_code(request: AdminCodeClaimRequest):
         "access_token": access_token,
         "tier":         admin_tier,
         "message":      f"Welcome! You have free lifetime {admin_tier.upper()} access.",
+        "needs_confirm": access_token is None,
+    }
+
+
+@app.post("/auth/signup-free")
+async def signup_free(request: FreeSignupRequest):
+    """
+    Create a FREE-tier account (email + password) — same as any other account,
+    just with subscription_tier='free' (capped at 1 portfolio, no payment).
+
+    This is the missing counterpart to the paid signup flow. The free account is
+    a first-class user: when they later upgrade, the Stripe webhook flips this
+    same row's subscription_tier — they never sign up twice. Returns an access
+    token so the user is logged in immediately. Mirrors signup-with-admin-code.
+    """
+    # 1. Create the Supabase auth user (real email + password account)
+    try:
+        auth_response = call_supabase_auth("POST", "/signup", {
+            "email": request.email,
+            "password": request.password,
+            "user_metadata": {"full_name": request.full_name or ""}
+        })
+    except HTTPException as e:
+        raise HTTPException(status_code=400, detail=f"Signup failed: {e.detail}")
+
+    user_obj = auth_response.get("user") or auth_response
+    user_id  = user_obj.get("id")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Could not create account — email may already be registered")
+
+    # 2. Create the users row at the FREE tier (DB trigger sets referral_code)
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("""
+            INSERT INTO users (id, email, full_name, subscription_tier, tier_expires_at)
+            VALUES (%s, %s, %s, 'free', NULL)
+            ON CONFLICT (id) DO UPDATE SET
+                email     = EXCLUDED.email,
+                full_name = EXCLUDED.full_name
+            RETURNING id, email, referral_code
+        """, (user_id, request.email, request.full_name or ""))
+        user = cursor.fetchone()
+        conn.commit()
+
+        # Backfill referral_codes (non-fatal — same as the other signup paths)
+        if user and user.get("referral_code"):
+            try:
+                cursor.execute("""
+                    INSERT INTO referral_codes (code, created_by_user_id)
+                    VALUES (%s, %s) ON CONFLICT (code) DO NOTHING
+                """, (user["referral_code"], user_id))
+                conn.commit()
+            except Exception:
+                pass
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+    # 3. Log them in so the frontend can drop them straight into their dashboard
+    try:
+        login_resp = call_supabase_auth("POST", "/token?grant_type=password", {
+            "email":    request.email,
+            "password": request.password,
+        })
+        access_token = login_resp.get("access_token")
+    except Exception:
+        access_token = None  # account created; email confirmation may be required
+
+    return {
+        "success":       True,
+        "access_token":  access_token,
+        "tier":          "free",
+        "message":       "Welcome! Your free account is ready — 1 portfolio included.",
         "needs_confirm": access_token is None,
     }
 

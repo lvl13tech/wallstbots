@@ -96,6 +96,39 @@ the count at 0.)
 
 ---
 
+## Live audit 2026-06-15 (public pages, all 3 product sites)
+
+Audited the rendered live sites (not just code). Most of the old known-bugs list is STALE —
+already fixed in current code:
+- ✅ Chatbot: now a proper `<form id="chatbotForm">` with `chatbotRenderQuick()` wired up in all
+  3 sites; the old undefined `handleChatbotInput` is gone. Not broken.
+- ✅ `#/login` and `#/signup`: route to real standalone pages (e.g. `/login`), not the homepage.
+- ✅ The Race / Signals / News / Reports / Get-Yours: render cleanly on all 3 (correct per-site
+  numbers — wallstbots $55k/55, aistocks $50k/50, bitbot13 $50k/50 coins), no error banners, no NaN.
+- ✅ aistocks shows TODAY's data on the rendered site (data-pipeline fix verified end-to-end).
+
+**Real bug found + FIXED:** Signals "last run -226m ago" showed NEGATIVE minutes. Cause:
+`relTime()` did `new Date(iso)` on a timezone-less UTC timestamp (e.g. "2026-06-15T20:32:15"),
+which JS parses as LOCAL time → looks hours in the future. Fixed in all 3 `app.js`: append "Z"
+when no tz suffix, and clamp negative to 0. (Also noted clone drift: `relTime` sat at different
+line numbers across the 3 files — bodies were identical, fix applied to all.)
+
+**Real bug found + FIXED — FREE signup was 404 (missing backend feature).** The FREE
+"Get Free Signals" box called `POST /subscriptions/free-signup`, which never existed on the
+backend (404 → "Something went wrong"). The free tier was simply never built (the DB already
+defaults `subscription_tier='free'`). Fix: added `POST /auth/signup-free` to `main.py`
+(mirrors `signup-with-admin-code`: creates a real Supabase auth user + users row at
+`subscription_tier='free'`, returns a JWT, logs them in). A free account is a NORMAL account —
+when they upgrade, the existing Stripe webhook flips the same row's tier; no second signup.
+Frontends (all 3): the FREE box now collects email + password and calls `/auth/signup-free`,
+dropping the user into their dashboard. **Needs backend redeploy to Cloud Run** (frontends
+auto-deploy via Cloudflare on push).
+
+**Not yet tested (needs a test login):** dashboard, admin, signup→Stripe checkout, referral
+dashboard, logged-in member portfolio view.
+
+---
+
 ## Known Bugs (from SITE_SPEC.md audit, 2026-05-20 — verify if still present)
 
 ### bitbot13.tech/assets/app.js
@@ -161,8 +194,11 @@ the count at 0.)
   vestigial git-commit-to-`Frontends/lvl13.tech/data/` step (the cause of the earlier merge
   conflict; sites read the API, not committed JSON), added `mkdir -p` so the local data dir
   exists for `send_emails.py`, made the verify step tolerant, and corrected the misleading
-  name/comments. **Verify after next cron run:** aistocks bucket `last_refresh` should advance
-  to today, and the workflow should go green. NOTE: wallstbots/bitbot13 workflows still have
+  name/comments. ✅ **VERIFIED LIVE 2026-06-15:** ran the workflow manually (green); logs
+  showed `[push:state] OK` + `[portfolios] running simulations for platform=aistocks`; backend
+  `aistocks` bucket now reads `last_refresh: 2026-06-15T20:32` with a fresh 06-15 snapshot (was
+  stuck on 06-12). The earlier "still 06-12" read was a stale CDN cache, not a failure.
+  NOTE: wallstbots/bitbot13 workflows still have
   the (harmless) commit-to-data step — their data folders still exist in the repo, so it's not
   broken; optional future cleanup to drop it from all three for consistency.
 - **2026-06-15 (committed & pushed)** — All session work committed and pushed to
