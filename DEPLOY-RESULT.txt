@@ -6,3 +6,19 @@ free-signup deploy - Mon 06/15/2026 19:00:28.27
  M Frontends/wallstbots.tech/assets/app.js
  M PROJECT_STATUS.md
 ?? DEPLOY-RESULT.txt
+[master e6c8b99] feat: free-tier signup (POST /auth/signup-free) + wire FREE box (email+password) on all 3 sites; fix relTime negative timestamps
+ 7 files changed, 245 insertions(+), 32 deletions(-)
+ create mode 100644 DEPLOY-RESULT.txt
+From https://github.com/lvl13tech/wallstbots
+ * branch            master     -> FETCH_HEAD
+   9b3effb..177e400  master     -> origin/master
+warning: in the working copy of 'DEPLOY-RESULT.txt', LF will be replaced by CRLF the next time Git touches it
+Merge made by the 'ort' strategy.
+ Frontends/bitbot13.tech/data/signals.json   |  672 +++++++-------
+ Frontends/bitbot13.tech/data/state.json     | 1320 +++++++++++++--------------
+ Frontends/wallstbots.tech/data/signals.json |    2 +-
+ Frontends/wallstbots.tech/data/state.json   |   52 +-
+ 4 files changed, 1023 insertions(+), 1023 deletions(-)
+To https://github.com/lvl13tech/wallstbots.git
+   177e400..86882ad  master -> master
+RESULT: SUCCESS

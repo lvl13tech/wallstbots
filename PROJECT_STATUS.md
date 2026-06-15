@@ -124,6 +124,28 @@ Frontends (all 3): the FREE box now collects email + password and calls `/auth/s
 dropping the user into their dashboard. **Needs backend redeploy to Cloud Run** (frontends
 auto-deploy via Cloudflare on push).
 
+**aistocks BOT13 end-of-day display blanked (migration side-effect, NOT a code bug) —
+WATCH TOMORROW.** After close on 2026-06-15, aistocks BOT13 showed empty HOLD (positions=0,
+picks=[], projected_return=0, day_pct=0) while wallstbots correctly PRESERVED its completed
+trade (decision=TRADE, 5 positions, "session complete" log, day +11.5%). Investigated: the
+market-closed branch in refresh_*.py preserves the day's trade ONLY if
+`prev_b13_strategy.decision == "TRADE"`. The code is **byte-identical** between
+refresh_wallstbots.py and refresh_lvl13.py — so it's a DATA-state difference, not logic.
+Cause: today's `lvl13→aistocks` platform-key switch (+ move to API-fallback state loading)
+interrupted the aistocks bucket's prior-TRADE chain, so the preserve-branch had nothing to
+preserve and wiped to empty. wallstbots' chain was never disrupted. **Self-heals** once
+aistocks runs a clean open-session TRADE tomorrow (it'll then store decision=TRADE and the
+after-hours refresh will preserve it). ⏳ VERIFY 2026-06-16 after the open-session refresh:
+aistocks BOT13 should look like wallstbots at end of day.
+
+✅ **HARDENED 2026-06-15 (so this can never blank again).** Added a graceful fallback to the
+market-closed branch in ALL 3 refresh scripts (parity): if the prior strategy chain isn't
+"TRADE" but there ARE positions stored from today, preserve and re-price those (shown as a
+held TRADE session) instead of wiping to empty. Positions are re-enriched with live prices
+below, so they display current values. Now the end-of-day page only goes empty when there
+genuinely are no positions. Needs no backend deploy (these are the GitHub-Actions refresh
+scripts) — just pushed to the repo so the next cron run uses them.
+
 **Not yet tested (needs a test login):** dashboard, admin, signup→Stripe checkout, referral
 dashboard, logged-in member portfolio view.
 
