@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-06-15T20:29:30",
+    "last_refresh": "2026-06-15T22:51:17",
     "snapshots": [
       {
         "date": "2026-06-02",
@@ -267,77 +267,77 @@
         "starting_capital": 55000.0,
         "value": {
           "total": 55000.0,
-          "cash": 0.0,
-          "pos_val": 55000.0,
+          "cash": 0.01,
+          "pos_val": 54999.99,
           "pnl": 0.0,
           "pnl_pct": 0.0,
-          "day_pnl": 2392.58,
+          "day_pnl": 2392.5,
           "day_pct": 4.55,
           "holding_cash": false,
           "positions": [
             {
               "symbol": "ARM",
-              "shares": 44.431065,
+              "shares": 44.425971,
               "entry_price": 412.55,
               "current_price": 412.55,
-              "cost_basis": 18330.04,
+              "cost_basis": 18327.93,
               "price": 412.55,
-              "value": 18330.04,
+              "value": 18327.93,
               "pnl": 0.0,
               "pnl_pct": 0.0,
-              "day_pnl": 1410.24,
+              "day_pnl": 1410.08,
               "day_pct": 8.33
             },
             {
               "symbol": "ALAB",
-              "shares": 38.759753,
+              "shares": 38.765511,
               "entry_price": 389.2,
               "current_price": 389.2,
-              "cost_basis": 15085.3,
+              "cost_basis": 15087.54,
               "price": 389.2,
-              "value": 15085.3,
+              "value": 15087.54,
               "pnl": 0.0,
               "pnl_pct": 0.0,
-              "day_pnl": 854.65,
+              "day_pnl": 854.78,
               "day_pct": 6.01
             },
             {
               "symbol": "BIRK",
-              "shares": 188.097249,
+              "shares": 188.124399,
               "entry_price": 47.93,
               "current_price": 47.93,
-              "cost_basis": 9015.5,
+              "cost_basis": 9016.8,
               "price": 47.93,
-              "value": 9015.5,
+              "value": 9016.8,
               "pnl": 0.0,
               "pnl_pct": 0.0,
-              "day_pnl": -154.24,
+              "day_pnl": -154.26,
               "day_pct": -1.68
             },
             {
               "symbol": "FCX",
-              "shares": 89.613342,
+              "shares": 89.603069,
               "entry_price": 70.13,
               "current_price": 70.13,
-              "cost_basis": 6284.58,
+              "cost_basis": 6283.86,
               "price": 70.13,
-              "value": 6284.58,
+              "value": 6283.86,
               "pnl": 0.0,
               "pnl_pct": 0.0,
-              "day_pnl": 154.13,
+              "day_pnl": 154.12,
               "day_pct": 2.51
             },
             {
               "symbol": "GE",
-              "shares": 18.362016,
+              "shares": 18.359911,
               "entry_price": 342.26,
               "current_price": 342.26,
-              "cost_basis": 6284.58,
+              "cost_basis": 6283.86,
               "price": 342.26,
-              "value": 6284.58,
+              "value": 6283.86,
               "pnl": 0.0,
               "pnl_pct": 0.0,
-              "day_pnl": 127.8,
+              "day_pnl": 127.78,
               "day_pct": 2.08
             }
           ]
@@ -349,7 +349,7 @@
           "picks": [
             {
               "symbol": "ARM",
-              "weight": 0.3333,
+              "weight": 0.3332,
               "score": 39.6,
               "rationale": "ARM: 5d +27.0% | 20d +91.8% | RSI 66 | Vol x0.92. Allocated 33%."
             },
@@ -369,7 +369,7 @@
               "symbol": "FCX",
               "weight": 0.1143,
               "score": 9.5,
-              "rationale": "FCX: 5d +9.2% | 20d +15.9% | RSI 62 | Vol x1.14. Allocated 11%."
+              "rationale": "FCX: 5d +9.2% | 20d +15.9% | RSI 62 | Vol x1.11. Allocated 11%."
             },
             {
               "symbol": "GE",
