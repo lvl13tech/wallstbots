@@ -33,3 +33,16 @@ WallStBots_*.md
 
 # ── Misc junk ─────────────────────────────────────────────────────────────────
 logo.svg
+
+# ── Cloudflare Wrangler local cache (not source; may hold account info) ──
+.wrangler/
+
+# ── Throwaway result logs from helper .bat scripts ──
+CHECK-RESULT.txt
+COMMIT-RESULT.txt
+commit-push-log.txt
+
+# ── Stray junk files accidentally created (sentence fragments) ──
+/$50k
+/50
+/Run
