@@ -526,8 +526,10 @@ function renderSignals() {
   const filterHTML = '<div class="sector-bar">' + filters.map(f =>
     '<button class="sector-chip '+(SIGNALS_FILTER===f?'active':'')+'" onclick="SIGNALS_FILTER=\''+f+'\'; renderSignals()">'+f+'</button>'
   ).join('') + '</div>';
+  const ACTION_ORDER = {'STRONG BUY':0,'BUY':1,'HOLD':2,'SELL':3,'STRONG SELL':4};
   const recs = (data.recommendations||[]).filter(r =>
-    SIGNALS_FILTER==='ALL' || r.action===SIGNALS_FILTER);
+    SIGNALS_FILTER==='ALL' || r.action===SIGNALS_FILTER)
+    .sort((a,b) => (ACTION_ORDER[a.action]??99) - (ACTION_ORDER[b.action]??99));
   const rows = recs.length ? recs.map(r => {
     const ind = r.indicators || {};
     const slug = (r.action || 'NA').toLowerCase().replace(/ /g,'-');
@@ -1442,3 +1444,4 @@ document.addEventListener('DOMContentLoaded', () => {
   updateNavAuthState();
   loadAll();
 });
+   
