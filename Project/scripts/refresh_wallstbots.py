@@ -137,31 +137,41 @@ def get_live_prices(symbols):
     prices      = {}
     prev_closes = {}
     print(f"  [yfinance] fetching {len(yf_syms)} tickers (live prices)...")
-    try:
-        raw = yf.download(
-            yf_syms,
-            period="5d",
-            auto_adjust=True,
-            progress=False,
-        )
-        if not raw.empty:
-            for yf_sym in yf_syms:
-                state_sym = YF_TO_STATE.get(yf_sym, yf_sym)
-                try:
-                    if isinstance(raw.columns, pd.MultiIndex):
-                        closes = raw["Close"][yf_sym].dropna()
-                    else:
-                        closes = raw["Close"].dropna()
-                    if len(closes) >= 1:
-                        p  = float(closes.iloc[-1])
-                        pc = float(closes.iloc[-2]) if len(closes) >= 2 else p
-                        if p > 0:
-                            prices[state_sym]      = round(p, 4)
-                            prev_closes[state_sym] = round(pc, 4)
-                except Exception:
-                    pass
-    except Exception as e:
-        print(f"  [yfinance] download error: {e}")
+    for attempt in range(2):
+        try:
+            raw = yf.download(
+                yf_syms,
+                period="5d",
+                auto_adjust=True,
+                progress=False,
+                timeout=30,
+            )
+            if not raw.empty:
+                for yf_sym in yf_syms:
+                    state_sym = YF_TO_STATE.get(yf_sym, yf_sym)
+                    try:
+                        if isinstance(raw.columns, pd.MultiIndex):
+                            if yf_sym in raw["Close"].columns:
+                                closes = raw["Close"][yf_sym].dropna()
+                            else:
+                                continue
+                        else:
+                            closes = raw["Close"].dropna()
+                        if len(closes) >= 1:
+                            p  = float(closes.iloc[-1])
+                            pc = float(closes.iloc[-2]) if len(closes) >= 2 else p
+                            if p > 0:
+                                prices[state_sym]      = round(p, 4)
+                                prev_closes[state_sym] = round(pc, 4)
+                    except Exception:
+                        pass
+                if prices:
+                    break
+                print(f"  [yfinance] attempt {attempt+1}: parsed 0 prices, retrying...")
+            else:
+                print(f"  [yfinance] attempt {attempt+1}: empty response, retrying...")
+        except Exception as e:
+            print(f"  [yfinance] attempt {attempt+1} error: {e}")
     print(f"  [yfinance] got {len(prices)}/{len(symbols)} prices")
     return prices, prev_closes
 
@@ -791,8 +801,10 @@ def main():
     print(f"[wallstbots] fetching prices for {len(need_syms)} symbols...")
     prices, prev_closes = get_live_prices(sorted(need_syms))
     if not prices:
-        print("[wallstbots] ERROR: zero prices returned — aborting to protect DB data.")
+        print("[wallstbots] ERROR: zero prices from all attempts — aborting to protect DB data.")
         sys.exit(1)
+    elif len(prices) < len(need_syms) * 0.5:
+        print(f"[wallstbots] WARNING: only {len(prices)}/{len(need_syms)} prices — partial data, continuing with caution.")
 
     # ── Fetch historical data for strategy scoring ───────────────────────────
     hist_data = get_hist_data(list(need_syms))
