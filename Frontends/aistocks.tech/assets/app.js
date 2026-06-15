@@ -449,7 +449,7 @@ function renderFund(fid) {
     + '<div class="grid grid-3" style="margin-bottom:18px">'
     + '<div class="card"><h3>Current Value</h3>'
     + '<div class="fund-value">'+fmt$0(v.total)+'</div>'
-    + '<div style="color:var(--muted);font-size:11px;margin-top:6px">Started at '+fmt$0(startCap)+'</div></div>'
+    + '<div style="color:var(--muted);font-size:11px;margin-top:6px">Started at '+fmt$0(49000)+'</div></div>'
     + '<div class="card"><h3>Total P&amp;L</h3>'
     + '<div class="fund-value '+cls(Math.round(v.pnl))+'">'+fmt$0(v.pnl)+'</div>'
     + '<div class="fund-pnl '+cls(v.pnl_pct)+'">'+fmtPct(v.pnl_pct)+' all-time</div></div>'
