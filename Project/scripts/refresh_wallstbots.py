@@ -1214,7 +1214,7 @@ def main():
     # ── Reports (placeholder — keeps API consistent) ──────────────────────────
     push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
 
-    # ── Portfolio performance snapshots ───────────────�
+    # -- Portfolio performance snapshots ----------------------------------------
     # ── Member portfolio simulations ──────────────────────────────────────────
     print("[wallstbots] running member portfolio simulations...")
     refresh_portfolios.run("wallstbots", prices, prev_closes, hist_data, secrets)
@@ -1223,13 +1223,6 @@ def main():
     trigger_portfolio_snapshots(secrets)
 
     print("[wallstbots] refresh complete.")
-
-
-if __name__ == "__main__":
-    main()
-lstbots.tech data refresh")
-
-    print("\n[wallstbots] ALL DONE")
 
 
 if __name__ == "__main__":
