@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Portfolio — Level XIII Tech</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    /* ── Header (matches dashboard) ── */
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 200;
+    }
+    .header-inner {
+      max-width: var(--max); margin: 0 auto;
+      padding: 0 var(--pad); height: 60px;
+      display: flex; align-items: center; gap: 24px;
+    }
+    .logo { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; white-space: nowrap; }
+    .logo span { color: var(--blue); }
+    nav { display: flex; gap: 4px; flex: 1; }
+    nav a { padding: 6px 14px; border-radius: 6px; font-size: 0.875rem; color: var(--muted); transition: all 0.15s; }
+    nav a:hover { color: var(--text); background: var(--panel2); }
+
+    .platform-switcher { position: relative; }
+    .platform-btn { display: flex; align-items: center; gap: 8px; background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; color: var(--text); font-size: 0.8rem; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .platform-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .platform-btn svg { width: 14px; height: 14px; transition: transform 0.2s; }
+    .platform-btn.open svg { transform: rotate(180deg); }
+    .platform-menu { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 6px; min-width: 220px; box-shadow: var(--shadow); z-index: 300; }
+    .platform-menu.open { display: block; }
+    .platform-menu-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 7px; cursor: pointer; font-size: 0.85rem; transition: background 0.15s; text-decoration: none; color: var(--text); }
+    .platform-menu-item:hover { background: var(--panel2); }
+    .platform-menu-item.current { background: rgba(0,212,255,0.08); color: var(--blue); }
+    .platform-badge { font-size: 0.65rem; font-weight: 700; background: rgba(0,212,255,0.12); color: var(--blue); border: 1px solid rgba(0,212,255,0.3); border-radius: 4px; padding: 2px 6px; letter-spacing: 0.5px; }
+    .platform-menu-item.current .platform-badge { background: var(--blue); color: var(--bg); }
+    .account-btn { background: rgba(0,212,255,0.1); border: 1px solid var(--blue); color: var(--blue); border-radius: 8px; padding: 7px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .account-btn:hover { background: var(--blue); color: var(--bg); }
+
+    /* ── Hamburger / Mobile Nav ── */
+    .ham-btn { display: none; background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; cursor: pointer; color: var(--text); margin-left: auto; flex-shrink: 0; }
+    .ham-btn svg { width: 18px; height: 18px; display: block; }
+    .mob-nav { display: none; position: fixed; top: 60px; left: 0; right: 0; background: var(--panel); border-bottom: 1px solid var(--border); z-index: 199; padding: 8px 16px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    .mob-nav a { display: block; padding: 11px 14px; border-radius: 8px; font-size: 0.9rem; color: var(--muted); transition: all 0.15s; }
+    .mob-nav a:hover { color: var(--text); background: var(--panel2); }
+    .mob-nav-sep { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
+    .mob-nav-overlay { display: none; position: fixed; inset: 0; top: 60px; z-index: 198; }
+    .mob-nav.open, .mob-nav-overlay.open { display: block; }
+
+    @media (max-width: 600px) {
+      .header-inner { gap: 10px; }
+      nav { display: none; }
+      .ham-btn { display: flex; align-items: center; }
+      .platform-btn span { display: none; }
+    }
+
+    /* ─── MOBILE: ≤480px ─── */
+    @media (max-width: 480px) {
+      main { padding: 12px; }
+      .header-inner { padding: 0 12px; gap: 6px; }
+      .platform-btn { display: none !important; }
+      .account-btn { padding: 6px 10px; font-size: 0.78rem; }
+      .hero-stats-bar { gap: 16px; }
+      .hs-val { font-size: 1.1rem; }
+      .hero-ctas { flex-wrap: wrap; gap: 8px; }
+      .hero-ctas .btn { flex: 1; min-width: 140px; text-align: center; justify-content: center; }
+      .section-head { flex-wrap: wrap; gap: 8px; }
+      .search-box { padding: 16px; max-width: 100%; }
+      .search-actions { flex-direction: column-reverse; gap: 8px; }
+      .search-actions button { width: 100%; }
+      .modal-actions { flex-direction: column-reverse; gap: 8px; }
+      .modal-actions button { width: 100%; }
+      .modal-box { padding: 16px; margin: 12px; }
+      .toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
+    }
+
+    /* ── Member Hero ── */
+    .member-hero { margin-bottom: 24px; }
+    .hero-stats-bar { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 16px; }
+    .hs { display: flex; flex-direction: column; gap: 2px; }
+    .hs-val { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.4px; }
+    .hs-lbl { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); }
+
+    /* ── Chart ── */
+    .chart-wrap { min-height: 280px; position: relative; }
+
+    /* ── Signals note ── */
+    .signals-note { font-size: 0.72rem; color: var(--muted); margin-top: 8px; font-style: italic; }
+
+    /* ── Portfolio Holdings chips ── */
+    .holdings-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 16px 18px;
+    }
+    .holding-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 0.82rem;
+      transition: border-color 0.15s;
+    }
+    .holding-chip:hover { border-color: var(--blue); }
+    .holding-chip strong { font-weight: 700; font-size: 0.85rem; }
+    .holding-chip small { color: var(--muted); font-size: 0.72rem; }
+    .holding-chip-remove {
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; padding: 0 0 0 2px; font-size: 1rem;
+      line-height: 1; transition: color 0.15s; display: flex; align-items: center;
+    }
+    .holding-chip-remove:hover { color: var(--red); }
+    .holdings-footer {
+      padding: 10px 18px 14px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .holdings-footer-label { font-size: 0.72rem; color: var(--muted); }
+
+    /* ── Account Drawer ── */
+    .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 400; }
+    .drawer-overlay.open { display: block; }
+    .drawer { position: fixed; top: 0; right: -420px; width: 420px; max-width: 95vw; height: 100vh; background: var(--panel); border-left: 1px solid var(--border); z-index: 500; transition: right 0.3s cubic-bezier(0.4,0,0.2,1); overflow-y: auto; display: flex; flex-direction: column; }
+    .drawer.open { right: 0; }
+    .drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--panel); z-index: 1; }
+    .drawer-header h2 { font-size: 1rem; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--text); margin: 0; }
+    .drawer-close { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 6px; display: flex; align-items: center; transition: all 0.15s; }
+    .drawer-close:hover { background: var(--panel2); color: var(--text); }
+    .drawer-section { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+    .drawer-section:last-child { border-bottom: none; }
+    .drawer-section-title { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; }
+    .profile-email { font-size: 0.95rem; font-weight: 500; margin-bottom: 12px; word-break: break-all; }
+    .btn-outline { background: none; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 16px; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; width: 100%; }
+    .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+    .tier-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .tier-badge { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.5px; padding: 3px 10px; border-radius: 20px; background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
+    .tier-badge.pro { background: #7c3aed; color: #fff; border-color: #7c3aed; }
+    .tier-badge.elite { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; border: none; }
+    .tier-name { font-weight: 600; font-size: 0.92rem; }
+    .referral-box { background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .referral-code { font-family: monospace; font-size: 1rem; letter-spacing: 2px; color: var(--blue); font-weight: 600; }
+    .btn-copy { background: rgba(0,212,255,0.1); border: 1px solid var(--blue); color: var(--blue); border-radius: 6px; padding: 4px 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .btn-copy:hover { background: var(--blue); color: var(--bg); }
+    .referral-stats { font-size: 0.78rem; color: var(--muted); }
+    .referral-stats span { color: var(--blue); font-weight: 600; }
+    .manage-link { display: block; text-align: center; padding: 10px; border-radius: 8px; font-size: 0.82rem; color: var(--muted); border: 1px solid var(--border); transition: all 0.15s; margin-top: 4px; }
+    .manage-link:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* ── Modals ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 600; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; width: 100%; max-width: 380px; box-shadow: var(--shadow); }
+    .modal-box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; text-transform: none; letter-spacing: 0; color: var(--text); }
+    .modal-box p { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .btn-cancel { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+    .btn-confirm { background: var(--blue); border: none; color: var(--bg); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .btn-confirm:hover { background: #00b8e0; }
+    .btn-danger { background: var(--red); border: none; color: #fff; border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+    .btn-danger:hover { opacity: 0.85; }
+
+    /* ── Search modal ── */
+    .search-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 600; align-items: center; justify-content: center; padding: 20px; }
+    .search-modal.open { display: flex; }
+    .search-box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 24px; width: 100%; max-width: 480px; box-shadow: var(--shadow); }
+    .search-box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; text-transform: none; letter-spacing: 0; color: var(--text); }
+    .search-input { width: 100%; background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: 0.9rem; transition: border-color 0.15s; font-family: inherit; }
+    .search-input:focus { outline: none; border-color: var(--blue); }
+    .search-results { background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; max-height: 220px; overflow-y: auto; margin: 10px 0 6px; }
+    .search-result-item { padding: 10px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.12s; border-bottom: 1px solid var(--border); }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover, .search-result-item.selected { background: rgba(0,212,255,0.08); }
+    .result-ticker { font-weight: 700; font-size: 0.88rem; min-width: 60px; }
+    .result-name { font-size: 0.78rem; color: var(--muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .result-type { font-size: 0.7rem; color: var(--muted); background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; }
+    .search-empty { padding: 20px; text-align: center; color: var(--muted); font-size: 0.82rem; }
+    .search-disclosure { font-size: 0.7rem; color: var(--muted); padding: 2px 2px 12px; line-height: 1.5; }
+    .selected-ticker-display { background: rgba(0,212,255,0.1); border: 1px solid var(--blue); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-size: 0.88rem; font-weight: 600; color: var(--blue); }
+    .allocation-note { font-size: 0.76rem; color: var(--muted); margin-bottom: 16px; }
+    .search-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 0.875rem; font-weight: 500; z-index: 1000; transform: translateY(20px); opacity: 0; transition: all 0.3s; max-width: 340px; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--blue); color: var(--blue); }
+    .toast.error { border-color: var(--red); color: var(--red); }
+
+    /* ── Hero action row ── */
+    .hero-action-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:6px; }
+    .share-btn { background:rgba(0,212,255,0.08); border:1px solid rgba(0,212,255,0.25); color:var(--blue); border-radius:8px; padding:7px 14px; font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; gap:6px; }
+    .share-btn:hover { background:rgba(0,212,255,0.18); }
+    .privacy-pill { display:flex; align-items:center; gap:7px; background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:6px 11px; font-size:0.75rem; color:var(--muted); cursor:pointer; user-select:none; }
+    .privacy-dot { width:8px; height:8px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:background 0.2s; }
+    .privacy-dot.public { background:#22c55e; }
+    .privacy-dot.private { background:#ef4444; }
+
+    /* ── Share sheet modal ── */
+    .share-sheet { max-width:340px; }
+    .share-url-box { background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:0.75rem; font-family:monospace; color:var(--muted); word-break:break-all; margin-bottom:10px; }
+    .share-sheet-opt { display:flex; align-items:center; gap:14px; padding:13px 6px; border-bottom:1px solid var(--border); cursor:pointer; border-radius:8px; transition:background 0.15s; }
+    .share-sheet-opt:last-child { border-bottom:none; }
+    .share-sheet-opt:hover { background:var(--panel2); padding-left:10px; padding-right:10px; }
+    .sso-icon { width:38px; height:38px; border-radius:8px; background:var(--panel2); display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; }
+    .sso-label { font-size:0.9rem; font-weight:500; }
+    .sso-sub { font-size:0.75rem; color:var(--muted); margin-top:1px; }
+
+    /* ── Compact holdings chips ── */
+    .holdings-chip-grid { display:flex; flex-wrap:wrap; gap:6px; }
+    .h-chip { background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:5px 10px; font-size:0.73rem; display:flex; align-items:center; gap:5px; transition:border-color 0.15s; }
+    .h-chip:hover { border-color:var(--blue); }
+    .h-chip-sym { font-weight:800; color:var(--text); letter-spacing:-0.2px; white-space:nowrap; }
+    .h-chip-name { color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80px; }
+    .h-chip-remove { background:none; border:none; color:var(--muted); cursor:pointer; padding:0 0 0 4px; font-size:0.9rem; line-height:1; transition:color 0.15s; }
+    .h-chip-remove:hover { color:#ef4444; }
+
+    /* ── Comments ── */
+    .comment-card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+    .comment-handle { font-size:0.82rem; font-weight:700; color:var(--blue); }
+    .comment-time { font-size:0.72rem; color:var(--muted); }
+    .comment-body-text { font-size:0.875rem; line-height:1.6; color:var(--text); white-space:pre-wrap; word-break:break-word; margin-top:6px; }
+    .comment-del-btn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:0.75rem; padding:2px 6px; border-radius:4px; }
+    .comment-del-btn:hover { color:#ef4444; background:rgba(239,68,68,0.08); }
+    .comments-empty { text-align:center; padding:28px; color:var(--muted); font-size:0.875rem; }
+
+    @media(max-width:480px){ .hero-action-row { gap:6px; } }
+
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="header-inner">
+    <a href="/" class="logo">Level <span>XIII</span></a>
+    <nav>
+      <a href="dashboard.html">← Portfolios</a>
+      <a href="leaderboard.html">Leaderboard</a>
+    </nav>
+    <button class="ham-btn" id="hamBtn" onclick="toggleMobNav()" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <div class="platform-switcher">
+      <button class="platform-btn" id="platformBtn" onclick="togglePlatformMenu()">
+        <span>Switch Platform</span>
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.427 7.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 7H4.604a.25.25 0 00-.177.427z"/></svg>
+      </button>
+      <div class="platform-menu" id="platformMenu">
+        <div class="platform-menu-item current">
+          <span class="platform-badge">L13</span>
+          <div><div style="font-weight:600">Level XIII Tech</div><div style="font-size:0.72rem;color:var(--muted)">AI &amp; Quantum</div></div>
+        </div>
+        <a href="https://wallstbots.tech/dashboard.html" class="platform-menu-item">
+          <span class="platform-badge" style="background:var(--panel2);color:var(--muted);border-color:var(--border)">WSB</span>
+          <div><div style="font-weight:600">Wall St. Bots</div><div style="font-size:0.72rem;color:var(--muted)">Stock Market</div></div>
+        </a>
+        <a href="https://bitbot13.tech/dashboard.html" class="platform-menu-item">
+          <span class="platform-badge" style="background:var(--panel2);color:var(--muted);border-color:var(--border)">BB13</span>
+          <div><div style="font-weight:600">BitBot13</div><div style="font-size:0.72rem;color:var(--muted)">Cryptocurrency</div></div>
+        </a>
+      </div>
+    </div>
+    <button class="account-btn" onclick="openDrawer()">My Account</button>
+  </div>
+</header>
+
+<!-- ── MOBILE NAV ── -->
+<div class="mob-nav" id="mobNav">
+  <a href="dashboard.html">← My Portfolios</a>
+  <a href="leaderboard.html">Leaderboard</a>
+  <hr class="mob-nav-sep">
+  <a href="https://wallstbots.tech/dashboard.html">Wall St. Bots — Stocks</a>
+  <a href="https://bitbot13.tech/dashboard.html">BitBot13 — Crypto</a>
+</div>
+<div class="mob-nav-overlay" id="mobNavOverlay" onclick="closeMobNav()"></div>
+
+<!-- ── ACCOUNT DRAWER ── -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="accountDrawer">
+  <div class="drawer-header">
+    <h2>My Account</h2>
+    <button class="drawer-close" onclick="closeDrawer()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="drawer-section">
+    <div class="drawer-section-title">Profile</div>
+    <div class="profile-email" id="drawerEmail">Loading…</div>
+    <button class="btn-outline" onclick="openPwModal()">🔑 Reset Password</button>
+  </div>
+  <div class="drawer-section">
+    <div class="drawer-section-title">Membership</div>
+    <div class="tier-row">
+      <span class="tier-badge" id="drawerTierBadge">Free</span>
+      <span class="tier-name" id="drawerTierName">Free Plan</span>
+    </div>
+    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:6px">Status: <span id="drawerStatus" style="color:var(--text);font-weight:500">—</span></div>
+    <div style="font-size:0.8rem;color:var(--muted)">Renewal: <span id="drawerBillDate" style="color:var(--text);font-weight:500">—</span></div>
+  </div>
+  <div class="drawer-section">
+    <div class="drawer-section-title">Referral Program</div>
+    <div class="referral-box">
+      <span class="referral-code" id="drawerRefCode">———</span>
+      <button class="btn-copy" onclick="copyReferral()">Copy</button>
+    </div>
+    <div class="referral-stats"><span id="drawerRefCount">0</span> referrals · Earn 1 free month per 3 referrals</div>
+  </div>
+  <div class="drawer-section">
+    <a href="#/dashboard" class="manage-link">Manage Subscription →</a>
+  </div>
+</div>
+
+<!-- ── PASSWORD RESET MODAL ── -->
+<div class="modal-overlay" id="pwModal">
+  <div class="modal-box">
+    <h3>Reset Password</h3>
+    <p id="pwModalText">We'll send a reset link to your email address.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closePwModal()">Cancel</button>
+      <button class="btn-confirm" id="pwConfirmBtn" onclick="sendPasswordReset()">Send Reset Link</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DELETE PORTFOLIO MODAL ── -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <h3>Delete Portfolio</h3>
+    <p id="deleteModalText">Are you sure you want to permanently delete this portfolio? This cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn-danger" id="deleteConfirmBtn" onclick="confirmDeletePortfolio()">Delete Portfolio</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SHARE SHEET MODAL ── -->
+<div class="modal-overlay" id="shareSheetModal">
+  <div class="modal-box share-sheet">
+    <h3>Share Portfolio</h3>
+    <div class="share-url-box" id="shareUrlDisplay"></div>
+    <div class="share-sheet-opt" onclick="shareAction('copy')">
+      <div class="sso-icon">🔗</div>
+      <div><div class="sso-label">Copy Link</div><div class="sso-sub">Copy URL to clipboard</div></div>
+    </div>
+    <div class="share-sheet-opt" onclick="shareAction('user')">
+      <div class="sso-icon">👤</div>
+      <div><div class="sso-label">Share with User</div><div class="sso-sub">Send to a @handle on this platform</div></div>
+    </div>
+    <div class="share-sheet-opt" onclick="shareAction('email')">
+      <div class="sso-icon">📧</div>
+      <div><div class="sso-label">Email</div><div class="sso-sub">Open in your email app</div></div>
+    </div>
+    <div class="share-sheet-opt" onclick="shareAction('text')">
+      <div class="sso-icon">💬</div>
+      <div><div class="sso-label">Text / iMessage</div><div class="sso-sub">Send via messages</div></div>
+    </div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeShareSheet()">Close</button></div>
+  </div>
+</div>
+
+<!-- ── SHARE WITH USER MODAL ── -->
+<div class="modal-overlay" id="shareUserModal">
+  <div class="modal-box" style="max-width:340px">
+    <h3>Share with @handle</h3>
+    <p>Enter the @handle of the user on this platform.</p>
+    <input id="shareHandleInput" type="text" placeholder="@username" maxlength="50"
+      style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:0.88rem;color:var(--text);outline:none;box-sizing:border-box;font-family:inherit">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('shareUserModal').classList.remove('open')">Cancel</button>
+      <button class="btn-confirm" onclick="addShare()">Share</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<main class="app">
+
+  <!-- 1. Member Hero -->
+  <section class="hero member-hero">
+    <img src="assets/logo.svg" alt="" class="hero-robot">
+    <div class="hero-content">
+      <span class="hero-eyebrow" id="heroEyebrow">Your Portfolio</span>
+      <h1 id="heroName" style="margin-bottom:6px">Loading…</h1>
+      <p id="heroMeta" style="color:var(--muted);margin-bottom:14px">&nbsp;</p>
+      <div class="hero-ctas">
+        <button class="btn btn-primary" onclick="openSearchModal()">+ Add Holding</button>
+        <button class="btn btn-secondary" onclick="openDeleteModal()">Delete Portfolio</button>
+      </div>
+      <!-- Actions row: Share + Privacy -->
+      <div class="hero-action-row" id="heroActionRow" style="display:none">
+        <button class="share-btn" onclick="openShareSheet()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span>Share Portfolio</span>
+        </button>
+        <div class="privacy-pill" onclick="togglePrivacyPill()" id="privacyPill">
+          <span class="privacy-dot public" id="privacyDot"></span>
+          <span id="privacyLabel">Public</span>
+        </div>
+      </div>
+      <!-- Holdings count only -->
+      <div class="hero-stats-bar" id="heroStats" style="display:none">
+        <div class="hs"><span class="hs-val" id="hsHoldings">—</span><span class="hs-lbl">Holdings</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Live Leaderboard — Today -->
+  <div class="section-head">
+    <h3>Live Leaderboard — Today</h3>
+  </div>
+  <div class="lb-strip" id="lbStrip">
+    <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading leaderboard…</div>
+  </div>
+
+  <!-- 3. Signals — Today (filtered to portfolio) -->
+  <div class="section-head" style="margin-top:28px">
+    <h3>Signals — Today</h3>
+  </div>
+  <div class="signals-today" id="signalsToday">
+    <div class="card" style="color:var(--muted);font-size:0.82rem">Loading signals…</div>
+  </div>
+  <div class="signals-note" id="signalsNote"></div>
+
+  <!-- 4. News — Today (filtered to portfolio) -->
+  <div class="section-head" style="margin-top:28px">
+    <h3>News — Today</h3>
+  </div>
+  <div class="news-grid" id="newsGrid">
+    <div class="card" style="color:var(--muted);font-size:0.82rem">Loading news…</div>
+  </div>
+
+  <!-- 5. The Race -->
+  <div class="section-head" style="margin-top:28px">
+    <h3>The Race</h3>
+  </div>
+  <div class="grid grid-5" id="raceGrid">
+    <div class="card" style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:14px">Loading race…</div>
+  </div>
+
+  <!-- 6. Performance Trajectory -->
+  <div class="panel" style="margin-top:18px">
+    <h3 id="chartTitle">Performance Trajectory — All 5 Strategies</h3>
+    <div class="chart-wrap" style="min-height:240px" id="chartWrap">
+      <canvas id="chartPortfolio"></canvas>
+    </div>
+  </div>
+
+  <!-- 7. Holdings (compact chips) -->
+  <div class="section-head" style="margin-top:28px">
+    <h3>Holdings &nbsp;<span id="holdingsCount" style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:0.78rem"></span></h3>
+  </div>
+  <div class="panel">
+    <div class="holdings-chip-grid" id="holdingsChipGrid">
+      <span style="color:var(--muted);font-size:0.85rem">Loading holdings…</span>
+    </div>
+  </div>
+
+  <!-- 8. Comments (members only) -->
+  <div class="panel" id="commentsSection" style="margin-top:18px">
+    <h3 style="margin-bottom:16px">💬 Comments</h3>
+    <div id="commentFormWrap"></div>
+    <div id="commentsList"><div class="comments-empty">Loading comments…</div></div>
+  </div>
+
+</main>
+
+<!-- ── ADD HOLDING MODAL ── -->
+<div class="search-modal" id="searchModal">
+  <div class="search-box">
+    <h3>Add a Stock</h3>
+    <input class="search-input" id="searchInput" type="text"
+           placeholder="Search ticker or company name…"
+           oninput="onSearchInput(this.value)" autocomplete="off" />
+    <div class="search-results" id="searchResults">
+      <div class="search-empty">Type 2+ characters to search AI, quantum, and tech stocks (Nasdaq, NYSE, OTC)</div>
+    </div>
+    <div class="search-disclosure">AI, quantum computing, and emerging tech stocks — Nasdaq, NYSE, OTC &amp; Pink Sheet symbols. Covers the full universe of U.S.-listed tech and innovation companies. Max 50 holdings per portfolio.</div>
+    <div class="selected-ticker-display" id="selectedDisplay" style="display:none">
+      <span id="selectedTicker">—</span>
+      <button style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:1.1rem" onclick="clearSelection()">×</button>
+    </div>
+    <div class="allocation-note">Each holding is allocated <strong style="color:var(--blue)">$1,000</strong> from your portfolio.</div>
+    <div class="search-actions">
+      <button class="btn-cancel" onclick="closeSearchModal()">Cancel</button>
+      <button class="btn-confirm" id="addHoldingBtn" onclick="addSelectedHolding()" disabled>Add Holding</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="auth.js"></script>
+<script src="api.js"></script>
+<script>
+// ── Per-site constants ──────────────────────────────────────────────────────
+const PLATFORM   = "lvl13";
+const SITE_TITLE = "Level XIII Tech";
+// ───────────────────────────────────────────────────────────────────────────
+
+const BACKEND_URL  = "https://wallstbots-backend-868128114349.us-east1.run.app";
+const API_BASE     = BACKEND_URL;
+const TRACKER_API  = BACKEND_URL + "/public/tracker";
+const auth = new WallStBotsAuth(BACKEND_URL);
+const api  = new WallStBotsAPI(BACKEND_URL, auth);
+if (!auth.isAuthenticated()) { window.location.href = "login.html"; }
+
+const BOT_ID = new URLSearchParams(window.location.search).get("id");
+if (!BOT_ID) { window.location.href = "dashboard.html"; }
+
+// ── Shared state ─────────────────────────────────────────────────────────────
+let botData = null, holdings = [], userProfile = null;
+let selectedSymbol = null, searchTimer = null;
+const CHARTS_BD = {};
+const STATE = { funds: null, news: null, signals: null };
+
+// ── Helpers (same as app.js) ──────────────────────────────────────────────────
+const fmt$  = n => { const v = n||0; return (v<0?'-$':'$') + Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); };
+const fmt$0 = n => { const v = Math.round(n||0); return (v<0?'-$':'$') + Math.abs(v).toLocaleString(); };
+const fmtPct = n => (n>=0?'+':'') + (n||0).toFixed(2) + '%';
+const cls    = n => n >= 0 ? 'pos' : 'neg';
+function escHtml(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function relTime(iso) {
+  if (!iso) return '';
+  const t = new Date(iso); if (isNaN(t)) return iso;
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 60)   return m + 'm ago';
+  if (m < 1440) return Math.round(m/60) + 'h ago';
+  if (m < 10080)return Math.round(m/1440) + 'd ago';
+  return t.toLocaleDateString();
+}
+function sectorClass(s) {
+  if (!s) return 'other';
+  const v = s.toLowerCase();
+  if (v.includes('energy') || v.includes('util'))        return 'energy';
+  if (v.includes('health') || v.includes('bio'))         return 'bio';
+  if (v.includes('financ') || v.includes('bank'))        return 'finance';
+  if (v.includes('tech') || v.includes(' it') || v.includes('communic') || v.includes('industrial')) return 'tech';
+  return 'other';
+}
+
+// ── FUND_META (same as app.js) ─────────────────────────────────────────────
+const FUND_META = {
+  bot13:     { name:'BOT13',     icon:'13', color:'#ec4899', kind:'DAILY',
+               tagline:"Daily intraday bot. Buys at open, sells before close. Skips the day if no edge." },
+  oracle:    { name:'ORACLE',    icon:'OR', color:'#a855f7', kind:'WEEKLY',
+               tagline:"Weekly bot. Trades every Monday. All-in on the week's best bets." },
+  wizard:    { name:'WIZARD',    icon:'WZ', color:'#10b981', kind:'MONTHLY',
+               tagline:"Monthly hold bot. Buys the 1st trading day, sells the last. Slow and patient." },
+  equalizer: { name:'EQUALIZER', icon:'EQ', color:'#00d4ff', kind:'BASELINE',
+               tagline:"Equal weight. No favorites. $1,000 in every stock." },
+  titan:     { name:'TITAN',     icon:'TT', color:'#ff8c00', kind:'BASELINE',
+               tagline:"Half on the heavyweights. Half on the rest. Concentration meets coverage." },
+};
+const FUND_ORDER = ['bot13','oracle','wizard','equalizer','titan'];
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  try { userProfile = await api.getUserProfile(); renderProfile(); } catch(e) {}
+  try { loadReferralCode(); } catch(e) {}
+  try { loadSubscriptionInfo(); } catch(e) {}
+  await loadBot();
+  await loadSiteData();
+  try { loadFundStates(); } catch(e) {}  // loads all 5 bot states, re-renders leaderboard with real %
+}
+
+function renderProfile() {
+  const email = userProfile?.email || userProfile?.user?.email || '—';
+  document.getElementById('drawerEmail').textContent = email;
+}
+
+async function loadSubscriptionInfo() {
+  try {
+    const sub = await api.getSubscription(); if (!sub) return;
+    const tier = sub.tier || sub.plan || 'Free';
+    const tl = tier.toLowerCase();
+    let bc = '';
+    if (tl.includes('insider')||tl.includes('elite')||tl.includes('premium')) bc = 'elite';
+    else if (tl.includes('pro')) bc = 'pro';
+    const tb = document.getElementById('drawerTierBadge');
+    tb.textContent = tier.charAt(0).toUpperCase()+tier.slice(1);
+    if (bc) tb.className = 'tier-badge ' + bc;
+    document.getElementById('drawerTierName').textContent = sub.plan_name || tier + ' Plan';
+    document.getElementById('drawerStatus').textContent = (sub.status||'active').charAt(0).toUpperCase()+(sub.status||'active').slice(1);
+    if (sub.current_period_end || sub.tier_expires_at) {
+      const d = new Date((sub.current_period_end||sub.tier_expires_at)*1000||(sub.current_period_end||sub.tier_expires_at));
+      document.getElementById('drawerBillDate').textContent = d.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+    }
+  } catch(e) {}
+}
+
+async function loadReferralCode() {
+  try {
+    const r = await api.getReferralStats();
+    document.getElementById('drawerRefCode').textContent = r?.referral_code || '—';
+    document.getElementById('drawerRefCount').textContent = r?.referred_count || r?.referral_count || 0;
+  } catch(e) {}
+}
+
+// ── Portfolio data ────────────────────────────────────────────────────────────
+async function loadBot() {
+  try {
+    const data = await api.getBot(BOT_ID);
+    botData = data?.bot || data;
+    holdings = botData?.holdings || [];
+    renderHero();
+    renderHoldingsChips();
+    try { loadPrivacyState(); } catch(e) {}
+    try { loadComments(); } catch(e) {}
+  } catch(e) {
+    document.getElementById('heroName').textContent = 'Error loading portfolio';
+    showToast(e.message || 'Could not load portfolio', 'error');
+  }
+}
+
+function renderHero() {
+  if (!botData) return;
+  const perf     = botData.performance || {};
+  const totalVal = perf.total_value || 0;
+  const cost     = perf.entry_cost  || 0;
+  const gain     = perf.gain_loss   || 0;
+  const gainPct  = perf.gain_loss_pct || 0;
+  const isPos    = gain >= 0;
+
+  const email    = userProfile?.email || userProfile?.user?.email || '';
+  const username = email ? '@' + email.split('@')[0] : '';
+
+  document.getElementById('heroEyebrow').textContent = username ? 'Your Portfolio · ' + username : 'Your Portfolio';
+  document.getElementById('heroName').textContent = botData.name || 'Untitled Portfolio';
+  document.title = (botData.name || 'Portfolio') + ' — ' + SITE_TITLE;
+
+  const created  = botData.created_at ? new Date(botData.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '';
+  document.getElementById('heroMeta').textContent =
+    holdings.length + ' holdings · $' + (holdings.length * 1000).toLocaleString() + ' allocated' + (created ? ' · Since ' + created : '');
+
+  document.getElementById('holdingsCount').textContent = '(' + holdings.length + ' of 50)';
+
+  // stats bar — only holdings count shown
+  const hs = document.getElementById('heroStats');
+  if (hs) hs.style.display = 'flex';
+  const hsH = document.getElementById('hsHoldings');
+  if (hsH) hsH.textContent = holdings.length + ' / 50';
+  // show action row (share + privacy)
+  const ar = document.getElementById('heroActionRow');
+  if (ar) ar.style.display = 'flex';
+}
+
+// ── Holdings table ────────────────────────────────────────────────────────────
+function renderHoldings() {
+  const wrap = document.getElementById('holdingsWrap');
+  const countEl = document.getElementById('holdingsCount');
+  if (countEl) countEl.textContent = '(' + holdings.length + ' of 50)';
+  if (!holdings.length) {
+    wrap.innerHTML = '<div class="empty-holdings">No holdings yet. Click <strong>+ Add Holding</strong> to get started.</div>';
+    return;
+  }
+  wrap.innerHTML =
+    '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'
+    + '<table style="min-width:600px;width:100%;border-collapse:collapse;font-size:0.82rem">'
+    + '<thead><tr>'
+    + '<th style="padding:10px 16px;text-align:left;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Symbol</th>'
+    + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Allocated</th>'
+    + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Entry</th>'
+    + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Current</th>'
+    + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)">Return</th>'
+    + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)"></th>'
+    + '</tr></thead><tbody>'
+    + holdings.map(h => {
+        const ep = parseFloat(h.entry_price) || 0;
+        const cp = parseFloat(h.current_price) || ep;
+        const alloc = parseFloat(h.allocated) || 1000;
+        const ret = ep > 0 ? ((cp - ep) / ep * 100) : 0;
+        const pos = ret >= 0;
+        return '<tr style="border-bottom:1px solid var(--border)">'
+          + '<td style="padding:12px 16px"><strong>' + escHtml(h.symbol) + '</strong>'
+          + (h.name ? '<div style="font-size:0.72rem;color:var(--muted)">' + escHtml(h.name) + '</div>' : '') + '</td>'
+          + '<td style="padding:12px 16px;text-align:right">' + fmt$(alloc) + '</td>'
+          + '<td style="padding:12px 16px;text-align:right">' + (ep ? fmt$(ep) : '—') + '</td>'
+          + '<td style="padding:12px 16px;text-align:right">' + (cp ? fmt$(cp) : '—') + '</td>'
+          + '<td style="padding:12px 16px;text-align:right;color:' + (pos ? 'var(--green)' : 'var(--red)') + '">'
+          + (pos ? '+' : '') + ret.toFixed(2) + '%</td>'
+          + '<td style="padding:12px 16px;text-align:right">'
+          + '<button onclick="removeHolding(\'' + h.id + '\',\'' + escHtml(h.symbol) + '\')" '
+          + 'style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer" '
+          + 'onmouseenter="this.style.borderColor=\'var(--red)\';this.style.color=\'var(--red)\'" '
+          + 'onmouseleave="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--muted)\'">Remove</button></td>'
+          + '</tr>';
+      }).join('')
+    + '</tbody></table></div>';
+}
+
+// ── Site data (state / signals / news) ───────────────────────────────────────
+async function loadSiteData() {
+  try {
+    const [sr, nr, sigr] = await Promise.allSettled([
+      fetch(TRACKER_API + '/state?platform='   + PLATFORM, {cache:'no-store'}).then(r=>r.json()).then(r=>r.data),
+      fetch(TRACKER_API + '/news?platform='    + PLATFORM, {cache:'no-store'}).then(r=>r.json()).then(r=>r.data),
+      fetch(TRACKER_API + '/signals?platform=' + PLATFORM, {cache:'no-store'}).then(r=>r.json()).then(r=>r.data),
+    ]);
+    STATE.funds   = sr.status   === 'fulfilled' ? sr.value   : null;
+    STATE.news    = nr.status   === 'fulfilled' ? nr.value   : { items: [] };
+    STATE.signals = sigr.status === 'fulfilled' ? sigr.value : { recommendations: [], summary: {} };
+  } catch(e) {}
+  try { renderLeaderboard();           } catch(e) {}
+  try { renderPortfolioBotAnalysis(); } catch(e) {}
+  try { renderSignals();              } catch(e) {}
+  try { renderNews();                 } catch(e) {}
+  try { renderRace();                 } catch(e) {}
+  drawPortfolioChart();
+}
+
+// ── Bot Analysis grid (portfolio-scoped) ─────────────────────────────────────
+function renderPortfolioBotAnalysis() {
+  const grid = document.getElementById('botAnalysisGrid');
+  if (!grid) return;
+  const tickers = holdings.map(h => h.symbol).join(', ') || 'your holdings';
+  const cards = FUND_ORDER.map(fid => {
+    const meta = FUND_META[fid];
+    return '<a class="card clickable fund-card" href="portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid + '">'
+      + '<div class="fund-head"><span class="fund-icon ' + fid + '">' + meta.icon + '</span>'
+      + '<div style="min-width:0"><div class="fund-name">' + meta.name + '</div>'
+      + '<div class="fund-kind" style="color:' + meta.color + '">' + meta.kind + '</div></div></div>'
+      + '<div class="fund-tag">' + meta.tagline + '</div>'
+      + '<div style="font-size:0.72rem;color:var(--muted);margin-top:6px">Tracking: <strong style="color:var(--text)">' + tickers + '</strong></div>'
+      + '</a>';
+  }).join('');
+  grid.innerHTML = cards;
+}
+
+// ── Fund states (per-portfolio bot simulation results) ────────────────────────
+const FUND_STATES = {};  // keyed by fund slug, populated by loadFundStates()
+
+async function loadFundStates() {
+  try {
+    // Retry once on auth failure (token may need refresh)
+    let token = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try { token = await auth.getToken(); } catch(e) {}
+      if (token) break;
+      await new Promise(r => setTimeout(r, 500));
+    }
+    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    await Promise.all(FUND_ORDER.map(async fid => {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const res = await fetch(API_BASE + '/bots/' + BOT_ID + '/fund/' + fid + '/state', { headers });
+          if (res.status === 401 && attempt === 0) continue;  // retry once on auth fail
+          if (res.ok) {
+            const data = await res.json();
+            if (data.state) FUND_STATES[fid] = data.state;
+          }
+          break;
+        } catch(e) { break; }
+      }
+    }));
+    renderLeaderboard();  // re-render with real data once loaded
+    renderRace();         // re-render race grid with actual fund values
+  } catch(e) {}
+}
+
+// ── Leaderboard strip ─────────────────────────────────────────────────────────
+// Shows today's day_pct for each bot strategy in this portfolio.
+// Reads from FUND_STATES populated by loadFundStates() — bot_fund_state table.
+function renderLeaderboard() {
+  const strip = FUND_ORDER.map(fid => {
+    const m  = FUND_META[fid];
+    const fs = FUND_STATES[fid];  // from /bots/{id}/fund/{fid}/state → bot_fund_state
+    let pctHtml = '<div class="lb-pct" style="color:var(--muted)">—</div>';
+    if (fs && fs.day_pct != null) {
+      const pct  = fs.day_pct;
+      const cls  = pct >= 0 ? 'pos' : 'neg';
+      const sign = pct >= 0 ? '+' : '';
+      pctHtml = '<div class="lb-pct ' + cls + '">' + sign + pct.toFixed(2) + '%</div>';
+    }
+    return '<a class="card clickable" href="portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid + '">'
+      + '<span class="fund-icon ' + fid + '">' + m.icon + '</span>'
+      + '<div class="lb-name"><strong>' + m.name + '</strong><small>' + m.kind + '</small></div>'
+      + pctHtml + '</a>';
+  }).join('');
+  const lbEl = document.getElementById('lbStrip');
+  if (lbEl) lbEl.innerHTML = strip;
+}
+
+// ── Signals (filtered to user's holdings only) ───────────────────────────────
+function renderSignals() {
+  const allSigs  = (STATE.signals && STATE.signals.recommendations) || [];
+  const holdingTickers = holdings.map(h => h.symbol);
+
+  const filtered = holdingTickers.length
+    ? allSigs.filter(r => holdingTickers.includes(r.symbol))
+    : [];
+
+  const note = document.getElementById('signalsNote');
+  if (!holdingTickers.length) {
+    note.textContent = 'Add holdings to see signals filtered to your portfolio.';
+  } else if (filtered.length === 0) {
+    note.textContent = 'No signals today for your ' + holdingTickers.length + ' holding' + (holdingTickers.length !== 1 ? 's' : '') + '. Check back after the next refresh.';
+  } else {
+    note.textContent = 'Showing signals for your ' + holdingTickers.length + ' holding' + (holdingTickers.length !== 1 ? 's' : '') + ' only.';
+  }
+
+  const topByAction = (action, n) => filtered.filter(r => r.action === action).slice(0, n);
+  const sigCol = (label, action, n) => {
+    const items = topByAction(action, n);
+    const count = filtered.filter(r => r.action === action).length;
+    const rows = items.length
+      ? items.map(r => '<div class="row"><strong>' + escHtml(r.symbol) + '</strong>'
+          + '<span class="' + (r.upside_pct >= 0 ? 'pos' : 'neg') + '">'
+          + (r.upside_pct != null ? fmtPct(r.upside_pct) : '') + '</span></div>').join('')
+      : '<div class="row" style="color:var(--muted);font-size:11px">None today</div>';
+    const sigClass = action === 'STRONG BUY' ? 'signal-strong-buy' : action === 'HOLD' ? 'signal-hold' : 'signal-strong-sell';
+    return '<div class="card">'
+      + '<div class="signals-today-head"><span class="signal ' + sigClass + '">' + label + '</span>'
+      + (count ? '<span style="color:var(--muted);font-size:10px">' + count + ' of your holdings</span>' : '')
+      + '</div>'
+      + '<div class="signals-today-list">' + rows + '</div></div>';
+  };
+
+  document.getElementById('signalsToday').innerHTML =
+    sigCol('TOP BUYS',  'STRONG BUY',  4)
+    + sigCol('HOLDS',   'HOLD',        4)
+    + sigCol('TOP SELLS','STRONG SELL',4);
+}
+
+// ── News (filtered to user's holdings) ───────────────────────────────────────
+function newsCard(it) {
+  const cat  = sectorClass(it.sector);
+  const url  = it.url && it.url !== '#' ? it.url : null;
+  const open = url ? ' target="_blank" rel="noopener noreferrer"' : '';
+  const href = url || 'javascript:void(0)';
+  return '<a class="news-card cat-' + cat + '" href="' + escHtml(href) + '"' + open + '>'
+    + '<div class="news-title">' + escHtml(it.title || '') + '</div>'
+    + '<div class="news-meta">' + escHtml(it.source || it.sector || 'Source') + ' · ' + relTime(it.published_at) + '</div></a>';
+}
+
+function renderNews() {
+  const allNews = (STATE.news && STATE.news.items) || [];
+  const holdingTickers = holdings.map(h => (h.symbol || '').toUpperCase());
+
+  let filtered = allNews;
+  if (holdingTickers.length) {
+    filtered = allNews.filter(item => {
+      if (item.ticker  && holdingTickers.includes(item.ticker.toUpperCase()))  return true;
+      if (item.symbol  && holdingTickers.includes(item.symbol.toUpperCase()))  return true;
+      if (item.tickers && item.tickers.some(t => holdingTickers.includes(t.toUpperCase()))) return true;
+      const title = (item.title || '').toUpperCase();
+      return holdingTickers.some(t => title.includes(t));
+    });
+  }
+
+  const cards = filtered.slice(0, 6).map(newsCard).join('');
+  document.getElementById('newsGrid').innerHTML = cards || '<p style="color:var(--muted);font-size:0.9rem">No headlines yet for your holdings — the fetcher runs nightly.</p>';
+}
+
+// ── The Race — fundCards (portfolio-scoped) ───────────────────────────────────
+// Shows allocated capital as starting value. P&L is $0 on day 1.
+// Links go to portfolio-scoped bot pages.
+function fundCard(fid) {
+  const meta = FUND_META[fid];
+  const fs   = FUND_STATES[fid];  // from bot_fund_state — same source as portfolio-fund.html
+  let valueHtml, pnlHtml, todayHtml;
+  if (fs && fs.total_value != null) {
+    const total  = fs.total_value;
+    const cost   = fs.entry_cost || 0;
+    const gl     = fs.gain_loss || 0;
+    const glPct  = fs.gain_loss_pct || 0;
+    const dayPnl = fs.day_pnl || 0;
+    const dayPct = fs.day_pct || 0;
+    const pos    = gl >= 0;
+    const tdPos  = dayPnl >= 0;
+    valueHtml = '<div class="fund-value">' + fmt$0(total) + '</div>';
+    pnlHtml   = '<div class="fund-pnl ' + (pos ? 'pos' : 'neg') + '">'
+      + (pos ? '+' : '') + fmt$(gl) + ' (' + (pos ? '+' : '') + glPct.toFixed(2) + '%)</div>';
+    todayHtml = '<div class="stat-row"><span class="stat-label">Today</span>'
+      + '<span class="stat-val ' + (tdPos ? 'pos' : 'neg') + '">'
+      + (tdPos ? '+' : '') + dayPct.toFixed(2) + '%</span></div>';
+  } else {
+    const cap = holdings.length * 1000;
+    valueHtml = '<div class="fund-value">' + fmt$0(cap) + '</div>';
+    pnlHtml   = '<div class="fund-pnl" style="color:var(--muted)">' + holdings.length + ' holdings · loading...</div>';
+    todayHtml = '<div class="stat-row"><span class="stat-label">Today</span><span class="stat-val">—</span></div>';
+  }
+  return '<a class="card clickable fund-card" href="portfolio-fund.html?portfolio=' + encodeURIComponent(BOT_ID) + '&bot=' + fid + '">'
+    + '<div class="fund-head"><span class="fund-icon ' + fid + '">' + meta.icon + '</span>'
+    + '<div style="min-width:0"><div class="fund-name">' + meta.name + '</div><div class="fund-kind" style="color:' + meta.color + '">' + meta.kind + '</div></div></div>'
+    + '<div class="fund-tag">' + meta.tagline + '</div>'
+    + valueHtml + pnlHtml + todayHtml + '</a>';
+}
+
+function renderRace() {
+  const el = document.getElementById('raceGrid');
+  if (el) el.innerHTML = FUND_ORDER.map(fid => fundCard(fid)).join('');
+}
+
+// ── Performance Trajectory chart ──────────────────────────────────────────────
+function drawPortfolioChart() {
+  const wrap = document.getElementById('chartWrap');
+  const ctx  = document.getElementById('chartPortfolio');
+  if (!wrap) return;
+  if (ctx && CHARTS_BD.portfolio) CHARTS_BD.portfolio.destroy();
+
+  // Use tracker snapshots — same source as homescreen, scaled to member capital
+  const cap   = holdings.length * 1000;
+  const snaps = (STATE.funds && STATE.funds.snapshots) || [];
+
+  if (!snaps.length) {
+    const created = botData?.created_at
+      ? new Date(botData.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
+      : 'today';
+    wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.8">Portfolio started ' + created + '.<br>Performance history appears after the first trading day.</div>';
+    return;
+  }
+
+  // Tracker snapshots store absolute values based on platform starting capital.
+  // Convert to % return then scale to member capital so lines reflect their portfolio.
+  const platformCap = (STATE.funds && STATE.funds.starting_capital) || 50000;
+  const labels   = snaps.map(s => s.date);
+  const datasets = FUND_ORDER.map(fid => {
+    const meta = FUND_META[fid];
+    return {
+      label: meta.name,
+      data: snaps.map(s => {
+        const v = s[fid];
+        if (v == null) return null;
+        const pct = (v - platformCap) / platformCap;
+        return Math.round(cap + cap * pct);
+      }),
+      borderColor: meta.color,
+      backgroundColor: 'transparent',
+      tension: 0.3, borderWidth: 2, fill: false,
+      pointRadius: snaps.length > 30 ? 0 : 3,
+      spanGaps: true,
+    };
+  });
+
+  const titleEl = document.getElementById('chartTitle');
+  if (titleEl) titleEl.innerHTML = 'Performance Trajectory — All 5 Strategies';
+
+  CHARTS_BD.portfolio = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: '#9ca3af', boxWidth: 12, font: { size: 11 } }
+        }
+      },
+      scales: {
+        x: { ticks: { color:'#7d8590', maxTicksLimit:8 }, grid: { color:'#1e2633' } },
+        y: { ticks: { color:'#7d8590', callback: v => '$'+v.toLocaleString() }, grid: { color:'#1e2633' } }
+      }
+    }
+  });
+}
+
+// ── Remove Holding ───────────────────────────────────────────────────────────
+async function removeHolding(holdingId, symbol) {
+  if (!confirm('Remove ' + symbol + ' from this portfolio?')) return;
+  try {
+    await api.removeHolding(BOT_ID, holdingId);
+    showToast(symbol + ' removed', 'success');
+    await loadBot();
+  } catch(e) {
+    showToast('Failed to remove ' + symbol, 'error');
+  }
+}
+
+// ── Delete Portfolio ──────────────────────────────────────────────────────────
+function openDeleteModal() {
+  const name = botData?.name || 'this portfolio';
+  document.getElementById('deleteModalText').textContent = 'Are you sure you want to permanently delete "' + name + '"? This cannot be undone.';
+  document.getElementById('deleteModal').classList.add('open');
+}
+function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('open'); }
+async function confirmDeletePortfolio() {
+  const btn = document.getElementById('deleteConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Deleting…';
+  try {
+    await api.deleteBot(BOT_ID);
+    showToast('Portfolio deleted', 'success');
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1200);
+  } catch(e) {
+    showToast(e.message || 'Failed to delete portfolio', 'error');
+    btn.disabled = false; btn.textContent = 'Delete Portfolio';
+  }
+}
+
+// ── Add Holding (Search Modal) ────────────────────────────────────────────────
+function openSearchModal() {
+  if (holdings.length >= 50) {
+    showToast('This portfolio is full (50/50). Create another portfolio to track more.', 'error');
+    return;
+  }
+  selectedSymbol = null;
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').innerHTML = '<div class="search-empty">Type 2+ characters to search AI, quantum, and tech stocks</div>';
+  document.getElementById('selectedDisplay').style.display = 'none';
+  document.getElementById('addHoldingBtn').disabled = true;
+  document.getElementById('searchModal').classList.add('open');
+  setTimeout(() => document.getElementById('searchInput').focus(), 100);
+}
+function closeSearchModal() { document.getElementById('searchModal').classList.remove('open'); }
+
+const _searchCache = {};
+function onSearchInput(q) {
+  clearTimeout(searchTimer);
+  // Force uppercase and strip invalid chars as user types
+  const input = document.getElementById('searchInput');
+  const cursor = input.selectionStart;
+  const clean = q.toUpperCase().replace(/[^A-Z0-9.^-]/g, '');
+  if (clean !== q) { input.value = clean; try { input.setSelectionRange(cursor, cursor); } catch(_) {} }
+  const trimmed = clean.trim();
+  // Always keep selectedSymbol in sync with what's typed
+  selectedSymbol = trimmed || null;
+  const addBtn = document.getElementById('addHoldingBtn');
+  if (addBtn) addBtn.disabled = !trimmed;
+  if (trimmed.length < 2) {
+    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Type a ticker (e.g. AAPL, NVDA) or keyword</div>';
+    return;
+  }
+  if (_searchCache[trimmed]) { renderSearchResults(_searchCache[trimmed]); return; }
+  document.getElementById('searchResults').innerHTML = '<div class="search-empty">Searching…</div>';
+  searchTimer = setTimeout(() => doSearch(trimmed), 800);
+}
+
+async function doSearch(q) {
+  try {
+    const data = await api.searchStocks(q, 'all');
+    const results = data?.results || data || [];
+    if (!results.length) {
+      document.getElementById('searchResults').innerHTML = '<div class="search-empty">No results for "<strong>' + escHtml(q) + '</strong>" — try the exact ticker (e.g. NVDA) or a keyword</div>';
+      return;
+    }
+    document.getElementById('searchResults').innerHTML = results.slice(0, 12).map(r =>
+      '<div class="search-result-item" onclick="selectTicker(\'' + escHtml(r.ticker) + '\',\'' + escHtml((r.name||r.ticker).replace(/'/g,"&#39;")) + '\')">'
+      + '<span class="result-ticker">' + escHtml(r.ticker) + '</span>'
+      + '<span class="result-name">' + escHtml(r.name||'') + '</span>'
+      + '<span class="result-type">' + escHtml(r.market||r.type||r.exchange||'') + '</span>'
+      + '</div>'
+    ).join('');
+  } catch(e) {
+    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Search unavailable — check connection or try the exact ticker symbol.</div>';
+  }
+}
+
+function selectTicker(ticker, name) {
+  selectedSymbol = ticker;
+  document.getElementById('selectedDisplay').style.display = 'flex';
+  document.getElementById('selectedTicker').textContent = ticker + ' — ' + name;
+  document.getElementById('addHoldingBtn').disabled = false;
+  document.getElementById('searchResults').style.display = 'none';
+}
+
+function clearSelection() {
+  selectedSymbol = null;
+  document.getElementById('selectedDisplay').style.display = 'none';
+  document.getElementById('addHoldingBtn').disabled = true;
+  document.getElementById('searchResults').style.display = 'block';
+  document.getElementById('searchInput').focus();
+}
+
+async function addSelectedHolding() {
+  // If nothing was selected from search, use whatever is in the input box
+  if (!selectedSymbol) {
+    const input = document.getElementById('searchInput');
+    const typed = (input ? input.value.trim().toUpperCase().replace(/[^A-Z0-9.^-]/g, '') : '');
+    if (!typed) return;
+    selectedSymbol = typed;
+  }
+  const btn = document.getElementById('addHoldingBtn');
+  btn.disabled = true; btn.textContent = 'Adding…';
+  try {
+    await api.addHolding(BOT_ID, selectedSymbol, 1000, null, null);
+    closeSearchModal();
+    showToast(selectedSymbol + ' added to portfolio', 'success');
+    await loadBot();
+  } catch(e) {
+    showToast(e.message || 'Failed to add ' + selectedSymbol, 'error');
+    btn.disabled = false; btn.textContent = 'Add Holding';
+  }
+}
+
+// ── Mobile Nav ────────────────────────────────────────────────────────────────
+function toggleMobNav() {
+  const nav = document.getElementById('mobNav');
+  const overlay = document.getElementById('mobNavOverlay');
+  const isOpen = nav.classList.toggle('open');
+  overlay.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+function closeMobNav() {
+  document.getElementById('mobNav').classList.remove('open');
+  document.getElementById('mobNavOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── Platform Switcher ─────────────────────────────────────────────────────────
+function togglePlatformMenu() {
+  const btn  = document.getElementById('platformBtn');
+  const menu = document.getElementById('platformMenu');
+  const open = menu.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  if (open) {
+    const close = e => { if (!btn.contains(e.target) && !menu.contains(e.target)) { menu.classList.remove('open'); btn.classList.remove('open'); document.removeEventListener('click', close); } };
+    setTimeout(() => document.addEventListener('click', close), 0);
+  }
+}
+
+// ── Account Drawer ────────────────────────────────────────────────────────────
+function openDrawer() {
+  document.getElementById('accountDrawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDrawer() {
+  document.getElementById('accountDrawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── Password Reset Modal ──────────────────────────────────────────────────────
+function openPwModal() {
+  document.getElementById('pwModal').classList.add('open');
+  document.getElementById('pwModalText').textContent = "We'll send a reset link to your email address.";
+  const btn = document.getElementById('pwConfirmBtn');
+  btn.disabled = false; btn.textContent = 'Send Reset Link';
+}
+function closePwModal() { document.getElementById('pwModal').classList.remove('open'); }
+async function sendPasswordReset() {
+  const btn = document.getElementById('pwConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const email = userProfile?.email || userProfile?.user?.email;
+    if (!email) throw new Error('No email on file');
+    await api.requestPasswordReset(email);
+    document.getElementById('pwModalText').textContent = 'Reset link sent! Check your inbox.';
+    btn.textContent = 'Sent ✓';
+  } catch(e) {
+    document.getElementById('pwModalText').textContent = e.message || 'Failed to send reset link.';
+    btn.disabled = false; btn.textContent = 'Try Again';
+  }
+}
+
+// ── Referral ──────────────────────────────────────────────────────────────────
+function copyReferral() {
+  const code = document.getElementById('drawerRefCode').textContent;
+  if (code && code !== '———') {
+    navigator.clipboard.writeText(code)
+      .then(() => showToast('Referral code copied!', 'success'))
+      .catch(() => showToast('Copy failed', 'error'));
+  }
+}
+
+// ── Logout ────────────────────────────────────────────────────────────────────
+function logout() { auth.logout(); window.location.href = 'login.html'; }
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Holdings Chips (compact: symbol · name, with remove) ─────────────────────
+function renderHoldingsChips() {
+  const grid = document.getElementById('holdingsChipGrid');
+  const cnt  = document.getElementById('holdingsCount');
+  if (!grid) return;
+  if (cnt) cnt.textContent = holdings.length + (holdings.length === 1 ? ' asset' : ' assets');
+  document.getElementById('hsHoldings').textContent = holdings.length + ' / 50';
+  document.getElementById('heroStats').style.display = 'flex';
+  document.getElementById('heroActionRow').style.display = 'flex';
+  if (!holdings.length) {
+    grid.innerHTML = '<span style="color:var(--muted);font-size:0.85rem">No holdings yet — click "+ Add Holding" to get started.</span>';
+    return;
+  }
+  grid.innerHTML = holdings.map(h => {
+    const sym  = escHtml((h.symbol || '').toUpperCase());
+    const name = escHtml(h.name || h.company_name || '');
+    return '<div class="h-chip">'
+      + '<span class="h-chip-sym">' + sym + '</span>'
+      + (name ? '<span class="h-chip-name">' + name + '</span>' : '')
+      + '<button class="h-chip-remove" onclick="removeHolding(\'' + escHtml(h.id) + '\',\'' + sym + '\')" title="Remove">×</button>'
+      + '</div>';
+  }).join('');
+}
+
+// ── Share Sheet ───────────────────────────────────────────────────────────────
+function openShareSheet() {
+  const url = window.location.origin + '/bot-detail.html?id=' + encodeURIComponent(BOT_ID) + '&view=public';
+  const box = document.getElementById('shareUrlDisplay');
+  if (box) box.textContent = url;
+  document.getElementById('shareSheetModal').classList.add('open');
+}
+function closeShareSheet() { document.getElementById('shareSheetModal').classList.remove('open'); }
+
+function shareAction(type) {
+  const url  = window.location.origin + '/bot-detail.html?id=' + encodeURIComponent(BOT_ID) + '&view=public';
+  const name = botData?.name || 'My Portfolio';
+  if (type === 'copy') {
+    navigator.clipboard.writeText(url)
+      .then(() => { showToast('Link copied!', 'success'); closeShareSheet(); })
+      .catch(() => showToast('Copy failed', 'error'));
+  } else if (type === 'email') {
+    window.open('mailto:?subject=' + encodeURIComponent('Check out my portfolio: ' + name) + '&body=' + encodeURIComponent(url));
+  } else if (type === 'text') {
+    window.open('sms:?body=' + encodeURIComponent('Check out my portfolio: ' + url));
+  } else if (type === 'user') {
+    closeShareSheet();
+    document.getElementById('shareHandleInput').value = '';
+    document.getElementById('shareUserModal').classList.add('open');
+    setTimeout(() => document.getElementById('shareHandleInput').focus(), 100);
+  }
+}
+
+async function addShare() {
+  const input  = document.getElementById('shareHandleInput');
+  const handle = (input?.value || '').trim().replace(/^@/, '');
+  if (!handle) { showToast('Enter a @handle', 'error'); return; }
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/share', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ handle })
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Error'); }
+    document.getElementById('shareUserModal').classList.remove('open');
+    showToast('@' + handle + ' can now view this portfolio', 'success');
+  } catch(e) { showToast(e.message || 'Could not share portfolio', 'error'); }
+}
+
+// ── Privacy pill ──────────────────────────────────────────────────────────────
+let _isPrivate = false;
+async function loadPrivacyState() {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/public', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (res.status === 403) {
+      // 403 means portfolio is private (public endpoint blocked)
+      _isPrivate = true;
+      updatePrivacyPillUI();
+      return;
+    }
+    if (!res.ok) return;
+    const data = await res.json();
+    _isPrivate = !!data.is_private;
+    updatePrivacyPillUI();
+  } catch(e) {}
+}
+
+function updatePrivacyPillUI() {
+  const dot   = document.getElementById('privacyDot');
+  const label = document.getElementById('privacyLabel');
+  if (dot)   { dot.className = 'privacy-dot ' + (_isPrivate ? 'private' : 'public'); }
+  if (label) { label.textContent = _isPrivate ? 'Private' : 'Public'; }
+}
+
+async function togglePrivacyPill() {
+  const next = !_isPrivate;
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/settings', {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_private: next })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    _isPrivate = next;
+    updatePrivacyPillUI();
+    showToast(next ? 'Portfolio set to private' : 'Portfolio set to public', 'success');
+  } catch(e) { showToast('Could not update privacy', 'error'); }
+}
+
+// ── Comments ──────────────────────────────────────────────────────────────────
+async function loadComments() {
+  const listEl = document.getElementById('commentsList');
+  try {
+    const token = await auth.getToken().catch(() => null);
+    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/comments?limit=50', { headers });
+    if (!res.ok) {
+      if (listEl) listEl.innerHTML = '<div class="comments-empty">No comments yet. Be the first!</div>';
+      try { renderCommentForm(); } catch(e) {}
+      return;
+    }
+    const data = await res.json();
+    const comments = Array.isArray(data.comments) ? data.comments : [];
+    let myUserId = null;
+    if (token) { try { myUserId = JSON.parse(atob(token.split('.')[1])).sub || JSON.parse(atob(token.split('.')[1])).user_id; } catch(e) {} }
+    try { renderCommentForm(); } catch(e) {}
+    try { renderComments(comments, myUserId); } catch(e) {
+      if (listEl) listEl.innerHTML = '<div class="comments-empty">No comments yet. Be the first!</div>';
+    }
+  } catch(e) {
+    if (listEl) listEl.innerHTML = '<div class="comments-empty">No comments yet. Be the first!</div>';
+    try { renderCommentForm(); } catch(e2) {}
+  }
+}
+
+function renderCommentForm() {
+  const wrap = document.getElementById('commentFormWrap');
+  if (!wrap) return;
+  const handle = userProfile?.display_name;
+  if (!handle) {
+    wrap.innerHTML = '<div style="font-size:0.85rem;color:var(--muted);padding:10px 0;text-align:center">Set a <a href="dashboard.html" style="color:var(--blue)">@handle in your dashboard</a> to post comments.</div>';
+    return;
+  }
+  wrap.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">'
+    + '<textarea id="commentBody" maxlength="1000" rows="3" placeholder="Write a comment…" style="background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:var(--text);resize:vertical;outline:none;font-family:inherit;box-sizing:border-box;width:100%"></textarea>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center">'
+    + '<span style="font-size:0.75rem;color:var(--muted)">Posting as <strong style="color:var(--blue)">@' + escHtml(handle) + '</strong></span>'
+    + '<button class="btn-copy" onclick="postComment()" style="padding:7px 16px;font-size:0.8rem">Post</button>'
+    + '</div></div>';
+}
+
+function renderComments(comments, myUserId) {
+  const list = document.getElementById('commentsList');
+  if (!list) return;
+  if (!comments.length) { list.innerHTML = '<div class="comments-empty">No comments yet. Be the first!</div>'; return; }
+  list.innerHTML = comments.map(c => {
+    const isOwn = myUserId && c.user_id === myUserId;
+    const ts = c.created_at ? new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    return '<div class="comment-card">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+      + '<span class="comment-handle">@' + escHtml(c.display_name) + '</span>'
+      + '<span style="display:flex;gap:10px;align-items:center">'
+      + '<span class="comment-time">' + ts + '</span>'
+      + (isOwn ? '<button class="comment-del-btn" onclick="deleteComment(\'' + c.id + '\')">Delete</button>' : '')
+      + '</span></div>'
+      + '<div class="comment-body-text">' + escHtml(c.body) + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+async function postComment() {
+  const body = (document.getElementById('commentBody')?.value || '').trim();
+  if (!body) return;
+  if (!userProfile?.display_name) { showToast('Set a @handle first', 'error'); return; }
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/comments', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ body })
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Error'); }
+    document.getElementById('commentBody').value = '';
+    loadComments();
+  } catch(e) { showToast(e.message || 'Could not post comment', 'error'); }
+}
+
+async function deleteComment(commentId) {
+  try {
+    const token = await auth.getToken();
+    const res = await fetch(API_BASE + '/portfolio/' + BOT_ID + '/comments/' + commentId, {
+      method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('Failed');
+    loadComments();
+  } catch(e) { showToast('Could not delete comment', 'error'); }
+}
+
+// ── Explicit window bindings ──────────────────────────────────────────────────
+window.toggleMobNav           = toggleMobNav;
+window.closeMobNav            = closeMobNav;
+window.togglePlatformMenu     = togglePlatformMenu;
+window.openDeleteModal        = openDeleteModal;
+window.c

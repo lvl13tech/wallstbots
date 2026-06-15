@@ -1301,7 +1301,7 @@ def main():
     push_to_api("state", state_data, secrets)
 
     # ── Signals ───────────────────────────────────────────────────────────────
-    signals = generate_signals(prices, prev_closes, hist_data)
+    signals = generate_signals(prices, prev_closes)
     signals_data = signals
     (DATA_DIR / "signals.json").write_text(json.dumps({"data": signals_data}, indent=2))
     n_sig = len(signals["recommendations"])

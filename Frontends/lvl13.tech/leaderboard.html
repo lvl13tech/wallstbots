@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Leaderboard — Level XIII</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="assets/style.css">
+  <style>
+    header { background: var(--panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 200; }
+    .header-inner { max-width: var(--max); margin: 0 auto; padding: 0 var(--pad); height: 60px; display: flex; align-items: center; gap: 24px; }
+    .logo { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; white-space: nowrap; text-decoration: none; color: var(--text); }
+    .logo span { color: var(--blue); }
+    nav { display: flex; gap: 4px; flex: 1; }
+    nav a { padding: 6px 14px; border-radius: 6px; font-size: 0.875rem; color: var(--muted); transition: all 0.15s; text-decoration: none; }
+    nav a:hover, nav a.active { color: var(--text); background: var(--panel2); }
+    nav a.active { color: var(--blue); }
+    .account-btn { background: rgba(0,212,255,0.1); border: 1px solid var(--blue); color: var(--blue); border-radius: 8px; padding: 7px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; text-decoration: none; }
+    .account-btn:hover { background: var(--blue); color: var(--bg); }
+    .ham-btn { display: none; background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; cursor: pointer; color: var(--text); margin-left: auto; }
+    .ham-btn svg { width: 18px; height: 18px; display: block; }
+    .mob-nav { display: none; position: fixed; top: 60px; left: 0; right: 0; background: var(--panel); border-bottom: 1px solid var(--border); z-index: 199; padding: 8px 16px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    .mob-nav a { display: block; padding: 11px 14px; border-radius: 8px; font-size: 0.9rem; color: var(--muted); text-decoration: none; }
+    .mob-nav a:hover { color: var(--text); background: var(--panel2); }
+    .mob-nav.open { display: block; }
+    .mob-nav-overlay { display: none; position: fixed; inset: 0; top: 60px; z-index: 198; }
+    .mob-nav-overlay.open { display: block; }
+
+    @media (max-width: 600px) { nav { display: none; } .ham-btn { display: flex; align-items: center; } }
+
+    /* ── Page layout ── */
+    .page { max-width: var(--max); margin: 0 auto; padding: 32px var(--pad) 80px; }
+    .page-header { margin-bottom: 28px; }
+    .page-header h1 { font-size: 1.8rem; font-weight: 700; margin: 0 0 6px; }
+    .page-header p { color: var(--muted); font-size: 0.9rem; margin: 0; }
+
+    /* ── Filters ── */
+    .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+    .filter-btn { background: var(--panel); border: 1px solid var(--border); color: var(--muted); border-radius: 20px; padding: 6px 16px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s; letter-spacing: 0.5px; }
+    .filter-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .filter-btn.active { background: rgba(0,212,255,0.12); border-color: var(--blue); color: var(--blue); }
+
+    /* ── Leaderboard table ── */
+    .lb-wrap { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .lb-table { width: 100%; border-collapse: collapse; }
+    .lb-table th { padding: 12px 16px; text-align: left; font-size: 0.72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); background: var(--panel2); white-space: nowrap; }
+    .lb-table th.right { text-align: right; }
+    .lb-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 0.875rem; vertical-align: middle; }
+    .lb-table tr:last-child td { border-bottom: none; }
+    .lb-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .lb-table td.right { text-align: right; }
+
+    .rank-cell { font-size: 0.8rem; font-weight: 700; color: var(--muted); width: 44px; }
+    .rank-cell.top3 { color: var(--blue); font-size: 1rem; }
+
+    .handle { font-weight: 600; color: var(--text); }
+    .pname  { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+
+    .fund-badge { display: inline-block; font-size: 0.68rem; font-weight: 700; padding: 3px 8px; border-radius: 5px; letter-spacing: 0.5px; background: rgba(0,212,255,0.1); color: var(--blue); border: 1px solid rgba(0,212,255,0.25); }
+    .fund-badge.oracle { background: rgba(168,85,247,0.1); color: #a855f7; border-color: rgba(168,85,247,0.25); }
+    .fund-badge.wizard { background: rgba(34,197,94,0.1); color: #22c55e; border-color: rgba(34,197,94,0.25); }
+    .fund-badge.equalizer { background: rgba(251,191,36,0.1); color: #fbbf24; border-color: rgba(251,191,36,0.25); }
+    .fund-badge.titan { background: rgba(239,68,68,0.1); color: #ef4444; border-color: rgba(239,68,68,0.25); }
+
+    .gain { font-weight: 700; color: #22c55e; font-size: 0.95rem; }
+    .days { color: var(--muted); font-size: 0.82rem; }
+
+    .view-btn { background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.25); color: var(--blue); border-radius: 7px; padding: 5px 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; text-decoration: none; display: inline-block; }
+    .view-btn:hover { background: rgba(0,212,255,0.18); }
+
+    /* ── Empty / loading states ── */
+    .lb-empty { padding: 64px 24px; text-align: center; }
+    .lb-empty .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .lb-empty h3 { font-size: 1.1rem; margin: 0 0 8px; }
+    .lb-empty p { color: var(--muted); font-size: 0.875rem; margin: 0; }
+
+    .lb-loading { padding: 48px 24px; text-align: center; color: var(--muted); font-size: 0.9rem; }
+    .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 10px; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Rules card ── */
+    .rules-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px 24px; margin-bottom: 24px; display: flex; gap: 32px; flex-wrap: wrap; }
+    .rule { display: flex; align-items: center; gap: 10px; }
+    .rule-icon { width: 32px; height: 32px; background: rgba(0,212,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .rule-label { font-size: 0.78rem; color: var(--muted); }
+    .rule-val { font-size: 0.9rem; font-weight: 600; }
+
+    /* ── CTA banner ── */
+    .cta-banner { background: linear-gradient(135deg, rgba(0,212,255,0.07) 0%, rgba(168,85,247,0.07) 100%); border: 1px solid rgba(0,212,255,0.2); border-radius: 14px; padding: 28px; text-align: center; margin-top: 32px; }
+    .cta-banner h3 { margin: 0 0 8px; font-size: 1.1rem; }
+    .cta-banner p { color: var(--muted); font-size: 0.875rem; margin: 0 0 16px; }
+    .cta-banner a { background: var(--blue); color: var(--bg); border-radius: 8px; padding: 10px 24px; font-weight: 700; font-size: 0.875rem; text-decoration: none; display: inline-block; }
+
+    @media (max-width: 640px) {
+      .lb-table th:nth-child(4), .lb-table td:nth-child(4) { display: none; }
+      .lb-table th:nth-child(6), .lb-table td:nth-child(6) { display: none; }
+      .rules-card { gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div class="header-inner">
+    <a href="index.html" class="logo">Level XIII <span>Tech</span></a>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="bot-detail.html">Portfolios</a>
+      <a href="leaderboard.html" class="active">Leaderboard</a>
+    </nav>
+    <a href="dashboard.html" class="account-btn">My Account</a>
+    <button class="ham-btn" onclick="toggleMobNav()" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</header>
+<div class="mob-nav-overlay" id="mobOverlay" onclick="toggleMobNav()"></div>
+<div class="mob-nav" id="mobNav">
+  <a href="dashboard.html">Dashboard</a>
+  <a href="bot-detail.html">Portfolios</a>
+  <a href="leaderboard.html">Leaderboard</a>
+  <a href="dashboard.html" style="color:var(--blue);font-weight:600;margin-top:8px;">My Account →</a>
+</div>
+
+<!-- ── Page ── -->
+<div class="page">
+  <div class="page-header">
+    <h1>🏆 Leaderboard</h1>
+    <p>Top-performing portfolios on Level XIII — ranked by total return.</p>
+  </div>
+
+  <!-- Rules -->
+  <div class="rules-card">
+    <div class="rule">
+      <div class="rule-icon">📅</div>
+      <div><div class="rule-label">Minimum age</div><div class="rule-val">21 days</div></div>
+    </div>
+    <div class="rule">
+      <div class="rule-icon">📈</div>
+      <div><div class="rule-label">Minimum gain</div><div class="rule-val">+10%</div></div>
+    </div>
+    <div class="rule">
+      <div class="rule-icon">🔓</div>
+      <div><div class="rule-label">Visibility</div><div class="rule-val">Opted-in only</div></div>
+    </div>
+    <div class="rule">
+      <div class="rule-icon">💬</div>
+      <div><div class="rule-label">Comments</div><div class="rule-val">Open to all members</div></div>
+    </div>
+  </div>
+
+  <!-- Fund filter -->
+  <div class="filters">
+    <button class="filter-btn active" onclick="setFilter('all', this)">All Funds</button>
+    <button class="filter-btn" onclick="setFilter('bot13', this)">BOT13</button>
+    <button class="filter-btn" onclick="setFilter('oracle', this)">Oracle</button>
+    <button class="filter-btn" onclick="setFilter('wizard', this)">Wizard</button>
+    <button class="filter-btn" onclick="setFilter('equalizer', this)">Equalizer</button>
+    <button class="filter-btn" onclick="setFilter('titan', this)">Titan</button>
+  </div>
+
+  <!-- Table -->
+  <div class="lb-wrap">
+    <div class="lb-loading" id="lbLoading">
+      <span class="spinner"></span>Loading leaderboard...
+    </div>
+    <div id="lbContent" style="display:none;">
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Trader</th>
+            <th>Fund</th>
+            <th class="right">Return</th>
+            <th class="right">Days</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="lbBody"></tbody>
+      </table>
+      <div class="lb-empty" id="lbEmpty" style="display:none;">
+        <div class="icon">📊</div>
+        <h3>No portfolios yet</h3>
+        <p>Be the first on the leaderboard — create a portfolio and trade for 21+ days!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-banner">
+    <h3>Want to appear on the leaderboard?</h3>
+    <p>Create a portfolio, track your strategy for 21+ days, and hit +10% to qualify. Enable sharing in your portfolio settings.</p>
+    <a href="dashboard.html">Get Started →</a>
+  </div>
+</div>
+
+<script>
+const BACKEND_URL = "https://wallstbots-backend-868128114349.us-east1.run.app";
+const PLATFORM    = "lvl13";
+
+let currentFund = "all";
+
+function toggleMobNav() {
+  document.getElementById("mobNav").classList.toggle("open");
+  document.getElementById("mobOverlay").classList.toggle("open");
+}
+
+function setFilter(fund, btn) {
+  currentFund = fund;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  loadLeaderboard();
+}
+
+function fundBadge(fund) {
+  const f = (fund || "bot13").toLowerCase();
+  const label = fund ? fund.toUpperCase() : "BOT13";
+  const cls = ["oracle","wizard","equalizer","titan"].includes(f) ? f : "";
+  return `<span class="fund-badge ${cls}">${label}</span>`;
+}
+
+function platformBadge(platform) {
+  const map = {
+    wallstbots: { label: 'WSB',  color: '#00d4ff', bg: 'rgba(0,212,255,0.1)',  border: 'rgba(0,212,255,0.25)'  },
+    bitbot13:   { label: 'BB13', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)' },
+    lvl13:      { label: 'L13',  color: '#a855f7', bg: 'rgba(168,85,247,0.1)', border: 'rgba(168,85,247,0.25)' },
+  };
+  const p = map[platform] || map.lvl13;
+  return `<span style="display:inline-block;font-size:0.62rem;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:0.5px;background:${p.bg};color:${p.color};border:1px solid ${p.border}">${p.label}</span>`;
+}
+
+function portfolioUrl(platform, botId) {
+  const bases = { wallstbots:'https://wallstbots.tech', bitbot13:'https://bitbot13.tech', lvl13:'https://lvl13.tech' };
+  return (bases[platform] || 'https://lvl13.tech') + '/portfolio-fund.html?id=' + botId + '&public=1';
+}
+
+function rankLabel(rank) {
+  if (rank === 1) return '<span class="rank-cell top3">🥇</span>';
+  if (rank === 2) return '<span class="rank-cell top3">🥈</span>';
+  if (rank === 3) return '<span class="rank-cell top3">🥉</span>';
+  return `<span class="rank-cell">${rank}</span>`;
+}
+
+async function loadLeaderboard() {
+  document.getElementById("lbLoading").style.display = "block";
+  document.getElementById("lbContent").style.display = "none";
+
+  try {
+    let url = `${BACKEND_URL}/leaderboard?limit=50`;
+    if (currentFund !== "all") url += `&fund=${currentFund}`;
+
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error("Failed to load");
+    const data = await resp.json();
+    const rows = data.leaderboard || [];
+
+    document.getElementById("lbLoading").style.display = "none";
+    document.getElementById("lbContent").style.display = "block";
+
+    const tbody = document.getElementById("lbBody");
+    const empty = document.getElementById("lbEmpty");
+
+    if (!rows.length) {
+      tbody.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${rankLabel(r.rank)}</td>
+        <td>
+          <div class="handle">@${r.handle}</div>
+          <div class="pname">${r.portfolio_name}</div>
+          <div style="margin-top:4px">${platformBadge(r.platform)}</div>
+        </td>
+        <td>${fundBadge(r.fund)}</td>
+        <td class="right"><span class="gain">+${r.gain_loss_pct.toFixed(2)}%</span></td>
+        <td class="right"><span class="days">${r.days_active}d</span></td>
+        <td class="right">
+          <a class="view-btn" href="${portfolioUrl(r.platform, r.bot_id)}" target="_blank">View →</a>
+        </td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    document.getElementById("lbLoading").innerHTML =
+      '<span style="color:var(--muted)">Failed to load leaderboard. Try again later.</span>';
+  }
+}
+
+loadLeaderboard();
+</script>
+</body>
+</html>
