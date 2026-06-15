@@ -152,5 +152,26 @@ the count at 0.)
 
 ## Session Log (append newest at top)
 
+- **2026-06-15 (aistocks data pipeline FIXED)** — Found aistocks.tech was showing STALE
+  data (June 12) because `refresh_lvl13.py` pushed to the backend as platform `lvl13` while
+  the site reads platform `aistocks` — separate buckets, no backend alias (verified live: the
+  aistocks bucket's last_refresh was 2026-06-12). Fixed: changed all 4 platform refs in
+  `refresh_lvl13.py` (`push_to_api`, snapshot trigger, fallback read, `refresh_portfolios.run`)
+  from `lvl13` → `aistocks`. Also cleaned the `refresh-lvl13.yml` workflow: removed the
+  vestigial git-commit-to-`Frontends/lvl13.tech/data/` step (the cause of the earlier merge
+  conflict; sites read the API, not committed JSON), added `mkdir -p` so the local data dir
+  exists for `send_emails.py`, made the verify step tolerant, and corrected the misleading
+  name/comments. **Verify after next cron run:** aistocks bucket `last_refresh` should advance
+  to today, and the workflow should go green. NOTE: wallstbots/bitbot13 workflows still have
+  the (harmless) commit-to-data step — their data folders still exist in the repo, so it's not
+  broken; optional future cleanup to drop it from all three for consistency.
+- **2026-06-15 (committed & pushed)** — All session work committed and pushed to
+  origin/master (`b0b794d`): doc corrections, refresh state.json crash-guard, origin_platform
+  constraint fix, Supabase security advisor fixes (all 7 cleared), repo junk cleanup +
+  .gitignore, and removal of the stale `Frontends/lvl13.tech/` trading-clone files. Merged 4
+  automated cron data-refresh commits cleanly. **⚠️ OPEN ITEM:** a scheduled job still runs
+  `lvl13 data refresh` writing to the now-removed `Frontends/lvl13.tech/data/` path (it caused
+  a merge conflict and re-creates files nobody reads). Retire or repoint that GitHub Actions
+  job next.
 - **2026-06-15 (later)** — Corrected the whole doc set to the real platform model: 3 product sites (wallstbots/aistocks/bitbot13) + lvl13 parent landing page (read-only, hands-off, Rule 10). Recorded migration history (aistocks was originally lvl13), Stripe-as-active-checkout (PayPal legacy), and lvl13's exact backend surface. Verified live lvl13 and backed it up. Wrote `HANDOFF_2026-06-15.md`. Archived dated historical docs to `_archive/`. No product-site code changed yet. Next: run the regression checklist to populate the per-site status table.
 - **2026-06-15** — Created control documents (ARCHITECTURE, PROJECT_STATUS, SESSION_START, CLAUDE.md, REGRESSION_CHECKLIST) after the platform reached a fully-broken state from clone drift. No code changed yet.

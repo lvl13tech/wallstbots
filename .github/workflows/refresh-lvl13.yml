@@ -1,4 +1,4 @@
-name: Refresh lvl13.tech
+name: Refresh aistocks.tech (AI/Quantum — script still named lvl13)
 
 on:
   schedule:
@@ -46,14 +46,16 @@ jobs:
           echo "=== Installed packages ==="
           python -m pip list | grep -E "yfinance|requests|pandas|numpy"
 
-      - name: Verify script exists
+      - name: Verify script exists and prepare data dir
         run: |
-          echo "=== Repo contents ==="
-          ls -la
           echo "=== Script check ==="
           ls -la Project/scripts/refresh_lvl13.py
-          echo "=== Data dir check ==="
-          ls -la Frontends/lvl13.tech/data/
+          # The data folder is no longer committed to the repo (sites read the
+          # backend API). Create it locally so the refresh script can write its
+          # working JSON, which send_emails.py reads later in this run.
+          mkdir -p Frontends/lvl13.tech/data
+          echo "=== Data dir ready ==="
+          ls -la Frontends/lvl13.tech/data/ || true
 
       - name: Run lvl13 refresh
         env:
@@ -64,13 +66,13 @@ jobs:
           python Project/scripts/refresh_lvl13.py
           echo "=== Script exit code: $? ==="
 
-      - name: Commit and push updated data
-        run: |
-          git config user.name  "WallStBots Bot"
-          git config user.email "bot@wallstbots.tech"
-          git add Frontends/lvl13.tech/data/
-          git diff --staged --quiet || git commit -m "auto: lvl13 data refresh [$(date -u '+%Y-%m-%d %H:%M UTC')]"
-          git push
+      # NOTE: No git-commit step. The product sites read tracker data from the
+      # backend API (the refresh script pushes there as platform "aistocks"), so
+      # committing JSON to Frontends/lvl13.tech/data/ served no purpose and caused
+      # merge conflicts after that stale folder was removed from the repo. The
+      # email step below still works: refresh_lvl13.py writes the JSON to the
+      # local workspace at run time, and send_emails.py reads it from there — no
+      # commit needed. (Migration cleanup, 2026-06-15.)
 
       - name: Send daily email notifications
         # Hour 14 UTC (9:35am ET): always send morning digest.
@@ -101,5 +103,10 @@ jobs:
             fi
           fi
 
-      # Deploy note: lvl13.tech is on Cloudflare Pages (migrated May 2026).
-      # Pushing Frontends/lvl13.tech/data/ here auto-deploys via Cloudflare — no FTP needed.
+      # Data flow note (post-migration): this workflow drives the AI/QUANTUM
+      # product site, aistocks.tech. refresh_lvl13.py pushes tracker data to the
+      # backend API as platform "aistocks", and aistocks.tech reads it from the
+      # API — there is no file deploy step. (The script keeps the lvl13 filename
+      # for historical reasons; only the backend platform key is "aistocks".)
+      # lvl13.tech itself is the separate parent-company landing page and is NOT
+      # touched by this workflow.

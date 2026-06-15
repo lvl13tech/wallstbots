@@ -712,7 +712,7 @@ def push_to_api(data_type, data, secrets):
     try:
         r = _requests.post(
             f"{api_url}/internal/tracker/push",
-            json={"platform": "lvl13", "data_type": data_type, "data": data},
+            json={"platform": "aistocks", "data_type": data_type, "data": data},
             headers={"x-internal-key": internal_key},
             timeout=20,
         )
@@ -736,7 +736,7 @@ def trigger_portfolio_snapshots(secrets):
     try:
         r = _requests.post(
             f"{api_url}/internal/portfolio-fund-snapshots/refresh",
-            json={"platform": "lvl13"},
+            json={"platform": "aistocks"},
             headers={"x-internal-key": internal_key},
             timeout=30,
         )
@@ -787,7 +787,7 @@ def main():
         try:
             api_url = secrets.get("api_url") or os.environ.get("TRACKER_API_URL", BACKEND_URL)
             _fb = _requests.get(
-                f"{api_url}/public/tracker/state?platform=lvl13", timeout=15
+                f"{api_url}/public/tracker/state?platform=aistocks", timeout=15
             )
             raw = {"data": _fb.json().get("data", {})}
             print("  [state.json] recovered from live API ✅")
@@ -1241,7 +1241,7 @@ def main():
     push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
     # ── Member portfolio simulations ──────────────────────────────────────────
     print("[lvl13] running member portfolio simulations...")
-    refresh_portfolios.run("lvl13", prices, prev_closes, hist_data, secrets)
+    refresh_portfolios.run("aistocks", prices, prev_closes, hist_data, secrets)
 
     # ── Portfolio snapshots ───────────────────────────────────────────────────
     trigger_portfolio_snapshots(secrets)
