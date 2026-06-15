@@ -1444,4 +1444,3 @@ document.addEventListener('DOMContentLoaded', () => {
   updateNavAuthState();
   loadAll();
 });
-   
