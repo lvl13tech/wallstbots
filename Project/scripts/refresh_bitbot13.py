@@ -167,26 +167,39 @@ def get_live_prices(state_symbols):
 
     yf_syms   = [UNIVERSE_MAP.get(s, f"{s}-USD") for s in state_symbols]
     sym_map   = {UNIVERSE_MAP.get(s, f"{s}-USD"): s for s in state_symbols}
-    try:
-        raw = yf.download(yf_syms, period="5d", auto_adjust=True, progress=False)
-        if not raw.empty:
-            for yf_sym in yf_syms:
-                state_sym = sym_map.get(yf_sym, yf_sym)
-                try:
-                    if isinstance(raw.columns, pd.MultiIndex):
-                        closes = raw["Close"][yf_sym].dropna()
-                    else:
-                        closes = raw["Close"].dropna()
-                    if len(closes) >= 1:
-                        p  = float(closes.iloc[-1])
-                        pc = float(closes.iloc[-2]) if len(closes) >= 2 else p
-                        if p > 0:
-                            prices[state_sym]      = p
-                            prev_closes[state_sym] = pc
-                except Exception:
-                    pass
-    except Exception as e:
-        print(f"  [yfinance] download error: {e}")
+
+    # Try yfinance up to 2 times — it can fail transiently on GitHub Actions
+    for attempt in range(2):
+        try:
+            raw = yf.download(yf_syms, period="5d", auto_adjust=True, progress=False,
+                              timeout=30)
+            if not raw.empty:
+                for yf_sym in yf_syms:
+                    state_sym = sym_map.get(yf_sym, yf_sym)
+                    try:
+                        if isinstance(raw.columns, pd.MultiIndex):
+                            # Handle both ("Close", "BTC-USD") and ("Close",) shapes
+                            if yf_sym in raw["Close"].columns:
+                                closes = raw["Close"][yf_sym].dropna()
+                            else:
+                                continue
+                        else:
+                            closes = raw["Close"].dropna()
+                        if len(closes) >= 1:
+                            p  = float(closes.iloc[-1])
+                            pc = float(closes.iloc[-2]) if len(closes) >= 2 else p
+                            if p > 0:
+                                prices[state_sym]      = p
+                                prev_closes[state_sym] = pc
+                    except Exception:
+                        pass
+                if prices:
+                    break  # got data — stop retrying
+                print(f"  [yfinance] attempt {attempt+1}: parsed 0 prices from non-empty frame, retrying...")
+            else:
+                print(f"  [yfinance] attempt {attempt+1}: empty response, retrying...")
+        except Exception as e:
+            print(f"  [yfinance] attempt {attempt+1} download error: {e}")
 
     # For any coins that yfinance missed, try CoinGecko (no auth needed, free tier)
     missing = [s for s in state_symbols if s not in prices]
@@ -877,9 +890,17 @@ def main():
 
     print(f"[bitbot13] fetching prices for {len(need_syms)} symbols...")
     prices, prev_closes = get_live_prices(sorted(need_syms))
+
+    # If yfinance returned nothing, try CoinGecko directly as full fallback
     if not prices:
-        print("[bitbot13] ERROR: zero prices returned — aborting to protect DB data.")
+        print("[bitbot13] WARNING: yfinance returned zero prices — attempting full CoinGecko fallback...")
+        _fetch_coingecko(list(need_syms), prices, prev_closes)
+
+    if not prices:
+        print("[bitbot13] ERROR: zero prices from ALL sources — aborting to protect DB data.")
         sys.exit(1)
+
+    print(f"[bitbot13] using {len(prices)}/{len(need_syms)} prices after all sources")
 
     # -- Fetch historical data for oracle/wizard scoring -------------------------
     hist_data = get_hist_data(sorted(need_syms))
