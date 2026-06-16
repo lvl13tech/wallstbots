@@ -501,7 +501,7 @@ function renderFundStats() {
   const dayPct = fundState && fundState.day_pct       != null ? fundState.day_pct       : 0;
 
   document.getElementById('fsTotal').textContent   = fmt$0(total);
-  document.getElementById('fsStarted').textContent = 'Started at ' + fmt$0(49000);
+  document.getElementById('fsStarted').textContent = 'Started at ' + fmt$0(cap);
   document.getElementById('fsPnl').textContent     = fmt$0(pnl);
   document.getElementById('fsPnl').className       = 'fund-value ' + cls(Math.round(pnl));
   document.getElementById('fsPnlPct').textContent  = fmtPct(pnlPct) + ' all-time';

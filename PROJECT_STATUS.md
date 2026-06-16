@@ -260,6 +260,12 @@ LEFT ALONE (intentional parent-brand, identical across sites): "Also from Level 
 fix already deploying. Principle applied: each section identical site-to-site, differing only by
 the site's own identity.
 
+**MEMBERS-AREA BUGS (fixing one-by-one, ONLY members pages — public pages are correct):**
+- ✅ aistocks portfolio-fund.html "Started at" was hardcoded `$49,000` (lvl13's old 49-stock global
+  capital — migration drift) instead of the member's `holdings.length × $1,000`. Fixed to use the
+  already-computed `cap` var. wallstbots/bitbot13 already used `cap` (aistocks-only bug). Applies to
+  all 5 bot views.
+
 **Not yet tested (needs a test login):** admin panel, referral dashboard, logged-in member portfolio
 data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
