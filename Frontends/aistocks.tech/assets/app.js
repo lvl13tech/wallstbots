@@ -224,7 +224,7 @@ function renderHome() {
     '<section class="hero"><img src="assets/logo.svg" alt="" class="hero-robot">'
     + '<div class="hero-content"><span class="hero-eyebrow">AI &amp; Quantum Stock Tracker</span>'
     + '<h1>5 AI strategies. One universe. Watch them race.</h1>'
-    + '<p>Three Claude-built bots — daily, weekly, monthly — trading head-to-head against two passive strategies on the same 50 AI/Quantum stocks. Daily Buy/Sell/Hold signals on every name. AI &amp; Quantum news, filtered to what matters. <strong>Welcome to Level 13.</strong></p>'
+    + '<p>Three Claude-built bots — daily, weekly, monthly — trading head-to-head against two passive strategies on the same 50 AI/Quantum stocks. Daily Buy/Sell/Hold signals on every name. AI &amp; Quantum news, filtered to what matters. <strong>Welcome to AI Stocks.</strong></p>'
     + '<div class="hero-ctas"><a class="btn btn-primary" href="#/race">See The Race</a>'
     + '<a class="btn btn-secondary" href="#/how">How It Works</a></div></div></section>'
 
@@ -251,7 +251,7 @@ function renderHome() {
     + '<div class="panel" style="margin-top:18px"><h3>Performance Trajectory — All 5 Strategies</h3>'
     + '<div class="chart-wrap"><canvas id="chartRace"></canvas></div></div>'
 
-+ '<div class="section-head" style="margin-top:36px"><h3>Also from Level 13</h3></div>'
++ '<div class="section-head" style="margin-top:36px"><h3>Also from Wall St. Bots</h3></div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">'
 
     + '<div class="card" style="display:flex;flex-direction:column">'

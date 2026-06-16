@@ -248,6 +248,18 @@ via `.open` → `display:flex`) + `closeSubModal()` on all 3; added `openStripeP
 Now: Manage Subscription → modal → Manage Billing/Cancel → Stripe billing portal. ⏳ Owner to verify
 after deploy (needs login; modal should open, billing portal link should work).
 
+**Branding leftovers from lvl13→aistocks migration — FIXED 2026-06-15.** (1) aistocks
+`bot-detail.html` header said "Level XIII" (the page's own SITE brand) → fixed to "AI Stocks"
+(matches how wallstbots uses "Wall St. Bots"). (2) aistocks homepage hero ended "Welcome to
+Level 13." → "Welcome to AI Stocks." (wallstbots says "Welcome to Wall St. Bots"). (3) og-image.svg
+(social-share preview) said "LVL13.TECH / AI & Quantum Stock Tracker" on ALL 3 sites (stale) →
+each now shows its own: AISTOCKS.TECH (AI & Quantum), WALLSTBOTS.TECH (Sector Stock Tracker),
+BITBOT13.TECH (Crypto Trading Bot Tracker; also fixed "Sector-filtered news"→"Crypto news").
+LEFT ALONE (intentional parent-brand, identical across sites): "Also from Level 13" footer label,
+"platform — Level 13" tagline. (4) aistocks portfolio-fund broken header logo = the same `logo.svg`
+fix already deploying. Principle applied: each section identical site-to-site, differing only by
+the site's own identity.
+
 **Not yet tested (needs a test login):** admin panel, referral dashboard, logged-in member portfolio
 data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 

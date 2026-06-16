@@ -237,7 +237,7 @@ function renderHome() {
     + '<div class="panel" style="margin-top:18px"><h3>Performance Trajectory — All 5 Strategies</h3>'
     + '<div class="chart-wrap"><canvas id="chartRace"></canvas></div></div>'
 
-    + '<div class="section-head" style="margin-top:36px"><h3>Also from Level 13</h3></div>'
+    + '<div class="section-head" style="margin-top:36px"><h3>Also from Wall St. Bots</h3></div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">'
 
     + '<div class="card" style="display:flex;flex-direction:column">'
