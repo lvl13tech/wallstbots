@@ -146,8 +146,19 @@ below, so they display current values. Now the end-of-day page only goes empty w
 genuinely are no positions. Needs no backend deploy (these are the GitHub-Actions refresh
 scripts) — just pushed to the repo so the next cron run uses them.
 
-**Not yet tested (needs a test login):** dashboard, admin, signup→Stripe checkout, referral
-dashboard, logged-in member portfolio view.
+**Dashboard design restored (2026-06-15).** Owner reported the members dashboard DESIGN
+changed (not a code bug). Diffed wallstbots `dashboard.html` against the last June-11 version
+(commit 73acf9d): the post-11 changes were mostly good (lvl13→aistocks rebrand, upgraded
+referral "Invite & Earn" panel, openStripePortal fix) — KEPT those. The actual unwanted change
+was **two ADDED sections: "Live Bot Session" and "Market News."** Removed both sections + their
+`loadNews()`/`loadBotSession()` bootstrap calls on **all 3 dashboards** (parity). Also fixed a
+wallstbots-only bug introduced after June 11: a stray duplicated/unclosed DB-latency `<div>` in
+the webmaster stats panel. Done surgically on the current files (design back, good code kept) —
+not a wholesale revert.
+
+**Not yet tested (needs a test login):** other dashboard sections, admin, signup→Stripe checkout,
+referral dashboard, logged-in member portfolio view. Owner to verify the restored dashboard looks
+right after deploy.
 
 ---
 

@@ -1469,21 +1469,6 @@
     </div>
   </div>
 
-  <!-- ─── BOT SESSION ─── -->
-  <div class="section-title">Live Bot Session</div>
-  <div id="botSessionBanner" class="session-banner">
-    <div class="session-banner-dot"></div>
-    <span class="session-banner-label" style="color:var(--muted)">Loading session…</span>
-  </div>
-  <div id="botSessionSummary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0;"></div>
-  <div id="botPosContainer"></div>
-
-  <!-- ─── MARKET NEWS ─── -->
-  <div class="section-title" style="margin-top:32px">Market News</div>
-  <div id="newsList" class="news-list">
-    <p style="color:var(--muted);font-size:0.85rem">Loading news…</p>
-  </div>
-
   <!-- Explore Other Platforms -->
   <div class="section-title">Explore Other Platforms</div>
   <div class="explore-grid">
@@ -2362,7 +2347,7 @@
       toggleEmailMaster();
     } catch(e) { /* silently ignore */ }
   }
-  document.addEventListener("DOMContentLoaded", () => { init(); loadNews(); loadBotSession(); loadEmailPrefs(); });
+  document.addEventListener("DOMContentLoaded", () => { init(); loadEmailPrefs(); });
 </script>
 </body>
 </html>

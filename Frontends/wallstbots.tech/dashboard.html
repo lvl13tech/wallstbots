@@ -1334,21 +1334,6 @@
     </div>
   </div>
 
-  <!-- ─── BOT SESSION ─── -->
-  <div class="section-title">Live Bot Session</div>
-  <div id="botSessionBanner" class="session-banner">
-    <div class="session-banner-dot"></div>
-    <span class="session-banner-label" style="color:var(--muted)">Loading session…</span>
-  </div>
-  <div id="botSessionSummary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0;"></div>
-  <div id="botPosContainer"></div>
-
-  <!-- ─── MARKET NEWS ─── -->
-  <div class="section-title" style="margin-top:32px">Market News</div>
-  <div id="newsList" class="news-list">
-    <p style="color:var(--muted);font-size:0.85rem">Loading news…</p>
-  </div>
-
   <div class="section-title">Explore Other Platforms</div>
   <div class="explore-grid">
     <div class="explore-card">
@@ -2100,7 +2085,6 @@
         : '<div style="color:var(--muted);font-size:12px;padding:8px 0">No tracker data yet</div>';
       document.getElementById("wmSysStats").innerHTML = `
         <div class="wm-row"><span class="wm-row-label">Total users in DB</span><span>${(data.total_users||0).toLocaleString()}</span></div>
-        <div class="wm-row"><span class="wm-row-label">DB latency</span><span>
         <div class="wm-row"><span class="wm-row-label">DB latency</span><span>${data.db_latency_ms != null ? data.db_latency_ms + "ms" : "—"}</span></div>
         <div class="wm-row"><span class="wm-row-label">Server time (UTC)</span><span style="font-size:11px;font-family:monospace">${data.timestamp||"—"}</span></div>`;
       _wmLoaded.system = true;
@@ -2114,7 +2098,7 @@
     }
   }
 
-  document.addEventListener("DOMContentLoaded", () => { init(); loadNews(); loadBotSession(); loadEmailPrefs(); });
+  document.addEventListener("DOMContentLoaded", () => { init(); loadEmailPrefs(); });
 </script>
 </body>
 </html>
