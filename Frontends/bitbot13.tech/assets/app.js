@@ -850,8 +850,9 @@ function renderPaypalForm() {
     + btnTxt + '</button>'
     + '<div style="font-size:12px;margin-top:8px;color:var(--muted);text-align:center">'
     + (ref ? 'Referral discount applied. Renews at $'+base+(annual?'/yr':'/mo')+' afterwards.' : 'Renews every '+(annual?'year':'month')+' · cancel anytime')
-    + '</div>'
-    + '<div style="font-size:11px;margin-top:6px;color:var(--muted);text-align:center;opacity:0.7">SECURED BY STRIPE</div>';
+    + '</div>';
+    // NOTE: "SECURED BY STRIPE" is rendered once in the panel header (class
+    // "powered"); do NOT add a second copy here (caused a doubled label).
 }
 
 // Returns true if a usable JWT is in place (refreshing it first if expired),
@@ -1226,4 +1227,13 @@ document.addEventListener('DOMContentLoaded', () => {
   wireUI();
   updateNavAuthState();
   loadAll();
+});
+
+// When the user returns via browser-back from Stripe (bfcache restore), the
+// checkout button can be stuck disabled on "Redirecting to checkout…". Reset
+// the Get Yours pricing panel so the Subscribe button is usable again.
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted && location.hash.indexOf('get-yours') !== -1) {
+    try { if (typeof updateGyPricing === 'function') updateGyPricing(); } catch (err) {}
+  }
 });

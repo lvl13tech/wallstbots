@@ -231,8 +231,16 @@ from checkout and route to login. Applied to all 3 (parity; per-site refresh-tok
 via SAFE-DEPLOY. ⏳ Owner to re-test: log in, click Subscribe — should reach Stripe checkout (or a
 clean re-login prompt), never "Token expired".
 
+**Get Yours Stripe panel — 2 small fixes 2026-06-15.** (1) "SECURED BY STRIPE" showed TWICE
+(a static one in the panel header `.powered` + a duplicate in the dynamic button render) — removed
+the dynamic duplicate; kept the header one. (2) Returning via browser-back from Stripe left the
+Subscribe button stuck disabled on "Redirecting to checkout…" (bfcache restore) — added a `pageshow`
+handler that re-renders the pricing panel (`updateGyPricing()`) when restored on the get-yours route,
+re-enabling the button. Both applied to all 3 sites (parity). ✅ Stripe checkout itself CONFIRMED
+working end-to-end (reaches live checkout.stripe.com — JBM Capital LLC, $49.99 Member Monthly).
+
 **Not yet tested (needs a test login):** admin panel, referral dashboard, logged-in member portfolio
-data. Owner to verify dashboard + bot-detail + portfolio-fund + Stripe checkout after deploy.
+data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ---
 
