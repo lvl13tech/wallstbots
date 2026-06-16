@@ -1682,6 +1682,31 @@
     }
   }
 
+  // Open/close the Manage Subscription modal (were referenced but never defined,
+  // so the "Manage Subscription" button did nothing). Populates plan/status/
+  // renewal from the loaded subscription, then shows the modal.
+  function openSubModal() {
+    try {
+      const plan   = (subscription && (subscription.plan_name || subscription.tier || subscription.plan)) || 'Free';
+      const status = (subscription && subscription.status) || 'Active';
+      const planEl = document.getElementById('subModalPlan');
+      const stEl   = document.getElementById('subModalStatus');
+      const rnEl   = document.getElementById('subModalRenewal');
+      if (planEl) planEl.textContent = (plan.charAt(0).toUpperCase() + plan.slice(1)) + (/(plan)$/i.test(plan) ? '' : ' Plan');
+      if (stEl)   stEl.textContent   = status.charAt(0).toUpperCase() + status.slice(1);
+      if (rnEl) {
+        const end = subscription && (subscription.current_period_end || subscription.tier_expires_at);
+        rnEl.textContent = end ? new Date((typeof end === 'number' ? end * 1000 : end)).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—';
+      }
+    } catch (e) {}
+    const m = document.getElementById('subModal');
+    if (m) m.classList.add('open');
+  }
+  function closeSubModal() {
+    const m = document.getElementById('subModal');
+    if (m) m.classList.remove('open');
+  }
+
   function renderSubscription() {
     if (!subscription) return;
     const plan = subscription.plan_name || subscription.plan || subscription.tier || "Member";

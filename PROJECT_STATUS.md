@@ -239,6 +239,15 @@ handler that re-renders the pricing panel (`updateGyPricing()`) when restored on
 re-enabling the button. Both applied to all 3 sites (parity). ✅ Stripe checkout itself CONFIRMED
 working end-to-end (reaches live checkout.stripe.com — JBM Capital LLC, $49.99 Member Monthly).
 
+**"Manage Subscription" button dead — FIXED 2026-06-15 (all 3 sites).** The account-drawer
+"Manage Subscription →" button called `openSubModal()`, which was **referenced but never defined**
+on ANY of the 3 dashboards → clicking did nothing (silent JS error). Same for `closeSubModal()`.
+aistocks was ALSO missing `openStripePortal()` entirely (clone drift — wallstbots/bitbot13 had it).
+Fix: defined `openSubModal()` (populates plan/status/renewal from `subscription`, shows the modal
+via `.open` → `display:flex`) + `closeSubModal()` on all 3; added `openStripePortal()` to aistocks.
+Now: Manage Subscription → modal → Manage Billing/Cancel → Stripe billing portal. ⏳ Owner to verify
+after deploy (needs login; modal should open, billing portal link should work).
+
 **Not yet tested (needs a test login):** admin panel, referral dashboard, logged-in member portfolio
 data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
