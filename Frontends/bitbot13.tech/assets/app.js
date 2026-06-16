@@ -854,16 +854,56 @@ function renderPaypalForm() {
     + '<div style="font-size:11px;margin-top:6px;color:var(--muted);text-align:center;opacity:0.7">SECURED BY STRIPE</div>';
 }
 
+// Returns true if a usable JWT is in place (refreshing it first if expired),
+// false if the user must log in again. Prevents the "Token expired" checkout
+// dead-end by minting a fresh access token via /auth/refresh when needed.
+async function ensureFreshJWT() {
+  let jwt = getJWT();
+  function isExpired(tok) {
+    try {
+      const payload = JSON.parse(atob(tok.split('.')[1]));
+      return !payload.exp || (payload.exp * 1000) < (Date.now() + 30000);
+    } catch (e) { return true; }
+  }
+  if (jwt && !isExpired(jwt)) return true;
+
+  const refresh = (function(){ try {
+    return localStorage.getItem('bitbot13_refresh_token')
+        || localStorage.getItem('bitbot13_refresh')
+        || localStorage.getItem('wallstbots_refresh');
+  } catch(e){ return null; } })();
+  if (!refresh) return false;
+
+  try {
+    const rr = await fetch(API_BASE + '/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refresh }),
+    });
+    if (!rr.ok) return false;
+    const rd = await rr.json();
+    if (rd.access_token) {
+      setJWT(rd.access_token);
+      if (rd.refresh_token) { try { localStorage.setItem('bitbot13_refresh_token', rd.refresh_token); } catch(e) {} }
+      return true;
+    }
+    return false;
+  } catch (e) { return false; }
+}
+
 async function startStripeCheckout() {
   const btn = $('stripeCheckoutBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to checkout…'; }
-  const jwt = getJWT();
-  if (!jwt) {
-    alert('Please log in or create an account first, then return to subscribe.');
+
+  const ok = await ensureFreshJWT();
+  if (!ok) {
+    alert('Your session expired. Please log in again, then return here to subscribe.');
     if (btn) { btn.disabled = false; btn.textContent = 'Subscribe'; }
     window.location.href = '/login.html';
     return;
   }
+  const jwt = getJWT();
+
   try {
     const r = await fetch(API_BASE + '/stripe/create-checkout', {
       method: 'POST',
@@ -872,6 +912,11 @@ async function startStripeCheckout() {
     });
     const d = await r.json();
     if (d.url) { window.location.href = d.url; }
+    else if (r.status === 401 || /token|expired|auth/i.test(d.detail || '')) {
+      alert('Your session expired. Please log in again, then return here to subscribe.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Subscribe'; }
+      window.location.href = '/login.html';
+    }
     else { throw new Error(d.detail || 'Could not create checkout session'); }
   } catch(e) {
     alert('Checkout error: ' + (e.message || 'Please try again.'));

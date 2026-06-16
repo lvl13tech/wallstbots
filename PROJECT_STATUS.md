@@ -212,8 +212,27 @@ bad JUP position/strategy, and de-poisons the 06-15 snapshot + leaderboard. Run 
 `FIX-bot13-baddata-doubleclick-me.bat` (deploys guard, then resets). Cloud Run redeploy needed for
 the engine (the .bat handles it). ⏳ Owner to run + verify bitbot13 BOT13 shows ~$66k not $1.28M.
 
-**Not yet tested (needs a test login):** admin panel, signup→Stripe checkout, referral dashboard,
-logged-in member portfolio data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
+**aistocks header logo missing — FIXED 2026-06-15.** Header `assets/logo.svg` was blank on the
+live site (loaded:false / 404) while the footer (favicon.svg) showed. Root cause: the logo.svg
+file existed on local disk but was **never committed/tracked by git** (git status showed `A` =
+new file on add), so Cloudflare had nothing to serve. Markup/CSS/path were all correct (identical
+to working wallstbots). Fix: `git add -f` the file + push (commit 5ff8546). ⏳ Pending Cloudflare
+deploy propagation — owner to Ctrl+Shift+R after ~5 min; header robot should then appear. (If
+still blank after deploy completes, investigate Cloudflare SPA routing intercepting /assets/.)
+
+**Stripe checkout "Token expired" — FIXED 2026-06-15.** Clicking Subscribe → "Redirecting to
+checkout…" → dead-ended on `alert('Checkout error: Token expired')`. Cause: `startStripeCheckout()`
+sent the raw JWT from localStorage without checking expiry or refreshing it; the backend rejected
+the stale token. auth.js HAS a `refreshTokenIfNeeded()` but app.js never called it. Fix: added a
+self-contained `ensureFreshJWT()` to all 3 product sites that decodes the JWT exp, and if expired,
+mints a new access token via `/auth/refresh` using the stored refresh token; if that fails (no/dead
+refresh token) it routes to /login instead of the dead-end alert. Also catch 401/"token" responses
+from checkout and route to login. Applied to all 3 (parity; per-site refresh-token keys). Deploy
+via SAFE-DEPLOY. ⏳ Owner to re-test: log in, click Subscribe — should reach Stripe checkout (or a
+clean re-login prompt), never "Token expired".
+
+**Not yet tested (needs a test login):** admin panel, referral dashboard, logged-in member portfolio
+data. Owner to verify dashboard + bot-detail + portfolio-fund + Stripe checkout after deploy.
 
 ---
 
