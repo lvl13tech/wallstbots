@@ -34,3 +34,15 @@ D  Frontends/aistocks.tech/signup.html
 ?? FINALIZE-RESULT.txt
 ?? Project/scripts/pre-commit-truncation-guard.sh
 ?? Project/scripts/strip_boxchars.py
+[master 3b8eae3] chore: add truncation guard (SAFE-DEPLOY + pre-commit hook + checker); delete orphaned/truncated aistocks signup.html (dead code)
+ 34 files changed, 789 insertions(+), 835 deletions(-)
+ create mode 100644 FINALIZE-RESULT.txt
+ delete mode 100644 Frontends/aistocks.tech/signup.html
+ create mode 100644 Project/scripts/pre-commit-truncation-guard.sh
+ create mode 100644 Project/scripts/strip_boxchars.py
+From https://github.com/lvl13tech/wallstbots
+ * branch            master     -> FETCH_HEAD
+Already up to date.
+To https://github.com/lvl13tech/wallstbots.git
+   0515833..3b8eae3  master -> master
+RESULT: SUCCESS

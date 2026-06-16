@@ -342,6 +342,12 @@ def run_bot13_equity(
             continue
         day_pct = (p / pc - 1) * 100
 
+        # -- BAD-DATA GUARD: a stock doesn't legitimately move hundreds of % in
+        #    a day; such a reading means a garbage price feed. Reject it so bad
+        #    data never becomes a trade (mirrors the crypto engine guard).
+        if abs(day_pct) > cfg.get("sane_move_cap_pct", 40.0):
+            continue
+
         if day_pct < entry_hurdle:
             continue
 
@@ -533,6 +539,17 @@ def run_bot13_crypto(
             mom_1h = (closes_1h[-1] / closes_1h[-2] - 1) * 100 if closes_1h[-2] > 0 else 0
         if len(closes_1h) >= 5:
             mom_4h = (closes_1h[-1] / closes_1h[-5] - 1) * 100 if closes_1h[-5] > 0 else 0
+
+        # -- BAD-DATA GUARD ---------------------------------------------------
+        # A real coin does not legitimately move hundreds of percent in 24h (or
+        # in 1h/4h). Such a reading means the price feed gave a garbage value
+        # (e.g. a near-zero prev close), which previously caused BOT13 to deploy
+        # 100% into a junk pick at a fake +1629% "edge". Reject any coin whose
+        # momentum exceeds a sane sanity cap so bad data never becomes a trade.
+        SANE_MOVE_CAP = cfg.get("sane_move_cap_pct", 60.0)  # % move beyond this = bad data
+        if (abs(mom_24h) > SANE_MOVE_CAP or abs(mom_1h) > SANE_MOVE_CAP
+                or abs(mom_4h) > SANE_MOVE_CAP):
+            continue
 
         if len(volumes_1h) >= 7:
             avg_vol   = sum(volumes_1h[-7:-1]) / 6

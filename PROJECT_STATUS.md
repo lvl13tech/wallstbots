@@ -201,6 +201,17 @@ every deploy — THE reliable layer), git pre-commit hook (installed; fires if G
 .sh hooks), `CHECK-truncation-doubleclick-me.bat` (on-demand). Checkers use PowerShell (plain
 batch choked on HTML special chars — first version gave false positives, now fixed).
 
+**BOT13 bad-data blowup (bitbot13) — FIXED 2026-06-15.** A garbage price feed gave JUP a fake
++1629.79% 24h move (entry_price 1.4e-05 vs real ~$0.40); BOT13's crypto engine had NO sanity cap,
+so it deployed 100% into JUP and inflated bitbot13 BOT13 to ~$1.28M (+2460% all-time), poisoning
+the leaderboard + the 06-15 snapshot + day_pct on all funds. Fix: added a **bad-data guard to BOTH
+engines** in `bot13_engine.py` — reject any pick whose 1h/4h/24h (crypto) or day (equity) move
+exceeds a sane cap (crypto 60%, equity 40%); bad data can never become a trade again. Data cleanup:
+`Project/scripts/reset_bitbot13_bot13.py` resets BOT13 to last-good (June-11 ~$66,437), clears the
+bad JUP position/strategy, and de-poisons the 06-15 snapshot + leaderboard. Run via
+`FIX-bot13-baddata-doubleclick-me.bat` (deploys guard, then resets). Cloud Run redeploy needed for
+the engine (the .bat handles it). ⏳ Owner to run + verify bitbot13 BOT13 shows ~$66k not $1.28M.
+
 **Not yet tested (needs a test login):** admin panel, signup→Stripe checkout, referral dashboard,
 logged-in member portfolio data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
