@@ -6,3 +6,18 @@ dashboard design fix - Mon 06/15/2026 20:16:04.07
  M PROJECT_STATUS.md
 ?? DASHFIX-RESULT.txt
 ?? current)
+[master 338af97] fix(dashboard): restore design - remove added 'Live Bot Session' + 'Market News' sections on all 3 sites; fix broken webmaster stats line (wallstbots). Keeps rebrand, referral upgrade, Stripe fix.
+ 7 files changed, 34 insertions(+), 51 deletions(-)
+ create mode 100644 DASHFIX-RESULT.txt
+ create mode 100644 current)
+From https://github.com/lvl13tech/wallstbots
+ * branch            master     -> FETCH_HEAD
+   843732e..989849d  master     -> origin/master
+warning: in the working copy of 'DASHFIX-RESULT.txt', LF will be replaced by CRLF the next time Git touches it
+Merge made by the 'ort' strategy.
+ Frontends/bitbot13.tech/data/signals.json |  738 ++++++-------
+ Frontends/bitbot13.tech/data/state.json   | 1654 ++++++++++++++---------------
+ 2 files changed, 1148 insertions(+), 1244 deletions(-)
+To https://github.com/lvl13tech/wallstbots.git
+   989849d..c3cf37a  master -> master
+RESULT: SUCCESS

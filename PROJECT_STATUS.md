@@ -156,9 +156,22 @@ wallstbots-only bug introduced after June 11: a stray duplicated/unclosed DB-lat
 the webmaster stats panel. Done surgically on the current files (design back, good code kept) —
 not a wholesale revert.
 
+**bot-detail.html was TRUNCATED on all 3 sites — FIXED 2026-06-15.** Owner reported the
+portfolio/bot-detail page stuck on "Loading…" everywhere with an EMPTY console (no JS error).
+Cause: the file was cut off mid-line in the window-bindings block (`window.clo…`), so it had
+no `</script>`, no closing tags, and — critically — the `document.addEventListener('DOMContentLoaded', init)`
+bootstrap was missing → `init()` never ran → every section frozen. (Line counts proved it: the
+last COMPLETE version was `c5ecab8` June 11 at 1416 lines; it dropped to 1386 truncated at
+`dcb73fb` June 12 and stayed broken since.) Fix: restored the exact missing tail (full window
+bindings + DOMContentLoaded→init + `</script></body></html>`) from the c5ecab8 version onto each
+current file, preserving all newer body content (bot_fund_state reads etc.). Applied to all 3
+sites (parity); verified each now has exactly one clean ending. **This is the same class of bug
+as commit `ecf5f61` ("repair truncated app.js — unexpected end of input") — truncation has hit
+this project repeatedly; worth a guard.** Needs deploy (Cloudflare auto on push).
+
 **Not yet tested (needs a test login):** other dashboard sections, admin, signup→Stripe checkout,
-referral dashboard, logged-in member portfolio view. Owner to verify the restored dashboard looks
-right after deploy.
+referral dashboard, logged-in member portfolio view. Owner to verify the restored dashboard + the
+bot-detail page after deploy.
 
 ---
 
