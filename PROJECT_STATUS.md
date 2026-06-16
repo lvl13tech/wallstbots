@@ -169,9 +169,19 @@ sites (parity); verified each now has exactly one clean ending. **This is the sa
 as commit `ecf5f61` ("repair truncated app.js — unexpected end of input") — truncation has hit
 this project repeatedly; worth a guard.** Needs deploy (Cloudflare auto on push).
 
-**Not yet tested (needs a test login):** other dashboard sections, admin, signup→Stripe checkout,
-referral dashboard, logged-in member portfolio view. Owner to verify the restored dashboard + the
-bot-detail page after deploy.
+**portfolio-fund.html ALSO truncated — FIXED 2026-06-15.** After bot-detail loaded, its in-page
+links (fund cards → portfolio-fund.html) "didn't load" because portfolio-fund.html was truncated
+the same way (cut at line 1008 mid nav-toggle comment; missing DOMContentLoaded→init bootstrap +
+window bindings + closing tags). Truncation came from `c1f7daa` (June 13, the same mega-commit).
+Last complete version: `c5ecab8` (June 11, 1039 lines); current was 1008. Restored the 31-line
+tail onto all 3 sites (parity), preserving newer body content (d9859b8 bot_fund_state stat-card
+change). **Full truncation sweep done:** scanned every member HTML across all 3 sites — only
+bot-detail, dashboard (design, not truncation), and portfolio-fund were affected; index/admin/
+login/leaderboard all end cleanly. **ROOT-CAUSE STILL OPEN:** files keep getting truncated mid-save
+(3rd occurrence — see ecf5f61). Investigate the deploy/save process that's cutting large files.
+
+**Not yet tested (needs a test login):** admin panel, signup→Stripe checkout, referral dashboard,
+logged-in member portfolio data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ---
 

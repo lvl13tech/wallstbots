@@ -1002,4 +1002,32 @@ function showToast(msg, type = 'success') {
   t._timer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ── Nav toggle (mobile) ───────────────────────────�
+// ── Nav toggle (mobile) ───────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const toggle = document.getElementById('menuToggle');
+  const nav    = document.getElementById('siteNav');
+  if (toggle && nav) {
+    toggle.addEventListener('click', () => {
+      const open = nav.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', open);
+    });
+  }
+  init();
+});
+
+window.togglePrivacy     = togglePrivacy;
+window.toggleLeaderboard = toggleLeaderboard;
+window.sharePortfolio    = sharePortfolio;
+window.addShare          = addShare;
+window.revokeShare       = revokeShare;
+window.postComment       = postComment;
+window.deleteComment     = deleteComment;
+window.openDrawer        = openDrawer;
+window.closeDrawer       = closeDrawer;
+window.openPwModal       = openPwModal;
+window.closePwModal      = closePwModal;
+window.sendPasswordReset = sendPasswordReset;
+window.copyReferral      = copyReferral;
+</script>
+</body>
+</html>
