@@ -21,7 +21,7 @@ ROOT        = Path(__file__).resolve().parents[1]
 DATA_DIR    = ROOT / "public_html" / "data"
 SECRETS     = ROOT / "config" / "secrets.json"
 
-# ── Load secrets ─────────────────────────────────────────────────────────────
+# -- Load secrets -------------------------------------------------------------
 if not SECRETS.exists():
     print(f"ERROR: secrets.json not found at {SECRETS}")
     sys.exit(1)
@@ -41,7 +41,7 @@ HEADERS  = {
     "X-Internal-Key": API_KEY,
 }
 
-# ── Push each data file ───────────────────────────────────────────────────────
+# -- Push each data file -------------------------------------------------------
 FILES = {
     "state":   DATA_DIR / "state.json",
     "news":    DATA_DIR / "news.json",

@@ -37,7 +37,7 @@ for path in PLATFORMS:
     print(f"\n[reset] {path.parent.parent.name}/{path.name}")
     print(f"  starting_capital: {sc}")
 
-    # ── 1. Reset snapshots to today only ──────────────────────────────────────
+    # -- 1. Reset snapshots to today only --------------------------------------
     today_snapshot = {"date": TODAY}
     for fid in FUND_ORDER:
         fund_sc = float((funds.get(fid) or {}).get("starting_capital") or sc)
@@ -45,7 +45,7 @@ for path in PLATFORMS:
     state_data["snapshots"] = [today_snapshot]
     print(f"  snapshots reset to today ({TODAY}) only")
 
-    # ── 2. Reset each fund's balance to starting_capital ─────────────────────
+    # -- 2. Reset each fund's balance to starting_capital ---------------------
     for fid in FUND_ORDER:
         fund = funds.get(fid)
         if not fund:
@@ -75,7 +75,7 @@ for path in PLATFORMS:
 
         print(f"  {fid}: reset to ${fund_sc:,.2f}, positions wiped, inception={TODAY}")
 
-    # ── 3. Write back ─────────────────────────────────────────────────────────
+    # -- 3. Write back ---------------------------------------------------------
     out = json.dumps(raw, indent=2, ensure_ascii=False)
     path.write_text(out, encoding="utf-8")
     print(f"  written: {path}")

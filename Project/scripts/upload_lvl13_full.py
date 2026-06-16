@@ -287,7 +287,7 @@ def main():
 
     source_dir = pick_source_dir()
 
-    # ── Try SFTP first (HostGator now requires SFTP on most accounts) ────────
+    # -- Try SFTP first (HostGator now requires SFTP on most accounts) --------
     ssh = sftp = None
     ok = fail = 0
     used_sftp = False
@@ -312,7 +312,7 @@ def main():
         print("[sftp] paramiko not installed — install with: pip install paramiko")
         print("[sftp] falling back to FTP/FTPS...")
 
-    # ── Fall back to FTP/FTPS if SFTP didn't work ────────────────────────────
+    # -- Fall back to FTP/FTPS if SFTP didn't work ----------------------------
     if not used_sftp:
         ftp = connect(host, user, pwd)
         try:

@@ -245,14 +245,14 @@ def main():
     (DATA_OUT / "reports.json").write_text(json.dumps(reports_payload, indent=2))
     print(f"[data] wrote reports.json ({len(reports)} reports)")
 
-    # ── Push to Supabase via Cloud Run API (dual-write; HostGator already done above) ──
+    # -- Push to Supabase via Cloud Run API (dual-write; HostGator already done above) --
     print("[push] pushing to Supabase...")
     push_to_api(secrets, "state",   state)
     if recs:
         push_to_api(secrets, "signals", recs)
     push_to_api(secrets, "reports", reports_payload)
 
-    # ── Portfolio performance snapshots ──────────────────────────────────────────
+    # -- Portfolio performance snapshots ------------------------------------------
     trigger_portfolio_snapshots(secrets)
 
 
@@ -311,7 +311,7 @@ def push_to_api(secrets, data_type, payload):
     from Supabase instead of HostGator.  Fails silently — HostGator write
     already happened, so this is additive only.
     """
-    # ── DISABLED 2026-05-29 ──────────────────────────────────────────────────
+    # -- DISABLED 2026-05-29 --------------------------------------------------
     # This legacy pusher was overwriting the LIVE lvl13 backend record with
     # stale, old-schema strategy data (missing projected_return). lvl13 is now
     # refreshed SOLELY by the GitHub Action "Refresh lvl13.tech"

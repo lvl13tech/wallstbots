@@ -28,19 +28,19 @@
 
     @media (max-width: 600px) { nav { display: none; } .ham-btn { display: flex; align-items: center; } }
 
-    /* ── Page layout ── */
+    /* -- Page layout -- */
     .page { max-width: var(--max); margin: 0 auto; padding: 32px var(--pad) 80px; }
     .page-header { margin-bottom: 28px; }
     .page-header h1 { font-size: 1.8rem; font-weight: 700; margin: 0 0 6px; }
     .page-header p { color: var(--muted); font-size: 0.9rem; margin: 0; }
 
-    /* ── Filters ── */
+    /* -- Filters -- */
     .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
     .filter-btn { background: var(--panel); border: 1px solid var(--border); color: var(--muted); border-radius: 20px; padding: 6px 16px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s; letter-spacing: 0.5px; }
     .filter-btn:hover { border-color: var(--blue); color: var(--blue); }
     .filter-btn.active { background: rgba(0,212,255,0.12); border-color: var(--blue); color: var(--blue); }
 
-    /* ── Leaderboard table ── */
+    /* -- Leaderboard table -- */
     .lb-wrap { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
     .lb-table { width: 100%; border-collapse: collapse; }
     .lb-table th { padding: 12px 16px; text-align: left; font-size: 0.72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); background: var(--panel2); white-space: nowrap; }
@@ -68,7 +68,7 @@
     .view-btn { background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.25); color: var(--blue); border-radius: 7px; padding: 5px 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; text-decoration: none; display: inline-block; }
     .view-btn:hover { background: rgba(0,212,255,0.18); }
 
-    /* ── Empty / loading states ── */
+    /* -- Empty / loading states -- */
     .lb-empty { padding: 64px 24px; text-align: center; }
     .lb-empty .icon { font-size: 2.5rem; margin-bottom: 12px; }
     .lb-empty h3 { font-size: 1.1rem; margin: 0 0 8px; }
@@ -78,14 +78,14 @@
     .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 10px; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Rules card ── */
+    /* -- Rules card -- */
     .rules-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px 24px; margin-bottom: 24px; display: flex; gap: 32px; flex-wrap: wrap; }
     .rule { display: flex; align-items: center; gap: 10px; }
     .rule-icon { width: 32px; height: 32px; background: rgba(0,212,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
     .rule-label { font-size: 0.78rem; color: var(--muted); }
     .rule-val { font-size: 0.9rem; font-weight: 600; }
 
-    /* ── CTA banner ── */
+    /* -- CTA banner -- */
     .cta-banner { background: linear-gradient(135deg, rgba(0,212,255,0.07) 0%, rgba(168,85,247,0.07) 100%); border: 1px solid rgba(0,212,255,0.2); border-radius: 14px; padding: 28px; text-align: center; margin-top: 32px; }
     .cta-banner h3 { margin: 0 0 8px; font-size: 1.1rem; }
     .cta-banner p { color: var(--muted); font-size: 0.875rem; margin: 0 0 16px; }
@@ -100,7 +100,7 @@
 </head>
 <body>
 
-<!-- ── Header ── -->
+<!-- -- Header -- -->
 <header>
   <div class="header-inner">
     <a href="index.html" class="logo">AI <span>Stocks</span></a>
@@ -123,7 +123,7 @@
   <a href="dashboard.html" style="color:var(--blue);font-weight:600;margin-top:8px;">My Account →</a>
 </div>
 
-<!-- ── Page ── -->
+<!-- -- Page -- -->
 <div class="page">
   <div class="page-header">
     <h1>🏆 Leaderboard</h1>

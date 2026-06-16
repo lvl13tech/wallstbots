@@ -33,7 +33,7 @@
       min-height: 100vh;
     }
 
-    /* ─── HEADER ─── */
+    /* --- HEADER --- */
     header {
       background: var(--panel);
       border-bottom: 1px solid var(--border);
@@ -93,7 +93,7 @@
     }
     .account-btn:hover { background: var(--accent); color: var(--bg); }
 
-    /* ─── DRAWER ─── */
+    /* --- DRAWER --- */
     .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 400; }
     .drawer-overlay.open { display: block; }
     .drawer {
@@ -128,7 +128,7 @@
     .tier-badge.syndicate { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; }
     .tier-badge.webmaster { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
 
-    /* ── Webmaster Command Center ───────────────────────────────── */
+    /* -- Webmaster Command Center --------------------------------- */
     .wm-section { display: none; padding: 24px 20px; max-width: 1200px; margin: 0 auto; }
     .wm-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
     .wm-header h2 { font-size: 1.2rem; font-weight: 700; }
@@ -213,7 +213,7 @@
     .referral-stats { font-size: 0.8rem; color: var(--muted); }
     .referral-stats span { color: var(--accent); font-weight: 600; }
 
-    /* ─── EMAIL PREFS TOGGLES ─── */
+    /* --- EMAIL PREFS TOGGLES --- */
     .email-toggle-row {
       display: flex; justify-content: space-between;
       align-items: center; padding: 9px 0;
@@ -255,7 +255,7 @@
     .manage-link { display: block; text-align: center; padding: 10px; border-radius: 8px; font-size: 0.85rem; color: var(--muted); border: 1px solid var(--border); transition: all 0.15s; margin-top: 4px; }
     .manage-link:hover { border-color: var(--accent); color: var(--accent); }
 
-    /* ─── PW MODAL ─── */
+    /* --- PW MODAL --- */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 600; align-items: center; justify-content: center; }
     .modal-overlay.open { display: flex; }
     .modal-box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; width: 100%; max-width: 380px; box-shadow: var(--shadow); }
@@ -267,7 +267,7 @@
     .btn-confirm { background: var(--accent); border: none; color: var(--bg); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
     .btn-confirm:hover { background: var(--accent-hover); }
 
-    /* ─── MAIN ─── */
+    /* --- MAIN --- */
     main { max-width: var(--max); margin: 0 auto; padding: var(--pad); }
     .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
     .page-header h1 { font-size: 1.4rem; font-weight: 700; }
@@ -330,7 +330,7 @@
     .sentiment-dot.neg { background: var(--red); }
     .sentiment-dot.neu { background: var(--muted); }
 
-    /* ─── LIVE BOT SESSION ─── */
+    /* --- LIVE BOT SESSION --- */
     .session-banner {
       display: flex;
       align-items: center;
@@ -414,7 +414,7 @@
       border-radius: var(--radius); margin-bottom: 8px;
     }
 
-    /* ─── CREATE MODAL ─── */
+    /* --- CREATE MODAL --- */
     .create-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 600; align-items: center; justify-content: center; padding: 20px; }
     .create-modal.open { display: flex; }
     .create-box { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); }
@@ -452,7 +452,7 @@
 
     @media (max-width: 600px) { .header-inner { gap: 10px; } nav { display: none; } .stats-bar { grid-template-columns: 1fr 1fr; } }
   
-    /* ─── HAMBURGER / MOBILE NAV ─── */
+    /* --- HAMBURGER / MOBILE NAV --- */
     .ham-btn {
       display: none; background: none; border: 1px solid var(--border);
       border-radius: 8px; padding: 6px 10px; cursor: pointer; color: var(--text);
@@ -471,7 +471,7 @@
     .mob-nav-overlay { display: none; position: fixed; inset: 0; top: 60px; z-index: 198; }
     .mob-nav.open, .mob-nav-overlay.open { display: block; }
 
-    /* ─── WEBMASTER MOBILE ─── */
+    /* --- WEBMASTER MOBILE --- */
     @media (max-width: 768px) {
       .wm-two-col { grid-template-columns: 1fr !important; }
       .wm-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -498,7 +498,7 @@
       .wm-table th, .wm-table td { padding: 7px 8px; }
     }
 
-    /* ─── MOBILE: ≤480px ─── */
+    /* --- MOBILE: ≤480px --- */
     @media (max-width: 480px) {
       main { padding: 12px; }
       .header-inner { padding: 0 12px; gap: 6px; }
@@ -527,7 +527,7 @@
 </head>
 <body>
 
-<!-- ─── HEADER ─── -->
+<!-- --- HEADER --- -->
 <header>
   <div class="header-inner">
     <a href="/" class="logo">AI <span>Stocks</span></a>
@@ -580,7 +580,7 @@
   </div>
 </header>
 
-<!-- ─── MOBILE NAV ─── -->
+<!-- --- MOBILE NAV --- -->
 <div class="mob-nav" id="mobNav">
   <a href="dashboard.html" class="active">Portfolios</a>
   <a href="leaderboard.html">Leaderboard</a>
@@ -589,7 +589,7 @@
 </div>
 <div class="mob-nav-overlay" id="mobNavOverlay" onclick="closeMobNav()"></div>
 
-<!-- ─── ACCOUNT DRAWER ─── -->
+<!-- --- ACCOUNT DRAWER --- -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="accountDrawer">
   <div class="drawer-header">
@@ -777,7 +777,7 @@
   </div>
 </div>
 
-<!-- ─── PASSWORD RESET MODAL ─── -->
+<!-- --- PASSWORD RESET MODAL --- -->
 <div class="modal-overlay" id="pwModal">
   <div class="modal-box">
     <h3>Reset Password</h3>
@@ -790,7 +790,7 @@
 </div>
 
 
-<!-- ─── MANAGE SUBSCRIPTION MODAL ─── -->
+<!-- --- MANAGE SUBSCRIPTION MODAL --- -->
 <div class="modal-overlay" id="subModal" onclick="if(event.target===this)closeSubModal()">
   <div class="modal-box sub-modal-box">
     <div class="sub-modal-header">
@@ -828,7 +828,7 @@
   </div>
 </div>
 
-<!-- ─── MAIN ─── -->
+<!-- --- MAIN --- -->
 <main>
   <div class="page-header">
     <h1>My Portfolios</h1>
@@ -902,7 +902,7 @@
 
 </main>
 
-<!-- ─── WEBMASTER COMMAND CENTER ─── -->
+<!-- --- WEBMASTER COMMAND CENTER --- -->
 <section class="wm-section" id="wmSection">
   <div class="wm-header">
     <h2>Command Center</h2>
@@ -1018,7 +1018,7 @@
   </div>
 </section>
 
-<!-- ─── CREATE MODAL ─── -->
+<!-- --- CREATE MODAL --- -->
 <div class="create-modal" id="createModal">
   <div class="create-box">
     <h2>New Portfolio</h2>
@@ -1258,7 +1258,7 @@
     }
   }
 
-  /* ─── BOT SESSION ─── */
+  /* --- BOT SESSION --- */
   async function loadBotSession() {
     try {
       const resp = await fetch(BACKEND_URL + "/public/tracker/state?platform=aistocks");
@@ -1531,7 +1531,7 @@
     clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove("show"),3500);
   }
 
-  // ── WEBMASTER COMMAND CENTER ──────────────────────────────────────────────
+  // -- WEBMASTER COMMAND CENTER ----------------------------------------------
   let _wmLoaded = {};
   const WM_API = BACKEND_URL;
 

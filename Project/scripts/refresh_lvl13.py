@@ -25,7 +25,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-# ── Bot13 unified engine ─────────────────────────────────────────────────────────
+# -- Bot13 unified engine ---------------------------------------------------------
 sys.path.insert(0, str(Path(__file__).parent))
 import refresh_portfolios
 from bot13_engine import (
@@ -45,13 +45,13 @@ try:
 except ImportError:
     _requests = None
 
-# ── Paths ───────────────────────────────────────────────────────────────────────
+# -- Paths -----------------------------------------------------------------------
 ROOT       = Path(__file__).resolve().parents[2]
 SECRETS    = ROOT / "Project" / "config" / "secrets.json"
 DATA_DIR   = ROOT / "Frontends" / "lvl13.tech" / "data"
 STATE_FILE = DATA_DIR / "state.json"
 
-# ── Universe ────────────────────────────────────────────────────────────────────
+# -- Universe --------------------------------------------------------------------
 UNIVERSE = [
     # AI Semiconductors & Hardware
     "NVDA","AMD","INTC","ARM","ALAB","MRVL","AVGO","QCOM","SMCI","CRDO","MU","NVTS",
@@ -103,11 +103,11 @@ SECTORS = {
 
 FUND_ORDER = ["bot13", "oracle", "wizard", "equalizer", "titan"]
 
-# ── Risk controls ───────────────────────────────────────────────────────────────
+# -- Risk controls ---------------------------------------------------------------
 # Display value shown to users; internal trigger is EQUITY_CFG["stop_internal"] = 1.35%
 STOP_LOSS_PCT = EQUITY_CFG["stop_display"]   # 1.5 — used for Wizard stop-flag check
 
-# ── Helpers ─────────────────────────────────────────────────────────────────────
+# -- Helpers ---------------------------------------------------------------------
 def load_secrets():
     if SECRETS.exists():
         return json.loads(SECRETS.read_text())
@@ -140,7 +140,7 @@ def sector_weight(picks_list, sector_map):
     return sw
 
 
-# ── Live prices ─────────────────────────────────────────────────────────────────
+# -- Live prices -----------------------------------------------------------------
 def get_live_prices(symbols):
     """Fetch live price + previous close via yfinance. Returns (prices, prev_closes)."""
     if yf is None:
@@ -233,7 +233,7 @@ def get_hist_data(symbols):
     return hist
 
 
-# ── Position enrichment ──────────────────────────────────────────────────────────
+# -- Position enrichment ----------------------------------------------------------
 def enrich_position(pos, prices, prev_closes):
     sym        = pos["symbol"]
     shares     = float(pos.get("shares") or 0)
@@ -271,27 +271,27 @@ def enrich_position(pos, prices, prev_closes):
     return result
 
 
-# ── (run_bot13_decision, _append_log removed — now in bot13_engine.py)
+# -- (run_bot13_decision, _append_log removed — now in bot13_engine.py)
 
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  ORACLE — Adaptive Weekly Momentum                                           ║
-# ║                                                                              ║
-# ║  Philosophy: Identify the 5 strongest names going into the week using        ║
-# ║  composite momentum. Concentrate capital — no equal-weight mediocrity.       ║
-# ║                                                                              ║
-# ║  Scoring (composite):                                                        ║
-# ║  - 5d momentum  × 0.40  — immediate price action (most predictive short-term)║
-# ║  - 20d momentum × 0.30  — confirms trend, not just a day trade bounce        ║
-# ║  - RSI(14)      × 0.20  — avoids overbought names; rewards healthy pullbacks  ║
-# ║  - Volume ratio × 0.10  — institutional confirmation (volume > 20d average)  ║
-# ║                                                                              ║
-# ║  Portfolio rules:                                                            ║
-# ║  - Top 5 picks, weighted by score (not equal weight)                        ║
-# ║  - Min 12% / Max 35% per position                                           ║
-# ║  - Sector cap: no single sector >40% of portfolio                           ║
-# ║  - Quality gate: 20d momentum must be positive to qualify                   ║
-# ║  - Recomputes every Monday; holds through Friday close                      ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
+# +==============================================================================+
+# |  ORACLE — Adaptive Weekly Momentum                                           |
+# |                                                                              |
+# |  Philosophy: Identify the 5 strongest names going into the week using        |
+# |  composite momentum. Concentrate capital — no equal-weight mediocrity.       |
+# |                                                                              |
+# |  Scoring (composite):                                                        |
+# |  - 5d momentum  × 0.40  — immediate price action (most predictive short-term)|
+# |  - 20d momentum × 0.30  — confirms trend, not just a day trade bounce        |
+# |  - RSI(14)      × 0.20  — avoids overbought names; rewards healthy pullbacks  |
+# |  - Volume ratio × 0.10  — institutional confirmation (volume > 20d average)  |
+# |                                                                              |
+# |  Portfolio rules:                                                            |
+# |  - Top 5 picks, weighted by score (not equal weight)                        |
+# |  - Min 12% / Max 35% per position                                           |
+# |  - Sector cap: no single sector >40% of portfolio                           |
+# |  - Quality gate: 20d momentum must be positive to qualify                   |
+# |  - Recomputes every Monday; holds through Friday close                      |
+# +==============================================================================+
 
 def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_str):
     """Score + select Oracle's weekly top-5 picks."""
@@ -399,25 +399,25 @@ def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_s
     return positions, picks, rationale, oracle_proj
 
 
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  WIZARD — Quality Monthly Momentum                                           ║
-# ║                                                                              ║
-# ║  Philosophy: Patience is the edge. Let quality compounders do the work.      ║
-# ║  Hold 8 names for the full month. No trading noise — only the best trend.    ║
-# ║                                                                              ║
-# ║  Scoring (long-horizon):                                                     ║
-# ║  - 20d momentum × 0.35  — intermediate trend confirmation                   ║
-# ║  - 60d momentum × 0.35  — broad trend health (avoids dead-cat bounces)      ║
-# ║  - Sharpe proxy × 0.20  — risk-adjusted quality (smooth ride preferred)     ║
-# ║  - Distance above 50dMA × 0.10 — trend integrity check                      ║
-# ║                                                                              ║
-# ║  Portfolio rules:                                                            ║
-# ║  - 8 positions, quartile-sized (top 2: ~24%, mid 4: ~14%, bottom 2: ~9%)    ║
-# ║  - Quality filter: 60d momentum must be positive                            ║
-# ║  - Sector cap: max 35% in any single sector                                 ║
-# ║  - Intra-month stop: any position down >12% from entry = exit flag          ║
-# ║  - Recomputes on the 1st trading day of each month                          ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
+# +==============================================================================+
+# |  WIZARD — Quality Monthly Momentum                                           |
+# |                                                                              |
+# |  Philosophy: Patience is the edge. Let quality compounders do the work.      |
+# |  Hold 8 names for the full month. No trading noise — only the best trend.    |
+# |                                                                              |
+# |  Scoring (long-horizon):                                                     |
+# |  - 20d momentum × 0.35  — intermediate trend confirmation                   |
+# |  - 60d momentum × 0.35  — broad trend health (avoids dead-cat bounces)      |
+# |  - Sharpe proxy × 0.20  — risk-adjusted quality (smooth ride preferred)     |
+# |  - Distance above 50dMA × 0.10 — trend integrity check                      |
+# |                                                                              |
+# |  Portfolio rules:                                                            |
+# |  - 8 positions, quartile-sized (top 2: ~24%, mid 4: ~14%, bottom 2: ~9%)    |
+# |  - Quality filter: 60d momentum must be positive                            |
+# |  - Sector cap: max 35% in any single sector                                 |
+# |  - Intra-month stop: any position down >12% from entry = exit flag          |
+# |  - Recomputes on the 1st trading day of each month                          |
+# +==============================================================================+
 
 def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_str):
     """Score + select Wizard's monthly 8-name quality portfolio."""
@@ -535,7 +535,7 @@ def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_
     return positions, picks, rationale, wizard_proj
 
 
-# ── Signals ──────────────────────────────────────────────────────────────────────
+# -- Signals ----------------------------------------------------------------------
 def generate_signals(prices, prev_closes, hist_data):
     """
     Enhanced signal generator — combines day momentum with trend context.
@@ -594,7 +594,7 @@ def generate_signals(prices, prev_closes, hist_data):
     }
 
 
-# ── News ─────────────────────────────────────────────────────────────────────────
+# -- News -------------------------------------------------------------------------
 # wallstbots is STOCK-MARKET ONLY. We restrict to financial publications and
 # reject any article that mentions crypto, NFT, blockchain, or web3 — per spec.
 
@@ -750,7 +750,7 @@ def trigger_portfolio_snapshots(secrets):
         print(f"  [snapshots] error: {e}")
 
 
-# ── Git push ──────────────────────────────────────────────────────────────────────
+# -- Git push ----------------------------------------------------------------------
 def git_push(msg):
     git_root = Path(__file__).resolve().parents[2]
     try:
@@ -765,7 +765,7 @@ def git_push(msg):
         print(f"[git] push failed: {e}")
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────────
+# -- Main --------------------------------------------------------------------------
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--push", action="store_true")
@@ -805,7 +805,7 @@ def main():
     week_str   = today.isocalendar()[0:2].__str__()    # (year, week)
     month_str  = today.strftime("%Y-%m")
 
-    # ── Determine which bots need full recompute ─────────────────────────────
+    # -- Determine which bots need full recompute -----------------------------
     is_monday       = today.weekday() == 0
     is_month_start  = today.day <= 3   # 1st-3rd trading day = month boundary
 
@@ -816,7 +816,7 @@ def main():
     oracle_needs_seed = (not funds.get("oracle", {}).get("value", {}).get("positions")) and oracle_inception < today_iso
     wizard_needs_seed = (not funds.get("wizard", {}).get("value", {}).get("positions")) and wizard_inception < today_iso
 
-    # ── Fetch live prices ────────────────────────────────────────────────────
+    # -- Fetch live prices ----------------------------------------------------
     need_syms = set(UNIVERSE)
     for fid, fund in funds.items():
         for pos in fund.get("value", {}).get("positions", []):
@@ -832,10 +832,10 @@ def main():
     elif len(prices) < len(need_syms) * 0.5:
         print(f"[lvl13] WARNING: only {len(prices)}/{len(need_syms)} prices — partial data, continuing with caution.")
 
-    # ── Fetch historical data for strategy scoring ───────────────────────────
+    # -- Fetch historical data for strategy scoring ---------------------------
     hist_data = get_hist_data(list(need_syms))
 
-    # ── BOT13 decision ───────────────────────────────────────────────────────
+    # -- BOT13 decision -------------------------------------------------------
     print(f"[lvl13] running BOT13 decision (phase: {_engine_session_phase(EQUITY_CFG)})...")
     prev_b13_strategy = funds.get("bot13", {}).get("current_strategy")
     # Use the fund's current running total so gains compound day-over-day
@@ -955,7 +955,7 @@ def main():
         )
         print(f"  BOT13: {b13_decision} ({len(b13_picks)} picks)")
 
-    # ── ORACLE decision (Monday only, otherwise keep existing positions) ──────
+    # -- ORACLE decision (Monday only, otherwise keep existing positions) ------
     oracle_new_positions = None
     oracle_new_picks     = None
     oracle_new_rationale = None
@@ -971,7 +971,7 @@ def main():
         else:
             print("  ORACLE: scoring returned no picks — keeping existing")
 
-    # ── WIZARD decision (1st trading days only) ───────────────────────────────
+    # -- WIZARD decision (1st trading days only) -------------------------------
     wizard_new_positions = None
     wizard_new_picks     = None
     wizard_new_rationale = None
@@ -987,7 +987,7 @@ def main():
         else:
             print("  WIZARD: scoring returned no picks — keeping existing")
 
-    # ── Enrich all fund positions ─────────────────────────────────────────────
+    # -- Enrich all fund positions ---------------------------------------------
     print("[wallstbots] enriching positions...")
     funds_out = {}
 
@@ -1189,7 +1189,7 @@ def main():
             "per_rest_dollars": fund.get("per_rest_dollars"),
         }
 
-    # ── Snapshots ─────────────────────────────────────────────────────────────
+    # -- Snapshots -------------------------------------------------------------
     today_snap = {"date": today_iso}
     for fid in FUND_ORDER:
         if fid in funds_out:
@@ -1200,7 +1200,7 @@ def main():
     snapshots.sort(key=lambda s: s.get("date", ""))
     snapshots = snapshots[-90:]
 
-    # ── Leaderboards ──────────────────────────────────────────────────────────
+    # -- Leaderboards ----------------------------------------------------------
     week_start = today - dt.timedelta(days=today.weekday())
     week_cands = [s for s in snapshots if s.get("date", "") <= week_start.isoformat()]
     week_snap  = week_cands[-1] if week_cands else None
@@ -1221,7 +1221,7 @@ def main():
     all_lb.sort(key=lambda r: -r["all_pct"])
 
 
-    # ── Build state payload ───────────────────────────────────────────────────
+    # -- Build state payload ---------------------------------------------------
     state_data = {
         "starting_capital": sc_global,
         "last_refresh":     now_iso,
@@ -1234,7 +1234,7 @@ def main():
     print(f"[wallstbots] state — {len(funds_out)} funds, {len(snapshots)} snapshots")
     push_to_api("state", state_data, secrets)
 
-    # ── Signals ───────────────────────────────────────────────────────────────
+    # -- Signals ---------------------------------------------------------------
     signals = generate_signals(prices, prev_closes, hist_data)
     signals_data = signals
     (DATA_DIR / "signals.json").write_text(json.dumps({"data": signals_data}, indent=2))
@@ -1242,7 +1242,7 @@ def main():
     print(f"[wallstbots] signals — {n_sig} signals")
     push_to_api("signals", signals_data, secrets)
 
-    # ── News ──────────────────────────────────────────────────────────────────
+    # -- News ------------------------------------------------------------------
     print("[lvl13] fetching news...")
     news_items = fetch_news(newsapi_key)
     news_data = {
@@ -1253,13 +1253,13 @@ def main():
     print(f"[lvl13] news — {len(news_items)} articles")
     push_to_api("news", news_data, secrets)
 
-    # ── Reports (placeholder — keeps API consistent) ──────────────────────────
+    # -- Reports (placeholder — keeps API consistent) --------------------------
     push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
-    # ── Member portfolio simulations ──────────────────────────────────────────
+    # -- Member portfolio simulations ------------------------------------------
     print("[lvl13] running member portfolio simulations...")
     refresh_portfolios.run("aistocks", prices, prev_closes, hist_data, secrets)
 
-    # ── Portfolio snapshots ───────────────────────────────────────────────────
+    # -- Portfolio snapshots ---------------------------------------------------
     trigger_portfolio_snapshots(secrets)
 
     print("[lvl13] refresh complete.")

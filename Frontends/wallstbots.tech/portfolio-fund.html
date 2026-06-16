@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="assets/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
   <style>
-    /* ── Member-only extras not in style.css ── */
+    /* -- Member-only extras not in style.css -- */
     .member-bar { display: none; align-items: center; justify-content: space-between; margin-bottom: 18px; }
     .member-bar a { font-size: 0.82rem; color: var(--muted); text-decoration: none; }
     .member-bar a:hover { color: var(--text); }
@@ -19,7 +19,7 @@
     .context-back-link { margin-left: auto; color: var(--blue); text-decoration: none; font-size: 0.78rem; white-space: nowrap; }
     .context-back-link:hover { text-decoration: underline; }
 
-    /* ── Account Drawer ── */
+    /* -- Account Drawer -- */
     .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 400; }
     .drawer-overlay.open { display: block; }
     .drawer { position: fixed; top: 0; right: -420px; width: 420px; max-width: 95vw; height: 100vh; background: var(--panel); border-left: 1px solid var(--border); z-index: 500; transition: right 0.3s cubic-bezier(0.4,0,0.2,1); overflow-y: auto; display: flex; flex-direction: column; }
@@ -59,7 +59,7 @@
     .revoke-btn { background:rgba(255,85,85,0.1); border:1px solid rgba(255,85,85,0.25); color:#ff5555; border-radius:6px; padding:3px 8px; font-size:0.75rem; cursor:pointer; }
     .revoke-btn:hover { background:rgba(255,85,85,0.22); }
 
-    /* ── Modal ── */
+    /* -- Modal -- */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 600; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
     .modal-box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; width: 100%; max-width: 380px; }
@@ -70,13 +70,13 @@
     .btn-cancel:hover { border-color: var(--text); color: var(--text); }
     .btn-confirm { background: var(--blue); border: none; color: var(--bg); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
 
-    /* ── Toast ── */
+    /* -- Toast -- */
     .toast { position: fixed; bottom: 24px; right: 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 0.875rem; font-weight: 500; z-index: 1000; transform: translateY(20px); opacity: 0; transition: all 0.3s; max-width: 340px; }
     .toast.show { transform: translateY(0); opacity: 1; }
     .toast.success { border-color: var(--blue); color: var(--blue); }
     .toast.error { border-color: var(--red); color: var(--red); }
 
-    /* ── Comments ── */
+    /* -- Comments -- */
     .comment-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
     .comment-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .comment-handle { font-size: 0.82rem; font-weight: 700; color: var(--blue); }
@@ -91,7 +91,7 @@
     .private-wall p { color:var(--muted); font-size:0.9rem; max-width:320px; line-height:1.6; }
     .chart-wrap { min-height: 280px; position: relative; }
 
-    /* ── Account button in nav ── */
+    /* -- Account button in nav -- */
     .nav-account { background: rgba(0,212,255,0.1); border: 1px solid var(--blue); color: var(--blue); border-radius: 8px; padding: 6px 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .nav-account:hover { background: var(--blue); color: var(--bg); }
   </style>
@@ -115,7 +115,7 @@
   </nav>
 </header>
 
-<!-- ── Account Drawer ── -->
+<!-- -- Account Drawer -- -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="accountDrawer">
   <div class="drawer-header">
@@ -177,7 +177,7 @@
   </div>
 </div>
 
-<!-- ── Password Reset Modal ── -->
+<!-- -- Password Reset Modal -- -->
 <div class="modal-overlay" id="pwModal">
   <div class="modal-box">
     <h3>Reset Password</h3>
@@ -312,10 +312,10 @@
 <script src="auth.js"></script>
 <script src="api.js"></script>
 <script>
-// ── Per-site constants ──────────────────────────────────────────────────────
+// -- Per-site constants ------------------------------------------------------
 const PLATFORM   = "wallstbots";
 const SITE_TITLE = "Wall St. Bots";
-// ───────────────────────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
 
 const BACKEND_URL = "https://wallstbots-backend-868128114349.us-east1.run.app";
 const TRACKER_API = BACKEND_URL + "/public/tracker";
@@ -476,7 +476,7 @@ async function loadSiteData() {
 }
 
 function renderFundStats() {
-  // ── Activation pending banner ─────────────────────────────────────────────
+  // -- Activation pending banner ---------------------------------------------
   // Show if no simulation data exists yet (portfolio created today or not yet run).
   const hasSimulated = fundState && fundState.snapshot_date;
   const createdAt    = botData && botData.created_at ? botData.created_at.slice(0, 10) : null;
@@ -495,7 +495,7 @@ function renderFundStats() {
     }
   }
 
-  // ── 3 stat cards: read from bot_fund_state (single source of truth) ──
+  // -- 3 stat cards: read from bot_fund_state (single source of truth) --
   const cap    = holdings.length * 1000;
   const total  = fundState && fundState.total_value   != null ? fundState.total_value   : cap;
   const pnl    = fundState && fundState.gain_loss     != null ? fundState.gain_loss     : 0;
@@ -514,7 +514,7 @@ function renderFundStats() {
   document.getElementById('fsDayPct').textContent  = fmtPct(dayPct) + ' since yesterday';
   document.getElementById('fsDayPct').className    = 'fund-pnl ' + cls(dayPct);
 
-  // ── Strategy panel: use per-portfolio simulation if available ──
+  // -- Strategy panel: use per-portfolio simulation if available --
   if (hasSimulated && ['bot13','oracle','wizard'].includes(BOT_SLUG) && fundState.strategy) {
     document.getElementById('strategyPanel').innerHTML = renderStrategyPanel(BOT_SLUG, fundState.strategy);
   } else {
@@ -719,7 +719,7 @@ async function drawFundChart() {
   });
 }
 
-// ── Public portfolio view ─────────────────────────────────────────────────────
+// -- Public portfolio view -----------------------------------------------------
 async function loadPublicPortfolio() {
   try {
     const token = await auth.getToken();
@@ -758,7 +758,7 @@ async function loadPublicPortfolio() {
   } catch(e) { showToast('Could not load portfolio', 'error'); }
 }
 
-// ── Account drawer ────────────────────────────────────────────────────────────
+// -- Account drawer ------------------------------------------------------------
 function renderProfile() {
   if (!userProfile) return;
   const email = userProfile.email || '';
@@ -827,7 +827,7 @@ function copyReferral() {
   }
 }
 
-// ── Privacy & Sharing ─────────────────────────────────────────────────────────
+// -- Privacy & Sharing ---------------------------------------------------------
 async function loadPrivacySettings() {
   try {
     const token = await auth.getToken();
@@ -926,7 +926,7 @@ async function revokeShare(shareId, handle) {
   } catch(e) { showToast('Could not revoke access', 'error'); }
 }
 
-// ── Comments ──────────────────────────────────────────────────────────────────
+// -- Comments ------------------------------------------------------------------
 async function loadComments() {
   try {
     const token = await auth.getToken();
@@ -997,7 +997,7 @@ async function deleteComment(commentId) {
   } catch(e) { showToast('Could not delete comment', 'error'); }
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
+// -- Toast ---------------------------------------------------------------------
 function showToast(msg, type = 'success') {
   const t = document.getElementById('toast');
   t.textContent = msg; t.className = 'toast show ' + type;
@@ -1005,7 +1005,7 @@ function showToast(msg, type = 'success') {
   t._timer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ── Nav toggle (mobile) ───────────────────────────────────────────────────────
+// -- Nav toggle (mobile) -------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   const toggle = document.getElementById('menuToggle');
   const nav    = document.getElementById('siteNav');

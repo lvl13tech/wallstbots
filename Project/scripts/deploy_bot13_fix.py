@@ -29,7 +29,7 @@ print("=" * 60)
 print("  BOT13 Fix Deployment")
 print("=" * 60)
 
-# ── 1. Git push (Cloudflare auto-deploys from this) ──────────────
+# -- 1. Git push (Cloudflare auto-deploys from this) --------------
 print("\n[1/2] Committing and pushing to GitHub...")
 
 run(["git", "add", "-A"], cwd=REPO_DIR)
@@ -52,7 +52,7 @@ else:
     print("\n  ERROR: git push failed. Try running manually:")
     print(f'    cd "{REPO_DIR}" && git push origin master')
 
-# ── 2. FTP upload for lvl13.tech ─────────────────────────────────
+# -- 2. FTP upload for lvl13.tech ---------------------------------
 # The lvl13 refresh_data.py runs locally — no FTP needed for script changes.
 # Data files (fund_*.json) are uploaded by the refresh script itself on each run.
 # If you need to redeploy the lvl13.tech frontend HTML, use the FTP refresh script.

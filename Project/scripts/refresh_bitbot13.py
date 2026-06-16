@@ -25,7 +25,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-# ── Bot13 unified engine ─────────────────────────────────────────────────────────
+# -- Bot13 unified engine ---------------------------------------------------------
 sys.path.insert(0, str(Path(__file__).parent))
 import refresh_portfolios
 from bot13_engine import (
@@ -46,7 +46,7 @@ except ImportError:
 
 import os   # used to read NEWSAPI_KEY env var in GitHub Actions
 
-# ── Trading window (ET) ────────────────────────────────────────────────────────
+# -- Trading window (ET) --------------------------------------------------------
 TRADING_WINDOW_START = CRYPTO_CFG["session_start"][0]   # 9
 TRADING_WINDOW_END   = CRYPTO_CFG["session_end"][0]     # 21
 STOP_LOSS_PCT        = CRYPTO_CFG["stop_display"]       # 1.5 — shown to users
@@ -57,13 +57,13 @@ def in_trading_window():
     return _engine_window_open(CRYPTO_CFG)
 
 
-# ── Paths ──────────────────────────────────────────────────────────────────────
+# -- Paths ----------------------------------------------------------------------
 ROOT       = Path(__file__).resolve().parents[2]
 SECRETS    = ROOT / "Project" / "config" / "secrets.json"
 DATA_DIR   = ROOT / "Frontends" / "bitbot13.tech" / "data"
 STATE_FILE = DATA_DIR / "state.json"
 
-# ── 50-coin universe ───────────────────────────────────────────────────────────
+# -- 50-coin universe -----------------------------------------------------------
 # Keys are the symbols used in state.json; values are yfinance ticker strings
 UNIVERSE_MAP = {
     "BTC":    "BTC-USD",
@@ -121,7 +121,7 @@ UNIVERSE_MAP = {
 UNIVERSE   = list(UNIVERSE_MAP.keys())
 YF_REVERSE = {v: k for k, v in UNIVERSE_MAP.items()}  # yf_sym → state_sym
 
-# ── Crypto sectors (for oracle/wizard sector-cap logic) ────────────────────────
+# -- Crypto sectors (for oracle/wizard sector-cap logic) ------------------------
 SECTORS = {
     "BTC":"LAYER1",  "ETH":"LAYER1",  "BNB":"LAYER1",  "SOL":"LAYER1",
     "XRP":"LAYER1",  "ADA":"LAYER1",  "TON":"LAYER1",  "AVAX":"LAYER1",
@@ -142,7 +142,7 @@ SECTORS = {
 
 FUND_ORDER = ["bot13", "oracle", "wizard", "equalizer", "titan"]
 
-# ── Secrets ────────────────────────────────────────────────────────────────────
+# -- Secrets --------------------------------------------------------------------
 def load_secrets():
     if SECRETS.exists():
         return json.loads(SECRETS.read_text())
@@ -150,7 +150,7 @@ def load_secrets():
 
 # grade() and grade_overall() imported from bot13_engine
 
-# ── Live prices ────────────────────────────────────────────────────────────────
+# -- Live prices ----------------------------------------------------------------
 def get_live_prices(state_symbols):
     """
     Fetch live price + previous close for each coin via yfinance.
@@ -261,7 +261,7 @@ def _fetch_coingecko(symbols, prices, prev_closes):
     except Exception as e:
         print(f"  [coingecko] error: {e}")
 
-# ── Position enrichment ────────────────────────────────────────────────────────
+# -- Position enrichment --------------------------------------------------------
 def enrich_position(pos, prices, prev_closes):
     sym        = pos["symbol"]
     shares     = float(pos.get("shares") or 0)
@@ -297,7 +297,7 @@ def enrich_position(pos, prices, prev_closes):
             enriched[field] = pos[field]
     return enriched
 
-# ── RSI + history ─────────────────────────────────────────────────────────────
+# -- RSI + history -------------------------------------------------------------
 def compute_rsi(closes, period=14):
     """Compute RSI from a list of closes. Returns float 0-100."""
     if len(closes) < period + 1:
@@ -385,9 +385,9 @@ def get_intraday_data(state_symbols):
     return intraday
 
 
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  ORACLE — Adaptive Weekly Momentum (Crypto)                                   ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
+# +==============================================================================+
+# |  ORACLE — Adaptive Weekly Momentum (Crypto)                                   |
+# +==============================================================================+
 
 def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_str):
     """Score + select Oracle's weekly top-5 picks."""
@@ -492,9 +492,9 @@ def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_s
     return positions, picks, rationale, oracle_proj
 
 
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  WIZARD — Quality Monthly Momentum (Crypto)                                   ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
+# +==============================================================================+
+# |  WIZARD — Quality Monthly Momentum (Crypto)                                   |
+# +==============================================================================+
 
 def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_str):
     """Score + select Wizard's monthly 8-coin quality portfolio."""
@@ -606,9 +606,9 @@ def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_
     return positions, picks, rationale, wizard_proj
 
 
-# ── BOT13 crypto decision now handled by bot13_engine.run_bot13_crypto() ─────
+# -- BOT13 crypto decision now handled by bot13_engine.run_bot13_crypto() -----
 
-# ── Signals ────────────────────────────────────────────────────────────────────
+# -- Signals --------------------------------------------------------------------
 def generate_signals(prices, prev_closes):
     today_iso = et_now().date().isoformat()
     recs    = []
@@ -663,7 +663,7 @@ def generate_signals(prices, prev_closes):
         "generated_at":    dt.datetime.now().isoformat(timespec="seconds"),
     }
 
-# ── News ───────────────────────────────────────────────────────────────────────
+# -- News -----------------------------------------------------------------------
 # bitbot13 is CRYPTOCURRENCY ONLY. We restrict to crypto-native publications and
 # require every accepted article to mention at least one crypto term — per spec.
 
@@ -819,7 +819,7 @@ def trigger_portfolio_snapshots(secrets):
     except Exception as e:
         print(f"  [snapshots] error: {e}")
 
-# ── Git push ───────────────────────────────────────────────────────────────────
+# -- Git push -------------------------------------------------------------------
 def git_push(msg):
     git_root = Path(__file__).resolve().parents[2]
     try:
@@ -1284,7 +1284,7 @@ def main():
     snapshots.sort(key=lambda s: s.get("date", ""))
     snapshots = snapshots[-90:]
 
-    # ── Leaderboards ──────────────────────────────────────────────────────────
+    # -- Leaderboards ----------------------------------------------------------
     week_start = today - dt.timedelta(days=today.weekday())
     week_cands = [s for s in snapshots if s.get("date", "") <= week_start.isoformat()]
     week_snap  = week_cands[-1] if week_cands else None
@@ -1304,7 +1304,7 @@ def main():
     wk_lb.sort(key=lambda r: -r["week_pct"])
     all_lb.sort(key=lambda r: -r["all_pct"])
 
-    # ── Build state payload ───────────────────────────────────────────────────
+    # -- Build state payload ---------------------------------------------------
     state_data = {
         "starting_capital": sc_global,
         "last_refresh":     now_iso,
@@ -1316,7 +1316,7 @@ def main():
     print(f"[bitbot13] state — {len(funds_out)} funds, {len(snapshots)} snapshots")
     push_to_api("state", state_data, secrets)
 
-    # ── Signals ───────────────────────────────────────────────────────────────
+    # -- Signals ---------------------------------------------------------------
     signals = generate_signals(prices, prev_closes)
     signals_data = signals
     (DATA_DIR / "signals.json").write_text(json.dumps({"data": signals_data}, indent=2))
@@ -1324,7 +1324,7 @@ def main():
     print(f"[bitbot13] signals — {n_sig} signals")
     push_to_api("signals", signals_data, secrets)
 
-    # ── News ──────────────────────────────────────────────────────────────────
+    # -- News ------------------------------------------------------------------
     print("[bitbot13] fetching news...")
     news_items = fetch_news(newsapi_key)
     news_data = {
@@ -1335,14 +1335,14 @@ def main():
     print(f"[bitbot13] news — {len(news_items)} articles")
     push_to_api("news", news_data, secrets)
 
-    # ── Reports ───────────────────────────────────────────────────────────────
+    # -- Reports ---------------------------------------------------------------
     push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
 
-    # ── Member portfolio simulations ──────────────────────────────────────────
+    # -- Member portfolio simulations ------------------------------------------
     print("[bitbot13] running member portfolio simulations...")
     refresh_portfolios.run("bitbot13", prices, prev_closes, hist_data, secrets)
 
-    # ── Portfolio snapshots ───────────────────────────────────────────────────
+    # -- Portfolio snapshots ---------------------------------------------------
     trigger_portfolio_snapshots(secrets)
 
     print("[bitbot13] refresh complete.")

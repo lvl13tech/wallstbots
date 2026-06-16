@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-bot13_engine.py  ─  Unified Bot13 Decision Engine
+bot13_engine.py  -  Unified Bot13 Decision Engine
 ==================================================
 Shared decision logic for all three WallStBots platforms:
   ▸ wallstbots.tech   — equity, broad-market universe
@@ -21,9 +21,9 @@ New in this version vs per-script logic:
 
 import datetime as dt
 
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  PLATFORM CONFIGS                                                             ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
+# +==============================================================================+
+# |  PLATFORM CONFIGS                                                             |
+# +==============================================================================+
 
 EQUITY_CFG = {
     "market_type":        "equity",
@@ -60,9 +60,9 @@ CRYPTO_CFG = {
 }
 
 
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  TIME & SESSION HELPERS                                                       ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
+# +==============================================================================+
+# |  TIME & SESSION HELPERS                                                       |
+# +==============================================================================+
 
 def et_now():
     """Return current time as a timezone-naive datetime in US/Eastern.
@@ -108,9 +108,9 @@ def session_phase(cfg):
         return "close"
 
 
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  MATH HELPERS                                                                  ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
+# +==============================================================================+
+# |  MATH HELPERS                                                                  |
+# +==============================================================================+
 
 def compute_rsi(closes, period=14):
     """Compute RSI from a list of closes. Returns float 0–100."""
@@ -149,9 +149,9 @@ def compute_atr_pct(closes, period=14):
     return (compute_atr(closes, period) / closes[-1]) * 100
 
 
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  PORTFOLIO HELPERS                                                             ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
+# +==============================================================================+
+# |  PORTFOLIO HELPERS                                                             |
+# +==============================================================================+
 
 def grade(pct):
     if pct >= 5:    return "A+"
@@ -235,24 +235,24 @@ def _append_log(prev_strategy, today_iso, new_entry):
     return existing
 
 
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  BOT13 EQUITY ENGINE                                                           ║
-# ║                                                                                ║
-# ║  Used by: wallstbots.tech  (broad-market universe)                             ║
-# ║           lvl13.tech       (AI & quantum universe)                             ║
-# ║                                                                                ║
-# ║  Philosophy: Strike fast on confirmed intraday leadership. Only trade when     ║
-# ║  conditions are clearly favorable. When in doubt — stay in cash.               ║
-# ║                                                                                ║
-# ║  Entry Rules:                                                                  ║
-# ║  - Stock must be up >1.0% from previous close (1.5% on high-ATR days)         ║
-# ║  - At least 3 qualified candidates required (breadth confirmation)             ║
-# ║  - No more than 33% of universe down >2% (market health check)                ║
-# ║  - Account drawdown < 1.5% from day_open (kill switch)                        ║
-# ║                                                                                ║
-# ║  Risk: Internal stop -1.35% (buffer for slippage). Displayed as -1.5%.        ║
-# ║        Profit target: +3.0%. ATR filter tightens entry on volatile days.      ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
+# +==============================================================================+
+# |  BOT13 EQUITY ENGINE                                                           |
+# |                                                                                |
+# |  Used by: wallstbots.tech  (broad-market universe)                             |
+# |           lvl13.tech       (AI & quantum universe)                             |
+# |                                                                                |
+# |  Philosophy: Strike fast on confirmed intraday leadership. Only trade when     |
+# |  conditions are clearly favorable. When in doubt — stay in cash.               |
+# |                                                                                |
+# |  Entry Rules:                                                                  |
+# |  - Stock must be up >1.0% from previous close (1.5% on high-ATR days)         |
+# |  - At least 3 qualified candidates required (breadth confirmation)             |
+# |  - No more than 33% of universe down >2% (market health check)                |
+# |  - Account drawdown < 1.5% from day_open (kill switch)                        |
+# |                                                                                |
+# |  Risk: Internal stop -1.35% (buffer for slippage). Displayed as -1.5%.        |
+# |        Profit target: +3.0%. ATR filter tightens entry on volatile days.      |
+# +==============================================================================+
 
 def run_bot13_equity(
     cfg, universe, prices, prev_closes, hist_data,
@@ -294,7 +294,7 @@ def run_bot13_equity(
         slog       = _append_log(prev_strategy, today_iso, log_entry)
         return "HOLD", [], [], reason_str, slog, 0.0
 
-    # ── ATR-based pre-session volatility filter ──────────────────────────────
+    # -- ATR-based pre-session volatility filter ------------------------------
     entry_hurdle = 1.0   # default
     if cfg.get("atr_volatility_cap", 0) > 0 and hist_data:
         atr_pcts = []
@@ -307,7 +307,7 @@ def run_bot13_equity(
             if avg_atr > cfg["atr_volatility_cap"]:
                 entry_hurdle = cfg["atr_high_threshold"]   # tighter on volatile days
 
-    # ── Market health check ──────────────────────────────────────────────────
+    # -- Market health check --------------------------------------------------
     n_green   = 0
     n_red     = 0
     n_priced  = 0
@@ -333,7 +333,7 @@ def run_bot13_equity(
             f"{int(sell_pressure*100)}% of universe down >2%. Broad selling pressure detected — protecting capital.",
         )
 
-    # ── Score each candidate ─────────────────────────────────────────────────
+    # -- Score each candidate -------------------------------------------------
     scored = []
     for sym in universe:
         p  = prices.get(sym, 0)
@@ -366,14 +366,14 @@ def run_bot13_equity(
     scored.sort(key=lambda x: -x[2])
     top_picks = scored[:5]
 
-    # ── Size proportionally to signal strength ───────────────────────────────
+    # -- Size proportionally to signal strength -------------------------------
     total_strength = sum(s for _, _, s in top_picks)
     raw_weights    = [s / total_strength for _, _, s in top_picks]
     clamped        = [max(cfg["weight_min"], min(cfg["weight_max"], w)) for w in raw_weights]
     total_c        = sum(clamped)
     weights        = [c / total_c for c in clamped]
 
-    # ── Projected portfolio return gate ──────────────────────────────────────
+    # -- Projected portfolio return gate --------------------------------------
     projected_return = round(
         sum(w * day_pct for (_, day_pct, _), w in zip(top_picks, weights)), 2
     )
@@ -386,7 +386,7 @@ def run_bot13_equity(
             "Not enough edge to justify risk today. Holding for the day.",
         )
 
-    # ── Build positions & picks ──────────────────────────────────────────────
+    # -- Build positions & picks ----------------------------------------------
     positions, picks = [], []
     for i, (sym, day_pct, strength) in enumerate(top_picks):
         w      = weights[i]
@@ -430,7 +430,7 @@ def run_bot13_equity(
                           f"Stop: -{stop_display}% | Target: +{target_pct}%."),
         })
 
-    # ── Build session log entry ──────────────────────────────────────────────
+    # -- Build session log entry ----------------------------------------------
     pos_summary   = ", ".join(f"{sym} {dpct:+.2f}%" for sym, dpct, _ in top_picks)
     breadth_label = f"{n_green}/{n_priced} green"
 
@@ -460,22 +460,22 @@ def run_bot13_equity(
     return "TRADE", positions, picks, rationale, session_log, projected_return
 
 
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  BOT13 CRYPTO ENGINE                                                           ║
-# ║                                                                                ║
-# ║  Used by: bitbot13.tech  (50-coin universe)                                    ║
-# ║                                                                                ║
-# ║  Philosophy: 7-day market. Score 1h + 4h + 24h momentum with volume           ║
-# ║  confirmation. Filters out low-volume fakeouts. Equal-weighted positions.      ║
-# ║                                                                                ║
-# ║  Entry Rules:                                                                  ║
-# ║  - Positive composite momentum (1h×0.45 + 4h×0.35 + 24h×0.20)                ║
-# ║  - Volume confirmation ≥ normal (rejects thin/suspicious moves)                ║
-# ║  - Positive 1h momentum (no fading entries)                                   ║
-# ║  - Account drawdown < 1.5% from day_open (kill switch)                        ║
-# ║                                                                                ║
-# ║  Risk: Internal stop -1.35% (slippage buffer). Displayed as -1.5%.            ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
+# +==============================================================================+
+# |  BOT13 CRYPTO ENGINE                                                           |
+# |                                                                                |
+# |  Used by: bitbot13.tech  (50-coin universe)                                    |
+# |                                                                                |
+# |  Philosophy: 7-day market. Score 1h + 4h + 24h momentum with volume           |
+# |  confirmation. Filters out low-volume fakeouts. Equal-weighted positions.      |
+# |                                                                                |
+# |  Entry Rules:                                                                  |
+# |  - Positive composite momentum (1h×0.45 + 4h×0.35 + 24h×0.20)                |
+# |  - Volume confirmation ≥ normal (rejects thin/suspicious moves)                |
+# |  - Positive 1h momentum (no fading entries)                                   |
+# |  - Account drawdown < 1.5% from day_open (kill switch)                        |
+# |                                                                                |
+# |  Risk: Internal stop -1.35% (slippage buffer). Displayed as -1.5%.            |
+# +==============================================================================+
 
 def run_bot13_crypto(
     cfg, universe, prices, prev_closes, intraday_data,
@@ -513,7 +513,7 @@ def run_bot13_crypto(
         slog       = _append_log(prev_strategy, today_iso, log_entry)
         return "HOLD", [], [], reason_str, slog, 0.0
 
-    # ── Score each coin ──────────────────────────────────────────────────────
+    # -- Score each coin ------------------------------------------------------
     scored = []
     for sym in universe:
         p  = prices.get(sym, 0)
@@ -563,7 +563,7 @@ def run_bot13_crypto(
             "Zero coins passed composite momentum + volume confirmation filters.",
         )
 
-    # ── Projected portfolio return gate ──────────────────────────────────────
+    # -- Projected portfolio return gate --------------------------------------
     projected_return = round(
         sum(mom_24h for _, _, _, _, mom_24h, _ in top_picks) / len(top_picks), 2
     )
@@ -576,7 +576,7 @@ def run_bot13_crypto(
             "Not enough edge to justify risk. Standing down.",
         )
 
-    # ── Build positions & picks (equal-weight) ───────────────────────────────
+    # -- Build positions & picks (equal-weight) -------------------------------
     per       = starting_capital / len(top_picks)
     positions, picks = [], []
     for sym, composite, mom_1h, mom_4h, mom_24h, vol_signal in top_picks:
@@ -620,7 +620,7 @@ def run_bot13_crypto(
                           f"24h {mom_24h:+.2f}% | Vol: {vol_signal}"),
         })
 
-    # ── Session log ──────────────────────────────────────────────────────────
+    # -- Session log ----------------------------------------------------------
     syms_summary = ", ".join(f"{sym} {m24:+.2f}%" for sym, _, _, _, m24, _ in top_picks)
     if phase == "open":
         action = f"ENTERED {len(picks)} position{'s' if len(picks) > 1 else ''}"

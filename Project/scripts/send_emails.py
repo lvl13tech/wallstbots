@@ -63,7 +63,7 @@ def load_platform_data(platform: str) -> dict:
     state   = state_raw.get("data", state_raw)
     signals = signals_raw.get("data", {}).get("recommendations", [])
 
-    # ── Staleness check ───────────────────────────────────────────────────────
+    # -- Staleness check -------------------------------------------------------
     # wallstbots / lvl13 use "last_refresh"; bitbot13 uses "last_updated".
     # Compare the data's date to today (UTC). If it's from a prior day the
     # platform section is suppressed so stale Friday data never appears in a
@@ -152,7 +152,7 @@ def run(is_weekly: bool = False, is_monthly: bool = False):
         if is_monthly and sub.get("email_monthly", True):
             monthly_recipients.append(sub)
 
-    # ── Daily consolidated email ───────────────────────────────────────────────
+    # -- Daily consolidated email -----------------------------------------------
     if daily_recipients:
         print(f"[send_emails] Sending consolidated daily email to {len(daily_recipients)} subscriber(s)...")
         subject = f"Your Daily Trading Signals — {today.strftime('%b %d')}"

@@ -125,7 +125,7 @@ def main():
     OUT_PATH.write_text(json.dumps(payload, indent=2))
     print(f"[news] wrote {len(all_items)} headlines → {OUT_PATH}")
 
-    # ── Push to Supabase via Cloud Run API (dual-write; HostGator file already written) ──
+    # -- Push to Supabase via Cloud Run API (dual-write; HostGator file already written) --
     push_to_api(secrets, "news", payload)
 
 

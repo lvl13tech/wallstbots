@@ -1,0 +1,36 @@
+finalize guard + cleanup - Mon 06/15/2026 21:19:15.48
+rm 'Frontends/aistocks.tech/signup.html'
+ M Frontends/aistocks.tech/admin.html
+ M Frontends/aistocks.tech/bot-detail.html
+ M Frontends/aistocks.tech/dashboard.html
+ M Frontends/aistocks.tech/leaderboard.html
+ M Frontends/aistocks.tech/portfolio-fund.html
+D  Frontends/aistocks.tech/signup.html
+ M Frontends/bitbot13.tech/admin.html
+ M Frontends/bitbot13.tech/bot-detail.html
+ M Frontends/bitbot13.tech/dashboard.html
+ M Frontends/bitbot13.tech/leaderboard.html
+ M Frontends/bitbot13.tech/portfolio-fund.html
+ M Frontends/wallstbots.tech/admin.html
+ M Frontends/wallstbots.tech/bot-detail.html
+ M Frontends/wallstbots.tech/dashboard.html
+ M Frontends/wallstbots.tech/leaderboard.html
+ M Frontends/wallstbots.tech/portfolio-fund.html
+ M PFUND-DEPLOY-RESULT.txt
+ M PROJECT_STATUS.md
+ M Project/scripts/bot13_engine.py
+ M Project/scripts/deploy_bot13_fix.py
+ M Project/scripts/email_service.py
+ M Project/scripts/refresh_bitbot13.py
+ M Project/scripts/refresh_data.py
+ M Project/scripts/refresh_lvl13.py
+ M Project/scripts/refresh_news.py
+ M Project/scripts/refresh_portfolios.py
+ M Project/scripts/refresh_wallstbots.py
+ M Project/scripts/reset_state_json.py
+ M Project/scripts/seed_tracker_db.py
+ M Project/scripts/send_emails.py
+ M Project/scripts/upload_lvl13_full.py
+?? FINALIZE-RESULT.txt
+?? Project/scripts/pre-commit-truncation-guard.sh
+?? Project/scripts/strip_boxchars.py

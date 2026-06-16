@@ -418,7 +418,7 @@ async function loadPromos() {
   }).join('');
 }
 
-// ── Admin Invite ──
+// -- Admin Invite --
 function updateTierUI() {
   const val = document.querySelector('input[name="inviteTier"]:checked').value;
   document.getElementById('tierInsiderLabel').style.borderColor   = val === 'admin13'  ? 'var(--blue)'   : 'var(--border)';

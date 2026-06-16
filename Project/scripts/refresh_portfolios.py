@@ -57,7 +57,7 @@ SECRETS = ROOT / "Project" / "config" / "secrets.json"
 
 BACKEND_URL = "https://wallstbots-backend-868128114349.us-east1.run.app"
 
-# ── Platform configs ──────────────────────────────────────────────────────────
+# -- Platform configs ----------------------------------------------------------
 
 PLATFORM_CFG = {
     "lvl13":      {"market": "equity", "cfg": EQUITY_CFG},
@@ -66,7 +66,7 @@ PLATFORM_CFG = {
 }
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# -- Helpers -------------------------------------------------------------------
 
 def load_secrets():
     if SECRETS.exists():
@@ -265,7 +265,7 @@ def get_hist_for_symbols(symbols):
     return hist
 
 
-# ── Bot decision functions (universe-parameterized) ───────────────────────────
+# -- Bot decision functions (universe-parameterized) ---------------------------
 
 def run_oracle_for_universe(universe, prices, prev_closes, hist_data, starting_capital, week_str):
     """Oracle decision against a custom universe."""
@@ -461,10 +461,10 @@ def build_baseline_positions(universe, prices, prev_closes, original_cost, prev_
     return positions, round(total_value, 2), round(day_pnl, 2)
 
 
-# ── Main simulation loop ──────────────────────────────────────────────────────
+# -- Main simulation loop ------------------------------------------------------
 
 
-# ── Main simulation loop ──────────────────────────────────────────────────────
+# -- Main simulation loop ------------------------------------------------------
 
 def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_data, secrets=None):
     """
@@ -495,7 +495,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
     oracle_day    = is_oracle_rebalance_day()
     wizard_day    = is_wizard_rebalance_day()
 
-    # ── Fetch platform tracker state ──────────────────────────────────────────
+    # -- Fetch platform tracker state ------------------------------------------
     tracker_funds = {}
     platform_sc   = None
     try:
@@ -564,7 +564,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
             day_pct      = tf["day_pct"]   # percentage is capital-neutral
             day_pnl      = round(member_value * (day_pct / 100), 2)
 
-            # ── Strategy / positions (for display only — not used for dollar values) ──
+            # -- Strategy / positions (for display only — not used for dollar values) --
             positions = []
             strategy  = {}
 
@@ -725,7 +725,7 @@ def run(platform, prices=None, prev_closes=None, hist_data=None, secrets=None):
     push_bot_states(secrets, results)
 
 
-# ── Standalone ────────────────────────────────────────────────────────────────
+# -- Standalone ----------------------------------------------------------------
 
 if __name__ == "__main__":
     import argparse

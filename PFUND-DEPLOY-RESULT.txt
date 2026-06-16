@@ -5,3 +5,12 @@ portfolio-fund fix deploy - Mon 06/15/2026 20:47:14.55
  M Frontends/wallstbots.tech/portfolio-fund.html
  M PROJECT_STATUS.md
 ?? PFUND-DEPLOY-RESULT.txt
+[master 0515833] fix(portfolio-fund): repair truncated file on all 3 sites - restore nav-toggle+init bootstrap, window bindings, closing tags. In-page fund links were dead because the destination page never ran init().
+ 6 files changed, 117 insertions(+), 6 deletions(-)
+ create mode 100644 PFUND-DEPLOY-RESULT.txt
+From https://github.com/lvl13tech/wallstbots
+ * branch            master     -> FETCH_HEAD
+Already up to date.
+To https://github.com/lvl13tech/wallstbots.git
+   40930c6..0515833  master -> master
+RESULT: SUCCESS

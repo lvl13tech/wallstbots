@@ -24,7 +24,7 @@ RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 FROM_EMAIL     = "Wall St. Bots <info@lvl13.tech>"
 API_URL        = "https://api.resend.com/emails"
 
-# ── Site config ────────────────────────────────────────────────────────────────
+# -- Site config ----------------------------------------------------------------
 SITE_NAMES = {
     "wallstbots": "Wall St. Bots",
     "bitbot13":   "BitBot13",
@@ -56,7 +56,7 @@ BOT_COLORS = {
 }
 
 
-# ── Resend sender ──────────────────────────────────────────────────────────────
+# -- Resend sender --------------------------------------------------------------
 def send_email(to: str, subject: str, html: str) -> bool:
     if not RESEND_API_KEY:
         print("[email] ERROR: RESEND_API_KEY not set")
@@ -87,7 +87,7 @@ def send_batch(recipients: list[dict], subject: str, html_fn) -> dict:
     return {"sent": sent, "failed": failed}
 
 
-# ── Visual helpers ─────────────────────────────────────────────────────────────
+# -- Visual helpers -------------------------------------------------------------
 
 def _mkt_status() -> str:
     return "MKT CLOSED" if _et_now().weekday() >= 5 else "MKT OPEN"
@@ -410,7 +410,7 @@ def _portfolio_section(recipient: dict) -> str:
     return "".join(blocks)
 
 
-# ── Email shell wrappers ───────────────────────────────────────────────────────
+# -- Email shell wrappers -------------------------------------------------------
 
 def _build_header_row(logo_text: str, date_str: str, time_str: str) -> str:
     mkt = _mkt_status()
@@ -544,7 +544,7 @@ def _wrap_consolidated(preheader: str, body_html: str) -> str:
 </html>"""
 
 
-# ── Section padding wrapper ────────────────────────────────────────────────────
+# -- Section padding wrapper ----------------------------------------------------
 def _pad(html: str, alt_bg: bool = False) -> str:
     bg = '#f9f9f7' if alt_bg else '#ffffff'
     return (
@@ -554,9 +554,9 @@ def _pad(html: str, alt_bg: bool = False) -> str:
     )
 
 
-# ═══════════════════════════════════════════════════════════════════
+# ===================================================================
 # EMAIL TEMPLATE 1 — Daily Signals (single-platform)
-# ═══════════════════════════════════════════════════════════════════
+# ===================================================================
 def build_daily_signals_email(
     platform: str,
     site_signals: list[dict],
@@ -600,9 +600,9 @@ def build_daily_signals_email(
     return _wrap(platform, preheader, body)
 
 
-# ═══════════════════════════════════════════════════════════════════
+# ===================================================================
 # EMAIL TEMPLATE 2 — Bot13 Trade Alert
-# ═══════════════════════════════════════════════════════════════════
+# ===================================================================
 def build_bot13_alert_email(platform: str, strategy: dict, recipient: dict) -> str:
     today_str  = _et_now().date().strftime("%B %d, %Y")
     decision   = strategy.get("decision", "HOLD")
@@ -625,9 +625,9 @@ def build_bot13_alert_email(platform: str, strategy: dict, recipient: dict) -> s
     return _wrap(platform, preheader, body)
 
 
-# ═══════════════════════════════════════════════════════════════════
+# ===================================================================
 # EMAIL TEMPLATE 3 — Weekly Picks (ORACLE)
-# ═══════════════════════════════════════════════════════════════════
+# ===================================================================
 def build_weekly_email(
     platform: str,
     oracle_strategy: dict,
@@ -655,9 +655,9 @@ def build_weekly_email(
     return _wrap(platform, preheader, body)
 
 
-# ═══════════════════════════════════════════════════════════════════
+# ===================================================================
 # EMAIL TEMPLATE 4 — Monthly Picks (WIZARD)
-# ═══════════════════════════════════════════════════════════════════
+# ===================================================================
 def build_monthly_email(
     platform: str,
     wizard_strategy: dict,
@@ -685,9 +685,9 @@ def build_monthly_email(
     return _wrap(platform, preheader, body)
 
 
-# ═══════════════════════════════════════════════════════════════════
+# ===================================================================
 # EMAIL TEMPLATE 5 — Consolidated Daily Report (all three sites)
-# ═══════════════════════════════════════════════════════════════════
+# ===================================================================
 def build_consolidated_email(
     recipient: dict,
     platform_data: dict,

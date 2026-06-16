@@ -177,8 +177,29 @@ Last complete version: `c5ecab8` (June 11, 1039 lines); current was 1008. Restor
 tail onto all 3 sites (parity), preserving newer body content (d9859b8 bot_fund_state stat-card
 change). **Full truncation sweep done:** scanned every member HTML across all 3 sites — only
 bot-detail, dashboard (design, not truncation), and portfolio-fund were affected; index/admin/
-login/leaderboard all end cleanly. **ROOT-CAUSE STILL OPEN:** files keep getting truncated mid-save
-(3rd occurrence — see ecf5f61). Investigate the deploy/save process that's cutting large files.
+login/leaderboard all end cleanly. **ROOT-CAUSE INVESTIGATED + GUARD ADDED (2026-06-15).** Findings: (1) NO script in the repo
+rewrites these HTML files — the JSON deploy script (`deploy_to_hostgator.py`) uses binary mode
+and only touches *.json; `update-frontend-api-urls.py` correctly uses encoding='utf-8' and only
+touches login/signup/index. So the truncation is NOT a deploy-script bug. (2) Every truncation
+cut off at a box-drawing char (`─` in the `// ── … ──` comments) leaving a `�` replacement char.
+That signature = a tool/editor that re-wrote the whole file with the wrong encoding or hit an
+output-length limit mid-file (consistent with an AI/editor regenerating large files; the repo
+also lives under OneDrive, which can interrupt writes). Exact tool unconfirmed (owner unsure how
+files are edited). **GUARD (makes cause irrelevant for prevention):** added a git pre-commit hook
+`Project/scripts/pre-commit-truncation-guard.sh` that BLOCKS any commit containing an HTML file
+not ending in `</html>`, installed via `INSTALL-truncation-guard-doubleclick-me.bat` (run once),
+plus a standalone `CHECK-truncation-doubleclick-me.bat` to scan on demand. A truncated file can no
+longer reach git/production. **Optional next:** replace the `─` box-drawing chars in comments with
+plain ASCII so the specific bytes tools choke on are gone (belt-and-suspenders).
+
+**Guard already caught one (2026-06-15):** the new checker flagged `aistocks.tech/signup.html`
+as truncated (cut mid-function at line 245). It's orphaned dead code — nothing links to it
+(/signup redirects to login.html#signup; real signups go via Get Yours / free-signup), and it
+exists on no other site. Deleted via `FINALIZE-guard-and-cleanup-doubleclick-me.bat`. 21/22 HTML
+files were clean. **Guard layers:** `SAFE-DEPLOY-doubleclick-me.bat` (runs PowerShell check before
+every deploy — THE reliable layer), git pre-commit hook (installed; fires if Git-for-Windows runs
+.sh hooks), `CHECK-truncation-doubleclick-me.bat` (on-demand). Checkers use PowerShell (plain
+batch choked on HTML special chars — first version gave false positives, now fixed).
 
 **Not yet tested (needs a test login):** admin panel, signup→Stripe checkout, referral dashboard,
 logged-in member portfolio data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
