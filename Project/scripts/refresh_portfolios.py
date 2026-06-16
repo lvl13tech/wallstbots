@@ -237,6 +237,24 @@ def get_prices_for_symbols(symbols):
                 pass
     except Exception as e:
         print(f"  [prices] error: {e}")
+
+    # -- BAD-DATA GUARD ------------------------------------------------------
+    # A garbage price feed can return a near-zero prev_close (e.g. JUP came back
+    # with prev=1.4e-05), producing an impossible day move like +1629% that then
+    # poisons baseline funds, signals, and scoring for member portfolios. If a
+    # coin's implied day move exceeds a sane cap, treat the prev_close as bad and
+    # use today's price (day move -> ~0%) so junk data never shows as a gain.
+    SANE_MOVE_CAP = 60.0  # % move beyond this in one day = bad data, not signal
+    for sym in list(prices.keys()):
+        p  = prices.get(sym, 0)
+        pc = prev_closes.get(sym, p)
+        if p > 0 and pc > 0:
+            move = abs((p / pc - 1) * 100)
+            if move > SANE_MOVE_CAP:
+                print(f"  [prices] bad-data guard: {sym} day move {move:.0f}% "
+                      f"(p={p}, prev={pc}) — neutralizing prev_close")
+                prev_closes[sym] = p
+
     return prices, prev_closes
 
 

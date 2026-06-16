@@ -275,6 +275,15 @@ the site's own identity.
   isn't being appended daily by refresh_portfolios.py — the gap between last snapshot and today still
   has no daily points. Fixing the snapshot-write pipeline would give a complete daily trajectory.
 
+- ✅ JUP +1629.79% bad-data ALSO showed in the members area (BOT13 leaderboard, TOP BUYS signal,
+  baselines). The earlier fix guarded `bot13_engine.py` (member BOT13 uses it via run_bot13_crypto)
+  + reset the PUBLIC bucket — but `refresh_portfolios.py` computes baselines/signals/day_pct from
+  raw prices directly with NO cap, so JUP's garbage prev_close still poisoned member data. Fix:
+  added a bad-data guard in `refresh_portfolios.py` `fetch_prices()` — if a coin's implied day move
+  > 60%, neutralize its prev_close (day move → ~0%) so junk never propagates to baselines/signals/
+  scoring. Self-heals on the next refresh_portfolios cron run (recomputes per-run; no manual reset
+  needed for the member side). It's a GitHub-Actions script — next cron run uses it, no Cloud Run deploy.
+
 **Not yet tested (needs a test login):** admin panel, referral dashboard, logged-in member portfolio
 data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
