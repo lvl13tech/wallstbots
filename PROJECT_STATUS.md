@@ -266,6 +266,15 @@ the site's own identity.
   already-computed `cap` var. wallstbots/bitbot13 already used `cap` (aistocks-only bug). Applies to
   all 5 bot views.
 
+- ✅ Member portfolio-fund Performance chart didn't match the cards. Root cause: the chart reads
+  `bot_performance_snapshots` (a SEPARATE table that lags — was stuck on 06-12) while the Current
+  Value card reads live `bot_fund_state`. Two sources of truth. Frontend fix (all 3 sites): append
+  the live `fundState.total_value` as the chart's final point when its date is ≥ the last snapshot
+  (correct same-day, append if newer), and use `fundState.gain_loss_pct` for the return label. Chart
+  now ends at the true current value. **BACKEND follow-up (deferred):** `bot_performance_snapshots`
+  isn't being appended daily by refresh_portfolios.py — the gap between last snapshot and today still
+  has no daily points. Fixing the snapshot-write pipeline would give a complete daily trajectory.
+
 **Not yet tested (needs a test login):** admin panel, referral dashboard, logged-in member portfolio
 data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 

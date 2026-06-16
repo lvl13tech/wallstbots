@@ -705,7 +705,26 @@ async function drawFundChart() {
   }
   const labels = snapshots.map(s => s.date);
   const values = snapshots.map(s => s.total_value);
-  const retPct = snapshots[snapshots.length-1].gain_loss_pct || 0;
+  // The snapshots table (bot_performance_snapshots) can lag behind the live
+  // fund state (bot_fund_state) by a day or more, which made the chart END on a
+  // stale value that didn't match the Current Value card. If we have a current
+  // fundState total for a date newer than the last snapshot, append it so the
+  // trajectory ends at the true current value (consistent with the cards).
+  try {
+    const liveTotal = (fundState && fundState.total_value != null) ? Number(fundState.total_value) : null;
+    const liveDate  = (fundState && fundState.snapshot_date) ? String(fundState.snapshot_date) : null;
+    const lastLabel = labels[labels.length - 1];
+    if (liveTotal != null && liveDate) {
+      if (liveDate === lastLabel) {
+        values[values.length - 1] = liveTotal;        // same day → correct the last point
+      } else if (liveDate > lastLabel) {
+        labels.push(liveDate); values.push(liveTotal); // newer day → append today's point
+      }
+    }
+  } catch (e) {}
+  const retPct = (fundState && fundState.gain_loss_pct != null)
+               ? Number(fundState.gain_loss_pct)
+               : (snapshots[snapshots.length-1].gain_loss_pct || 0);
   const titleEl = document.getElementById('chartTitle');
   if (titleEl && meta) titleEl.textContent = 'Performance Trajectory — ' + meta.name;
   const color = (meta && meta.color) || '#00d4ff';
