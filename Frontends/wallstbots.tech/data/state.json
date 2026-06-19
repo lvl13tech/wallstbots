@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-06-18T22:34:36",
+    "last_refresh": "2026-06-19T16:19:20",
     "snapshots": [
       {
         "date": "2026-06-02",
@@ -106,6 +106,14 @@
         "wizard": 57497.64,
         "equalizer": 54651.34,
         "titan": 54068.65
+      },
+      {
+        "date": "2026-06-19",
+        "bot13": 107798.72,
+        "oracle": 57085.96,
+        "wizard": 57497.64,
+        "equalizer": 54599.31,
+        "titan": 54038.69
       }
     ],
     "funds": {
@@ -118,158 +126,158 @@
         "inception": "2026-06-02",
         "starting_capital": 55000.0,
         "value": {
-          "total": 100868.5,
+          "total": 107798.72,
           "cash": 0.0,
-          "pos_val": 100868.5,
-          "pnl": 45868.5,
-          "pnl_pct": 83.4,
-          "day_pnl": 5669.9,
-          "day_pct": 5.96,
-          "day_open": 95198.6,
-          "holding_cash": true,
-          "window_open": false,
+          "pos_val": 107798.72,
+          "pnl": 52798.72,
+          "pnl_pct": 96.0,
+          "day_pnl": 6930.22,
+          "day_pct": 6.87,
+          "day_open": 100868.5,
+          "holding_cash": false,
+          "window_open": true,
           "session_open_et": "9:30",
           "session_close_et": "16:00",
           "positions": [
             {
               "symbol": "ALAB",
-              "shares": 75.29884,
+              "shares": 63.429419,
               "entry_price": 374.68,
               "current_price": 417.07,
-              "cost_basis": 28212.97,
+              "cost_basis": 23765.73,
               "price": 417.07,
-              "value": 31404.89,
-              "pnl": 3191.92,
+              "value": 26454.51,
+              "pnl": 2688.77,
               "pnl_pct": 11.31,
-              "day_pnl": 3191.92,
+              "day_pnl": 2688.77,
               "day_pct": 11.31,
               "stop_pct": -1.5,
               "target_pct": 3.0,
-              "entry_time": "2026-06-18T16:45:50",
+              "entry_time": "2026-06-19T16:19:29",
               "stop_triggered": false,
               "exit_reason": null
             },
             {
-              "symbol": "VST",
-              "shares": 120.448532,
-              "entry_price": 158.83,
-              "current_price": 163.75,
-              "cost_basis": 19130.84,
-              "price": 163.75,
-              "value": 19723.45,
-              "pnl": 592.61,
-              "pnl_pct": 3.1,
-              "day_pnl": 592.61,
-              "day_pct": 3.1,
+              "symbol": "GRAL",
+              "shares": 370.876413,
+              "entry_price": 59.45,
+              "current_price": 63.74,
+              "cost_basis": 22048.6,
+              "price": 63.74,
+              "value": 23639.66,
+              "pnl": 1591.06,
+              "pnl_pct": 7.22,
+              "day_pnl": 1591.06,
+              "day_pct": 7.22,
               "stop_pct": -1.5,
               "target_pct": 3.0,
-              "entry_time": "2026-06-18T16:45:50",
+              "entry_time": "2026-06-19T16:19:29",
+              "stop_triggered": false,
+              "exit_reason": null
+            },
+            {
+              "symbol": "IBTA",
+              "shares": 651.758596,
+              "entry_price": 29.25,
+              "current_price": 30.71,
+              "cost_basis": 19063.94,
+              "price": 30.71,
+              "value": 20015.51,
+              "pnl": 951.57,
+              "pnl_pct": 4.99,
+              "day_pnl": 951.57,
+              "day_pct": 4.99,
+              "stop_pct": -1.5,
+              "target_pct": 3.0,
+              "entry_time": "2026-06-19T16:19:29",
+              "stop_triggered": false,
+              "exit_reason": null
+            },
+            {
+              "symbol": "ARM",
+              "shares": 44.797293,
+              "entry_price": 418.88,
+              "current_price": 439.46,
+              "cost_basis": 18764.69,
+              "price": 439.46,
+              "value": 19686.62,
+              "pnl": 921.93,
+              "pnl_pct": 4.91,
+              "day_pnl": 921.93,
+              "day_pct": 4.91,
+              "stop_pct": -1.5,
+              "target_pct": 3.0,
+              "entry_time": "2026-06-19T16:19:29",
               "stop_triggered": false,
               "exit_reason": null
             },
             {
               "symbol": "AFRM",
-              "shares": 260.551484,
+              "shares": 243.539281,
               "entry_price": 70.73,
               "current_price": 73.92,
-              "cost_basis": 18428.81,
+              "cost_basis": 17225.53,
               "price": 73.92,
-              "value": 19259.97,
-              "pnl": 831.16,
+              "value": 18002.42,
+              "pnl": 776.89,
               "pnl_pct": 4.51,
-              "day_pnl": 831.16,
+              "day_pnl": 776.89,
               "day_pct": 4.51,
               "stop_pct": -1.5,
               "target_pct": 3.0,
-              "entry_time": "2026-06-18T16:45:50",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "CAT",
-              "shares": 15.440656,
-              "entry_price": 955.92,
-              "current_price": 985.82,
-              "cost_basis": 14760.03,
-              "price": 985.82,
-              "value": 15221.71,
-              "pnl": 461.68,
-              "pnl_pct": 3.13,
-              "day_pnl": 461.68,
-              "day_pct": 3.13,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-18T16:45:50",
-              "stop_triggered": false,
-              "exit_reason": null
-            },
-            {
-              "symbol": "CART",
-              "shares": 342.502379,
-              "entry_price": 42.82,
-              "current_price": 44.55,
-              "cost_basis": 14665.95,
-              "price": 44.55,
-              "value": 15258.48,
-              "pnl": 592.53,
-              "pnl_pct": 4.04,
-              "day_pnl": 592.53,
-              "day_pct": 4.04,
-              "stop_pct": -1.5,
-              "target_pct": 3.0,
-              "entry_time": "2026-06-18T16:45:50",
+              "entry_time": "2026-06-19T16:19:29",
               "stop_triggered": false,
               "exit_reason": null
             }
           ]
         },
         "current_strategy": {
-          "day": "2026-06-18",
+          "day": "2026-06-19",
           "decision": "TRADE",
-          "rationale": "Deployed into 5 high-conviction names (ALAB +11.88%, VST +4.43%, AFRM +4.27%, CAT +3.42%, CART +3.40%). Market breadth: 27/55 green. Weighted by signal strength. Stop -1.5% | Target +3.0%.",
+          "rationale": "Deployed into 5 high-conviction names (ALAB +11.31%, GRAL +7.22%, IBTA +4.99%, ARM +4.91%, AFRM +4.51%). Market breadth: 22/55 green. Weighted by signal strength. Stop -1.5% | Target +3.0%.",
           "picks": [
             {
               "symbol": "ALAB",
-              "weight": 0.2964,
-              "score": 65.4,
-              "rationale": "ALAB: STRONG momentum +11.88% \u2014 30% allocation ($28,213). Stop: -1.5% | Target: +3.0%."
+              "weight": 0.2356,
+              "score": 62.2,
+              "rationale": "ALAB: STRONG momentum +11.31% \u2014 24% allocation ($23,766). Stop: -1.5% | Target: +3.0%."
             },
             {
-              "symbol": "VST",
-              "weight": 0.201,
-              "score": 44.3,
-              "rationale": "VST: solid momentum +4.43% \u2014 20% allocation ($19,131). Stop: -1.5% | Target: +3.0%."
+              "symbol": "GRAL",
+              "weight": 0.2186,
+              "score": 57.7,
+              "rationale": "GRAL: STRONG momentum +7.22% \u2014 22% allocation ($22,049). Stop: -1.5% | Target: +3.0%."
+            },
+            {
+              "symbol": "IBTA",
+              "weight": 0.189,
+              "score": 49.9,
+              "rationale": "IBTA: solid momentum +4.99% \u2014 19% allocation ($19,064). Stop: -1.5% | Target: +3.0%."
+            },
+            {
+              "symbol": "ARM",
+              "weight": 0.186,
+              "score": 49.1,
+              "rationale": "ARM: solid momentum +4.91% \u2014 19% allocation ($18,765). Stop: -1.5% | Target: +3.0%."
             },
             {
               "symbol": "AFRM",
-              "weight": 0.1936,
-              "score": 42.7,
-              "rationale": "AFRM: solid momentum +4.27% \u2014 19% allocation ($18,429). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "CAT",
-              "weight": 0.155,
-              "score": 34.2,
-              "rationale": "CAT: solid momentum +3.42% \u2014 16% allocation ($14,760). Stop: -1.5% | Target: +3.0%."
-            },
-            {
-              "symbol": "CART",
-              "weight": 0.1541,
-              "score": 34.0,
-              "rationale": "CART: solid momentum +3.40% \u2014 15% allocation ($14,666). Stop: -1.5% | Target: +3.0%."
+              "weight": 0.1708,
+              "score": 45.1,
+              "rationale": "AFRM: solid momentum +4.51% \u2014 17% allocation ($17,226). Stop: -1.5% | Target: +3.0%."
             }
           ],
           "stop_pct": -1.5,
           "target_pct": 3.0,
           "session_log": [
             {
-              "time": "12:45 PM",
+              "time": "12:19 PM",
               "phase": "MIDDAY",
               "action": "MIDDAY CHECK \u2014 positions reviewed",
-              "detail": "Current positions: ALAB +11.88%, VST +4.43%, AFRM +4.27%, CAT +3.42%, CART +3.40%. Breadth: 27/55 green. Monitoring for stop/target triggers. Any position through -1.35% (internal) exits immediately."
+              "detail": "Current positions: ALAB +11.31%, GRAL +7.22%, IBTA +4.99%, ARM +4.91%, AFRM +4.51%. Breadth: 22/55 green. Monitoring for stop/target triggers. Any position through -1.35% (internal) exits immediately."
             }
           ],
-          "projected_return": 6.29
+          "projected_return": 6.87
         },
         "top10": null,
         "per_top_dollars": null,
@@ -601,26 +609,26 @@
         "inception": "2026-06-02",
         "starting_capital": 55000.0,
         "value": {
-          "total": 54651.34,
+          "total": 54599.31,
           "cash": 0.0,
-          "pos_val": 54651.34,
-          "pnl": -348.66,
-          "pnl_pct": -0.63,
-          "day_pnl": 362.75,
-          "day_pct": 0.67,
+          "pos_val": 54599.31,
+          "pnl": -400.69,
+          "pnl_pct": -0.73,
+          "day_pnl": 233.82,
+          "day_pct": 0.43,
           "positions": [
             {
               "symbol": "XOM",
               "shares": 6.694337,
               "entry_price": 149.38,
-              "current_price": 137.81,
+              "current_price": 140.74,
               "cost_basis": 1000.0,
-              "price": 137.81,
-              "value": 922.55,
-              "pnl": -77.45,
-              "pnl_pct": -7.75,
-              "day_pnl": -19.61,
-              "day_pct": -2.08
+              "price": 140.74,
+              "value": 942.16,
+              "pnl": -57.84,
+              "pnl_pct": -5.78,
+              "day_pnl": -7.5,
+              "day_pct": -0.79
             },
             {
               "symbol": "CVX",
@@ -652,14 +660,14 @@
               "symbol": "FANG",
               "shares": 5.024368,
               "entry_price": 199.03,
-              "current_price": 183.5,
+              "current_price": 185.48,
               "cost_basis": 1000.0,
-              "price": 183.5,
-              "value": 921.97,
-              "pnl": -78.03,
-              "pnl_pct": -7.8,
-              "day_pnl": -9.95,
-              "day_pct": -1.07
+              "price": 185.48,
+              "value": 931.92,
+              "pnl": -68.08,
+              "pnl_pct": -6.81,
+              "day_pnl": -13.26,
+              "day_pct": -1.4
             },
             {
               "symbol": "OKLO",
@@ -1016,14 +1024,14 @@
               "symbol": "JPM",
               "shares": 3.371772,
               "entry_price": 296.58,
-              "current_price": 325.22,
+              "current_price": 333.46,
               "cost_basis": 1000.0,
-              "price": 325.22,
-              "value": 1096.57,
-              "pnl": 96.57,
-              "pnl_pct": 9.66,
-              "day_pnl": -27.78,
-              "day_pct": -2.47
+              "price": 333.46,
+              "value": 1124.35,
+              "pnl": 124.35,
+              "pnl_pct": 12.44,
+              "day_pnl": 7.82,
+              "day_pct": 0.7
             },
             {
               "symbol": "V",
@@ -1068,14 +1076,14 @@
               "symbol": "NVDA",
               "shares": 4.457122,
               "entry_price": 224.36,
-              "current_price": 210.69,
+              "current_price": 204.65,
               "cost_basis": 1000.0,
-              "price": 210.69,
-              "value": 939.07,
-              "pnl": -60.93,
-              "pnl_pct": -6.09,
-              "day_pnl": 26.92,
-              "day_pct": 2.95
+              "price": 204.65,
+              "value": 912.15,
+              "pnl": -87.85,
+              "pnl_pct": -8.78,
+              "day_pnl": -12.3,
+              "day_pct": -1.33
             },
             {
               "symbol": "AAPL",
@@ -1185,14 +1193,14 @@
               "symbol": "RDDT",
               "shares": 5.622716,
               "entry_price": 177.85,
-              "current_price": 174.96,
+              "current_price": 165.95,
               "cost_basis": 1000.0,
-              "price": 174.96,
-              "value": 983.75,
-              "pnl": -16.25,
-              "pnl_pct": -1.62,
-              "day_pnl": 50.66,
-              "day_pct": 5.43
+              "price": 165.95,
+              "value": 933.09,
+              "pnl": -66.91,
+              "pnl_pct": -6.69,
+              "day_pnl": -53.08,
+              "day_pct": -5.38
             },
             {
               "symbol": "SPOT",
@@ -1250,14 +1258,14 @@
               "symbol": "VST",
               "shares": 6.461618,
               "entry_price": 154.76,
-              "current_price": 163.75,
+              "current_price": 158.83,
               "cost_basis": 1000.0,
-              "price": 163.75,
-              "value": 1058.09,
-              "pnl": 58.09,
-              "pnl_pct": 5.81,
-              "day_pnl": 31.79,
-              "day_pct": 3.1
+              "price": 158.83,
+              "value": 1026.3,
+              "pnl": 26.3,
+              "pnl_pct": 2.63,
+              "day_pnl": 1.42,
+              "day_pct": 0.14
             },
             {
               "symbol": "PLD",
@@ -1342,26 +1350,26 @@
         "inception": "2026-06-02",
         "starting_capital": 55000.0,
         "value": {
-          "total": 54068.65,
+          "total": 54038.69,
           "cash": 0.05,
-          "pos_val": 54068.6,
-          "pnl": -931.35,
-          "pnl_pct": -1.69,
-          "day_pnl": 326.99,
-          "day_pct": 0.61,
+          "pos_val": 54038.64,
+          "pnl": -961.31,
+          "pnl_pct": -1.75,
+          "day_pnl": 240.46,
+          "day_pct": 0.45,
           "positions": [
             {
               "symbol": "NVDA",
               "shares": 12.257087,
               "entry_price": 224.36,
-              "current_price": 210.69,
+              "current_price": 204.65,
               "cost_basis": 2750.0,
-              "price": 210.69,
-              "value": 2582.45,
-              "pnl": -167.55,
-              "pnl_pct": -6.09,
-              "day_pnl": 74.03,
-              "day_pct": 2.95
+              "price": 204.65,
+              "value": 2508.41,
+              "pnl": -241.59,
+              "pnl_pct": -8.78,
+              "day_pnl": -33.83,
+              "day_pct": -1.33
             },
             {
               "symbol": "AMZN",
@@ -1458,14 +1466,14 @@
               "symbol": "JPM",
               "shares": 9.272372,
               "entry_price": 296.58,
-              "current_price": 325.22,
+              "current_price": 333.46,
               "cost_basis": 2750.0,
-              "price": 325.22,
-              "value": 3015.56,
-              "pnl": 265.56,
-              "pnl_pct": 9.66,
-              "day_pnl": -76.4,
-              "day_pct": -2.47
+              "price": 333.46,
+              "value": 3091.97,
+              "pnl": 341.97,
+              "pnl_pct": 12.44,
+              "day_pnl": 21.51,
+              "day_pct": 0.7
             },
             {
               "symbol": "NFLX",
@@ -1484,14 +1492,14 @@
               "symbol": "XOM",
               "shares": 4.090976,
               "entry_price": 149.38,
-              "current_price": 137.81,
+              "current_price": 140.74,
               "cost_basis": 611.11,
-              "price": 137.81,
-              "value": 563.78,
-              "pnl": -47.33,
-              "pnl_pct": -7.75,
-              "day_pnl": -11.99,
-              "day_pct": -2.08
+              "price": 140.74,
+              "value": 575.76,
+              "pnl": -35.35,
+              "pnl_pct": -5.78,
+              "day_pnl": -4.58,
+              "day_pct": -0.79
             },
             {
               "symbol": "CVX",
@@ -1523,14 +1531,14 @@
               "symbol": "FANG",
               "shares": 3.070442,
               "entry_price": 199.03,
-              "current_price": 183.5,
+              "current_price": 185.48,
               "cost_basis": 611.11,
-              "price": 183.5,
-              "value": 563.43,
-              "pnl": -47.68,
-              "pnl_pct": -7.8,
-              "day_pnl": -6.08,
-              "day_pct": -1.07
+              "price": 185.48,
+              "value": 569.51,
+              "pnl": -41.6,
+              "pnl_pct": -6.81,
+              "day_pnl": -8.11,
+              "day_pct": -1.4
             },
             {
               "symbol": "OKLO",
@@ -1926,14 +1934,14 @@
               "symbol": "RDDT",
               "shares": 3.436098,
               "entry_price": 177.85,
-              "current_price": 174.96,
+              "current_price": 165.95,
               "cost_basis": 611.11,
-              "price": 174.96,
-              "value": 601.18,
-              "pnl": -9.93,
-              "pnl_pct": -1.62,
-              "day_pnl": 30.96,
-              "day_pct": 5.43
+              "price": 165.95,
+              "value": 570.22,
+              "pnl": -40.89,
+              "pnl_pct": -6.69,
+              "day_pnl": -32.44,
+              "day_pct": -5.38
             },
             {
               "symbol": "SPOT",
@@ -1991,14 +1999,14 @@
               "symbol": "VST",
               "shares": 3.948759,
               "entry_price": 154.76,
-              "current_price": 163.75,
+              "current_price": 158.83,
               "cost_basis": 611.11,
-              "price": 163.75,
-              "value": 646.61,
-              "pnl": 35.5,
-              "pnl_pct": 5.81,
-              "day_pnl": 19.43,
-              "day_pct": 3.1
+              "price": 158.83,
+              "value": 627.18,
+              "pnl": 16.07,
+              "pnl_pct": 2.63,
+              "day_pnl": 0.87,
+              "day_pct": 0.14
             },
             {
               "symbol": "PLD",
@@ -2090,8 +2098,8 @@
       "week": [
         {
           "fund": "bot13",
-          "week_pnl": 14954.27,
-          "week_pct": 17.41,
+          "week_pnl": 21884.49,
+          "week_pct": 25.47,
           "week_grade": "A+"
         },
         {
@@ -2108,22 +2116,22 @@
         },
         {
           "fund": "equalizer",
-          "week_pnl": -420.39,
-          "week_pct": -0.76,
+          "week_pnl": -472.42,
+          "week_pct": -0.86,
           "week_grade": "D"
         },
         {
           "fund": "titan",
-          "week_pnl": -589.18,
-          "week_pct": -1.08,
+          "week_pnl": -619.14,
+          "week_pct": -1.13,
           "week_grade": "D"
         }
       ],
       "all": [
         {
           "fund": "bot13",
-          "all_pnl": 45868.5,
-          "all_pct": 83.4,
+          "all_pnl": 52798.72,
+          "all_pct": 96.0,
           "overall_grade": "A+"
         },
         {
@@ -2140,14 +2148,14 @@
         },
         {
           "fund": "equalizer",
-          "all_pnl": -348.66,
-          "all_pct": -0.63,
+          "all_pnl": -400.69,
+          "all_pct": -0.73,
           "overall_grade": "D"
         },
         {
           "fund": "titan",
-          "all_pnl": -931.35,
-          "all_pct": -1.69,
+          "all_pnl": -961.31,
+          "all_pct": -1.75,
           "overall_grade": "D"
         }
       ]
