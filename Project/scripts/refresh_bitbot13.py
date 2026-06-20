@@ -7,7 +7,7 @@ enriches all bot positions with P&L, generates trading signals,
 fetches crypto news from NewsAPI, and writes the updated static
 JSON files to Frontends/bitbot13.tech/data/.
 
-Run daily (or hourly — crypto never closes) on your local Windows machine:
+Run daily (or hourly -- crypto never closes) on your local Windows machine:
     python Project/scripts/refresh_bitbot13.py
 
 Optional auto-push to GitHub (deploys to Cloudflare Pages):
@@ -49,7 +49,7 @@ import os   # used to read NEWSAPI_KEY env var in GitHub Actions
 # -- Trading window (ET) --------------------------------------------------------
 TRADING_WINDOW_START = CRYPTO_CFG["session_start"][0]   # 9
 TRADING_WINDOW_END   = CRYPTO_CFG["session_end"][0]     # 21
-STOP_LOSS_PCT        = CRYPTO_CFG["stop_display"]       # 1.5 — shown to users
+STOP_LOSS_PCT        = CRYPTO_CFG["stop_display"]       # 1.5 -- shown to users
 
 
 def in_trading_window():
@@ -98,11 +98,11 @@ UNIVERSE_MAP = {
     "XLM":    "XLM-USD",
     "HBAR":   "HBAR-USD",
     "MKR":    "MKR-USD",
-    "JUP":    "JUP-USD",              # Jupiter (Solana DEX) — Coinbase + Binance
-    "RENDER": "RENDER-USD",        # Render Network — AI/GPU, Coinbase + Binance
-    "FET":    "FET-USD",           # Fetch.ai/ASI Alliance — AI crypto, Coinbase + Binance
-    "ONDO":   "ONDO-USD",          # Ondo Finance — RWA/DeFi, Coinbase + Binance
-    "WIF":    "WIF-USD",           # dogwifhat — meme, Coinbase + Binance
+    "JUP":    "JUP-USD",              # Jupiter (Solana DEX) -- Coinbase + Binance
+    "RENDER": "RENDER-USD",        # Render Network -- AI/GPU, Coinbase + Binance
+    "FET":    "FET-USD",           # Fetch.ai/ASI Alliance -- AI crypto, Coinbase + Binance
+    "ONDO":   "ONDO-USD",          # Ondo Finance -- RWA/DeFi, Coinbase + Binance
+    "WIF":    "WIF-USD",           # dogwifhat -- meme, Coinbase + Binance
     "RUNE":   "RUNE-USD",
     "QNT":    "QNT-USD",
     "KAS":    "KAS-USD",
@@ -168,7 +168,7 @@ def get_live_prices(state_symbols):
     yf_syms   = [UNIVERSE_MAP.get(s, f"{s}-USD") for s in state_symbols]
     sym_map   = {UNIVERSE_MAP.get(s, f"{s}-USD"): s for s in state_symbols}
 
-    # Try yfinance up to 2 times — it can fail transiently on GitHub Actions
+    # Try yfinance up to 2 times -- it can fail transiently on GitHub Actions
     for attempt in range(2):
         try:
             raw = yf.download(yf_syms, period="5d", auto_adjust=True, progress=False,
@@ -194,7 +194,7 @@ def get_live_prices(state_symbols):
                     except Exception:
                         pass
                 if prices:
-                    break  # got data — stop retrying
+                    break  # got data -- stop retrying
                 print(f"  [yfinance] attempt {attempt+1}: parsed 0 prices from non-empty frame, retrying...")
             else:
                 print(f"  [yfinance] attempt {attempt+1}: empty response, retrying...")
@@ -216,7 +216,7 @@ def _fetch_coingecko(symbols, prices, prev_closes):
     CoinGecko /simple/price fallback (no API key required for free tier).
     Fills prices / prev_closes in-place.
     """
-    # CoinGecko IDs for common symbols — extend if needed
+    # CoinGecko IDs for common symbols -- extend if needed
     CG_IDS = {
         "BTC":"bitcoin","ETH":"ethereum","BNB":"binancecoin","SOL":"solana",
         "XRP":"ripple","ADA":"cardano","TON":"the-open-network","AVAX":"avalanche-2",
@@ -353,7 +353,7 @@ def get_hist_data(state_symbols):
 def get_intraday_data(state_symbols):
     """
     Fetch 5-day 1-hour OHLCV for BOT13 intraday momentum scoring.
-    Returns dict: {sym: {"closes": [...], "volumes": [...]}} — each list is hourly candles.
+    Returns dict: {sym: {"closes": [...], "volumes": [...]}} -- each list is hourly candles.
     """
     if yf is None:
         return {}
@@ -386,7 +386,7 @@ def get_intraday_data(state_symbols):
 
 
 # +==============================================================================+
-# |  ORACLE — Adaptive Weekly Momentum (Crypto)                                   |
+# |  ORACLE -- Adaptive Weekly Momentum (Crypto)                                   |
 # +==============================================================================+
 
 def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_str):
@@ -493,7 +493,7 @@ def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_s
 
 
 # +==============================================================================+
-# |  WIZARD — Quality Monthly Momentum (Crypto)                                   |
+# |  WIZARD -- Quality Monthly Momentum (Crypto)                                   |
 # +==============================================================================+
 
 def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_str):
@@ -600,7 +600,7 @@ def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_
         f"Projected month return: +{wizard_proj:.2f}%. "
         f"Top {len(picks)} quality coins for the month. "
         f"Quartile-weighted (top coins get largest allocation). "
-        f"60d quality filter applied — no negative long-term trends. "
+        f"60d quality filter applied -- no negative long-term trends. "
         f"Sector cap enforced. Stop flag at -12% intra-month."
     )
     return positions, picks, rationale, wizard_proj
@@ -622,15 +622,15 @@ def generate_signals(prices, prev_closes):
         pct = (p / pc - 1) * 100 if pc > 0 else 0
 
         if pct >= 5.0:
-            signal = "STRONG BUY";  reason = f"Up {pct:+.2f}% in 24h — strong upside momentum."
+            signal = "STRONG BUY";  reason = f"Up {pct:+.2f}% in 24h -- strong upside momentum."
         elif pct >= 2.0:
-            signal = "BUY";         reason = f"Up {pct:+.2f}% in 24h — positive momentum."
+            signal = "BUY";         reason = f"Up {pct:+.2f}% in 24h -- positive momentum."
         elif pct <= -5.0:
-            signal = "STRONG SELL"; reason = f"Down {pct:+.2f}% in 24h — sharp decline."
+            signal = "STRONG SELL"; reason = f"Down {pct:+.2f}% in 24h -- sharp decline."
         elif pct <= -2.0:
-            signal = "SELL";        reason = f"Down {pct:+.2f}% in 24h — negative momentum."
+            signal = "SELL";        reason = f"Down {pct:+.2f}% in 24h -- negative momentum."
         else:
-            signal = "HOLD";        reason = f"Flat {pct:+.2f}% — no clear edge right now."
+            signal = "HOLD";        reason = f"Flat {pct:+.2f}% -- no clear edge right now."
 
         summary[signal] += 1
         price_dp = 8 if p < 0.01 else (4 if p < 1 else 2)
@@ -665,7 +665,7 @@ def generate_signals(prices, prev_closes):
 
 # -- News -----------------------------------------------------------------------
 # bitbot13 is CRYPTOCURRENCY ONLY. We restrict to crypto-native publications and
-# require every accepted article to mention at least one crypto term — per spec.
+# require every accepted article to mention at least one crypto term -- per spec.
 
 SECTOR_QUERIES = {
     "Bitcoin":    '(Bitcoin OR BTC OR "Bitcoin ETF" OR "Bitcoin halving" OR "Bitcoin price")',
@@ -684,7 +684,7 @@ BITBOT13_DOMAINS = ",".join([
     "ambcrypto.com", "bitcoinist.com", "coingape.com",
 ])
 
-# Positive crypto filter — every accepted article must mention at least one of these.
+# Positive crypto filter -- every accepted article must mention at least one of these.
 # (Belt and suspenders since the domains list is already crypto-only.)
 CRYPTO_REQUIRED_TERMS = (
     "bitcoin", "btc", "ethereum", "eth", "crypto", "blockchain", "altcoin",
@@ -703,10 +703,10 @@ def _has_term(text, terms):
 def fetch_news(api_key):
     """Fetch CRYPTO-ONLY news from NewsAPI.org, restricted to crypto-native publications."""
     if _requests is None:
-        print("  [news] requests not available — skipping")
+        print("  [news] requests not available -- skipping")
         return []
     if not api_key:
-        print("  [news] no NewsAPI key — skipping")
+        print("  [news] no NewsAPI key -- skipping")
         return []
 
     from_date = (dt.datetime.utcnow() - dt.timedelta(days=3)).strftime("%Y-%m-%d")
@@ -775,7 +775,7 @@ def push_to_api(data_type, data, secrets):
     api_url      = secrets.get("api_url") or os.environ.get("TRACKER_API_URL", BACKEND_URL)
     internal_key = secrets.get("internal_api_key") or os.environ.get("INTERNAL_API_KEY", "")
     if not internal_key:
-        print(f"  [push:{data_type}] no INTERNAL_API_KEY — skipping")
+        print(f"  [push:{data_type}] no INTERNAL_API_KEY -- skipping")
         return
     try:
         r = _requests.post(
@@ -801,7 +801,7 @@ def trigger_portfolio_snapshots(secrets):
     api_url      = secrets.get("api_url") or os.environ.get("TRACKER_API_URL", BACKEND_URL)
     internal_key = secrets.get("internal_api_key") or os.environ.get("INTERNAL_API_KEY", "")
     if not internal_key:
-        print("  [snapshots] no INTERNAL_API_KEY — skipping portfolio snapshots")
+        print("  [snapshots] no INTERNAL_API_KEY -- skipping portfolio snapshots")
         return
     try:
         r = _requests.post(
@@ -812,7 +812,7 @@ def trigger_portfolio_snapshots(secrets):
         )
         if r.status_code == 200:
             result = r.json()
-            print(f"  [snapshots] OK — {result.get('portfolios_updated', 0)} portfolios updated, "
+            print(f"  [snapshots] OK -- {result.get('portfolios_updated', 0)} portfolios updated, "
                   f"{result.get('prices_available', 0)} prices used")
         else:
             print(f"  [snapshots] HTTP {r.status_code}: {r.text[:120]}")
@@ -848,7 +848,7 @@ def main():
         try:
             raw = json.loads(STATE_FILE.read_text())
         except Exception as e:
-            print(f"  [state.json] parse error ({e}) — falling back to live API")
+            print(f"  [state.json] parse error ({e}) -- falling back to live API")
     if raw is None:
         # Fallback: fetch current state from live backend API so a corrupted
         # state.json never silently kills the entire refresh run.
@@ -860,7 +860,7 @@ def main():
             raw = {"data": _fb.json().get("data", {})}
             print("  [state.json] recovered from live API ✅")
         except Exception as e2:
-            print(f"  [state.json] API fallback also failed ({e2}) — using empty state")
+            print(f"  [state.json] API fallback also failed ({e2}) -- using empty state")
             raw = {"data": {}}
     state_data = raw.get("data", raw)
     funds      = state_data.get("funds", {})
@@ -876,7 +876,7 @@ def main():
     is_monday      = today.weekday() == 0
     is_month_start = today.day <= 3
 
-    # Force scoring on first run — no positions means never deployed yet
+    # Force scoring on first run -- no positions means never deployed yet
     oracle_needs_seed = not funds.get("oracle", {}).get("value", {}).get("positions")
     wizard_needs_seed = not funds.get("wizard", {}).get("value", {}).get("positions")
 
@@ -893,11 +893,11 @@ def main():
 
     # If yfinance returned nothing, try CoinGecko directly as full fallback
     if not prices:
-        print("[bitbot13] WARNING: yfinance returned zero prices — attempting full CoinGecko fallback...")
+        print("[bitbot13] WARNING: yfinance returned zero prices -- attempting full CoinGecko fallback...")
         _fetch_coingecko(list(need_syms), prices, prev_closes)
 
     if not prices:
-        print("[bitbot13] ERROR: zero prices from ALL sources — aborting to protect DB data.")
+        print("[bitbot13] ERROR: zero prices from ALL sources -- aborting to protect DB data.")
         sys.exit(1)
 
     print(f"[bitbot13] using {len(prices)}/{len(need_syms)} prices after all sources")
@@ -911,11 +911,46 @@ def main():
     # -- Trading window check ----------------------------------------------------
     window_open = in_trading_window()
     _now_et = et_now(); h_et, m_et = _now_et.hour, _now_et.minute
-    print(f"[bitbot13] ET time: {h_et:02d}:{m_et:02d} — trading window {'OPEN' if window_open else 'CLOSED'}")
+    print(f"[bitbot13] ET time: {h_et:02d}:{m_et:02d} -- trading window {'OPEN' if window_open else 'CLOSED'}")
 
     # -- BOT13 decision ----------------------------------------------------------
     print("[bitbot13] running BOT13 decision...")
     prev_b13_total    = float(funds.get("bot13", {}).get("value", {}).get("total") or sc_global)
+
+    # -- CARRY-FORWARD SANITY GUARD (day-over-day jump cap) ------------------
+    # BOT13 reinvests its ENTIRE balance each day BY DESIGN, and the bots are
+    # meant to run forever -- so an ABSOLUTE size ceiling is wrong (real growth
+    # would eventually hit any fixed cap and get wrongly reset). What is NEVER
+    # legitimate is the balance MULTIPLYING in a single day. The JUP bad-data
+    # spike did exactly that (a garbage price ~19x'd the balance in one day),
+    # then compounded forever after (66k -> 1.28M -> 1.59M ...). So we compare
+    # today's carried-forward total to YESTERDAY's close and reject only an
+    # impossible day-over-day jump -- never a normal (even very strong) day.
+    # A daily-trading bot's balance multiplying >4x in a SINGLE day is not real
+    # growth, it is bad data. Tune here if a legitimate day ever exceeds this.
+    MAX_DAY_FACTOR = 4.0
+    _prev_close = None
+    try:
+        for _snap in reversed(snapshots or []):
+            if _snap.get("date") == today_iso:
+                continue  # skip a partial snapshot already written for today
+            _v = float(_snap.get("bot13") or 0)
+            if _v > 0:
+                _prev_close = _v
+                break
+    except Exception:
+        _prev_close = None
+    if _prev_close and prev_b13_total > _prev_close * MAX_DAY_FACTOR:
+        print(f"  [bot13] CARRY-FORWARD GUARD: prior total ${prev_b13_total:,.0f} "
+              f"is {prev_b13_total/_prev_close:.1f}x yesterday's close "
+              f"${_prev_close:,.0f} (> {MAX_DAY_FACTOR:.0f}x cap) -- bad data, "
+              f"resetting to yesterday's close")
+        prev_b13_total = _prev_close
+        # drop inherited positions so the bot redeploys cleanly, and clear the
+        # inflated day_open so today's change isn't computed off the bad figure
+        _b13v = funds.setdefault("bot13", {}).setdefault("value", {})
+        _b13v["positions"] = []
+        _b13v["day_open"]  = _prev_close
     b13_prev_strategy = funds.get("bot13", {}).get("current_strategy", {})
     # day_open = value at start of today's session; persists across intraday refreshes
     b13_day_open = (
@@ -939,7 +974,7 @@ def main():
     drawdown_hit = check_drawdown(CRYPTO_CFG, b13_day_open, stored_positions, prices)
 
     # Guard: if positions already exist for today AND window is open AND no stops/drawdown,
-    # just re-price — don't create new ones
+    # just re-price -- don't create new ones
     same_day_trade = (
         b13_prev_strategy.get("day") == today_iso
         and b13_prev_strategy.get("decision") == "TRADE"
@@ -960,22 +995,22 @@ def main():
         b13_decision  = "HOLD"
         b13_positions = []
         b13_picks     = []
-        b13_rationale = (f"HOLD — daily drawdown limit reached ({_dd_pct:.2f}% account loss). "
+        b13_rationale = (f"HOLD -- daily drawdown limit reached ({_dd_pct:.2f}% account loss). "
                          "Capital protection activated. No new trades today.")
         b13_log       = b13_prev_strategy.get("session_log", [])
         b13_proj      = 0.0
-        print(f"  BOT13: HOLD (daily drawdown kill switch — {_dd_pct:.2f}% loss)")
+        print(f"  BOT13: HOLD (daily drawdown kill switch -- {_dd_pct:.2f}% loss)")
     elif not window_open:
-        # Outside trading window — carry forward last session's decision and positions
+        # Outside trading window -- carry forward last session's decision and positions
         b13_decision  = b13_prev_strategy.get("decision", "HOLD")
         b13_positions = stored_positions  # preserve for receipt display
         b13_picks     = b13_prev_strategy.get("picks", [])
         b13_rationale = b13_prev_strategy.get("rationale", "")
         b13_log       = b13_prev_strategy.get("session_log", [])
         b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
-        print(f"  BOT13: {b13_decision} (outside trading window {TRADING_WINDOW_START}am-{TRADING_WINDOW_END-12}pm ET — carrying forward last session)")
+        print(f"  BOT13: {b13_decision} (outside trading window {TRADING_WINDOW_START}am-{TRADING_WINDOW_END-12}pm ET -- carrying forward last session)")
     elif stops_triggered:
-        # Stop-loss triggered — mark stopped positions and open fresh picks
+        # Stop-loss triggered -- mark stopped positions and open fresh picks
         now_exit = dt.datetime.utcnow().isoformat(timespec="seconds") + "Z"
         for p in stored_positions:
             sym = p.get("symbol")
@@ -986,13 +1021,13 @@ def main():
                     p["stop_triggered"] = True
                     p["exit_reason"]    = f"stop_loss (>{CRYPTO_CFG['stop_display']}% loss)"
                     p["exit_time"]      = now_exit
-        print(f"  BOT13: stop-loss triggered — closing stopped positions, re-picking...")
+        print(f"  BOT13: stop-loss triggered -- closing stopped positions, re-picking...")
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = run_bot13_crypto(
             CRYPTO_CFG, UNIVERSE, prices, prev_closes, intraday_data, b13_day_open, today_iso, b13_prev_strategy
         )
         print(f"  BOT13: re-entered with {len(b13_picks)} new picks after stop-loss")
     elif same_day_trade:
-        # Re-use existing positions — only re-price, don't resize
+        # Re-use existing positions -- only re-price, don't resize
         b13_positions = stored_positions
         b13_decision  = "TRADE"
         b13_picks     = b13_prev_strategy.get("picks", [])
@@ -1001,7 +1036,7 @@ def main():
         b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
         print(f"  BOT13: same-session re-price ({len(b13_positions)} existing positions)")
     elif not _engine_window_open(CRYPTO_CFG):
-        # Market closed — don't enter new positions after hours.
+        # Market closed -- don't enter new positions after hours.
         # If today already had a completed TRADE, preserve its picks/log so the
         # display keeps showing what the bot did; total is preserved via prev_b13_total.
         _prior_dec  = (b13_prev_strategy or {}).get("decision")
@@ -1013,11 +1048,11 @@ def main():
             b13_rationale = (b13_prev_strategy or {}).get("rationale", "")
             b13_log       = (b13_prev_strategy or {}).get("session_log", [])
             b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
-            print("  BOT13: HOLD (market closed — no new positions after hours)")
+            print("  BOT13: HOLD (market closed -- no new positions after hours)")
         elif _stored_pos:
             # GRACEFUL FALLBACK: the prior strategy chain is broken/missing (e.g. a
             # corrupted state, a platform migration, or a skipped run) so its
-            # decision isn't "TRADE" — but there ARE positions stored from today.
+            # decision isn't "TRADE" -- but there ARE positions stored from today.
             # Preserve and re-price those (re-enriched below with live prices)
             # instead of blanking the page to empty. Present them like a normal
             # held session (decision "TRADE") so the page matches a healthy site.
@@ -1025,7 +1060,7 @@ def main():
             b13_positions = _stored_pos
             b13_picks     = (b13_prev_strategy or {}).get("picks", [])
             b13_rationale = (b13_prev_strategy or {}).get("rationale",
-                              "Session complete — holding today's positions through close.")
+                              "Session complete -- holding today's positions through close.")
             b13_log       = (b13_prev_strategy or {}).get("session_log", [])
             b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
             print(f"  BOT13: recovered {len(_stored_pos)} stored positions after close (prior strategy chain was not TRADE)")
@@ -1033,12 +1068,12 @@ def main():
             b13_decision  = "HOLD"
             b13_positions = []
             b13_picks     = []
-            b13_rationale = "Market closed — waiting for next trading session."
+            b13_rationale = "Market closed -- waiting for next trading session."
             b13_log       = (b13_prev_strategy or {}).get("session_log", [])
             b13_proj      = 0.0
-            print("  BOT13: HOLD (market closed — no new positions after hours)")
+            print("  BOT13: HOLD (market closed -- no new positions after hours)")
     else:
-        # New session — run fresh decision
+        # New session -- run fresh decision
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = run_bot13_crypto(
             CRYPTO_CFG, UNIVERSE, prices, prev_closes, intraday_data, b13_day_open, today_iso, b13_prev_strategy
         )
@@ -1093,7 +1128,7 @@ def main():
                 total     = b13_day_open + sum_pnl              # day_open + receipts = true total
                 cash      = 0.0
             else:
-                # HOLD/CASH: no positions — empty holdings, today's P&L = 0
+                # HOLD/CASH: no positions -- empty holdings, today's P&L = 0
                 enriched  = []
                 pos_val   = 0.0
                 total     = b13_day_open
@@ -1313,7 +1348,7 @@ def main():
         "leaderboards":     {"week": wk_lb, "all": all_lb},
     }
     STATE_FILE.write_text(json.dumps({"data": state_data}, indent=2))
-    print(f"[bitbot13] state — {len(funds_out)} funds, {len(snapshots)} snapshots")
+    print(f"[bitbot13] state -- {len(funds_out)} funds, {len(snapshots)} snapshots")
     push_to_api("state", state_data, secrets)
 
     # -- Signals ---------------------------------------------------------------
@@ -1321,7 +1356,7 @@ def main():
     signals_data = signals
     (DATA_DIR / "signals.json").write_text(json.dumps({"data": signals_data}, indent=2))
     n_sig = len(signals["recommendations"])
-    print(f"[bitbot13] signals — {n_sig} signals")
+    print(f"[bitbot13] signals -- {n_sig} signals")
     push_to_api("signals", signals_data, secrets)
 
     # -- News ------------------------------------------------------------------
@@ -1332,7 +1367,7 @@ def main():
         "sectors":      sorted({it["sector"] for it in news_items}) if news_items else [],
         "generated_at": dt.datetime.utcnow().isoformat() + "Z",
     }
-    print(f"[bitbot13] news — {len(news_items)} articles")
+    print(f"[bitbot13] news -- {len(news_items)} articles")
     push_to_api("news", news_data, secrets)
 
     # -- Reports ---------------------------------------------------------------
