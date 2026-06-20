@@ -7,23 +7,23 @@ Runs all 5 bot strategy engines against every active member portfolio
 and pushes results to /internal/portfolio-bot-state/upsert.
 
 Called by each platform's refresh script after pushing global state.
-Reuses prices + hist_data already fetched — no extra API calls needed
+Reuses prices + hist_data already fetched -- no extra API calls needed
 when called inline from refresh_lvl13.py / refresh_wallstbots.py / refresh_bitbot13.py.
 
 Can also be run standalone:
     python Project/scripts/refresh_portfolios.py --platform lvl13
 
 Bot compounding rules (enforced here, permanent):
-  BOT13     — daily. Carries yesterday's closing total_value as next day's capital.
+  BOT13     -- daily. Carries yesterday's closing total_value as next day's capital.
               Intraday refreshes mark-to-market but do NOT update carryover capital
               until the session closes (after 4 PM ET for equity, 9 PM ET for crypto).
-  ORACLE    — weekly. Rebalances ONLY on Monday. All other days: mark existing
+  ORACLE    -- weekly. Rebalances ONLY on Monday. All other days: mark existing
               positions to market, carry balance forward unchanged.
-  WIZARD    — monthly. Rebalances ONLY on the 1st of the month. All other days:
+  WIZARD    -- monthly. Rebalances ONLY on the 1st of the month. All other days:
               mark existing positions to market, carry balance forward unchanged.
-  EQUALIZER — buy once at inception, never sell. Entry prices stored permanently
+  EQUALIZER -- buy once at inception, never sell. Entry prices stored permanently
               on first run. Value drifts with market forever.
-  TITAN     — buy once at inception, never sell. Same as Equalizer.
+  TITAN     -- buy once at inception, never sell. Same as Equalizer.
 """
 
 import datetime as dt
@@ -106,7 +106,7 @@ def is_session_closed(platform):
 
 def is_oracle_rebalance_day():
     """Oracle rebalances on Monday only."""
-    return et_now().date().weekday() == 0  # 0 = Monday — uses ET not UTC
+    return et_now().date().weekday() == 0  # 0 = Monday -- uses ET not UTC
 
 
 def is_wizard_rebalance_day():
@@ -118,7 +118,7 @@ def mark_positions_to_market(positions, prices, prev_closes):
     """
     Take a stored list of positions and revalue them at current prices.
     Returns (total_value, day_pnl) without changing entry_price.
-    Entry prices are NEVER updated after inception — only shares and cost_basis matter.
+    Entry prices are NEVER updated after inception -- only shares and cost_basis matter.
     """
     total_value = 0.0
     day_pnl     = 0.0
@@ -204,7 +204,7 @@ def push_bot_states(secrets, results):
         )
         if r.status_code == 200:
             res = r.json()
-            print(f"  [bot-state] OK — {res.get('upserted', 0)} states upserted")
+            print(f"  [bot-state] OK -- {res.get('upserted', 0)} states upserted")
         else:
             print(f"  [bot-state] HTTP {r.status_code}: {r.text[:120]}")
     except Exception as e:
@@ -252,7 +252,7 @@ def get_prices_for_symbols(symbols):
             move = abs((p / pc - 1) * 100)
             if move > SANE_MOVE_CAP:
                 print(f"  [prices] bad-data guard: {sym} day move {move:.0f}% "
-                      f"(p={p}, prev={pc}) — neutralizing prev_close")
+                      f"(p={p}, prev={pc}) -- neutralizing prev_close")
                 prev_closes[sym] = p
 
     return prices, prev_closes
@@ -419,7 +419,7 @@ def build_baseline_positions(universe, prices, prev_closes, original_cost, prev_
     Build Equalizer / Titan positions.
 
     If prev_positions exist (from a prior run), reuse their entry_price and shares
-    permanently — we never change the inception allocation. Just mark current value.
+    permanently -- we never change the inception allocation. Just mark current value.
 
     If this is the first run (no prev_positions), set entry_price = today's price.
     That price is then stored and reused forever.
@@ -443,13 +443,13 @@ def build_baseline_positions(universe, prices, prev_closes, original_cost, prev_
         prev  = prev_closes.get(sym, price)
 
         if sym in prev_lookup:
-            # Reuse inception entry_price and shares — never change them
+            # Reuse inception entry_price and shares -- never change them
             stored = prev_lookup[sym]
             shares      = float(stored.get("shares", 0))
             entry_price = float(stored.get("entry_price", price))
             cost_basis  = float(stored.get("cost_basis", 0))
         else:
-            # First run for this holding — set inception values now.
+            # First run for this holding -- set inception values now.
             # Use prev_close as entry price so P&L reflects real movement
             # from the prior close. If no prev_close, fall back to today's price.
             alloc       = original_cost / len(universe) if universe else 0
@@ -492,12 +492,12 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
         member_value  = entry_cost × (platform_fund_total / platform_starting_capital)
         gain_loss     = member_value - entry_cost
         gain_loss_pct = gain_loss / entry_cost × 100
-        day_pct       = platform day_pct (capital-neutral — same % regardless of member size)
+        day_pct       = platform day_pct (capital-neutral -- same % regardless of member size)
         day_pnl       = member_value × (day_pct / 100)
 
     BOT13/Oracle/Wizard engines still run for strategy/picks/rationale display.
     Equalizer/Titan reuse stored inception positions for holdings table.
-    All dollar values come from tracker ratios — single source of truth.
+    All dollar values come from tracker ratios -- single source of truth.
     """
     if secrets is None:
         secrets = load_secrets()
@@ -532,7 +532,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
         print(f"  [portfolios] WARNING: could not fetch tracker state: {e}")
 
     if not platform_sc or platform_sc <= 0:
-        print(f"  [portfolios] ERROR: platform_sc={platform_sc} — cannot scale member values. Aborting.")
+        print(f"  [portfolios] ERROR: platform_sc={platform_sc} -- cannot scale member values. Aborting.")
         return []
 
     results = []
@@ -550,11 +550,11 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
 
         portfolio_created = (portfolio.get("created_at") or "")[:10]
         if portfolio_created == today_iso:
-            print(f"  [portfolios] skipping bot_id={bot_id} — created today, activates next trading day")
+            print(f"  [portfolios] skipping bot_id={bot_id} -- created today, activates next trading day")
             continue
 
         if len(universe) < 5:
-            print(f"  [portfolios] skipping bot_id={bot_id} — only {len(universe)} holding(s), minimum 5 required")
+            print(f"  [portfolios] skipping bot_id={bot_id} -- only {len(universe)} holding(s), minimum 5 required")
             continue
 
         original_cost = len(universe) * 1000.0
@@ -571,7 +571,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
         for fund_name in ["bot13", "oracle", "wizard", "equalizer", "titan"]:
             tf = tracker_funds.get(fund_name)
             if not tf or tf["total"] <= 0:
-                print(f"  [portfolios] WARNING: no tracker data for {fund_name} — skipping")
+                print(f"  [portfolios] WARNING: no tracker data for {fund_name} -- skipping")
                 continue
 
             # Core scaling formula
@@ -582,12 +582,25 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
             day_pct      = tf["day_pct"]   # percentage is capital-neutral
             day_pnl      = round(member_value * (day_pct / 100), 2)
 
-            # -- Strategy / positions (for display only — not used for dollar values) --
+            # -- Strategy / positions (for display only -- not used for dollar values) --
             positions = []
             strategy  = {}
 
             if fund_name == "bot13":
                 b13_capital = float(b13_state.get("total_value") or original_cost)
+                # -- CARRY-FORWARD SANITY GUARD (mirrors the public refresh) --------
+                # Member BOT13 reinvests its whole carried-forward balance each day
+                # (by design), so a one-time bad price (e.g. the JUP feed) inflates
+                # b13_capital and then COMPOUNDS daily. `member_value` above is the
+                # clean value scaled from the now-guarded public tracker, so it is a
+                # trustworthy sanity reference. If the stored capital is more than 4x
+                # that, it is corrupted -- fall back to the clean scaled value. Never
+                # clips real growth (the tracker scales with real gains in lockstep).
+                if member_value > 0 and b13_capital > member_value * 4.0:
+                    print(f"  [portfolios] BOT13 carry-forward guard: stored "
+                          f"${b13_capital:,.0f} is {b13_capital/member_value:.1f}x the "
+                          f"clean scaled ${member_value:,.0f} -- bad data, using scaled.")
+                    b13_capital = member_value
                 if is_equity:
                     portfolio_cfg = dict(cfg)
                     portfolio_cfg["min_picks"] = max(1, min(3, max(1, round(len(universe) / 3))))
@@ -604,7 +617,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                     "projected_return": b13_proj, "day": today_iso,
                     "session_ended": session_ended,
                 }
-                # BOT13 always sells before close — after session ends it is in cash
+                # BOT13 always sells before close -- after session ends it is in cash
                 holding_cash = b13_dec in ("CASH", "HOLD") or session_ended
 
             elif fund_name == "oracle":
@@ -715,7 +728,7 @@ def run(platform, prices=None, prev_closes=None, hist_data=None, secrets=None):
 
     portfolios = get_all_portfolios(secrets, platform)
     if not portfolios:
-        print(f"  [portfolios] no active portfolios — skipping")
+        print(f"  [portfolios] no active portfolios -- skipping")
         return
 
     all_symbols = set()
