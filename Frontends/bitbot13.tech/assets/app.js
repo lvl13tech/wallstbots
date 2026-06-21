@@ -169,6 +169,57 @@ function newsCard(it) {
 }
 
 // ============ PAGE: HOMEPAGE ============
+// ============ BOT13 TRACK RECORD (self-updating from snapshots) ============
+// Computes BOT13's up/down/cash-day record + worst day straight from the daily
+// snapshot history already in STATE. No backend call -- updates itself daily.
+function bot13Record() {
+  const snaps = (STATE.funds && STATE.funds.snapshots) || [];
+  let prev = null, up = 0, down = 0, cash = 0, worst = 0, days = 0;
+  for (const sn of snaps) {
+    const v = (sn && typeof sn.bot13 === 'number') ? sn.bot13 : null;
+    if (v === null) continue;
+    if (prev !== null && prev > 0) {
+      const ch = (v / prev - 1) * 100;
+      days++;
+      if (ch > 0.05) up++;
+      else if (ch < -0.05) down++;
+      else cash++;
+      if (ch < worst) worst = ch;
+    }
+    prev = v;
+  }
+  return { up, down, cash, worst, days };
+}
+
+function bot13RecordTile() {
+  const r = bot13Record();
+  if (!r.days) return '';
+  const cell = (num, label, cls) =>
+    '<div style="flex:1;min-width:74px;text-align:center;padding:14px 6px;background:var(--panel2);border:1px solid var(--border);border-radius:var(--radius)">'
+    + '<div class="stat-val ' + cls + '" style="font-size:28px;line-height:1">' + num + '</div>'
+    + '<div class="stat-label" style="margin-top:7px">' + label + '</div>'
+    + '</div>';
+  const downCls = r.down === 0 ? 'pos' : 'neg';
+  const worstCls = r.worst < 0 ? 'neg' : 'pos';
+  return '<div class="panel" style="border-color:var(--pink);background:linear-gradient(135deg,rgba(236,72,153,0.08),rgba(236,72,153,0.01))">'
+    + '<div class="section-head" style="margin:0 0 14px">'
+    + '<h3 style="color:var(--pink)"><span class="fund-icon bot13" style="width:20px;height:20px;font-size:9px;display:inline-flex;align-items:center;justify-content:center;border-radius:5px;vertical-align:-3px;margin-right:7px;color:var(--bg);font-weight:700">13</span>BOT13 Track Record</h3>'
+    + '<span class="more" style="cursor:default;color:var(--muted)">Updates every market day</span>'
+    + '</div>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+    + cell(r.up,   'Up days',   'pos')
+    + cell(r.down, 'Down days', downCls)
+    + cell(r.cash, 'Cash days', '')
+    + cell(r.worst.toFixed(2) + '%', 'Worst day', worstCls)
+    + '</div>'
+    + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:14px 0 0">'
+    + 'BOT13 only trades when it sees a real edge — otherwise it holds cash and risks nothing. '
+    + 'No edge, no trade: the downside of a quiet day is a quiet day, not a loss. '
+    + 'The record above updates itself every market day. '
+    + '<a class="more" href="#/get-yours">Run BOT13 on your stocks →</a></p>'
+    + '</div>';
+}
+
 function renderHome() {
   const strip = FUND_ORDER.map(fid => {
     const data = STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null;
@@ -213,6 +264,7 @@ function renderHome() {
     + '<p>Three bots — daily, weekly, monthly — trading head-to-head against two passive strategies on the top 50 crypto by market cap. No stablecoins. 24/7 markets. '+fmt$0(cap)+' starting capital. Daily Buy/Sell/Hold signals on every coin. Crypto news, filtered to what matters. <strong>Welcome to BitBot13.</strong></p>'
     + '<div class="hero-ctas"><a class="btn btn-primary" href="#/race">See The Race</a>'
     + '<a class="btn btn-secondary" href="#/how">How It Works</a></div></div></section>'
+    + bot13RecordTile()
 
     + '<div class="section-head"><h3>Live Leaderboard — Today</h3>'
     + '<a class="more" href="#/race">View all →</a></div>'
@@ -259,7 +311,7 @@ function renderHome() {
     + '</div>'
     + '<p style="text-align:center;color:var(--muted);font-size:13px;margin:0 0 36px;line-height:1.6">One login for stocks or cryptocurrencies. Your trading market research platform — Level 13.</p>'
 
-    + getYoursHint('Join and run the same 5 bots on your own crypto picks.');
+    + getYoursHint('Join and let BOT13 — the bot that only trades when it sees an edge — trade your own crypto picks.');
   drawTrajectory();
 }
 
@@ -427,6 +479,7 @@ function renderFund(fid) {
     + '<th class="num">Price</th><th class="num">Value</th><th class="num">Today</th>'
     + '<th class="num">Total P&amp;L</th><th class="num">%</th></tr></thead>'
     + '<tbody>'+positionRows+'</tbody></table></div></div>'
+    + (fid === 'bot13' ? bot13RecordTile() : '')
     + getYoursHint('Want a '+meta.name.toLowerCase()+'-style bot on YOUR coin list?');
 }
 
@@ -591,7 +644,7 @@ function renderGetYours() {
     '<section class="hero" style="margin-bottom:24px"><img src="assets/logo.svg" alt="" class="hero-robot">'
     + '<div class="hero-content"><span class="hero-eyebrow">Master Crypto — Without the Risk</span>'
     + '<h1>You\'ve seen what it does. Now make it yours.</h1>'
-    + '<p>Up to 50 coins. 5 AI-powered strategies. Daily signals, custom crypto news, Sunday auto-reports. <strong style="color:var(--blue)">BitBot13</strong> runs 24/7 so you never miss a move.</p></div></section>'
+    + '<p>You’ve seen the race. <strong style="color:var(--pink)">BOT13 won it — by only trading when it sees an edge.</strong> No edge, no trade: it sits in cash and risks nothing, so it chases the market without betting against you. Add your own coins and it trades them the same way — daily signals, custom news, Sunday reports.</p></div></section>'
 
     // ── Billing toggle ──
     + '<div style="display:flex;justify-content:center;margin-bottom:28px">'
@@ -619,6 +672,11 @@ function renderGetYours() {
     + '<div id="freeMsg" style="font-size:12px;margin-top:6px;min-height:16px"></div>'
     + '</div></div></div>'
 
+    + '<div class="panel" style="margin-bottom:16px;border-color:var(--pink);background:linear-gradient(135deg,rgba(236,72,153,0.07),rgba(236,72,153,0.01))"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch">'
+    + '<div style="flex:1;min-width:130px;text-align:center"><div class="stat-val pos" style="font-size:22px">No edge, no trade</div><div class="stat-label" style="margin-top:5px">Holds cash, risks nothing</div></div>'
+    + '<div style="flex:1;min-width:130px;text-align:center"><div class="stat-val" style="font-size:22px;color:var(--pink)">Trades only with an edge</div><div class="stat-label" style="margin-top:5px">No edge = sits in cash</div></div>'
+    + '<div style="flex:1;min-width:130px;text-align:center"><div class="stat-val" style="font-size:22px">Beats every other bot</div><div class="stat-label" style="margin-top:5px">+ both market benchmarks</div></div>'
+    + '</div><p style="color:var(--muted);font-size:11px;margin:10px 0 0;text-align:center">Simulated/paper-trading results, shown live on the leaderboard.</p></div>'
     // ── Paid tier cards ──
     + '<div class="grid grid-3" style="gap:16px;margin-bottom:24px">'
     + Object.entries(TIER_META).map(([tier, meta]) =>
@@ -665,7 +723,7 @@ function renderGetYours() {
     + '<span class="signal signal-buy" style="font-size:11px;padding:6px 14px">TOP 50 CRYPTO</span></div>'
     + '<h3>What\'s Included</h3><div class="grid grid-3">'
     + [['Up to 50 coins','Any chain, any category. BTC, ETH, altcoins, DeFi, gaming tokens.'],
-       ['5 AI bots','Daily, weekly, monthly — plus two market-cap benchmarks.'],
+       ['BOT13 + 4 more','The daily bot that only trades on a real edge — and holds cash otherwise — runs on your picks, plus weekly, monthly, and two benchmarks for context.'],
        ['Daily Buy/Sell/Hold','Composite signals on every coin you track.'],
        ['Custom news feed','Crypto never sleeps. Neither does your news feed.'],
        ['Sunday auto-reports','Weekly grades, pros/cons, trade-by-trade review.'],
@@ -1056,7 +1114,8 @@ const FAQS = [
   { q: ['chain','chains','layer','defi','category','what can i track'], a: "Any chain or category — Layer 1, Layer 2, DeFi protocols, exchanges, gaming, meme coins, and more. We pull crypto news for the projects you choose." },
   { q: ['portfolio','tracker','bot-detail','my portfolio','dashboard'], a: "Your portfolio page shows: your coin holdings with live P&L, pie chart breakdown, bot signals on each coin, curated crypto news for your picks, and a live leaderboard of all 5 bots competing on your exact coin list." },
   { q: ['news','articles','sources'], a: "We pull from 80+ sources via NewsAPI, dedupe, and filter to the crypto topics your coins cover. Updated every night." },
-  { q: ['bot','bots','strategy','strategies'], a: "5 strategies race on YOUR coin list: BOT13 (daily intraday), ORACLE (weekly Monday rebalance), WIZARD (monthly hold), EQUALIZER (equal-weight baseline), TITAN (cap-weighted baseline)." },
+  { q: ['bot','bots','strategy','strategies'], a: "5 strategies race on YOUR coin list — and BOT13, the daily bot, keeps winning by refusing to chase a bad trade. It only trades when it sees an edge and sits in cash otherwise — no edge, no trade, no risk — while still beating every other strategy and both market benchmarks. The others (ORACLE weekly, WIZARD monthly, plus EQUALIZER & TITAN benchmarks) are there for context. When you join, BOT13 trades your exact coin list the same way." },
+  { q: ['best bot','which bot','top bot','does it work','proof','track record','winning','why bot13','losing'], a: "BOT13 — the daily strategy — is the standout, and here’s WHY it wins: it only trades when it sees a real edge, and sits in cash otherwise. No edge, no trade, no risk — the downside of a quiet day is a quiet day, not a loss. It still beats the other bots and the market (paper-trading results, shown live on the leaderboard, including its day-by-day win/cash record). Join, add your coins, and copy the bot that won’t bet against you." },
   { q: ['signals','buy','sell','hold'], a: "Every trading day we score every coin on your list — momentum, RSI, MACD, volume, volatility — and label it Strong Buy / Buy / Hold / Sell / Strong Sell." },
   { q: ['report','reports','sunday','weekly'], a: "Every Sunday you get an auto-generated report: each bot's grade, what they bought/sold, why, and what's coming next." },
   { q: ['real money','live trade','execute','broker','exchange'], a: "No — these are paper portfolios for research and signals only. We never touch an exchange account. You see what the bots would do, then decide for yourself." },
@@ -1141,7 +1200,7 @@ function chatHandleInput(q) {
 
 function chatbotRenderQuick() {
   const wrap = $('chatbotQuick'); if (!wrap) return;
-  const quick = ['Pricing', 'Coins', 'Bots', 'Cancel', 'Support'];
+  const quick = ['Pricing', 'Why BOT13?', 'Coins', 'Cancel', 'Support'];
   wrap.innerHTML = quick.map(q => '<button data-q="'+q+'">'+q+'</button>').join('');
   wrap.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => {
