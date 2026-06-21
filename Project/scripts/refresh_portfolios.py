@@ -621,6 +621,13 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 holding_cash = b13_dec in ("CASH", "HOLD") or session_ended
 
             elif fund_name == "oracle":
+                # Carry-forward sanity guard (same as BOT13): if stored capital is
+                # >4x the clean tracker-scaled value, it's bad data -> use scaled.
+                if member_value > 0 and prev_oracle_total > member_value * 4.0:
+                    print(f"  [portfolios] Oracle carry-forward guard: stored "
+                          f"${prev_oracle_total:,.0f} vs clean ${member_value:,.0f} "
+                          f"-- bad data, using scaled.")
+                    prev_oracle_total = member_value
                 if oracle_day or not oracle_state.get("positions"):
                     oracle_dec, oracle_pos, oracle_picks, oracle_rat, oracle_proj = run_oracle_for_universe(
                         universe, prices, prev_closes, hist_data, prev_oracle_total, week_str
@@ -639,6 +646,13 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 holding_cash = oracle_dec in ("CASH", "HOLD")
 
             elif fund_name == "wizard":
+                # Carry-forward sanity guard (same as BOT13): if stored capital is
+                # >4x the clean tracker-scaled value, it's bad data -> use scaled.
+                if member_value > 0 and prev_wizard_total > member_value * 4.0:
+                    print(f"  [portfolios] Wizard carry-forward guard: stored "
+                          f"${prev_wizard_total:,.0f} vs clean ${member_value:,.0f} "
+                          f"-- bad data, using scaled.")
+                    prev_wizard_total = member_value
                 if wizard_day or not wizard_state.get("positions"):
                     wizard_dec, wizard_pos, wizard_picks, wizard_rat, wizard_proj = run_wizard_for_universe(
                         universe, prices, prev_closes, hist_data, prev_wizard_total, month_str

@@ -1,38 +1,66 @@
 #!/bin/sh
 # ============================================================================
 #  pre-commit-truncation-guard.sh
-#  Git pre-commit hook: blocks any commit that includes a TRUNCATED HTML file
-#  (one whose final non-empty line is not </html>). This is the guard against
-#  the recurring mid-save truncation bug (bot-detail, portfolio-fund, app.js).
-#
+#  Git pre-commit hook: blocks any commit containing a TRUNCATED file.
+#  Covers the recurring mid-save truncation bug (OneDrive sync racing the
+#  editor) for BOTH file types:
+#    - HTML : must contain </html> in its final lines
+#    - .py  : must COMPILE (py_compile) AND parse to a complete module;
+#             a mid-line cut, unclosed bracket, or missing tail all fail.
 #  Installed to .git/hooks/pre-commit by INSTALL-truncation-guard.bat.
+#  Emergency override (use sparingly): git commit --no-verify
 # ============================================================================
 
 fail=0
 
-# Check every staged .html file (Added/Copied/Modified)
+# --- HTML files -------------------------------------------------------------
 for f in $(git diff --cached --name-only --diff-filter=ACM | grep -i '\.html$'); do
     [ -f "$f" ] || continue
-    # Skip temp comparison copies (e.g. foo.JUNE11.html, foo.<hash>.html)
     case "$f" in
         *.JUNE11.html|*.GOOD.html|*.CURRENT-backup.html) continue ;;
     esac
-    # Look for </html> anywhere in the last 5 lines (tolerates trailing blanks)
     if tail -n 5 "$f" | grep -qi "</html>"; then
-        : # ok
+        :
     else
-        echo "  ✗ TRUNCATED (no </html> at end): $f"
+        echo "  X TRUNCATED (no </html> at end): $f"
         fail=1
+    fi
+done
+
+# --- Python files -----------------------------------------------------------
+# Pick a python interpreter if one exists; if none, skip the .py check
+PY=""
+for cand in python3 python py; do
+    if command -v "$cand" >/dev/null 2>&1; then PY="$cand"; break; fi
+done
+
+for f in $(git diff --cached --name-only --diff-filter=ACM | grep -i '\.py$'); do
+    [ -f "$f" ] || continue
+    if [ -n "$PY" ]; then
+        if ! "$PY" -m py_compile "$f" >/dev/null 2>&1; then
+            echo "  X TRUNCATED or broken (does not compile): $f"
+            fail=1
+        fi
+    else
+        # No python available: fall back to a heuristic - a complete script
+        # should not end mid-token. Flag if last non-empty line ends with an
+        # obvious continuation/open construct.
+        last=$(awk 'NF{l=$0} END{print l}' "$f")
+        case "$last" in
+            *"="|*","|*"("|*"["|*"{"|*"\\")
+                echo "  X LIKELY TRUNCATED (ends mid-statement): $f"
+                fail=1 ;;
+        esac
     fi
 done
 
 if [ "$fail" -ne 0 ]; then
     echo ""
     echo "============================================================"
-    echo " COMMIT BLOCKED: one or more HTML files are TRUNCATED."
-    echo " They do not end with </html> -- this is the mid-save"
-    echo " truncation bug. Fix the file(s) before committing."
-    echo " (To override in a true emergency: git commit --no-verify)"
+    echo " COMMIT BLOCKED: one or more files are TRUNCATED/broken."
+    echo " This is the mid-save truncation bug (OneDrive vs editor)."
+    echo " Re-save the flagged file(s), then commit again."
+    echo " Emergency override: git commit --no-verify"
     echo "============================================================"
     exit 1
 fi

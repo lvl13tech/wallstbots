@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-refresh_wallstbots.py  (v2 — enhanced strategy engine)
+refresh_wallstbots.py  (v2 -- enhanced strategy engine)
 =======================================================
 Fetches live prices + 90-day history for the 50-stock AI & Quantum universe.
 Runs three bot strategy engines:
   - BOT13  : Precision Intraday Momentum (3 runs/day: open, midday, close)
   - ORACLE : Adaptive Weekly Momentum    (recomputes every Monday)
   - WIZARD : Quality Monthly Momentum    (recomputes every 1st trading day)
-  - EQUALIZER / TITAN : baselines — mark-to-market only
+  - EQUALIZER / TITAN : baselines -- mark-to-market only
 
 Auto-run via GitHub Actions; manual run also supported:
   python Project/scripts/refresh_wallstbots.py [--push]
@@ -63,13 +63,13 @@ UNIVERSE = [
     "PANW","ANET","PSTG","TSLA","ISRG",
     # AI Healthcare
     "RXRX","GRAL","SMMT",
-    # Quantum Computing — established
+    # Quantum Computing -- established
     "IONQ","RGTI","QBTS","QUBT","ARQQ","IBM",
-    # Quantum Computing — 2026 IPOs
+    # Quantum Computing -- 2026 IPOs
     "XNDU","INFQ","HQ",
-    # AI — 2026 IPO
+    # AI -- 2026 IPO
     "CBRS",
-    # Space — 2026 IPO
+    # Space -- 2026 IPO
     "SPCX",
 ]
 
@@ -95,9 +95,9 @@ SECTORS = {
     # Quantum Computing
     "IONQ":"QUANTUM","RGTI":"QUANTUM","QBTS":"QUANTUM","QUBT":"QUANTUM",
     "ARQQ":"QUANTUM","IBM":"QUANTUM","XNDU":"QUANTUM","INFQ":"QUANTUM","HQ":"QUANTUM",
-    # AI — 2026 IPO
+    # AI -- 2026 IPO
     "CBRS":"AI SEMIS",
-    # Space — 2026 IPO
+    # Space -- 2026 IPO
     "SPCX":"AI SPACE",
 }
 
@@ -105,7 +105,7 @@ FUND_ORDER = ["bot13", "oracle", "wizard", "equalizer", "titan"]
 
 # -- Risk controls ---------------------------------------------------------------
 # Display value shown to users; internal trigger is EQUITY_CFG["stop_internal"] = 1.35%
-STOP_LOSS_PCT = EQUITY_CFG["stop_display"]   # 1.5 — used for Wizard stop-flag check
+STOP_LOSS_PCT = EQUITY_CFG["stop_display"]   # 1.5 -- used for Wizard stop-flag check
 
 # -- Helpers ---------------------------------------------------------------------
 def load_secrets():
@@ -271,19 +271,19 @@ def enrich_position(pos, prices, prev_closes):
     return result
 
 
-# -- (run_bot13_decision, _append_log removed — now in bot13_engine.py)
+# -- (run_bot13_decision, _append_log removed -- now in bot13_engine.py)
 
 # +==============================================================================+
-# |  ORACLE — Adaptive Weekly Momentum                                           |
+# |  ORACLE -- Adaptive Weekly Momentum                                           |
 # |                                                                              |
 # |  Philosophy: Identify the 5 strongest names going into the week using        |
-# |  composite momentum. Concentrate capital — no equal-weight mediocrity.       |
+# |  composite momentum. Concentrate capital -- no equal-weight mediocrity.       |
 # |                                                                              |
 # |  Scoring (composite):                                                        |
-# |  - 5d momentum  × 0.40  — immediate price action (most predictive short-term)|
-# |  - 20d momentum × 0.30  — confirms trend, not just a day trade bounce        |
-# |  - RSI(14)      × 0.20  — avoids overbought names; rewards healthy pullbacks  |
-# |  - Volume ratio × 0.10  — institutional confirmation (volume > 20d average)  |
+# |  - 5d momentum  × 0.40  -- immediate price action (most predictive short-term)|
+# |  - 20d momentum × 0.30  -- confirms trend, not just a day trade bounce        |
+# |  - RSI(14)      × 0.20  -- avoids overbought names; rewards healthy pullbacks  |
+# |  - Volume ratio × 0.10  -- institutional confirmation (volume > 20d average)  |
 # |                                                                              |
 # |  Portfolio rules:                                                            |
 # |  - Top 5 picks, weighted by score (not equal weight)                        |
@@ -316,7 +316,7 @@ def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_s
         if ret20 < 0:
             continue
 
-        # RSI — penalize overbought (>75), reward healthy range (50-70)
+        # RSI -- penalize overbought (>75), reward healthy range (50-70)
         rsi = compute_rsi(closes[-15:] + [p_now])
         if rsi > 75:
             rsi_score = -0.5 * (rsi - 75) / 25   # negative pressure above 75
@@ -400,16 +400,16 @@ def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_s
 
 
 # +==============================================================================+
-# |  WIZARD — Quality Monthly Momentum                                           |
+# |  WIZARD -- Quality Monthly Momentum                                           |
 # |                                                                              |
 # |  Philosophy: Patience is the edge. Let quality compounders do the work.      |
-# |  Hold 8 names for the full month. No trading noise — only the best trend.    |
+# |  Hold 8 names for the full month. No trading noise -- only the best trend.    |
 # |                                                                              |
 # |  Scoring (long-horizon):                                                     |
-# |  - 20d momentum × 0.35  — intermediate trend confirmation                   |
-# |  - 60d momentum × 0.35  — broad trend health (avoids dead-cat bounces)      |
-# |  - Sharpe proxy × 0.20  — risk-adjusted quality (smooth ride preferred)     |
-# |  - Distance above 50dMA × 0.10 — trend integrity check                      |
+# |  - 20d momentum × 0.35  -- intermediate trend confirmation                   |
+# |  - 60d momentum × 0.35  -- broad trend health (avoids dead-cat bounces)      |
+# |  - Sharpe proxy × 0.20  -- risk-adjusted quality (smooth ride preferred)     |
+# |  - Distance above 50dMA × 0.10 -- trend integrity check                      |
 # |                                                                              |
 # |  Portfolio rules:                                                            |
 # |  - 8 positions, quartile-sized (top 2: ~24%, mid 4: ~14%, bottom 2: ~9%)    |
@@ -493,7 +493,7 @@ def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_
     raw_w = []
     for i in range(n):
         if i < q1_cut:
-            raw_w.append(3.0)   # top quartile — highest conviction
+            raw_w.append(3.0)   # top quartile -- highest conviction
         elif i < q3_cut:
             raw_w.append(1.8)   # middle
         else:
@@ -529,7 +529,7 @@ def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_
         f"Projected month return: +{wizard_proj:.2f}%. "
         f"Top {len(picks)} quality compounders for the month. "
         f"Quartile-weighted (top names get largest allocation). "
-        f"60d quality filter applied — no negative long-term trends. "
+        f"60d quality filter applied -- no negative long-term trends. "
         f"Sector cap 35%. Stop flag at -12% intra-month."
     )
     return positions, picks, rationale, wizard_proj
@@ -538,7 +538,7 @@ def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_
 # -- Signals ----------------------------------------------------------------------
 def generate_signals(prices, prev_closes, hist_data):
     """
-    Enhanced signal generator — combines day momentum with trend context.
+    Enhanced signal generator -- combines day momentum with trend context.
     Strong signals require both day move AND multi-day trend alignment.
     """
     today_iso = et_now().date().isoformat()
@@ -562,17 +562,17 @@ def generate_signals(prices, prev_closes, hist_data):
 
         # Signal with trend confirmation
         if pct >= 3.0 and trend_positive:
-            signal = "STRONG BUY";  reason = f"Up {pct:+.2f}% with uptrend — strong confirmed momentum."
+            signal = "STRONG BUY";  reason = f"Up {pct:+.2f}% with uptrend -- strong confirmed momentum."
         elif pct >= 1.0 and trend_positive:
-            signal = "BUY";         reason = f"Up {pct:+.2f}% with trend support — positive momentum."
+            signal = "BUY";         reason = f"Up {pct:+.2f}% with trend support -- positive momentum."
         elif pct >= 1.0 and not trend_positive:
-            signal = "HOLD";        reason = f"Up {pct:+.2f}% but against 5d trend — wait for confirmation."
+            signal = "HOLD";        reason = f"Up {pct:+.2f}% but against 5d trend -- wait for confirmation."
         elif pct <= -3.0:
-            signal = "STRONG SELL"; reason = f"Down {pct:+.2f}% — sharp decline, avoid."
+            signal = "STRONG SELL"; reason = f"Down {pct:+.2f}% -- sharp decline, avoid."
         elif pct <= -1.0:
-            signal = "SELL";        reason = f"Down {pct:+.2f}% — negative momentum."
+            signal = "SELL";        reason = f"Down {pct:+.2f}% -- negative momentum."
         else:
-            signal = "HOLD";        reason = f"Flat {pct:+.2f}% — no clear edge today."
+            signal = "HOLD";        reason = f"Flat {pct:+.2f}% -- no clear edge today."
 
         summary[signal] += 1
         recs.append({
@@ -596,7 +596,7 @@ def generate_signals(prices, prev_closes, hist_data):
 
 # -- News -------------------------------------------------------------------------
 # wallstbots is STOCK-MARKET ONLY. We restrict to financial publications and
-# reject any article that mentions crypto, NFT, blockchain, or web3 — per spec.
+# reject any article that mentions crypto, NFT, blockchain, or web3 -- per spec.
 
 # Per-sector queries are focused on the names actually in our stock universe.
 SECTOR_QUERIES = {
@@ -617,7 +617,7 @@ WALLSTBOTS_DOMAINS = ",".join([
     "forbes.com", "morningstar.com",
 ])
 
-# Drop any article whose title contains a crypto term — these slip in even with
+# Drop any article whose title contains a crypto term -- these slip in even with
 # clean queries (e.g., "AI chip news ... bitcoin mining"). wallstbots is stocks-only.
 CRYPTO_BLOCK_TERMS = (
     "bitcoin", "btc", "ethereum", "eth", "crypto", "cryptocurrenc",
@@ -635,10 +635,10 @@ def _has_blocked_term(text, terms):
 def fetch_news(api_key):
     """Fetch STOCK-MARKET-ONLY news from NewsAPI.org, filtered to trusted financial sources."""
     if _requests is None:
-        print("  [news] requests not available — skipping")
+        print("  [news] requests not available -- skipping")
         return []
     if not api_key:
-        print("  [news] no NewsAPI key — skipping")
+        print("  [news] no NewsAPI key -- skipping")
         return []
 
     from_date = (dt.datetime.utcnow() - dt.timedelta(days=3)).strftime("%Y-%m-%d")
@@ -670,7 +670,7 @@ def fetch_news(api_key):
                     key         = title[:80].lower()
                     if not title or key in seen or "[Removed]" in title:
                         continue
-                    # Exclude crypto-tinged articles — wallstbots is stocks-only
+                    # Exclude crypto-tinged articles -- wallstbots is stocks-only
                     if _has_blocked_term(title, CRYPTO_BLOCK_TERMS) or _has_blocked_term(description, CRYPTO_BLOCK_TERMS):
                         skipped_crypto += 1
                         continue
@@ -707,7 +707,7 @@ def push_to_api(data_type, data, secrets):
     api_url      = secrets.get("api_url") or os.environ.get("TRACKER_API_URL", BACKEND_URL)
     internal_key = secrets.get("internal_api_key") or os.environ.get("INTERNAL_API_KEY", "")
     if not internal_key:
-        print(f"  [push:{data_type}] no INTERNAL_API_KEY — skipping")
+        print(f"  [push:{data_type}] no INTERNAL_API_KEY -- skipping")
         return
     try:
         r = _requests.post(
@@ -731,7 +731,7 @@ def trigger_portfolio_snapshots(secrets):
     api_url      = secrets.get("api_url") or os.environ.get("TRACKER_API_URL", BACKEND_URL)
     internal_key = secrets.get("internal_api_key") or os.environ.get("INTERNAL_API_KEY", "")
     if not internal_key:
-        print("  [snapshots] no INTERNAL_API_KEY — skipping portfolio snapshots")
+        print("  [snapshots] no INTERNAL_API_KEY -- skipping portfolio snapshots")
         return
     try:
         r = _requests.post(
@@ -742,7 +742,7 @@ def trigger_portfolio_snapshots(secrets):
         )
         if r.status_code == 200:
             result = r.json()
-            print(f"  [snapshots] OK — {result.get('portfolios_updated', 0)} portfolios updated, "
+            print(f"  [snapshots] OK -- {result.get('portfolios_updated', 0)} portfolios updated, "
                   f"{result.get('prices_available', 0)} prices used")
         else:
             print(f"  [snapshots] HTTP {r.status_code}: {r.text[:120]}")
@@ -780,7 +780,7 @@ def main():
         try:
             raw = json.loads(STATE_FILE.read_text())
         except Exception as e:
-            print(f"  [state.json] parse error ({e}) — falling back to live API")
+            print(f"  [state.json] parse error ({e}) -- falling back to live API")
     if raw is None:
         # Fallback: fetch current state from live backend API so a corrupted
         # state.json never silently kills the entire refresh run.
@@ -792,7 +792,7 @@ def main():
             raw = {"data": _fb.json().get("data", {})}
             print("  [state.json] recovered from live API ✅")
         except Exception as e2:
-            print(f"  [state.json] API fallback also failed ({e2}) — using empty state")
+            print(f"  [state.json] API fallback also failed ({e2}) -- using empty state")
             raw = {"data": {}}
     state_data = raw.get("data", raw)
     funds      = state_data.get("funds", {})
@@ -809,8 +809,8 @@ def main():
     is_monday       = today.weekday() == 0
     is_month_start  = today.day <= 3   # 1st-3rd trading day = month boundary
 
-    # Force scoring on first run — no positions means never deployed yet
-    # Needs seed only if no positions AND past inception day — never trade on reset day itself
+    # Force scoring on first run -- no positions means never deployed yet
+    # Needs seed only if no positions AND past inception day -- never trade on reset day itself
     oracle_inception  = funds.get("oracle", {}).get("inception", today_iso)
     wizard_inception  = funds.get("wizard", {}).get("inception", today_iso)
     oracle_needs_seed = (not funds.get("oracle", {}).get("value", {}).get("positions")) and oracle_inception < today_iso
@@ -827,10 +827,10 @@ def main():
     print(f"[wallstbots] fetching prices for {len(need_syms)} symbols...")
     prices, prev_closes = get_live_prices(sorted(need_syms))
     if not prices:
-        print("[lvl13] ERROR: zero prices from all attempts — aborting to protect DB data.")
+        print("[lvl13] ERROR: zero prices from all attempts -- aborting to protect DB data.")
         sys.exit(1)
     elif len(prices) < len(need_syms) * 0.5:
-        print(f"[lvl13] WARNING: only {len(prices)}/{len(need_syms)} prices — partial data, continuing with caution.")
+        print(f"[lvl13] WARNING: only {len(prices)}/{len(need_syms)} prices -- partial data, continuing with caution.")
 
     # -- Fetch historical data for strategy scoring ---------------------------
     hist_data = get_hist_data(list(need_syms))
@@ -840,6 +840,34 @@ def main():
     prev_b13_strategy = funds.get("bot13", {}).get("current_strategy")
     # Use the fund's current running total so gains compound day-over-day
     prev_b13_total = float(funds.get("bot13", {}).get("value", {}).get("total") or sc_global)
+
+    # -- CARRY-FORWARD SANITY GUARD (day-over-day jump cap) ------------------
+    # BOT13 reinvests its ENTIRE balance each day (by design), so a one-time bad
+    # price gets baked into `total` and then COMPOUNDS daily. We compare today's
+    # carried-forward total to YESTERDAY's close and reset to yesterday ONLY if
+    # the jump exceeds 4x -- never clips real growth, so the bot runs forever.
+    MAX_DAY_FACTOR = 4.0
+    _prev_close = None
+    try:
+        for _snap in reversed(snapshots or []):
+            if _snap.get("date") == today_iso:
+                continue
+            _v = float(_snap.get("bot13") or 0)
+            if _v > 0:
+                _prev_close = _v
+                break
+    except Exception:
+        _prev_close = None
+    if _prev_close and prev_b13_total > _prev_close * MAX_DAY_FACTOR:
+        print(f"  [bot13] CARRY-FORWARD GUARD: prior total ${prev_b13_total:,.0f} "
+              f"is {prev_b13_total/_prev_close:.1f}x yesterday's close "
+              f"${_prev_close:,.0f} (> {MAX_DAY_FACTOR:.0f}x cap) -- bad data, "
+              f"resetting to yesterday's close")
+        prev_b13_total = _prev_close
+        _b13v = funds.setdefault("bot13", {}).setdefault("value", {})
+        _b13v["positions"] = []
+        _b13v["day_open"]  = _prev_close
+
     # day_open = value at start of today; persists across intraday refreshes so day_pnl is cumulative
     b13_day_open = (
         float(funds.get("bot13", {}).get("value", {}).get("day_open") or prev_b13_total)
@@ -850,7 +878,7 @@ def main():
     b13_inception    = funds.get("bot13", {}).get("inception", today_iso)
     stored_positions = funds.get("bot13", {}).get("value", {}).get("positions", [])
 
-    _stop_internal = EQUITY_CFG["stop_internal"]   # 1.35% — internal trigger (vs 1.5% display)
+    _stop_internal = EQUITY_CFG["stop_internal"]   # 1.35% -- internal trigger (vs 1.5% display)
 
     # Account-level daily drawdown kill switch
     drawdown_hit = check_drawdown(EQUITY_CFG, b13_day_open, stored_positions, prices)
@@ -882,9 +910,9 @@ def main():
                          f"from today's open (${b13_day_open:,.2f}). No new entries until tomorrow.")
         b13_log       = (prev_b13_strategy or {}).get("session_log", [])
         b13_proj      = 0.0
-        print(f"  BOT13: HOLD (daily drawdown limit hit — protecting capital)")
+        print(f"  BOT13: HOLD (daily drawdown limit hit -- protecting capital)")
     elif stops_triggered:
-        # Stop-loss triggered — mark stopped positions, then re-enter fresh picks
+        # Stop-loss triggered -- mark stopped positions, then re-enter fresh picks
         now_exit = __import__("datetime").datetime.utcnow().isoformat(timespec="seconds") + "Z"
         for p in stored_positions:
             sym = p.get("symbol")
@@ -895,13 +923,13 @@ def main():
                     p["stop_triggered"] = True
                     p["exit_reason"]    = f"stop_loss (>{STOP_LOSS_PCT}% loss)"
                     p["exit_time"]      = now_exit
-        print(f"  BOT13: stop-loss triggered — closing stopped positions, re-picking...")
+        print(f"  BOT13: stop-loss triggered -- closing stopped positions, re-picking...")
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = run_bot13_equity(
             EQUITY_CFG, UNIVERSE, prices, prev_closes, hist_data, b13_day_open, today_iso, prev_b13_strategy
         )
         print(f"  BOT13: re-entered with {len(b13_picks)} new picks after stop-loss")
     elif same_day_trade:
-        # Re-use existing positions — only re-price, don't resize
+        # Re-use existing positions -- only re-price, don't resize
         b13_positions = stored_positions
         b13_decision  = "TRADE"
         b13_picks     = (prev_b13_strategy or {}).get("picks", [])
@@ -910,13 +938,13 @@ def main():
         b13_proj      = float((prev_b13_strategy or {}).get("projected_return", 0.0))
         print(f"  BOT13: same-day re-price ({len(b13_positions)} existing positions)")
     elif not _engine_window_open(EQUITY_CFG):
-        # Market closed — don't enter new positions after hours.
+        # Market closed -- don't enter new positions after hours.
         # If today already had a completed TRADE, preserve its picks/log so the
         # display keeps showing what the bot did; total is preserved via prev_b13_total.
         _prior_dec  = (prev_b13_strategy or {}).get("decision")
         _stored_pos = funds.get("bot13", {}).get("value", {}).get("positions", []) or []
         if _prior_dec == "TRADE":
-            # Previous decision was TRADE (same day or prior day) — keep its
+            # Previous decision was TRADE (same day or prior day) -- keep its
             # positions, picks and log intact so the page stays populated until
             # the next trade fires.
             b13_decision  = "HOLD"
@@ -925,11 +953,11 @@ def main():
             b13_rationale = (prev_b13_strategy or {}).get("rationale", "")
             b13_log       = (prev_b13_strategy or {}).get("session_log", [])
             b13_proj      = float((prev_b13_strategy or {}).get("projected_return", 0.0))
-            print("  BOT13: HOLD (market closed — no new positions after hours)")
+            print("  BOT13: HOLD (market closed -- no new positions after hours)")
         elif _stored_pos:
             # GRACEFUL FALLBACK: the prior strategy chain is broken/missing (e.g. a
             # corrupted state, a platform migration, or a skipped run) so its
-            # decision isn't "TRADE" — but there ARE positions stored from today.
+            # decision isn't "TRADE" -- but there ARE positions stored from today.
             # Preserve and re-price those (re-enriched below with live prices)
             # instead of blanking the page to empty. Present them like a normal
             # held session (decision "TRADE") so the page matches a healthy site.
@@ -937,7 +965,7 @@ def main():
             b13_positions = _stored_pos
             b13_picks     = (prev_b13_strategy or {}).get("picks", [])
             b13_rationale = (prev_b13_strategy or {}).get("rationale",
-                              "Session complete — holding today's positions through close.")
+                              "Session complete -- holding today's positions through close.")
             b13_log       = (prev_b13_strategy or {}).get("session_log", [])
             b13_proj      = float((prev_b13_strategy or {}).get("projected_return", 0.0))
             print(f"  BOT13: recovered {len(_stored_pos)} stored positions after close (prior strategy chain was not TRADE)")
@@ -945,10 +973,10 @@ def main():
             b13_decision  = "HOLD"
             b13_positions = []
             b13_picks     = []
-            b13_rationale = "Market closed — waiting for next trading session."
+            b13_rationale = "Market closed -- waiting for next trading session."
             b13_log       = (prev_b13_strategy or {}).get("session_log", [])
             b13_proj      = 0.0
-            print("  BOT13: HOLD (market closed — no new positions after hours)")
+            print("  BOT13: HOLD (market closed -- no new positions after hours)")
     else:
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = run_bot13_equity(
             EQUITY_CFG, UNIVERSE, prices, prev_closes, hist_data, b13_day_open, today_iso, prev_b13_strategy
@@ -962,14 +990,14 @@ def main():
     oracle_new_proj      = 0.0
     oracle_past_inception = funds.get("oracle", {}).get("inception", today_iso) < today_iso
     if (is_monday or oracle_needs_seed) and hist_data and oracle_past_inception:
-        print(f"[wallstbots] {'Monday' if is_monday else 'first run'} — running ORACLE recompute...")
+        print(f"[wallstbots] {'Monday' if is_monday else 'first run'} -- running ORACLE recompute...")
         oracle_new_positions, oracle_new_picks, oracle_new_rationale, oracle_new_proj = run_oracle_decision(
             prices, prev_closes, hist_data, sc_global, week_str
         )
         if oracle_new_picks:
             print(f"  ORACLE: {len(oracle_new_picks)} new picks")
         else:
-            print("  ORACLE: scoring returned no picks — keeping existing")
+            print("  ORACLE: scoring returned no picks -- keeping existing")
 
     # -- WIZARD decision (1st trading days only) -------------------------------
     wizard_new_positions = None
@@ -978,14 +1006,14 @@ def main():
     wizard_new_proj      = 0.0
     wizard_past_inception = funds.get("wizard", {}).get("inception", today_iso) < today_iso
     if (is_month_start or wizard_needs_seed) and hist_data and wizard_past_inception:
-        print(f"[wallstbots] {'Month start' if is_month_start else 'first run'} ({today_iso}) — running WIZARD recompute...")
+        print(f"[wallstbots] {'Month start' if is_month_start else 'first run'} ({today_iso}) -- running WIZARD recompute...")
         wizard_new_positions, wizard_new_picks, wizard_new_rationale, wizard_new_proj = run_wizard_decision(
             prices, prev_closes, hist_data, sc_global, month_str
         )
         if wizard_new_picks:
             print(f"  WIZARD: {len(wizard_new_picks)} new picks")
         else:
-            print("  WIZARD: scoring returned no picks — keeping existing")
+            print("  WIZARD: scoring returned no picks -- keeping existing")
 
     # -- Enrich all fund positions ---------------------------------------------
     print("[wallstbots] enriching positions...")
@@ -1124,7 +1152,7 @@ def main():
                         "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2), "positions": enriched}
 
         else:
-            # Equalizer + Titan — mark-to-market; auto-seed on first run
+            # Equalizer + Titan -- mark-to-market; auto-seed on first run
             raw_pos  = fund.get("value", {}).get("positions", [])
 
             if not raw_pos and fid == "equalizer" and prices:
@@ -1231,7 +1259,7 @@ def main():
     }
     # Write local file (backup) + push to backend API
     STATE_FILE.write_text(json.dumps({"data": state_data}, indent=2))
-    print(f"[wallstbots] state — {len(funds_out)} funds, {len(snapshots)} snapshots")
+    print(f"[wallstbots] state -- {len(funds_out)} funds, {len(snapshots)} snapshots")
     push_to_api("state", state_data, secrets)
 
     # -- Signals ---------------------------------------------------------------
@@ -1239,7 +1267,7 @@ def main():
     signals_data = signals
     (DATA_DIR / "signals.json").write_text(json.dumps({"data": signals_data}, indent=2))
     n_sig = len(signals["recommendations"])
-    print(f"[wallstbots] signals — {n_sig} signals")
+    print(f"[wallstbots] signals -- {n_sig} signals")
     push_to_api("signals", signals_data, secrets)
 
     # -- News ------------------------------------------------------------------
@@ -1250,10 +1278,10 @@ def main():
         "sectors":      sorted({it["sector"] for it in news_items}) if news_items else [],
         "generated_at": dt.datetime.utcnow().isoformat() + "Z",
     }
-    print(f"[lvl13] news — {len(news_items)} articles")
+    print(f"[lvl13] news -- {len(news_items)} articles")
     push_to_api("news", news_data, secrets)
 
-    # -- Reports (placeholder — keeps API consistent) --------------------------
+    # -- Reports (placeholder -- keeps API consistent) --------------------------
     push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
     # -- Member portfolio simulations ------------------------------------------
     print("[lvl13] running member portfolio simulations...")

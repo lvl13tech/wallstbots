@@ -1,0 +1,10 @@
+# Normalize line endings to prevent OneDrive/editor mid-save churn.
+* text=auto eol=lf
+*.py   text eol=lf
+*.sh   text eol=lf
+*.html text eol=lf
+*.css  text eol=lf
+*.js   text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.bat  text eol=crlf
