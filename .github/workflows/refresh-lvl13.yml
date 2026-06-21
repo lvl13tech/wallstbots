@@ -66,13 +66,24 @@ jobs:
           python Project/scripts/refresh_lvl13.py
           echo "=== Script exit code: $? ==="
 
-      # NOTE: No git-commit step. The product sites read tracker data from the
-      # backend API (the refresh script pushes there as platform "aistocks"), so
-      # committing JSON to Frontends/lvl13.tech/data/ served no purpose and caused
-      # merge conflicts after that stale folder was removed from the repo. The
-      # email step below still works: refresh_lvl13.py writes the JSON to the
-      # local workspace at run time, and send_emails.py reads it from there — no
-      # commit needed. (Migration cleanup, 2026-06-15.)
+      # Heartbeat: aistocks reads its data from the backend API, so this workflow
+      # has no data-JSON commit (that caused merge conflicts pre-migration). But
+      # without any commit there was no at-a-glance signal that the scheduled run
+      # succeeded. This step commits ONE tiny timestamp file — a heartbeat — only
+      # if the refresh step above succeeded. It never conflicts (single line,
+      # always overwritten) and gives the same git-history "did it run?" signal
+      # that wallstbots gets from its data commit. (Added 2026-06-21.)
+      - name: Heartbeat (commit run timestamp)
+        if: success()
+        run: |
+          git config user.name  "WallStBots Bot"
+          git config user.email "bot@wallstbots.tech"
+          mkdir -p Frontends/aistocks.tech
+          echo "aistocks refresh OK [$(date -u '+%Y-%m-%d %H:%M UTC')] run=${{ github.run_id }}" > Frontends/aistocks.tech/.heartbeat
+          git add Frontends/aistocks.tech/.heartbeat
+          git diff --staged --quiet || git commit -m "auto: aistocks refresh heartbeat [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git pull --rebase --autostash origin master || true
+          git push
 
       - name: Send daily email notifications
         # Hour 14 UTC (9:35am ET): always send morning digest.
