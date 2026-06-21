@@ -693,7 +693,7 @@ function renderNews() {
 
 // ===== BOT13 Track Record (members) — computes from the member's OWN snapshots =====
 function memberBot13Record(snaps) {
-  let prev = null, up = 0, down = 0, cash = 0, worst = 0, days = 0;
+  let prev = null, up = 0, down = 0, cash = 0, worst = 0, best = 0, days = 0;
   for (const sn of (snaps || [])) {
     const v = (sn && sn.total_value != null) ? Number(sn.total_value) : null;
     if (v === null) continue;
@@ -702,17 +702,28 @@ function memberBot13Record(snaps) {
       days++;
       if (ch > 0.05) up++; else if (ch < -0.05) down++; else cash++;
       if (ch < worst) worst = ch;
+      if (ch > best) best = ch;
     }
     prev = v;
   }
-  return { up, down, cash, worst, days };
+  return { up, down, cash, worst, best, days };
 }
 function renderMemberBot13Tile(snaps) {
   const wrap = document.getElementById('bot13RecordWrap');
   if (!wrap) return;
   if (BOT_SLUG !== 'bot13') { wrap.innerHTML = ''; return; }
   const r = memberBot13Record(snaps);
-  if (!r.days) { wrap.innerHTML = ''; return; }
+  if (!r.days) {
+    wrap.innerHTML =
+      '<div class="panel" style="margin-top:18px;border-color:var(--pink);background:linear-gradient(135deg,rgba(236,72,153,0.08),rgba(236,72,153,0.01))">'
+      + '<div class="section-head" style="margin:0 0 14px">'
+      + '<h3 style="color:var(--pink)">BOT13 Track Record — Your Portfolio</h3>'
+      + '<span class="more" style="cursor:default;color:var(--muted)">Fresh start</span></div>'
+      + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0">'
+      + 'Your BOT13 record is building fresh — up, down, and cash days will fill in here as each market day completes. '
+      + 'BOT13 only trades your stocks when it sees a real edge, and holds cash otherwise: no edge, no trade, no risk.</p></div>';
+    return;
+  }
   const cell = (num, label, cls) =>
     '<div style="flex:1;min-width:74px;text-align:center;padding:14px 6px;background:var(--panel2);border:1px solid var(--border);border-radius:var(--radius)">'
     + '<div class="stat-val ' + cls + '" style="font-size:28px;line-height:1">' + num + '</div>'
@@ -728,6 +739,7 @@ function renderMemberBot13Tile(snaps) {
     + cell(r.up, 'Up days', 'pos')
     + cell(r.down, 'Down days', downCls)
     + cell(r.cash, 'Cash days', '')
+    + cell('+' + r.best.toFixed(2) + '%', 'Best day', 'pos')
     + cell(r.worst.toFixed(2) + '%', 'Worst day', worstCls)
     + '</div>'
     + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:14px 0 0">'

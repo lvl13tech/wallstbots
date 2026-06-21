@@ -187,7 +187,7 @@ function newsCard(it) {
 // snapshot history already in STATE. No backend call -- updates itself daily.
 function bot13Record() {
   const snaps = (STATE.funds && STATE.funds.snapshots) || [];
-  let prev = null, up = 0, down = 0, cash = 0, worst = 0, days = 0;
+  let prev = null, up = 0, down = 0, cash = 0, worst = 0, best = 0, days = 0;
   for (const sn of snaps) {
     const v = (sn && typeof sn.bot13 === 'number') ? sn.bot13 : null;
     if (v === null) continue;
@@ -198,15 +198,29 @@ function bot13Record() {
       else if (ch < -0.05) down++;
       else cash++;
       if (ch < worst) worst = ch;
+      if (ch > best) best = ch;
     }
     prev = v;
   }
-  return { up, down, cash, worst, days };
+  return { up, down, cash, worst, best, days };
 }
 
 function bot13RecordTile() {
   const r = bot13Record();
-  if (!r.days) return '';
+  if (!r.days) {
+    // Fewer than 2 days of history (e.g. right after a reset): show a clean
+    // "tracking just started" state instead of hiding the whole section.
+    return '<div class="panel" style="border-color:var(--pink);background:linear-gradient(135deg,rgba(236,72,153,0.08),rgba(236,72,153,0.01))">'
+      + '<div class="section-head" style="margin:0 0 14px">'
+      + '<h3 style="color:var(--pink)"><span class="fund-icon bot13" style="width:20px;height:20px;font-size:9px;display:inline-flex;align-items:center;justify-content:center;border-radius:5px;vertical-align:-3px;margin-right:7px;color:var(--bg);font-weight:700">13</span>BOT13 Track Record</h3>'
+      + '<span class="more" style="cursor:default;color:var(--muted)">Fresh start</span>'
+      + '</div>'
+      + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0">'
+      + 'BOT13’s track record is building fresh \u2014 up, down, and cash days will appear here as each market day completes. '
+      + 'The method never changes: it only trades when it sees a real edge, and holds cash otherwise. No edge, no trade, no risk. '
+      + '<a class="more" href="#/get-yours">Run BOT13 on your stocks →</a></p>'
+      + '</div>';
+  }
   const cell = (num, label, cls) =>
     '<div style="flex:1;min-width:74px;text-align:center;padding:14px 6px;background:var(--panel2);border:1px solid var(--border);border-radius:var(--radius)">'
     + '<div class="stat-val ' + cls + '" style="font-size:28px;line-height:1">' + num + '</div>'
@@ -223,6 +237,7 @@ function bot13RecordTile() {
     + cell(r.up,   'Up days',   'pos')
     + cell(r.down, 'Down days', downCls)
     + cell(r.cash, 'Cash days', '')
+    + cell('+' + r.best.toFixed(2) + '%', 'Best day', 'pos')
     + cell(r.worst.toFixed(2) + '%', 'Worst day', worstCls)
     + '</div>'
     + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:14px 0 0">'
