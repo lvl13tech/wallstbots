@@ -502,7 +502,7 @@ function renderTradeLog(tl, fid){
       + '<td style="color:var(--muted);font-size:12px">'+escapeHtml(t.reason||'')+'</td></tr>';
   }).join('');
   return '<div class="panel"><h3>Trade History</h3>'
-    + '<div style="color:var(--muted);font-size:12px;margin:-4px 0 10px">Every buy and sell is timestamped (ET) when the simulation makes it. Simulated / paper trading.</div>'
+    + '<div style="color:var(--muted);font-size:12px;margin:-4px 0 10px">Every buy and sell is timestamped.</div>'
     + '<div class="tbl-wrap"><table>'
     + '<thead><tr><th>Time</th><th>Action</th><th>Symbol</th><th class="num">Shares</th><th class="num">Price</th><th class="num">Realized P&amp;L</th><th>Note</th></tr></thead>'
     + '<tbody>'+rows+'</tbody></table></div></div>';
