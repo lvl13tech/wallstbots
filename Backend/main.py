@@ -1812,6 +1812,7 @@ async def upsert_portfolio_bot_state(
             "ALTER TABLE bot_fund_state ADD COLUMN IF NOT EXISTS day_pct      NUMERIC(10,4)",
             "ALTER TABLE bot_fund_state ADD COLUMN IF NOT EXISTS window_open  BOOLEAN DEFAULT FALSE",
             "ALTER TABLE bot_fund_state ADD COLUMN IF NOT EXISTS holding_cash BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE bot_fund_state ADD COLUMN IF NOT EXISTS trade_log    JSONB",
         ]:
             cursor.execute(col_ddl)
 
@@ -1821,8 +1822,8 @@ async def upsert_portfolio_bot_state(
                 INSERT INTO bot_fund_state
                     (bot_id, fund_name, snapshot_date, positions, strategy,
                      total_value, entry_cost, gain_loss, gain_loss_pct,
-                     day_pnl, day_pct, window_open, holding_cash, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                     day_pnl, day_pct, window_open, holding_cash, trade_log, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
                 ON CONFLICT (bot_id, fund_name) DO UPDATE SET
                     snapshot_date = EXCLUDED.snapshot_date,
                     positions     = EXCLUDED.positions,
@@ -1835,6 +1836,7 @@ async def upsert_portfolio_bot_state(
                     day_pct       = EXCLUDED.day_pct,
                     window_open   = EXCLUDED.window_open,
                     holding_cash  = EXCLUDED.holding_cash,
+                    trade_log     = EXCLUDED.trade_log,
                     updated_at    = NOW()
             """, (
                 r["bot_id"], r["fund_name"], today_str,
@@ -1848,6 +1850,7 @@ async def upsert_portfolio_bot_state(
                 round(float(r.get("day_pct", 0)), 4),
                 bool(r.get("window_open", False)),
                 bool(r.get("holding_cash", False)),
+                json.dumps(r.get("trade_log", [])),
             ))
             upserted += 1
 
@@ -1886,7 +1889,7 @@ async def get_portfolio_fund_state(
         cursor.execute("""
             SELECT fund_name, snapshot_date, positions, strategy,
                    total_value, entry_cost, gain_loss, gain_loss_pct,
-                   day_pnl, day_pct, window_open, holding_cash, updated_at
+                   day_pnl, day_pct, window_open, holding_cash, trade_log, updated_at
             FROM bot_fund_state
             WHERE bot_id = %s AND fund_name = %s
         """, (bot_id, fund_name))
@@ -1897,6 +1900,7 @@ async def get_portfolio_fund_state(
 
         positions = row["positions"] if isinstance(row["positions"], list) else json.loads(row["positions"] or "[]")
         strategy  = row["strategy"]  if isinstance(row["strategy"],  dict) else json.loads(row["strategy"]  or "{}")
+        trade_log = row["trade_log"] if isinstance(row["trade_log"], list) else json.loads(row["trade_log"] or "[]")
 
         return {
             "success": True,
@@ -1913,6 +1917,7 @@ async def get_portfolio_fund_state(
                 "day_pct":       float(row["day_pct"]       or 0),
                 "window_open":   bool(row["window_open"]),
                 "holding_cash":  bool(row["holding_cash"]),
+                "trade_log":     trade_log,
                 "updated_at":    str(row["updated_at"]),
             }
         }
