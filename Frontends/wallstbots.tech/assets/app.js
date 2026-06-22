@@ -439,10 +439,8 @@ function fmtTradeTime(iso){
   var s=String(iso).replace('Z','').trim();
   var d=new Date(s.indexOf('T')>=0?s:s.replace(' ','T'));
   if(isNaN(d.getTime())) return String(iso);
-  var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
-  var h=d.getHours(), m=d.getMinutes();
-  var ap=h>=12?'PM':'AM'; var h12=h%12; if(h12===0) h12=12;
-  return mo+' '+d.getDate()+', '+d.getFullYear()+' '+h12+':'+(m<10?'0':'')+m+' '+ap+' ET';
+  var h=d.getHours(), m=d.getMinutes(); var ap=h>=12?'PM':'AM'; var h12=h%12; if(h12===0) h12=12;
+  return h12+':'+(m<10?'0':'')+m+' '+ap+' ET';
 }
 function renderTradeLog(tl, fid){
   if(!tl || !tl.length) return '';
@@ -481,8 +479,8 @@ function renderFund(fid) {
   const holdingCash = v.holding_cash === true;
   const windowOpen = v.window_open !== false;
   const cashRow = windowOpen
-    ? '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
-    : '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>';
+    ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
+    : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>';
   const positionRows = (v.positions || []).length
     ? v.positions.map(p => {
         const entry  = p.entry_price || p.entry || 0;
@@ -494,9 +492,7 @@ function renderFund(fid) {
                      : (entry > 0 ? ((price/entry - 1)*100) : 0);
         const dayPnl = p.day_pnl != null ? p.day_pnl : 0;
         const dayPct = p.day_pct != null ? p.day_pct : 0;
-        var boughtTxt = p.entry_time ? fmtTradeTime(p.entry_time) : 'Held since launch';
         return '<tr><td><strong>'+p.symbol+'</strong></td>'
-          + '<td style="white-space:nowrap;color:var(--muted);font-size:12px">'+escapeHtml(boughtTxt)+'</td>'
           + '<td class="num">'+shares.toFixed(2)+'</td>'
           + '<td class="num">$'+entry.toFixed(2)+'</td>'
           + '<td class="num">$'+price.toFixed(2)+'</td>'
@@ -525,7 +521,7 @@ function renderFund(fid) {
     + strategyHTML
     + '<div class="panel"><h3>Holdings</h3>'
     + '<div class="tbl-wrap"><table>'
-    + '<thead><tr><th>Symbol</th><th>Bought</th><th class="num">Shares</th><th class="num">Entry</th>'
+    + '<thead><tr><th>Symbol</th><th class="num">Shares</th><th class="num">Entry</th>'
     + '<th class="num">Price</th><th class="num">Value</th><th class="num">Today</th>'
     + '<th class="num">Total P&amp;L</th><th class="num">%</th></tr></thead>'
     + '<tbody>'+positionRows+'</tbody></table></div></div>'

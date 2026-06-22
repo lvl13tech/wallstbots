@@ -236,11 +236,11 @@
     <h3>Holdings</h3>
     <div class="tbl-wrap"><table>
       <thead><tr>
-        <th>Symbol</th><th>Bought</th><th class="num">Shares</th><th class="num">Entry</th>
+        <th>Symbol</th><th class="num">Shares</th><th class="num">Entry</th>
         <th class="num">Price</th><th class="num">Value</th><th class="num">Today</th>
         <th class="num">Total P&amp;L</th><th class="num">%</th>
       </tr></thead>
-      <tbody id="holdingsTbody"><tr><td colspan="9" style="text-align:center;color:var(--muted);padding:18px">Loading…</td></tr></tbody>
+      <tbody id="holdingsTbody"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Loading…</td></tr></tbody>
     </table></div>
   </div>
 
@@ -591,9 +591,8 @@ function fmtTradeTime(iso){
   var s=String(iso).replace('Z','').trim();
   var d=new Date(s.indexOf('T')>=0?s:s.replace(' ','T'));
   if(isNaN(d.getTime())) return String(iso);
-  var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
   var h=d.getHours(), m=d.getMinutes(); var ap=h>=12?'PM':'AM'; var h12=h%12; if(h12===0) h12=12;
-  return mo+' '+d.getDate()+', '+d.getFullYear()+' '+h12+':'+(m<10?'0':'')+m+' '+ap+' ET';
+  return h12+':'+(m<10?'0':'')+m+' '+ap+' ET';
 }
 function renderTradeLog(){
   var panel=document.getElementById('tradeLogPanel');
@@ -627,19 +626,19 @@ function renderPositions() {
   const holdingCash = (fundState && fundState.holding_cash === true);
   const windowOpen  = (!fundState || fundState.window_open !== false);
   const cashRow = windowOpen
-    ? '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
-    : '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>';
+    ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
+    : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>';
 
   // Hard guard: never show global positions without member holdings
   if (!holdingTickers.length) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:18px">No stocks in your portfolio yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">No stocks in your portfolio yet.</td></tr>';
     return;
   }
   const myPos = allPos.filter(p => holdingTickers.includes((p.symbol || p.ticker || '').toUpperCase()));
 
   if (!myPos.length) {
     if (!holdingTickers.length) {
-      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:18px">No stocks yet — go back to your portfolio and add some stocks.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">No stocks yet — go back to your portfolio and add some stocks.</td></tr>';
     } else if (isBaseline) {
       tbody.innerHTML = holdings.map(h => {
         const entry  = h.entry_price || 0;
@@ -651,7 +650,6 @@ function renderPositions() {
         const dayPct = h.day_pct ?? 0;
         const dayPnl = value * dayPct / 100;
         return '<tr><td><strong>'+escHtml(h.symbol||'—')+'</strong></td>'
-          + '<td style="white-space:nowrap;color:var(--muted);font-size:12px">Held since launch</td>'
           + '<td class="num">'+shares.toFixed(2)+'</td>'
           + '<td class="num">$'+(entry||0).toFixed(2)+'</td>'
           + '<td class="num">$'+(price||0).toFixed(2)+'</td>'
@@ -663,15 +661,15 @@ function renderPositions() {
     } else {
       const hasSimulated = fundState && fundState.snapshot_date;
       if (!hasSimulated) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:28px;line-height:1.8">'
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:28px;line-height:1.8">'
           + '<strong style="color:var(--text);display:block;margin-bottom:6px">Awaiting first simulation</strong>'
           + meta.name + ' will begin trading your ' + holdingTickers.length + ' stock' + (holdingTickers.length !== 1 ? 's' : '') + ' during the next trading session.</td></tr>';
       } else if (fundState && fundState.holding_cash) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:28px;line-height:1.8">'
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:28px;line-height:1.8">'
           + '<strong style="color:var(--text);display:block;margin-bottom:6px">Holding Cash</strong>'
           + meta.name + ' evaluated your ' + holdingTickers.length + ' stock' + (holdingTickers.length !== 1 ? 's' : '') + ' and is holding cash — no picks met the entry criteria today.</td></tr>';
       } else {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:18px">'
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">'
           + meta.name + ' has no active positions in your stocks today.</td></tr>';
       }
     }
@@ -687,9 +685,7 @@ function renderPositions() {
     const pnlPct = p.pnl_pct != null ? p.pnl_pct : (entry > 0 ? ((price/entry - 1)*100) : 0);
     const dayPnl = p.day_pnl != null ? p.day_pnl : 0;
     const dayPct = p.day_pct != null ? p.day_pct : 0;
-    var boughtTxt = p.entry_time ? fmtTradeTime(p.entry_time) : 'Held since launch';
     return '<tr><td><strong>'+escHtml(p.symbol||'—')+'</strong></td>'
-      + '<td style="white-space:nowrap;color:var(--muted);font-size:12px">'+escHtml(boughtTxt)+'</td>'
       + '<td class="num">'+shares.toFixed(2)+'</td>'
       + '<td class="num">$'+entry.toFixed(2)+'</td>'
       + '<td class="num">$'+price.toFixed(2)+'</td>'
