@@ -58,7 +58,7 @@ gcloud run deploy $SERVICE `
   --memory 512Mi `
   --cpu 1 `
   --timeout 60 `
-  --max-instances 100
+  --max-instances 20
 
 if ($LASTEXITCODE -ne 0) { throw "Cloud Run deploy failed" }
 Write-Host "Cloud Run deploy OK" -ForegroundColor Green

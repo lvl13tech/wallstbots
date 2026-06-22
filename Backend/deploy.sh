@@ -46,7 +46,7 @@ gcloud run deploy $SERVICE_NAME \
   --memory 512Mi \
   --cpu 1 \
   --timeout 60 \
-  --max-instances 100
+  --max-instances 20
 
 echo ""
 echo "================================"
