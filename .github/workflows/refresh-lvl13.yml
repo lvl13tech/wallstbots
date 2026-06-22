@@ -2,10 +2,10 @@ name: Refresh aistocks.tech (AI/Quantum — script still named lvl13)
 
 on:
   schedule:
-    - cron: '35 13 * * 1-5'   #  9:35 AM ET — right at market open
-    - cron: '0  17 * * 1-5'   #  1:00 PM ET — midday check
-    - cron: '45 19 * * 1-5'   #  3:45 PM ET — pre-close final read (BOT13 still in window)
-    - cron: '45 20 * * 1-5'   #  4:45 PM ET — end of trading day final snapshot
+    - cron: '30,45 13 * * 1-5'      #  9:30 & 9:45 AM ET (market open)
+    - cron: '*/15 14-19 * * 1-5'    # 10:00 AM - 3:45 PM ET, every 15 min
+    - cron: '0 20 * * 1-5'          #  4:00 PM ET (market close)
+    - cron: '45 20 * * 1-5'         #  4:45 PM ET (end-of-day final snapshot)
   workflow_dispatch:
 
 permissions:
@@ -57,6 +57,16 @@ jobs:
           echo "=== Data dir ready ==="
           ls -la Frontends/lvl13.tech/data/ || true
 
+      - name: Snapshot prior trade count (for email gate)
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+        run: |
+          # aistocks reads its data from the backend API (not a committed state.json),
+          # so snapshot the PREVIOUS trade state from the live API before this run pushes.
+          URL="${BACKEND_URL:-https://wallstbots-backend-868128114349.us-east1.run.app}"
+          curl -s "$URL/public/tracker/state?platform=aistocks" > /tmp/prev_state.json 2>/dev/null || echo "{}" > /tmp/prev_state.json
+          test -s /tmp/prev_state.json || echo "{}" > /tmp/prev_state.json
+
       - name: Run lvl13 refresh
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
@@ -97,14 +107,15 @@ jobs:
           FORCE_SEND:       ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
         run: |
           HOUR=$(date -u +%H)
+          MIN=$(date -u +%M)
           echo "=== Email dispatch check: event=$EVENT_NAME hour=${HOUR}UTC force=$FORCE_SEND ==="
           echo "=== Secrets present: RESEND=$([ -n "$RESEND_API_KEY" ] && echo YES || echo MISSING) BACKEND=$([ -n "$BACKEND_URL" ] && echo YES || echo MISSING) APIKEY=$([ -n "$INTERNAL_API_KEY" ] && echo YES || echo MISSING) ==="
           python -m pip install --quiet requests
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$HOUR" = "13" ]; then
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || { [ "$HOUR" = "13" ] && [ "$MIN" -lt 45 ]; }; then
             echo "=== Dispatching morning daily email ==="
             python Project/scripts/send_emails.py
           else
-            TRADED=$(python3 Project/scripts/check_bot13_traded_today.py Frontends/lvl13.tech/data/state.json 2>/dev/null || echo "NO")
+            TRADED=$(python3 Project/scripts/check_bot13_traded_today.py Frontends/lvl13.tech/data/state.json /tmp/prev_state.json 2>/dev/null || echo "NO")
             echo "=== BOT13 bought or sold this run? $TRADED ==="
             if [ "$TRADED" = "YES" ]; then
               echo "=== BOT13 traded — sending buy/sell alert email ==="

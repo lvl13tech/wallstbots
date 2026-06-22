@@ -3,62 +3,81 @@
 """
 check_bot13_traded_today.py
 
-Prints "YES" if BOT13 recorded a real BUY or SELL *today* (ET) in its trade_log,
-otherwise "NO". Used by the refresh workflows to decide whether a MIDDAY / CLOSE
-run should send a trade-alert email.
+Prints "YES" only when BOT13 recorded a NEW buy or sell on THIS refresh run,
+otherwise "NO". Used by the refresh workflows to decide whether an intraday run
+should send a buy/sell alert email.
 
-The morning run always emails (day's signals + decision) and does NOT use this.
-Only the later intraday runs gate on this so members are emailed ONLY when the
-bot actually bought or sold -- never on a plain "still holding" refresh.
+Why "new this run" (not "any trade today"):
+  With 15-minute refreshes a position bought in the morning stays in the
+  trade_log all day. Emailing whenever the log merely CONTAINS a trade would
+  send an email every 15 minutes. Instead we compare the freshly written
+  state.json against a snapshot of the PREVIOUS run's state and only fire when
+  the count of BUY/SELL events actually went up.
 
-Reads the local data-dir state.json the refresh just wrote:
-    <site>/data/state.json -> data.funds.bot13.value.trade_log[]
-Each event looks like: {"ts": "2026-06-22T15:25:00", "action": "BUY"|"SELL", ...}
-"ts" is ET (the codebase stamps ET via et_now()), so we compare its date to ET today.
+Usage:
+    python check_bot13_traded_today.py <new-state.json> [<prev-state.json>]
 
-Usage:  python check_bot13_traded_today.py <path-to-state.json>
+If <prev-state.json> is omitted we fall back to `git show HEAD:<new-state.json>`,
+but the workflow passes an explicit pre-refresh snapshot (/tmp/prev_state.json)
+because the commit step may run before this check.
 """
 import json
+import subprocess
 import sys
-import datetime as dt
 
 
-def et_today_iso():
-    """ET calendar date (DST-aware), matching bot13_engine.et_now()."""
-    utc = dt.datetime.utcnow()
-    year = utc.year
-    march1 = dt.date(year, 3, 1)
-    dst_on = march1 + dt.timedelta(days=(6 - march1.weekday()) % 7 + 7)
-    nov1 = dt.date(year, 11, 1)
-    dst_off = nov1 + dt.timedelta(days=(6 - nov1.weekday()) % 7)
-    offset = -4 if dst_on <= utc.date() < dst_off else -5
-    return (utc + dt.timedelta(hours=offset)).date().isoformat()
+def _buysell_count(text):
+    try:
+        d = json.loads(text)
+    except Exception:
+        return None
+    d = d.get("data", d)
+    bot13 = (d.get("funds", {}) or {}).get("bot13", {}) or {}
+    value = bot13.get("value", bot13) or {}
+    log = value.get("trade_log", []) or []
+    return sum(1 for e in log
+               if str(e.get("action", "")).upper() in ("BUY", "SELL"))
 
 
 def main():
     if len(sys.argv) < 2:
         print("NO")
         return
+    path = sys.argv[1]
+    prev_path = sys.argv[2] if len(sys.argv) > 2 else None
+
     try:
-        with open(sys.argv[1]) as f:
-            d = json.load(f)
+        with open(path) as f:
+            now_count = _buysell_count(f.read())
     except Exception:
         print("NO")
         return
+    if now_count is None:
+        print("NO")
+        return
 
-    d = d.get("data", d)
-    bot13 = (d.get("funds", {}) or {}).get("bot13", {}) or {}
-    value = bot13.get("value", bot13) or {}
-    log = value.get("trade_log", []) or []
+    prev_count = None
+    if prev_path:
+        try:
+            with open(prev_path) as f:
+                prev_count = _buysell_count(f.read())
+        except Exception:
+            prev_count = None
+    else:
+        try:
+            prev_text = subprocess.run(
+                ["git", "show", "HEAD:" + path],
+                capture_output=True, text=True, timeout=20
+            ).stdout
+            prev_count = _buysell_count(prev_text)
+        except Exception:
+            prev_count = None
 
-    today = et_today_iso()
-    for e in log:
-        action = str(e.get("action", "")).upper()
-        ts = str(e.get("ts", ""))[:10]
-        if ts == today and action in ("BUY", "SELL"):
-            print("YES")
-            return
-    print("NO")
+    if prev_count is None:
+        print("YES" if now_count > 0 else "NO")
+        return
+
+    print("YES" if now_count > prev_count else "NO")
 
 
 if __name__ == "__main__":
