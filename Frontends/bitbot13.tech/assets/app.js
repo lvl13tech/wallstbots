@@ -682,6 +682,7 @@ let GY_TIER       = 'member';
 let GY_REF        = '';
 let GY_VALID      = false;
 let GY_ADMIN_CODE = '';   // set when an admin lifetime code is applied
+let GY_ADMIN_TIER = 'insider'; // tier granted by the admin code ('insider' or 'syndicate')
 
 function renderGetYours() {
   const urlRef = new URLSearchParams(location.search).get('ref')
@@ -788,6 +789,7 @@ function renderGetYours() {
   GY_REF        = '';
   GY_VALID      = false;
   GY_ADMIN_CODE = '';
+  GY_ADMIN_TIER = 'insider';
   updateGyPricing();
   if (urlRef) { const inp = $('refInput'); if (inp) inp.value = urlRef.toUpperCase(); applyRefCode(); }
 }
@@ -898,9 +900,10 @@ async function applyRefCode() {
     const d = await r.json();
     if (d.valid && d.type === 'admin_lifetime') {
       GY_ADMIN_CODE = code;
+      GY_ADMIN_TIER = d.tier || 'insider';
       GY_REF        = '';
       GY_VALID      = false;
-      msg.innerHTML = '<span style="color:#ff8c00;font-weight:700">🎉 Admin code verified — free lifetime INSIDER access! Enter your details below to claim.</span>';
+      msg.innerHTML = '<span style="color:#ff8c00;font-weight:700">🎉 Admin code verified — free lifetime ' + GY_ADMIN_TIER.toUpperCase() + ' access! Enter your details below to claim.</span>';
       renderPaypalForm();
     } else if (d.valid) {
       GY_ADMIN_CODE = '';
@@ -929,13 +932,15 @@ function renderPaypalForm() {
 
   if (GY_ADMIN_CODE) {
     wrap.innerHTML =
-      '<input id="adminEmail" type="email" placeholder="Your email" autocomplete="email" '
-      + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:8px">'
-      + '<input id="adminPw" type="password" placeholder="Create a password (min 6 chars)" autocomplete="new-password" '
-      + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:10px">'
-      + '<button onclick="claimAdminAccess()" '
-      + 'style="width:100%;background:#ff8c00;color:#000;border:none;border-radius:8px;padding:12px 0;font-weight:800;cursor:pointer;font-size:15px">🎉 Claim Free INSIDER Access</button>'
-      + '<div id="adminClaimMsg" style="font-size:12px;margin-top:8px;min-height:16px"></div>';
+      '<div style="background:var(--surface2);border-radius:12px;padding:24px;max-width:360px">'
+      + '<p style="color:#ff8c00;font-weight:700;margin-bottom:16px">🎉 Free Lifetime ' + GY_ADMIN_TIER.toUpperCase() + ' Access</p>'
+      + '<div style="margin-bottom:12px"><label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px">EMAIL</label>'
+      + '<input type="email" id="admin-email" placeholder="you@example.com" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:10px 14px;font-size:14px;box-sizing:border-box"></div>'
+      + '<div style="margin-bottom:16px"><label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px">PASSWORD</label>'
+      + '<input type="password" id="admin-password" placeholder="At least 8 characters" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:10px 14px;font-size:14px;box-sizing:border-box"></div>'
+      + '<button onclick="claimAdminAccess()" style="width:100%;background:#ff8c00;color:#fff;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:700;cursor:pointer">Claim Free ' + GY_ADMIN_TIER.toUpperCase() + ' Access</button>'
+      + '<p id="admin-claim-msg" style="margin-top:10px;font-size:13px;color:var(--muted)"></p>'
+      + '</div>';
     return;
   }
 
@@ -1057,7 +1062,7 @@ async function claimAdminAccess() {
   if (password.length < 8)  { if (msgEl) msgEl.textContent = 'Password must be at least 8 characters.'; return; }
   if (msgEl) msgEl.textContent = 'Claiming…';
   try {
-    const r = await fetch(API + '/auth/signup-with-admin-code', {
+    const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/auth/signup-with-admin-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code: GY_ADMIN_CODE, email, password })
@@ -1072,19 +1077,22 @@ async function claimAdminAccess() {
 }
 
 function renderThanksAdmin() {
-  $('app').innerHTML =
-    '<section class="hero"><div class="hero-content">'
-    + '<h1>You\'re in. 🎉</h1>'
-    + '<p style="font-size:1.15rem;margin-bottom:8px"><strong style="color:var(--blue)">INSIDER FREE · LIFETIME</strong></p>'
-    + '<p>Your free lifetime INSIDER access has been activated. Log in now to get started.</p>'
-    + '<div class="hero-ctas">'
-    + '<a class="btn btn-primary" href="https://bitbot13.tech/login.html">Log In →</a>'
-    + '</div></div></section>'
-    + '<div class="panel" style="margin-top:24px;border:2px solid var(--blue)">'
+  const tierLabel = GY_ADMIN_TIER.toUpperCase();
+  const upsell = GY_ADMIN_TIER === 'syndicate' ? '' :
+    '<div class="panel" style="margin-top:24px;border:2px solid var(--blue)">'
     + '<h3 style="color:var(--blue);margin-bottom:8px">Want even more?</h3>'
     + '<p style="color:var(--muted);margin-bottom:16px">Upgrade to <strong style="color:var(--fg)">SYNDICATE</strong> for just <strong style="color:var(--fg)">$30/mo more</strong> and unlock our full signal suite, priority alerts, and exclusive syndicate reports.</p>'
     + '<a class="btn btn-primary" href="#/get-yours">Upgrade to SYNDICATE — $30/mo</a>'
     + '</div>';
+  $('app').innerHTML =
+    '<section class="hero"><div class="hero-content">'
+    + '<h1>You\'re in. 🎉</h1>'
+    + '<p style="font-size:1.15rem;margin-bottom:8px"><strong style="color:var(--blue)">' + tierLabel + ' FREE · LIFETIME</strong></p>'
+    + '<p>Your free lifetime ' + tierLabel + ' access has been activated. Log in now to get started.</p>'
+    + '<div class="hero-ctas">'
+    + '<a class="btn btn-primary" href="https://bitbot13.tech/login.html">Log In →</a>'
+    + '</div></div></section>'
+    + upsell;
 }
 
 // ============ PAGE: REFERRAL PROGRAM ============

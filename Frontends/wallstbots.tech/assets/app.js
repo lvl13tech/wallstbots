@@ -682,6 +682,7 @@ let GY_TIER       = 'member';
 let GY_REF        = '';
 let GY_VALID      = false;
 let GY_ADMIN_CODE = '';   // set when an admin lifetime code is applied
+let GY_ADMIN_TIER = 'insider'; // tier granted by the admin code ('insider' or 'syndicate')
 
 function renderGetYours() {
   const urlRef = new URLSearchParams(location.search).get('ref')
@@ -789,6 +790,7 @@ function renderGetYours() {
   GY_REF        = '';
   GY_VALID      = false;
   GY_ADMIN_CODE = '';
+  GY_ADMIN_TIER = 'insider';
   updateGyPricing();
 
   // Auto-apply ref from URL
@@ -927,11 +929,12 @@ async function applyRefCode() {
     const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/subscriptions/validate-referral?code=' + encodeURIComponent(code));
     const d = await r.json();
     if (d.valid && d.type === 'admin_lifetime') {
-      // Admin code — free lifetime INSIDER, no PayPal
+      // Admin code — free lifetime tier (insider or syndicate), no PayPal
       GY_ADMIN_CODE = code;
+      GY_ADMIN_TIER = d.tier || 'insider';
       GY_REF        = '';
       GY_VALID      = false;
-      msg.innerHTML = '<span style="color:#ff8c00;font-weight:700">🎉 Admin code verified — free lifetime INSIDER access! Enter your details below to claim.</span>';
+      msg.innerHTML = '<span style="color:#ff8c00;font-weight:700">🎉 Admin code verified — free lifetime ' + GY_ADMIN_TIER.toUpperCase() + ' access! Enter your details below to claim.</span>';
       renderPaypalForm();
     } else if (d.valid) {
       GY_ADMIN_CODE = '';
@@ -966,7 +969,7 @@ function renderPaypalForm() {
       + '<input id="adminPw" type="password" placeholder="Create a password (min 6 chars)" autocomplete="new-password" '
       + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:10px">'
       + '<button onclick="claimAdminAccess()" '
-      + 'style="width:100%;background:#ff8c00;color:#000;border:none;border-radius:8px;padding:12px 0;font-weight:800;cursor:pointer;font-size:15px">🎉 Claim Free INSIDER Access</button>'
+      + 'style="width:100%;background:#ff8c00;color:#000;border:none;border-radius:8px;padding:12px 0;font-weight:800;cursor:pointer;font-size:15px">🎉 Claim Free ' + GY_ADMIN_TIER.toUpperCase() + ' Access</button>'
       + '<div id="adminClaimMsg" style="font-size:12px;margin-top:8px;min-height:16px"></div>';
     return;
   }
@@ -1083,7 +1086,8 @@ async function claimAdminAccess() {
     const d = await r.json();
     if (r.ok && d.success) {
       if (d.access_token) localStorage.setItem('access_token', d.access_token);
-      localStorage.setItem('subscription_tier', 'insider');
+      GY_ADMIN_TIER = d.tier || GY_ADMIN_TIER;
+      localStorage.setItem('subscription_tier', GY_ADMIN_TIER);
       location.hash = '#/thanks-admin';
     } else {
       if (msg) msg.innerHTML = '<span style="color:var(--red)">✗ ' + (d.detail || d.message || 'Error creating account.') + '</span>';
@@ -1094,14 +1098,18 @@ async function claimAdminAccess() {
 }
 
 function renderThanksAdmin() {
+  const tierLabel = GY_ADMIN_TIER.toUpperCase();
+  const perks = GY_ADMIN_TIER === 'syndicate'
+    ? '25 portfolios · All 5 bots · All 3 platforms · Max signal coverage'
+    : '10 portfolios · Priority signals · Analytics dashboard<br>Want SYNDICATE? Upgrade for just <strong style="color:var(--fg)">$30/mo</strong> anytime.';
   $('app').innerHTML =
     '<section class="hero"><div class="hero-content">'
     + '<h1>You\'re in. 🎉</h1>'
     + '<p style="color:var(--muted);font-size:16px">Welcome to <strong style="color:var(--fg)">Wall St. Bots</strong> — your account is live.</p>'
     + '<div style="background:var(--surface2);border:2px solid #ff8c00;border-radius:12px;padding:24px;margin:24px 0;max-width:420px">'
     + '<div style="font-size:11px;letter-spacing:1.5px;color:#ff8c00;font-weight:700;margin-bottom:6px;text-transform:uppercase">Your Tier</div>'
-    + '<div style="font-size:28px;font-weight:800;color:var(--fg)">INSIDER <span style="color:#10b981;font-size:15px;font-weight:600">FREE · LIFETIME</span></div>'
-    + '<div style="font-size:13px;color:var(--muted);margin-top:10px;line-height:1.6">10 portfolios · Priority signals · Analytics dashboard<br>Want SYNDICATE? Upgrade for just <strong style="color:var(--fg)">$30/mo</strong> anytime.</div>'
+    + '<div style="font-size:28px;font-weight:800;color:var(--fg)">' + tierLabel + ' <span style="color:#10b981;font-size:15px;font-weight:600">FREE · LIFETIME</span></div>'
+    + '<div style="font-size:13px;color:var(--muted);margin-top:10px;line-height:1.6">' + perks + '</div>'
     + '</div>'
     + '<p style="color:var(--muted);font-size:13px">Check your email — confirm your address to activate your account, then log in.</p>'
     + '<div class="hero-ctas">'
