@@ -206,6 +206,94 @@ def enrich_position(pos, prices, prev_closes, price_dp=4):
     return result
 
 
+
+def fmt_et_human(iso_str):
+    """Format an ISO datetime string as 'Jun 19, 2026 4:19 PM ET'.
+    Returns '' for falsy input so callers/frontends can show a fallback.
+    Times produced by this codebase are already US/Eastern (see et_now), so
+    we just relabel them ET -- we do not re-convert.
+    """
+    if not iso_str:
+        return ""
+    s = str(iso_str).replace("Z", "").strip()
+    try:
+        d = dt.datetime.fromisoformat(s)
+    except Exception:
+        try:
+            d = dt.datetime.strptime(s[:19], "%Y-%m-%dT%H:%M:%S")
+        except Exception:
+            return str(iso_str)
+    try:
+        return d.strftime("%b %-d, %Y %-I:%M %p ET")
+    except Exception:
+        return d.strftime("%b %d, %Y %I:%M %p ET")
+
+
+def stamp_and_log(prev_positions, new_positions, trade_log, now_iso, max_entries=200):
+    """Transparency engine: stamp immutable entry_time on opens and append an
+    append-only trade ledger of every BUY / SELL / RESIZE.
+
+    Diff is by symbol:
+      * symbol present now but not before -> BUY  (shares, entry price)
+      * symbol present before but not now -> SELL (shares, exit price, reason,
+                                                   realized P&L)
+      * share count changed > 2 percent   -> BUY/SELL resize event
+    Append-only: prior trade_log is carried forward, never rewritten.
+    new_positions is mutated in place to stamp entry_time on fresh opens.
+    Returns the updated (capped) trade_log.
+    """
+    log = list(trade_log or [])
+    prev = {p.get("symbol"): p for p in (prev_positions or []) if p.get("symbol")}
+    new  = {p.get("symbol"): p for p in (new_positions or []) if p.get("symbol")}
+
+    for sym, p in new.items():
+        if not p.get("entry_time") and sym not in prev:
+            p["entry_time"] = now_iso
+
+    for sym, p in new.items():
+        shares = float(p.get("shares") or 0)
+        price  = float(p.get("entry_price") or p.get("price") or 0)
+        if sym not in prev:
+            log.append({
+                "ts":     p.get("entry_time") or now_iso,
+                "action": "BUY",
+                "symbol": sym,
+                "shares": round(shares, 6),
+                "price":  round(price, 4),
+                "reason": "opened",
+            })
+        else:
+            old_sh = float(prev[sym].get("shares") or 0)
+            if old_sh > 0 and abs(shares - old_sh) / old_sh > 0.02:
+                cur = float(p.get("price") or price)
+                log.append({
+                    "ts":     now_iso,
+                    "action": "BUY" if shares > old_sh else "SELL",
+                    "symbol": sym,
+                    "shares": round(abs(shares - old_sh), 6),
+                    "price":  round(cur, 4),
+                    "reason": "added to position" if shares > old_sh else "trimmed position",
+                })
+
+    for sym, p in prev.items():
+        if sym not in new:
+            old_sh = float(p.get("shares") or 0)
+            entry  = float(p.get("entry_price") or 0)
+            exitpx = float(p.get("price") or p.get("current_price") or entry)
+            realized = round((exitpx - entry) * old_sh, 2) if entry else 0.0
+            log.append({
+                "ts":       p.get("exit_time") or now_iso,
+                "action":   "SELL",
+                "symbol":   sym,
+                "shares":   round(old_sh, 6),
+                "price":    round(exitpx, 4),
+                "reason":   p.get("exit_reason") or "closed",
+                "realized": realized,
+            })
+
+    return log[-max_entries:]
+
+
 def check_drawdown(cfg, day_open, stored_positions, prices):
     """
     Return True if the account-level daily drawdown limit has been hit.

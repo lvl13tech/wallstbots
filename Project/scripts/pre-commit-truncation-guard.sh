@@ -54,6 +54,28 @@ for f in $(git diff --cached --name-only --diff-filter=ACM | grep -i '\.py$'); d
     fi
 done
 
+# --- JS files ---------------------------------------------------------------
+# JS edits are subject to the same OneDrive mid-save race. If node exists,
+# syntax-check; otherwise flag files that end mid-statement.
+NODE=""
+command -v node >/dev/null 2>&1 && NODE="node"
+for f in $(git diff --cached --name-only --diff-filter=ACM | grep -i '\.js$'); do
+    [ -f "$f" ] || continue
+    if [ -n "$NODE" ]; then
+        if ! "$NODE" --check "$f" >/dev/null 2>&1; then
+            echo "  X TRUNCATED or broken (node --check failed): $f"
+            fail=1
+        fi
+    else
+        last=$(awk 'NF{l=$0} END{print l}' "$f")
+        case "$last" in
+            *"="|*","|*"("|*"["|*"{"|*"\\")
+                echo "  X LIKELY TRUNCATED (ends mid-statement): $f"
+                fail=1 ;;
+        esac
+    fi
+done
+
 if [ "$fail" -ne 0 ]; then
     echo ""
     echo "============================================================"

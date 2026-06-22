@@ -40,6 +40,7 @@ from bot13_engine import (
     et_now, window_open as _window_open,
     session_phase as _session_phase,
     check_drawdown, enrich_position,
+    stamp_and_log,
 )
 
 try:
@@ -710,10 +711,17 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 strategy     = {"decision": "TRADE"}
                 holding_cash = False
 
+            # --- Transparency ledger (member side): stamp opens + BUY/SELL log ---
+            _pstate   = prev_states.get(fund_name) or {}
+            _prev_pos = _pstate.get("positions") or []
+            _prev_log = _pstate.get("trade_log") or []
+            _trade_log = stamp_and_log(_prev_pos, positions, _prev_log, et_now().isoformat(timespec="seconds"))
+
             results.append({
                 "bot_id":        bot_id,
                 "fund_name":     fund_name,
                 "positions":     positions,
+                "trade_log":     _trade_log,
                 "strategy":      strategy,
                 "total_value":   member_value,
                 "entry_cost":    round(original_cost, 2),

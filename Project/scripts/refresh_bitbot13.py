@@ -32,6 +32,7 @@ from bot13_engine import (
     run_bot13_crypto, check_drawdown,
     CRYPTO_CFG,
     grade, grade_overall, et_now, window_open as _engine_window_open,
+    stamp_and_log,
 )
 
 try:
@@ -1292,6 +1293,11 @@ def main():
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
                         "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2), "positions": enriched}
             strategy = fund.get("current_strategy")
+
+        # --- Transparency ledger: stamp entry_time on opens + append BUY/SELL log ---
+        _prev_pos = (fund.get("value") or {}).get("positions") or []
+        _prev_log = (fund.get("value") or {}).get("trade_log") or []
+        value["trade_log"] = stamp_and_log(_prev_pos, value.get("positions") or [], _prev_log, et_now().isoformat(timespec="seconds"))
 
         funds_out[fid] = {
             "id":               fid,
