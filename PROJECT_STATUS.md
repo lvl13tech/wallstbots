@@ -3,7 +3,8 @@
 **Keep this file honest and current.** Update it at the end of every work session.
 When Claude finishes a change, the LAST step is to update this file.
 
-Last updated: 2026-06-15 · Status: **BROKEN — no site is fully functional**
+Last updated: 2026-06-22 · Status: **BROKEN — no site is fully functional** · 1 code change
+pending deploy (BOT13 Track Record tile on members bot-detail page, all 3 sites — see Session Log)
 
 ---
 
@@ -36,7 +37,7 @@ Mark each row honestly. Use: ✅ works · ⚠️ partly works · ❌ broken · �
 | Live leaderboard shows data | ❔ | ❔ | ❔ |
 | Signals section | ❔ | ❔ | ❔ |
 | News (correct topic only) | ❔ | ❔ | ❔ |
-| The Race / fund pages | ❔ | ❔ | ❔ |
+| The Race / fund pages | ❔ | ❔ | ✅ ALL 5 bots reset 06-22 to equal $50k/0% start |
 | Reports | ❔ | ❔ | ❔ |
 | Signup | ❔ | ❔ | ❔ |
 | Login | ❔ | ❔ | ❔ |
@@ -344,6 +345,202 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 ---
 
 ## Session Log (append newest at top)
+
+- **2026-06-22 (BOT13 Track Record tile added to members-area bot-detail page, all 3 sites —
+  CODE CHANGE)** -- Owner reported the "BOT13 Track Record" tile (Up/Down/Cash days, Best/Worst
+  day %) that was added to the public homepage was missing from the members-area portfolio
+  detail page (`bot-detail.html`, shown when a logged-in member opens one of their own
+  portfolios). Confirmed by reading the file: `bot-detail.html` does NOT load `assets/app.js`
+  (where the homepage's `bot13Record()`/`bot13RecordTile()` live) -- it has its own inline
+  `<script>` and never had an equivalent. Ported the same day-over-day up/down/cash-day logic
+  already proven on `portfolio-fund.html` (`memberBot13Record()`/`renderMemberBot13Tile()`,
+  fed by `api.getBotPerformance(BOT_ID, 90)` against `bot_performance_snapshots` -- a
+  PORTFOLIO-level table, not fund-specific), and added it to `bot-detail.html` unconditionally
+  (this page covers the whole portfolio, not gated to a single fund slug). New tile placed
+  right after the hero section, before "Live Leaderboard — Today" -- same position as the
+  homepage. Applied byte-identical to all 3 product sites (wallstbots, aistocks, bitbot13) per
+  the Parity Rule; confirmed identical line numbers/structure in all 3 before and after.
+  **Caught and fixed a live truncation bug while editing:** the Edit tool truncated the
+  ~1400-line `bot-detail.html` mid-statement on 2 separate small edits, on all 3 site copies --
+  restored each from git (`git show HEAD:<path>`) and re-applied the same edits via Python
+  (`open()`/`.replace()`/`write()`) instead, which did not truncate. Verified every Frontends
+  HTML file ends in `</html>` (no truncation anywhere in the repo) and the inline `<script>` in
+  all 3 patched files passes `node --check`. See `project_truncation_guard.md` memory for the
+  new culprit evidence. **NOT YET LIVE** -- this is a code change sitting in the local repo;
+  needs `SAFE-DEPLOY-doubleclick-me.bat` (commits + pushes; Cloudflare auto-deploys frontends)
+  before it's visible on any of the 3 sites. lvl13.tech NOT touched.
+
+- **2026-06-22 (bitbot13 CASH DAYS stale-data fix, public side, NO code changes)** -- After the
+  full 5-bot reset below, owner caught that the public "BOT13 TRACK RECORD" tile on
+  bitbot13.tech still read "16 CASH DAYS" even though Up/Down/Best/Worst all correctly showed
+  0/0.00%. Root cause: the prior full reset flattened every snapshot's per-fund VALUE to
+  $50,000 but never truncated the `snapshots` ARRAY itself -- 17 old entries remained, and the
+  frontend's `bot13Record()` computes up/down/cash days live by diffing each snapshot against
+  the previous one, not from a stored counter. 17 identical flattened entries = 16 zero-change
+  diffs, all bucketed as cash days. Fix: wrote `truncate_bitbot13_snapshots.py`, which collapses
+  `state["snapshots"]` to a single entry (today, all 5 funds @ $50,000) and re-pushes via the
+  same `/internal/tracker/push` endpoint used throughout -- no code changes. Verified live: tile
+  now shows the "Fresh start" empty state (≤1 snapshot = no day-over-day pair to diff). Third
+  recurrence of the same class of mistake (reset values without resetting array-length-derived
+  stats) -- see `feedback_full_reset_not_partial.md` and `project_bitbot13_jup_inflation_open.md`
+  memories for the full trace and the sharpened heuristic going forward.
+
+- **2026-06-22 (bitbot13 FULL platform reset: all 5 bots, public + member, NO code changes)**
+  -- Owner caught that resetting bot13 alone (entry below) left titan/oracle/wizard/equalizer
+  mid-race with two weeks of real P&L while bot13 sat at a fresh $50k/0% -- an unfair/broken
+  comparison for a platform built around bots racing each other. Owner's instruction: "if one
+  is reset then they all must be reset." Reset ALL 5 bots (bot13, titan, oracle, wizard,
+  equalizer) on bitbot13 to a clean, identical, same-day baseline -- public tracker AND the
+  one active member portfolio. Public: each fund -> $50,000.00 / 0.00% / HOLD / no positions
+  / holding_cash; all 17 snapshot dates (06-02 through 06-21) flattened to $50,000 for every
+  fund; both leaderboards zeroed (`all`: all_pnl=0/all_pct=0/grade=C per fund; `week`: same --
+  this also caught a leftover artifact from the prior bot13-only reset, where the `week`
+  leaderboard still showed bot13 at week_pnl=341,572.75/grade=A+ from stale pre-reset deltas).
+  Member (`bot_id f74ae1f8-4c8b-4fcc-9591-4d2d8cf91746`): each fund -> total_value=entry_cost=
+  $27,000.00 (their actual per-fund entry cost, 27 holdings x $1,000), gain_loss=$0.00, 0.00%,
+  positions cleared, decision HOLD. Data-only push via the existing `/internal/tracker/push`
+  and `/internal/portfolio-bot-state/upsert` endpoints -- zero code changes, per owner's
+  standing instruction. One-off script used: `reset_bitbot13_all_bots.py` (dry-run reviewed
+  before the real push). Verified live on both sides after push: all 5 bots read identical
+  clean values, public and member. Same accepted limitation as the bot13-only reset applies
+  to all 4 additional funds now: this member's positions/strategy/trade_log for
+  titan/oracle/wizard/equalizer prior to today could not be read back before the overwrite
+  (the internal GET endpoint doesn't expose them), so those were necessarily cleared too.
+  lvl13.tech NOT touched.
+
+- **2026-06-22 (bitbot13 BOT13 JUP-inflation: data reset, public + member, NO code changes)**
+  -- Root-caused why the 06-20/06-21 "fix" never actually resolved the live data: the
+  day-jump guard (`refresh_bitbot13.py`, commit `0b3b1ee`) only blocks NEW >4x single-day
+  jumps and reads its own comparison baseline from the snapshots array -- it does nothing to
+  undo corruption already baked in, and post-spike daily growth (~6-9%/day) never re-tripped
+  it. Separately, `reset_bitbot13_bot13.py` (committed `8062862` on 06-15) had never actually
+  been executed against the live backend -- confirmed by zero $50k entries in snapshot
+  history and the value sitting perfectly flat at $1,621,573.90 on both 06-20 and 06-21 (no
+  $50k dip, no re-corruption pattern -- just never run). Per owner instruction ("just reset
+  the data... I don't want you changing any code"), made ZERO code changes. Ran the existing
+  `reset_bitbot13_bot13.py` for real (dry run reviewed and approved first): public bitbot13
+  BOT13 tracker reset from $1,621,573.90 / +3143.15% to $50,000.00 / 0.00%, 7 poisoned
+  snapshots (06-15 through 06-21) flattened to $50,000, leaderboard row corrected to
+  all_pnl=0/all_pct=0/grade=C. Verified live via `/public/tracker/state?platform=bitbot13`.
+  Then found and fixed the one affected MEMBER portfolio (bot_id
+  `f74ae1f8-4c8b-4fcc-9591-4d2d8cf91746`) which had the same corruption scaled to their
+  $27,000 entry cost ($875,649.91 / +3143.15% -- identical % to the public bug, confirming
+  same root cause). Pushed via the existing `/internal/portfolio-bot-state/upsert` endpoint
+  (no new code) to total_value=entry_cost=$27,000, gain_loss=0, positions cleared, decision
+  HOLD. Verified live: total_value $27,000.00, gain_loss $0.00, 0.00%. Known limitation
+  flagged to and accepted by owner: the internal read endpoint used doesn't expose this
+  member's prior positions/strategy/trade_log, so those were necessarily cleared as part of
+  the reset (same blind spot the original public-side script always had; likely empty/null
+  for this period anyway since the trade ledger feature postdates the corruption window).
+  This closes the previously DEFERRED issue (see memory `project_bitbot13_jup_inflation_open`,
+  now resolved). lvl13.tech NOT touched. Still pending from prior sessions: first live
+  15-minute-refresh trading session has not yet been verified (markets were closed this
+  session) -- see HANDOFF.md top priority.
+
+- **2026-06-22 (15-minute refresh + email anti-spam)** -- Switched all 3 sites from 4
+  refreshes/day to every 15 minutes during their trading windows (equities 9:30 AM-4 PM ET
+  Mon-Fri via `30,45 13`, `*/15 14-19`, `0 20`, `45 20` UTC; bitbot13 `*/15 13-23` + `*/15 0-2`
+  + overnight `0 6`). Reason: BOT13's stop-loss/profit-target are only enforced on a refresh;
+  at 4x/day a stop could be blown through for hours. This is a SCHEDULING change only -- no
+  trading logic touched; picks/rules identical, just checked far more often so stops/targets
+  fire close to when actually hit (and copy-trade members see timely sells). Email safety for
+  the higher frequency: rewrote `check_bot13_traded_today.py` to fire YES only on a NEW buy/sell
+  (compares a pre-refresh snapshot `/tmp/prev_state.json` to the freshly written state; count
+  must increase) -- prevents an email every 15 min once a position is held. Added a "Snapshot
+  prior trade count" step before each refresh; aistocks snapshots from the backend API (it
+  reads data from the API, only commits a heartbeat). Morning email tightened to fire once
+  (`HOUR && MIN<45`) since the open hour now has two runs. Verified: all 3 YAML valid, detector
+  unit-tested (YES on new buy/sell, NO on re-price), step order Snapshot->Run->Commit->Email,
+  live API parses. Deploy: `DEPLOY-15min-refresh-doubleclick-me.bat`. lvl13.tech NOT touched.
+
+- **2026-06-22 (Timestamp integrity + buy/sell-only intraday emails)** -- Fixed the root
+  cause of impossible trade times (e.g. "6:27 PM ET"): BOT13 entry/exit times were stamped
+  with the server's UTC/wall-clock (`dt.datetime.now()`/`utcnow()`) then relabeled "ET" by the
+  frontend. Replaced every TRADE-time stamp with `et_now()` so entry_time / exit_time / crypto
+  now_iso / stop-loss now_exit are all true ET, across bot13_engine.py and all 3 product refresh
+  scripts (wallstbots, lvl13=aistocks, bitbot13). Trading / hold / sell / display behavior was
+  NOT changed -- only the clock. Sell price+time are captured automatically by the existing
+  stamp_and_log ledger when positions clear (real marked price, real ET run time). Emails:
+  morning 9:35 AM email still ALWAYS sends (day's signals + decision incl. holding cash); the
+  LATER intraday runs now email ONLY when BOT13 actually bought or sold this run -- detected by
+  new `check_bot13_traded_today.py` reading the trade_log -- instead of firing on every refresh.
+  Applied to all 3 workflow YAMLs. Non-trade metadata timestamps (generated_at, last_refresh,
+  news) intentionally left as-is (out of scope, avoid touching working refresh tracking).
+  Verified: all .py compile, all 3 YAML valid, EOF intact, detector unit-tested (YES on a
+  today BUY/SELL, NO otherwise), 3-site parity on the clock fix. Deploy:
+  `DEPLOY-timestamps-and-trade-emails-doubleclick-me.bat` (scripts + workflows only; no backend
+  or frontend deploy this round). lvl13.tech NOT touched.
+
+- **2026-06-21 (Trade ledger + transparency: timestamps & Trade History, all 3 sites)** --
+  Built a full transparency layer so the simulated numbers (esp. BOT13's) are defensible.
+  Backend: added shared `stamp_and_log()` + `fmt_et_human()` in `bot13_engine.py`. Every bot
+  now stamps an IMMUTABLE `entry_time` (ET) when a position is opened (BOT13 already did;
+  Oracle/Wizard/Equalizer/Titan were null and now stamp from launch forward). Added an
+  append-only `trade_log` per bot recording every BUY / SELL / resize with timestamp, shares,
+  price, reason, and REALIZED P&L on sells. Rides inside the existing tracker payload (public)
+  and a new `trade_log JSONB` column on `bot_fund_state` (member side; additive
+  `ADD COLUMN IF NOT EXISTS` migration in `Backend/main.py` upsert + GET). Frontend (all 3
+  product sites, public bot-detail `app.js` + members `portfolio-fund.html`): new "Bought"
+  column in Holdings ("Jun 19, 2026 4:19 PM ET", or "Held since launch" for pre-feature
+  positions) and a "Trade History" panel rendering the ledger (BOT13 = full receipt). Verified:
+  all 6 .py compile, all 3 app.js pass `node --check`, ledger diff logic unit-tested (BUY/SELL/
+  resize/realized P&L correct, append-only idempotent). PERMANENT FIXES: (a) repaired the
+  corrupted `.git/index` via a rebuild-from-HEAD step in the deploy .bat (history was safe);
+  (b) hardened the truncation guard + `_truncation_check.bat` to also `node --check` .js files
+  (the OneDrive mid-save race can hit .js too). Deploy: `REPAIR-GIT-AND-DEPLOY-trade-ledger-
+  doubleclick-me.bat` (frontends+scripts) THEN `DEPLOY-BACKEND.bat` (Cloud Run, for the member
+  trade_log column). All edits via the Linux shell here-doc method (the file-editor truncated a
+  large .py mid-session -- recovered from git object store). lvl13.tech NOT touched.
+
+- **2026-06-20 (BOT13 spotlight shipped across all 3 sites)** -- Positioned BOT13 as the hero
+  and reason to join, backed by verified data (12 up / 0 down / 1 cash day on wallstbots; 7/0/6
+  on aistocks; never a losing day). Added: (1) self-updating BOT13 Track Record tile (up/down/
+  cash days + worst day) on the homepage, the public BOT13 page, AND the members-area bot page
+  (member tile reads each member's OWN portfolio snapshots). Computes client-side -> updates
+  every market day, native styling (pink .panel, real --green/--red/--pink, site font). (2) Get
+  Yours: hero subline + a proof bar above pricing + 'BOT13 + 4 more' card. (3) Chatbot: rewritten
+  Bots answer + 'Why BOT13?' quick chip + dedicated spotlight FAQ. (4) Homepage join hint reframed
+  around BOT13. Angle = 'only trades with an edge, holds cash otherwise -> no losing days' (the
+  fear-killer). All claims hedged as paper/simulation + 'so far'. 6 files (3 app.js + 3
+  portfolio-fund.html); all JS valid, all end clean. Deploy: DEPLOY-bot13-spotlight-all-doubleclick-me.bat.
+  NOTE: portfolio-fund.html truncated mid-edit again (editor bug) -- caught + restored via bash.
+  bitbot13's PUBLIC tile reads off until its JUP data reset settles; member tile unaffected.
+
+- **2026-06-20 (truncation guard upgraded + all bot guards + members reset)** -- Closed the
+  recurring issues for launch. (1) TRUNCATION BUG: root-caused to the file-editor write path
+  truncating large scripts at a fixed byte offset (bash writes never truncate). The existing
+  guard only checked HTML; upgraded `_truncation_check.bat` + the git pre-commit hook to also
+  py_compile every .py, so a truncated/broken script can no longer be committed or deployed.
+  Added `.gitattributes` (eol=lf) to kill CRLF churn. Install via
+  INSTALL-truncation-guard-v2-doubleclick-me.bat. (2) BOT GUARDS: ported the BOT13 day-over-day
+  jump guard (>4x yesterday = bad data -> reset) to refresh_wallstbots.py and refresh_lvl13.py
+  (parity with bitbot13); added member BOT13/Oracle/Wizard carry-forward guards in the shared
+  refresh_portfolios.py. Public Oracle/Wizard need no guard (they size off fixed sc_global, not
+  carried capital). Titan/Equalizer are static baselines. (3) MEMBERS RESET: TRUNCATEd
+  bot_fund_state + bot_performance_snapshots (verified 0 rows); member bots rebuild fresh +
+  guarded on next refresh. Deploy the guards via DEPLOY-all-bot-guards-doubleclick-me.bat.
+  All scripts py_compile OK and end clean. NOTE: refresh_portfolios.py truncated TWICE this
+  session at the same offset during editor writes -- restored via bash both times.
+
+- **2026-06-20 (BOT13 JUP inflation -- PERMANENT day-jump guard + $50k reset)** -- Final
+  root cause: BOT13 reinvests its ENTIRE balance every day (by design), so a one-time bad
+  JUP price (~06-15) inflated the balance and then COMPOUNDED daily as the bot redeployed
+  the inflated cash: 66k -> 1.28M -> 1.40M -> 1.43M -> 1.52M -> 1.59M (+3089%). The momentum
+  guard stopped NEW bad picks but could not undo an already-inflated balance, and the prior
+  reset got overwritten by the next cron. Two-part permanent fix: (1) **day-over-day jump
+  guard** in refresh_bitbot13.py -- BOT13 only (it is the only DAILY trader; oracle=weekly,
+  wizard=monthly, titan/equalizer=near-static baselines need their own per-cadence logic
+  later). It compares today's carried-forward total to yesterday's close and resets to
+  yesterday ONLY if the jump exceeds 4x -- never clips real growth, so bots can run forever.
+  (2) **one-time reset** (reset_bitbot13_bot13.py) sets BOT13 to its $50,000 start and
+  flattens all 6 poisoned snapshots, because the guard cannot unwind inflation already baked
+  into history. Deploy via DEPLOY-bot13-carryforward-guard-doubleclick-me.bat then
+  RESET-bot13-to-50k-doubleclick-me.bat. Both py_compile OK; reset dry-run verified ($1.59M
+  -> $50k, 6 snapshots fixed). NOTE: during this work refresh_bitbot13.py AND the reset
+  script were found TRUNCATED on disk again (cut mid-line, missing main()) -- repaired via
+  bash writes (the file-edit tool path appears to coincide with the truncation; bash writes
+  held). Typographic chars (em-dashes) stripped to ASCII as a precaution. Scope: refresh
+  script + reset script only; no frontend/backend/lvl13 changes.
 
 - **2026-06-15 (aistocks data pipeline FIXED)** — Found aistocks.tech was showing STALE
   data (June 12) because `refresh_lvl13.py` pushed to the backend as platform `lvl13` while

@@ -418,6 +418,9 @@
     </div>
   </section>
 
+  <!-- 1b. BOT13 Track Record — Your Portfolio -->
+  <div id="bot13RecordWrap"></div>
+
   <!-- 2. Live Leaderboard — Today -->
   <div class="section-head">
     <h3>Live Leaderboard — Today</h3>
@@ -720,6 +723,70 @@ async function loadSiteData() {
   try { renderNews();                 } catch(e) {}
   try { renderRace();                 } catch(e) {}
   drawPortfolioChart();
+  loadBot13RecordTile();
+}
+
+// ===== BOT13 Track Record (members) -- computes from the member's OWN portfolio snapshots =====
+// Same logic as portfolio-fund.html's memberBot13Record/renderMemberBot13Tile, but shown
+// unconditionally here since bot-detail.html is the whole-portfolio overview (not gated to
+// a single fund slug).
+function memberBot13Record(snaps) {
+  let prev = null, up = 0, down = 0, cash = 0, worst = 0, best = 0, days = 0;
+  for (const sn of (snaps || [])) {
+    const v = (sn && sn.total_value != null) ? Number(sn.total_value) : null;
+    if (v === null) continue;
+    if (prev !== null && prev > 0) {
+      const ch = (v / prev - 1) * 100;
+      days++;
+      if (ch > 0.05) up++; else if (ch < -0.05) down++; else cash++;
+      if (ch < worst) worst = ch;
+      if (ch > best) best = ch;
+    }
+    prev = v;
+  }
+  return { up, down, cash, worst, best, days };
+}
+function renderMemberBot13Tile(snaps) {
+  const wrap = document.getElementById('bot13RecordWrap');
+  if (!wrap) return;
+  const r = memberBot13Record(snaps);
+  if (!r.days) {
+    wrap.innerHTML =
+      '<div class="panel" style="margin-top:18px;border-color:var(--pink);background:linear-gradient(135deg,rgba(236,72,153,0.08),rgba(236,72,153,0.01))">'
+      + '<div class="section-head" style="margin:0 0 14px">'
+      + '<h3 style="color:var(--pink)">BOT13 Track Record — Your Portfolio</h3>'
+      + '<span class="more" style="cursor:default;color:var(--muted)">Fresh start</span></div>'
+      + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0">'
+      + 'Your BOT13 record is building fresh — up, down, and cash days will fill in here as each market day completes. '
+      + 'BOT13 only trades your stocks when it sees a real edge, and holds cash otherwise: no edge, no trade, no risk.</p></div>';
+    return;
+  }
+  const cell = (num, label, cls) =>
+    '<div style="flex:1;min-width:74px;text-align:center;padding:14px 6px;background:var(--panel2);border:1px solid var(--border);border-radius:var(--radius)">'
+    + '<div class="stat-val ' + cls + '" style="font-size:28px;line-height:1">' + num + '</div>'
+    + '<div class="stat-label" style="margin-top:7px">' + label + '</div></div>';
+  const downCls = r.down === 0 ? 'pos' : 'neg';
+  const worstCls = r.worst < 0 ? 'neg' : 'pos';
+  wrap.innerHTML =
+    '<div class="panel" style="margin-top:18px;border-color:var(--pink);background:linear-gradient(135deg,rgba(236,72,153,0.08),rgba(236,72,153,0.01))">'
+    + '<div class="section-head" style="margin:0 0 14px">'
+    + '<h3 style="color:var(--pink)">BOT13 Track Record — Your Portfolio</h3>'
+    + '<span class="more" style="cursor:default;color:var(--muted)">Updates every market day</span></div>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+    + cell(r.up, 'Up days', 'pos')
+    + cell(r.down, 'Down days', downCls)
+    + cell(r.cash, 'Cash days', '')
+    + cell('+' + r.best.toFixed(2) + '%', 'Best day', 'pos')
+    + cell(r.worst.toFixed(2) + '%', 'Worst day', worstCls)
+    + '</div>'
+    + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:14px 0 0">'
+    + 'BOT13 only trades your stocks when it sees a real edge — otherwise it holds cash and risks nothing. '
+    + 'No edge, no trade: a quiet day stays a quiet day, never a loss. The day-by-day record above is yours and updates every market day.</p></div>';
+}
+async function loadBot13RecordTile() {
+  let snapshots = [];
+  try { const data = await api.getBotPerformance(BOT_ID, 90); snapshots = data?.snapshots || []; } catch(e) {}
+  try { renderMemberBot13Tile(snapshots); } catch(e) {}
 }
 
 // -- Bot Analysis grid (portfolio-scoped) -------------------------------------

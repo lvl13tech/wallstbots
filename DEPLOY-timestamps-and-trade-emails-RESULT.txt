@@ -1,0 +1,10 @@
+timestamps + trade-emails deploy - Sun 06/21/2026 23:08:18.79
+[master 5fd0f8c] fix: record all BOT13 trade timestamps in true ET (data integrity) + send intraday emails only on a real buy/sell; morning signals email unchanged. All 3 product sites; lvl13 untouched.
+ 8 files changed, 85 insertions(+), 20 deletions(-)
+ create mode 100644 Project/scripts/check_bot13_traded_today.py
+From https://github.com/lvl13tech/wallstbots
+ * branch            master     -> FETCH_HEAD
+Already up to date.
+To https://github.com/lvl13tech/wallstbots.git
+   06d6ba8..5fd0f8c  master -> master
+SUCCESS

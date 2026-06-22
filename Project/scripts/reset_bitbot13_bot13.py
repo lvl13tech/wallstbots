@@ -2,23 +2,16 @@
 """
 reset_bitbot13_bot13.py
 -----------------------
-One-time cleanup: a garbage price feed gave JUP a fake +1629% move, so BOT13
-on bitbot13 deployed 100% into it and inflated to ~$1.28M. The engine now has a
-bad-data guard (bot13_engine.py) so this can't recur, but the corrupted value is
-already stored in the live tracker state + the 2026-06-15 snapshot.
+One-time cleanup: a garbage price feed gave JUP a fake move, so BOT13 on bitbot13
+deployed 100% into it and inflated to ~$1.59M, then COMPOUNDED across multiple days
+(06-15 -> 06-20) because BOT13 reinvests its whole balance daily.
 
-This script:
-  1. Fetches the live bitbot13 'state' from the backend.
-  2. Resets BOT13's value to the last-good level (June-11 snapshot) and clears
-     its bad JUP position + current_strategy (so the guarded engine rebuilds it
-     cleanly on the next refresh).
-  3. Removes the poisoned 2026-06-15 BOT13 snapshot value (sets it to last-good).
-  4. Recomputes the BOT13 'all'/'leaderboard' grade off the corrected total.
-  5. Pushes the corrected state back via /internal/tracker/push.
+The engine now has a day-over-day jump guard (refresh_bitbot13.py) so this can't
+recur, but the already-corrupted value is still stored in the live tracker state +
+every recent snapshot. This script clears it and starts BOT13 fresh from $50k.
 
-Reads INTERNAL_API_KEY from Project/config/secrets.json or env. UTF-8 safe.
 Run:  python Project/scripts/reset_bitbot13_bot13.py
-Dry run (prints, no push):  python Project/scripts/reset_bitbot13_bot13.py --dry
+Dry:  python Project/scripts/reset_bitbot13_bot13.py --dry
 """
 import json, os, sys
 from pathlib import Path
@@ -30,17 +23,17 @@ BACKEND   = "https://wallstbots-backend-868128114349.us-east1.run.app"
 PLATFORM  = "bitbot13"
 DRY       = "--dry" in sys.argv
 
-# Last-good BOT13 value for bitbot13 — the June-11 snapshot (before the bad data).
-LAST_GOOD_TOTAL = 66436.70
-LAST_GOOD_DATE  = "2026-06-11"
-BAD_DATE        = "2026-06-15"
+LAST_GOOD_TOTAL = 50000.0
+LAST_GOOD_DATE  = "2026-06-20"
 START_CAP       = 50000.0
+SANE_SNAP_CEILING = 250000.0
 
 def internal_key():
     if SECRETS.exists():
         try:
             k = json.loads(SECRETS.read_text(encoding="utf-8")).get("internal_api_key")
-            if k: return k
+            if k:
+                return k
         except Exception:
             pass
     return os.environ.get("INTERNAL_API_KEY", "")
@@ -66,7 +59,6 @@ def main():
     old_total = b13.get("value", {}).get("total")
     print(f"[reset] current BOT13 total = ${old_total:,.2f}  -> resetting to ${LAST_GOOD_TOTAL:,.2f}")
 
-    # 1. Reset BOT13 value to last-good, flat/cash (guarded engine rebuilds next run)
     pnl     = LAST_GOOD_TOTAL - START_CAP
     pnl_pct = round((LAST_GOOD_TOTAL / START_CAP - 1) * 100, 2)
     b13["value"] = {
@@ -78,34 +70,32 @@ def main():
         "session_open_et": b13.get("value", {}).get("session_open_et", "9:00"),
         "session_close_et": b13.get("value", {}).get("session_close_et", "21:00"),
     }
-    # Clear the bad current_strategy so the page shows a clean 'holding cash' state
     b13["current_strategy"] = {
         "day": LAST_GOOD_DATE, "picks": [], "decision": "HOLD",
         "rationale": "Reset after a bad price-feed reading; awaiting next clean session.",
         "session_log": [], "projected_return": 0.0,
     }
 
-    # 2. Fix the poisoned snapshot: set the BAD_DATE bot13 value to last-good
     fixed = 0
     for snap in state.get("snapshots", []):
-        if snap.get("date") == BAD_DATE and snap.get("bot13", 0) > 500000:
+        if snap.get("bot13", 0) > SANE_SNAP_CEILING:
+            print(f"[reset]   snapshot {snap.get('date')}: ${snap['bot13']:,.0f} -> ${LAST_GOOD_TOTAL:,.0f}")
             snap["bot13"] = LAST_GOOD_TOTAL
             fixed += 1
-    print(f"[reset] fixed {fixed} poisoned snapshot(s) for {BAD_DATE}")
+    print(f"[reset] fixed {fixed} poisoned snapshot(s)")
 
-    # 3. Fix the leaderboard 'all' entry for bot13 off the corrected total
     lb = state.get("leaderboards", {}).get("all", [])
     for row in lb:
         if row.get("fund") == "bot13":
             row["all_pnl"] = round(pnl, 2)
             row["all_pct"] = pnl_pct
-            row["overall_grade"] = "B"  # recompute happens naturally next refresh
+            row["overall_grade"] = "C"
+
     if DRY:
-        print("[reset] DRY RUN — corrected BOT13 total/snapshot/leaderboard, NOT pushing.")
+        print("[reset] DRY RUN -- corrected BOT13 total/snapshot/leaderboard, NOT pushing.")
         print(json.dumps(b13["value"], indent=2))
         return
 
-    # 4. Push corrected state back
     print("[reset] pushing corrected state to backend...")
     pr = requests.post(
         f"{BACKEND}/internal/tracker/push",
@@ -113,7 +103,7 @@ def main():
         headers={"x-internal-key": key}, timeout=30,
     )
     if pr.status_code == 200:
-        print("[reset] OK — bitbot13 BOT13 reset to last-good. Verify the site.")
+        print("[reset] OK -- bitbot13 BOT13 reset to $50k start. Verify the site.")
     else:
         print(f"[reset] PUSH FAILED HTTP {pr.status_code}: {pr.text[:200]}")
         sys.exit(1)
