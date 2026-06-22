@@ -1763,6 +1763,57 @@ async def refresh_portfolio_fund_snapshots(
         return_db_connection(conn)
 
 
+@app.post("/internal/portfolio-fund-snapshots/wipe")
+async def wipe_portfolio_fund_snapshots(
+    request: Request,
+    _: None = Depends(verify_internal_key)
+):
+    """
+    FULL RESET ONLY — permanently deletes ALL bot_performance_snapshots history
+    for every active portfolio on a platform (not just one date, not just one bot).
+    Used when the owner asks for a "full reset": old history must not just be
+    corrected in place, it must be deleted so it can't be read back. See
+    CLAUDE.md / project memory "full reset" definition before calling this.
+    """
+    body = await request.json()
+    platform = body.get("platform")
+    if not platform:
+        raise HTTPException(status_code=400, detail="platform is required")
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("""
+            SELECT b.id AS bot_id
+            FROM bots b
+            WHERE b.platform = %s AND b.status != 'deleted'
+        """, (platform,))
+        bot_ids = [str(r["bot_id"]) for r in cursor.fetchall()]
+
+        deleted = 0
+        if bot_ids:
+            cursor.execute(
+                "DELETE FROM bot_performance_snapshots WHERE bot_id = ANY(%s)",
+                (bot_ids,)
+            )
+            deleted = cursor.rowcount
+
+        conn.commit()
+        return {
+            "success":           True,
+            "platform":          platform,
+            "portfolios":        len(bot_ids),
+            "snapshots_deleted": deleted,
+        }
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        return_db_connection(conn)
+
+
 # ============================================================================
 # PER-PORTFOLIO BOT STATE — store and read bot simulation results per portfolio
 # ============================================================================
@@ -3722,4 +3773,201 @@ async def delete_comment(
     current_user: dict = Depends(get_current_user),
 ):
     """Soft-delete own comment."""
-    conn = get_db_connec
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("""
+            UPDATE portfolio_comments SET is_deleted = TRUE
+            WHERE id = %s AND bot_id = %s AND user_id = %s AND is_deleted = FALSE
+            RETURNING id
+        """, (comment_id, bot_id, current_user["user_id"]))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Comment not found or already deleted")
+        conn.commit()
+        return {"deleted": True}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.patch("/portfolio/{bot_id}/settings")
+async def update_portfolio_settings(
+    bot_id: str,
+    body: LeaderboardSettings,
+    current_user: dict = Depends(get_current_user),
+):
+    """Update portfolio privacy settings — owner only.
+    Accepts is_private and/or public_leaderboard. Forcing private also disables leaderboard."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        # Build dynamic SET clause
+        updates = []
+        params = []
+        if body.is_private is not None:
+            updates.append("is_private = %s")
+            params.append(body.is_private)
+            if body.is_private:
+                # Private portfolio can't be on leaderboard
+                updates.append("public_leaderboard = FALSE")
+        if body.public_leaderboard is not None and body.is_private is not True:
+            updates.append("public_leaderboard = %s")
+            params.append(body.public_leaderboard)
+        if not updates:
+            raise HTTPException(status_code=400, detail="No settings provided")
+        updates.append("updated_at = NOW()")
+        params.extend([bot_id, current_user["user_id"]])
+        cursor.execute(
+            f"UPDATE bots SET {', '.join(updates)} WHERE id = %s AND user_id = %s RETURNING id, public_leaderboard, is_private",
+            params
+        )
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Portfolio not found or not yours")
+        conn.commit()
+        return {
+            "bot_id": str(row["id"]),
+            "public_leaderboard": row["public_leaderboard"],
+            "is_private": row["is_private"],
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.get("/portfolio/{bot_id}/shares")
+async def get_portfolio_shares(
+    bot_id: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """List users this portfolio has been shared with — owner only."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("SELECT id FROM bots WHERE id = %s AND user_id = %s", (bot_id, current_user["user_id"]))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=403, detail="Not your portfolio")
+        cursor.execute("""
+            SELECT ps.id AS share_id, ps.shared_with_user_id,
+                   COALESCE(u.display_name, 'Trader #' || SUBSTRING(u.id::text, 1, 6)) AS handle,
+                   ps.created_at
+            FROM portfolio_shares ps
+            JOIN users u ON u.id = ps.shared_with_user_id
+            WHERE ps.bot_id = %s
+            ORDER BY ps.created_at DESC
+        """, (bot_id,))
+        rows = cursor.fetchall()
+        return {"shares": [
+            {
+                "share_id":  str(r["share_id"]),
+                "user_id":   str(r["shared_with_user_id"]),
+                "handle":    r["handle"],
+                "shared_at": r["created_at"].isoformat(),
+            }
+            for r in rows
+        ]}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.post("/portfolio/{bot_id}/share")
+async def share_portfolio(
+    bot_id: str,
+    body: ShareCreate,
+    current_user: dict = Depends(get_current_user),
+):
+    """Share a portfolio with another user by their @handle — owner only."""
+    handle = body.handle.strip().lstrip("@")
+    if not handle:
+        raise HTTPException(status_code=400, detail="Handle is required")
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        # Must own the portfolio
+        cursor.execute("SELECT id FROM bots WHERE id = %s AND user_id = %s", (bot_id, current_user["user_id"]))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=403, detail="Not your portfolio")
+        # Find target user by handle
+        cursor.execute("SELECT id, display_name FROM users WHERE display_name = %s", (handle,))
+        target = cursor.fetchone()
+        if not target:
+            raise HTTPException(status_code=404, detail=f"No user found with handle @{handle}")
+        if str(target["id"]) == current_user["user_id"]:
+            raise HTTPException(status_code=400, detail="You can't share a portfolio with yourself")
+        # Insert share (ignore duplicate)
+        cursor.execute("""
+            INSERT INTO portfolio_shares (bot_id, shared_by_user_id, shared_with_user_id)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (bot_id, shared_with_user_id) DO NOTHING
+            RETURNING id
+        """, (bot_id, current_user["user_id"], str(target["id"])))
+        conn.commit()
+        return {"shared_with": f"@{handle}", "user_id": str(target["id"])}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+@app.delete("/portfolio/{bot_id}/share/{share_id}")
+async def revoke_portfolio_share(
+    bot_id: str,
+    share_id: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """Revoke a portfolio share — owner only."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("""
+            DELETE FROM portfolio_shares
+            WHERE id = %s AND bot_id = %s AND shared_by_user_id = %s
+            RETURNING id
+        """, (share_id, bot_id, current_user["user_id"]))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Share not found or not yours")
+        conn.commit()
+        return {"revoked": True}
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+# ============================================================================
+# HEALTH CHECK
+# ============================================================================
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "service": "Wall St. Bots API", "version": "2.0.0"}
+
+
+@app.get("/health/db")
+async def health_check_db():
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("SELECT 1")
+        cursor.fetchone()
+        return {
+            "status":    "healthy",
+            "database":  "connected",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+# ============================================================================
+# SHUTDOWN
+# ============================================================================
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    if db_pool:
+        db_pool.close()
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
