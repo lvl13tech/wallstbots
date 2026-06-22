@@ -1012,7 +1012,7 @@ def main():
         print(f"  BOT13: {b13_decision} (outside trading window {TRADING_WINDOW_START}am-{TRADING_WINDOW_END-12}pm ET -- carrying forward last session)")
     elif stops_triggered:
         # Stop-loss triggered -- mark stopped positions and open fresh picks
-        now_exit = dt.datetime.utcnow().isoformat(timespec="seconds") + "Z"
+        now_exit = et_now().isoformat(timespec="seconds")
         for p in stored_positions:
             sym = p.get("symbol")
             if sym:

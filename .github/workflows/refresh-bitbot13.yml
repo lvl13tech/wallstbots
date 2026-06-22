@@ -80,13 +80,13 @@ jobs:
             echo "=== Dispatching morning daily email ==="
             python Project/scripts/send_emails.py
           elif [ "$HOUR" = "17" ]; then
-            DECISION=$(python3 -c "import json,sys; d=json.load(open('Frontends/bitbot13.tech/data/state.json')); print(d.get('data',d).get('funds',{}).get('bot13',{}).get('current_strategy',{}).get('decision','HOLD'))" 2>/dev/null || echo "HOLD")
-            echo "=== BOT13 decision at hour $HOUR: $DECISION ==="
-            if [ "$DECISION" = "TRADE" ]; then
-              echo "=== BOT13 entered TRADE — sending trade-alert email ==="
+            TRADED=$(python3 Project/scripts/check_bot13_traded_today.py Frontends/bitbot13.tech/data/state.json 2>/dev/null || echo "NO")
+            echo "=== BOT13 bought or sold this run? $TRADED ==="
+            if [ "$TRADED" = "YES" ]; then
+              echo "=== BOT13 traded — sending buy/sell alert email ==="
               python Project/scripts/send_emails.py
             else
-              echo "=== Skipping email (BOT13=$DECISION at hour $HOUR — no trade alert needed) ==="
+              echo "=== Skipping email (BOT13 made no buy/sell at hour $HOUR) ==="
             fi
           else
             echo "=== Skipping email (hour=$HOUR — not a scheduled email window) ==="

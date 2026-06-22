@@ -914,7 +914,7 @@ def main():
         print(f"  BOT13: HOLD (daily drawdown limit hit -- protecting capital)")
     elif stops_triggered:
         # Stop-loss triggered -- mark stopped positions, then re-enter fresh picks
-        now_exit = __import__("datetime").datetime.utcnow().isoformat(timespec="seconds") + "Z"
+        now_exit = et_now().isoformat(timespec="seconds")
         for p in stored_positions:
             sym = p.get("symbol")
             if sym:

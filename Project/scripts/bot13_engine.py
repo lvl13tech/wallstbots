@@ -511,7 +511,7 @@ def run_bot13_equity(
             "day_pct":        round(day_pct, 2),
             "stop_pct":       -stop_display,    # displayed stop
             "target_pct":     target_pct,
-            "entry_time":     dt.datetime.now().isoformat(timespec="seconds"),
+            "entry_time":     et_now().isoformat(timespec="seconds"),
             "stop_triggered": False,
             "exit_reason":    None,
         })
@@ -593,7 +593,7 @@ def run_bot13_crypto(
     -------
     (decision, positions, picks, rationale, session_log, projected_return)
     """
-    now_iso    = dt.datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    now_iso    = et_now().isoformat(timespec="seconds")
     now        = et_now()
     time_label = f"{now.hour}:{now.minute:02d} {'AM' if now.hour < 12 else 'PM'}"
     phase      = session_phase(cfg)
