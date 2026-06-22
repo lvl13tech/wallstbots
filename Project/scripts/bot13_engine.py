@@ -29,6 +29,7 @@ EQUITY_CFG = {
     "market_type":        "equity",
     "session_start":      (9, 30),          # (hour, minute) ET
     "session_end":        (16, 0),
+    "close_out":          (15, 30),         # BOT13 force-flattens all positions at this ET time
     "trading_days":       {0, 1, 2, 3, 4},  # Mon=0 … Fri=4
     "stop_internal":      1.35,             # actual exit trigger (slippage buffer baked in)
     "stop_display":       1.5,              # shown in picks + UI
@@ -46,6 +47,7 @@ CRYPTO_CFG = {
     "market_type":        "crypto",
     "session_start":      (9, 0),
     "session_end":        (21, 0),
+    "close_out":          (21, 0),          # BOT13 force-flattens all positions at this ET time
     "trading_days":       {0, 1, 2, 3, 4, 5, 6},   # 7 days
     "stop_internal":      1.35,
     "stop_display":       1.5,
@@ -106,6 +108,22 @@ def session_phase(cfg):
         if h < 14:
             return "midday"
         return "close"
+
+
+def past_close_out(cfg, now=None):
+    """Return True once current ET time has reached the platform's daily
+    BOT13 close-out cutoff (EQUITY_CFG/CRYPTO_CFG "close_out").
+
+    This is intentionally separate from window_open()/session_end -- session_end
+    only gates whether BOT13 may open NEW positions. past_close_out() answers a
+    different question: has the moment arrived where BOT13 must force-flatten
+    any positions it is still holding, so every position is closed same-day and
+    every SELL gets a real, same-moment exit_time instead of being inferred the
+    next time the picks list changes.
+    """
+    now = now or et_now()
+    ch, cm = cfg["close_out"]
+    return (now.hour * 60 + now.minute) >= (ch * 60 + cm)
 
 
 # +==============================================================================+
@@ -240,11 +258,34 @@ def stamp_and_log(prev_positions, new_positions, trade_log, now_iso, max_entries
       * share count changed > 2 percent   -> BUY/SELL resize event
     Append-only: prior trade_log is carried forward, never rewritten.
     new_positions is mutated in place to stamp entry_time on fresh opens.
+
+    Timestamp-ordering guarantee: a SELL's logged "ts" must never be earlier
+    than the "ts" of the BUY that opened the lot it's closing. The engine
+    doesn't always know the real wall-clock close moment (a symbol can sit
+    untouched across several intraday ticks before a later run notices it's
+    gone), so SELL falls back to now_iso -- but now_iso is clamped forward to
+    the BUY's timestamp if it would otherwise read earlier. This fixes
+    same-day BUY-before-SELL inversions without changing any trade decision
+    logic or the trade-log table's render order.
     Returns the updated (capped) trade_log.
     """
     log = list(trade_log or [])
     prev = {p.get("symbol"): p for p in (prev_positions or []) if p.get("symbol")}
     new  = {p.get("symbol"): p for p in (new_positions or []) if p.get("symbol")}
+
+    # Most recent BUY/opened timestamp on record per symbol, used as the floor
+    # for any SELL of that symbol's lot below.
+    last_buy_ts = {}
+    for entry in log:
+        if entry.get("action") == "BUY" and entry.get("symbol") and entry.get("ts"):
+            last_buy_ts[entry["symbol"]] = entry["ts"]
+
+    def _not_before(sym, candidate_ts):
+        """Return candidate_ts, or the symbol's last BUY ts if that is later."""
+        floor = last_buy_ts.get(sym)
+        if floor and candidate_ts and str(floor) > str(candidate_ts):
+            return floor
+        return candidate_ts
 
     for sym, p in new.items():
         if not p.get("entry_time") and sym not in prev:
@@ -254,25 +295,28 @@ def stamp_and_log(prev_positions, new_positions, trade_log, now_iso, max_entries
         shares = float(p.get("shares") or 0)
         price  = float(p.get("entry_price") or p.get("price") or 0)
         if sym not in prev:
+            buy_ts = p.get("entry_time") or now_iso
             log.append({
-                "ts":     p.get("entry_time") or now_iso,
+                "ts":     buy_ts,
                 "action": "BUY",
                 "symbol": sym,
                 "shares": round(shares, 6),
                 "price":  round(price, 4),
                 "reason": "opened",
             })
+            last_buy_ts[sym] = buy_ts
         else:
             old_sh = float(prev[sym].get("shares") or 0)
             if old_sh > 0 and abs(shares - old_sh) / old_sh > 0.02:
                 cur = float(p.get("price") or price)
+                is_buy = shares > old_sh
                 log.append({
-                    "ts":     now_iso,
-                    "action": "BUY" if shares > old_sh else "SELL",
+                    "ts":     now_iso if is_buy else _not_before(sym, now_iso),
+                    "action": "BUY" if is_buy else "SELL",
                     "symbol": sym,
                     "shares": round(abs(shares - old_sh), 6),
                     "price":  round(cur, 4),
-                    "reason": "added to position" if shares > old_sh else "trimmed position",
+                    "reason": "added to position" if is_buy else "trimmed position",
                 })
 
     for sym, p in prev.items():
@@ -281,8 +325,9 @@ def stamp_and_log(prev_positions, new_positions, trade_log, now_iso, max_entries
             entry  = float(p.get("entry_price") or 0)
             exitpx = float(p.get("price") or p.get("current_price") or entry)
             realized = round((exitpx - entry) * old_sh, 2) if entry else 0.0
+            sell_ts = _not_before(sym, p.get("exit_time") or now_iso)
             log.append({
-                "ts":       p.get("exit_time") or now_iso,
+                "ts":       sell_ts,
                 "action":   "SELL",
                 "symbol":   sym,
                 "shares":   round(old_sh, 6),

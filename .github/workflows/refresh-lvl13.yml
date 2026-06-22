@@ -3,7 +3,9 @@ name: Refresh aistocks.tech (AI/Quantum — script still named lvl13)
 on:
   schedule:
     - cron: '30,45 13 * * 1-5'      #  9:30 & 9:45 AM ET (market open)
-    - cron: '*/15 14-19 * * 1-5'    # 10:00 AM - 3:45 PM ET, every 15 min
+    - cron: '*/15 14-18 * * 1-5'    # 10:00 AM - 2:45 PM ET, every 15 min
+    - cron: '30 19 * * 1-5'         #  3:30 PM ET (BOT13 daily close-out cutoff)
+    - cron: '45 19 * * 1-5'         #  3:45 PM ET
     - cron: '0 20 * * 1-5'          #  4:00 PM ET (market close)
     - cron: '45 20 * * 1-5'         #  4:45 PM ET (end-of-day final snapshot)
   workflow_dispatch:

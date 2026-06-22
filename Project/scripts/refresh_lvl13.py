@@ -33,7 +33,7 @@ from bot13_engine import (
     EQUITY_CFG,
     grade, grade_overall, et_now, window_open as _engine_window_open,
     session_phase as _engine_session_phase, enrich_position as _engine_enrich,
-    stamp_and_log,
+    stamp_and_log, past_close_out,
 )
 
 try:
@@ -899,6 +899,18 @@ def main():
         and bool(stored_positions)
         and not stops_triggered
     )
+    # Daily close-out: BOT13 must be fully flat by 3:30 PM ET. If we're past that
+    # cutoff and still holding today's TRADE positions, force-flatten them now with
+    # a real exit_time stamped at this exact moment -- this is what makes every SELL
+    # genuine and same-day instead of being inferred later when a symbol silently
+    # disappears from tomorrow's picks.
+    close_out_due = (
+        past_close_out(EQUITY_CFG)
+        and (prev_b13_strategy or {}).get("day") == today_iso
+        and (prev_b13_strategy or {}).get("decision") == "TRADE"
+        and bool(stored_positions)
+        and not stops_triggered
+    )
     if b13_inception >= today_iso:  # do not trade on inception day itself
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = "HOLD", [], [], "Pre-inception hold", [], 0.0
         prev_b13_total = sc_global  # reset to SC so tomorrow starts clean
@@ -929,6 +941,20 @@ def main():
             EQUITY_CFG, UNIVERSE, prices, prev_closes, hist_data, b13_day_open, today_iso, prev_b13_strategy
         )
         print(f"  BOT13: re-entered with {len(b13_picks)} new picks after stop-loss")
+    elif close_out_due:
+        # 3:30 PM ET close-out -- force-flatten every held position right now with
+        # a genuine exit_time, so the trade log records a real same-day SELL.
+        now_close = et_now().isoformat(timespec="seconds")
+        for p in stored_positions:
+            p["exit_reason"] = p.get("exit_reason") or "daily close-out (3:30pm ET)"
+            p["exit_time"]   = now_close
+        b13_decision  = "HOLD"
+        b13_positions = []
+        b13_picks     = (prev_b13_strategy or {}).get("picks", [])
+        b13_rationale = "HOLD -- daily close-out at 3:30pm ET. All positions flattened for the day."
+        b13_log       = (prev_b13_strategy or {}).get("session_log", [])
+        b13_proj      = 0.0
+        print(f"  BOT13: close-out -- flattened {len(stored_positions)} position(s) at 3:30pm ET")
     elif same_day_trade:
         # Re-use existing positions -- only re-price, don't resize
         b13_positions = stored_positions

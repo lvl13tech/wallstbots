@@ -32,7 +32,7 @@ from bot13_engine import (
     run_bot13_crypto, check_drawdown,
     CRYPTO_CFG,
     grade, grade_overall, et_now, window_open as _engine_window_open,
-    stamp_and_log,
+    stamp_and_log, past_close_out,
 )
 
 try:
@@ -984,6 +984,22 @@ def main():
         and not drawdown_hit
     )
 
+    # Daily close-out: BOT13 must be fully flat by 9 PM ET. If we're past that
+    # cutoff and still holding today's TRADE positions, force-flatten them now with
+    # a real exit_time stamped at this exact moment -- this is what makes every SELL
+    # genuine and same-day instead of being inferred later when a symbol silently
+    # disappears from a later run's positions. Must be checked before the
+    # "outside trading window" branch below, since close_out time == session_end
+    # for crypto and window_open would already be False by then.
+    close_out_due = (
+        past_close_out(CRYPTO_CFG)
+        and b13_prev_strategy.get("day") == today_iso
+        and b13_prev_strategy.get("decision") == "TRADE"
+        and bool(stored_positions)
+        and not stops_triggered
+        and not drawdown_hit
+    )
+
     if b13_inception >= today_iso:  # do not trade on inception day itself
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = "HOLD", [], [], "Pre-inception hold", [], 0.0
         prev_b13_total = sc_global
@@ -1001,6 +1017,20 @@ def main():
         b13_log       = b13_prev_strategy.get("session_log", [])
         b13_proj      = 0.0
         print(f"  BOT13: HOLD (daily drawdown kill switch -- {_dd_pct:.2f}% loss)")
+    elif close_out_due:
+        # 9 PM ET close-out -- force-flatten every held position right now with
+        # a genuine exit_time, so the trade log records a real same-day SELL.
+        now_close = et_now().isoformat(timespec="seconds")
+        for p in stored_positions:
+            p["exit_reason"] = p.get("exit_reason") or "daily close-out (9pm ET)"
+            p["exit_time"]   = now_close
+        b13_decision  = "HOLD"
+        b13_positions = []
+        b13_picks     = b13_prev_strategy.get("picks", [])
+        b13_rationale = "HOLD -- daily close-out at 9pm ET. All positions flattened for the day."
+        b13_log       = b13_prev_strategy.get("session_log", [])
+        b13_proj      = 0.0
+        print(f"  BOT13: close-out -- flattened {len(stored_positions)} position(s) at 9pm ET")
     elif not window_open:
         # Outside trading window -- carry forward last session's decision and positions
         b13_decision  = b13_prev_strategy.get("decision", "HOLD")

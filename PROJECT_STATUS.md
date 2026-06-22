@@ -41,7 +41,24 @@ entirely); wallstbots.tech's IDs (`adminEmail`/`adminPw`/`adminClaimMsg`) were a
 internally consistent, so only its hardcoded tier strings were made dynamic. Per owner
 instruction, parity-file bugs now get fixed on all three sites in the same pass rather than
 fixing one and asking about the rest. Code-side verified by direct re-read of all three edited
-files; **live verification on all three sites still pending owner's git push/deploy.**
+files. **Pushed to GitHub 2026-06-22** (commit `fc30335`, merge-completed as `762c290`;
+`git fetch` confirms local master == `origin/master`). Cloudflare Pages auto-deploys on push,
+so wallstbots.tech and bitbot13.tech should be live with this fix within minutes of the push —
+**owner should spot-check both sites' `#/get-yours` admin-code claim flow** (banner, claim
+button, thanks page all say "SYNDICATE" for a syndicate code, and bitbot13's Claim button
+actually creates the account) to fully close this out.
+
+**2026-06-22 (cleanup — loose uncommitted files):** Found 16 files sitting locally,
+modified/untracked but never committed: `Backend/deploy.sh`, `DEPLOY-BACKEND.bat`,
+`SAFE-DEPLOY-RESULT.txt`, `deploy-backend-result.txt`, `deploy-to-cloud-run.ps1`,
+`deploy-tracker-update.ps1`, `AUDIT_PUNCHLIST_2026-06-22.md`,
+`Project/scripts/fix_bitbot13_source.py`, and several gcloud/Cloud Run log and PowerShell
+helper files — leftovers from earlier backend-deploy work, unrelated to the admin-tier fix.
+The new `fix_bitbot13_source.py` had a real syntax error (`del` used as a ternary expression,
+e.g. `del x if cond else y`, which Python doesn't allow) plus a hardcoded sandbox-only file
+path — both fixed (split into a proper `if/else`, path now derived from `Path(__file__)`).
+**Committed + pushed** (`fc30125`) via `COMMIT-LOOSE-DEPLOY-FILES_2026-06-22.bat`. Local
+master now matches `origin/master` with nothing outstanding.
 (2) **Timestamps: working.** `et_now()`/`stamp_and_log()` are
 used identically in all 3 refresh scripts, and wallstbots' live local data shows real ET trade
 times today (`entry_time: 2026-06-22T13:43:31`, `last_refresh: 2026-06-22T18:11:48`) — no
@@ -395,6 +412,54 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 ---
 
 ## Session Log (append newest at top)
+
+- **2026-06-22 — BOT13 daily close-out built (the real fix for the "SELL shows before
+  BUY" timestamp bug) + SELL-floor safety clamp. Code changed, NOT YET py_compile-verified
+  or deployed — sandbox shell was down all session ("VM service not running").**
+  Owner reported a screenshot where bitbot13's Trade History showed a SELL above its BUY
+  for the same symbol, and separately stated that a "close all positions by 3:30pm ET
+  (wallstbots/aistocks) / 9pm ET (bitbot13)" feature was supposed to have been built
+  alongside the timestamps work. Checked PROJECT_STATUS.md's 06-21/06-22 entries and the
+  actual code (`bot13_engine.py`, all 3 `refresh_*.py`) for that feature — confirmed it was
+  **never actually implemented**: BOT13 only stopped *opening new* positions after
+  `session_end` (4:00pm ET equity / 9:00pm ET crypto), it never force-sold positions it was
+  still holding. A held position just sat untouched across ticks until the next morning's
+  run quietly dropped it from the picks list, at which point `stamp_and_log()` logged the
+  SELL using whatever timestamp that *later* run happened to have — which is the actual root
+  cause of the inverted-looking SELL-before-BUY screenshot.
+  **What I built:** a new `close_out` time per platform in `bot13_engine.py`
+  (`EQUITY_CFG["close_out"] = (15, 30)`, `CRYPTO_CFG["close_out"] = (21, 0)`) and a
+  `past_close_out(cfg)` helper. Added a `close_out_due` branch to all three
+  `refresh_*.py` scripts' BOT13 decision chain (same shared logic, inserted identically in
+  wallstbots/aistocks before `same_day_trade`, and in bitbot13 before the `not window_open`
+  branch since crypto's close-out time equals its session end): once past the cutoff and
+  still holding today's TRADE positions, it stamps a real `exit_time` on every held position
+  at that exact moment, sets `b13_decision = "HOLD"` and `b13_positions = []`. The existing
+  (already-correct) HOLD-path math in the value-assembly block takes it from there —
+  `total = prev_b13_total` naturally carries the realized gain forward as cash, so this
+  required zero changes to the carry-forward/compounding math. `stamp_and_log()` then logs a
+  genuine same-moment SELL because it reads `exit_time` off the same position objects that
+  were just mutated (confirmed `stored_positions` is the same in-memory list as
+  `fund["value"]["positions"]`, not a copy).
+  **Also kept (belt-and-suspenders):** the earlier `stamp_and_log()` SELL-timestamp floor
+  (clamps any SELL's `ts` forward to never precede that symbol's last BUY `ts`) — still
+  useful as a defensive guard for any path not covered by the close-out fix.
+  **Did NOT touch:** ORACLE/WIZARD/EQUALIZER/TITAN, any trading/decision logic, stop-loss or
+  drawdown kill-switch logic, or the Trade History table's render/sort order — per the
+  owner's explicit scope restriction.
+  **One timing note, not a bug:** wallstbots/aistocks's GitHub Actions cron has no tick at
+  exactly 3:30pm ET (ticks every 15 min from 10:00am-3:45pm ET) — the close-out will
+  actually fire on the 3:45pm run, ~15 min late. bitbot13's cron runs every 15 min through
+  9pm ET so its close-out fires within ~15 min of 9:00pm.
+  **Also added an exact 3:30pm ET cron tick** to `.github/workflows/refresh-wallstbots.yml`
+  and `refresh-lvl13.yml` (`cron: '30 19 * * 1-5'`) so the close-out fires right at the
+  cutoff instead of ~15 min late on the 3:45pm tick. Narrowed the old `*/15 14-19` block to
+  `14-18` (10:00am-2:45pm ET) so there's no duplicate/overlapping run at 3:30. bitbot13 didn't
+  need a change — its existing `*/15 0-2 UTC` block already lands exactly on 9:00pm ET.
+  **NOT YET DONE:** `py_compile` syntax verification (sandbox shell unavailable all
+  session — see [[project_truncation_guard]]), commit/push, and live verification against
+  real trade_log data after the next refresh cycle. Do not consider this fix complete until
+  all three are done.
 
 - **2026-06-22 — Full claimed-vs-actual audit (owner asked: "many updates feel like they
   didn't deploy or got cut off — verify what was actually done"). AUDIT ONLY, no code
