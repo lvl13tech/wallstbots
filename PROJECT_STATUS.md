@@ -3,7 +3,46 @@
 **Keep this file honest and current.** Update it at the end of every work session.
 When Claude finishes a change, the LAST step is to update this file.
 
-Last updated: 2026-06-22 (full audit) · Status: **WORKING — verified live on all 3 sites** ·
+Last updated: 2026-06-23 (BOT13 member-fund-page close-out regression fixed, NOT YET PUSHED — see below) ·
+Status: **FIX READY LOCALLY, COMMIT/PUSH BLOCKED on a corrupted .git\index — run `FIX_PORTFOLIOS_CLOSEOUT_2026-06-23.bat`** ·
+
+**2026-06-23 — Real regression found and fixed: BOT13 fund page contradicted itself
+post-close-out (Strategy=HOLD/0%/blank Holdings next to a positive Today's Change and a
+populated Trade History).** Owner correctly rejected my first read of this as a labeling
+issue — it was a real data bug. Root cause: commit `5374245` (2026-06-22) added a 3:30pm ET
+/ 9pm ET force-close-out step to the three platform tracker scripts
+(`refresh_wallstbots.py`, `refresh_lvl13.py`, `refresh_bitbot13.py`) but never to
+`Project/scripts/refresh_portfolios.py` — the one shared script that computes the
+per-member numbers the `#/fund/bot13` page actually reads. After close-out, the tracker
+correctly showed the day's real (closed) gain and trade history, but `refresh_portfolios.py`
+kept independently re-asking "what should BOT13 do right now" and got a fresh
+HOLD/0%-with-no-positions answer that wiped Holdings, while Trade History/Today's Change
+(carried from elsewhere) still showed the real trade. Fix: ported the same close-out
+mirror logic into `refresh_portfolios.py` (gated on `past_close_out(cfg)` + same-day stored
+strategy was TRADE + positions still held) so Holdings and Strategy now flip to
+empty/HOLD together, in sync, instead of one updating and the other staying stale. Trade
+History and Today's Change were already correct and are untouched. The chronological
+trade-log sort (`stamp_and_log`'s `last_buy_ts`/`_not_before` clamp, added in the same prior
+commit) was re-confirmed correct and did not need any change. Because `refresh_portfolios.py`
+is a single file shared by wallstbots/aistocks/bitbot13 (not a per-site duplicate), this one
+fix satisfies the Parity Rule automatically — no separate per-site porting needed.
+**Separately discovered and fixed in the same pass (unrelated, pre-existing):** the live
+copy of `refresh_portfolios.py` was truncated at line 765 mid-statement, missing its entire
+`run()` entrypoint and `__main__` block — the script could not have been invoked stand-alone
+or imported correctly at all regardless of the close-out bug. Restored the missing tail from
+a clean GitHub clone. Verified with `py_compile` + `ast.parse` against a patched copy of the
+clean clone (the working-directory file lives on a Windows-mounted drive the sandbox shell
+can't reliably re-read after edits — confirmed correct via the file-editing tool's own
+read-back instead). **NOT YET committed or pushed** — `.git\index` in the working copy is
+corrupted (a pre-existing issue, not caused by this session), which also blocks a normal
+`git status`/`git commit`. A real autostash (`stash@{0}: autostash`) holding your own
+uncommitted work is intact and untouched. Run `FIX_PORTFOLIOS_CLOSEOUT_2026-06-23.bat` from
+Windows (not the sandbox) to safely rebuild the index and commit+push just this fix — it
+will not touch your stash or any other uncommitted files. Once pushed, no separate deploy
+step is needed: the next scheduled GitHub Action / cron-job.org tick for any of the 3
+product sites will pick it up automatically.
+
+
 Backend redeployed and verified healthy (`wallstbots-backend-00109-7v8`); **bitbot13 full
 reset is 100% COMPLETE across all 3 layers AND confirmed on GitHub** (commit `d2d35b7`).
 A full claimed-vs-actual audit (repo code AND live pages, all 3 sites) ran 2026-06-22 — see
@@ -111,7 +150,7 @@ Mark each row honestly. Use: ✅ works · ⚠️ partly works · ❌ broken · �
 | Stripe checkout | ❔ | ❔ | ❔ |
 | Stripe billing portal (Manage/Cancel) | ❔ | ❔ | ❔ |
 | Referral dashboard | ❔ | ❔ | ❔ |
-| Admin code → correct tier banner | ✅ | ✅ | 🔴 BUG — hardcodes "INSIDER" (see 2026-06-22 note below) |
+| Admin code → correct tier banner | ✅ | ✅ | ✅ FIXED 2026-06-22 (admin-tier hardcode resolved, parity confirmed in code) |
 | Admin panel | ❔ | ❔ | ❔ |
 | Chatbot (quick replies + typed input) | ❔ | ❔ | ❔ |
 
@@ -412,6 +451,85 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 ---
 
 ## Session Log (append newest at top)
+
+- **2026-06-23 (Webmaster referral/admin-code selector — all 3 product sites, parity
+  verified).** Owner's request: webmaster account could only send the personal 50%-off
+  referral code; needed to also send the two admin comp codes (`admin13` = Insider free-
+  lifetime, `adminm13` = Syndicate free-lifetime) from the same "My Account" drawer, with
+  Copy Code / Copy Link / Send-by-email all following whichever code is selected.
+  **What changed (frontend only — `dashboard.html` on all 3 product sites):** added a
+  webmaster-only `<select id="wmCodeSelector">` dropdown (Personal / admin13 / adminm13) in
+  the Invite & Earn section, gated behind the existing `isWM` check (same flag that already
+  shows the Command Center nav link — no new gating logic invented). Selecting a code swaps
+  the displayed code, the invite link's `ref=` parameter, and the "How it works" blurb via a
+  new `onWmCodeChange()` function. `sendInviteEmail()` now branches: personal code still
+  posts to `/account/invite` exactly as before (zero behavior change for regular members);
+  admin13/adminm13 now post to the pre-existing, webmaster-only `/admin/send-invite` endpoint
+  (`Backend/main.py`, already built and already role-gated — **no backend changes needed**),
+  which sends the existing "free lifetime account" branded email template.
+  **Parity:** wallstbots.tech was the reference build; identical markup + JS ported to
+  aistocks.tech and bitbot13.tech in the same session. Verified by grepping all 3 files for
+  every new hook (`wmCodeSelectorWrap`, `onWmCodeChange`, `referralHowItWorks`,
+  `_personalRefCode`/`_personalRefLink`) — identical counts and call sites in all three.
+  **Not yet done:** live click-through test in a browser (sandbox/bash tool was unavailable
+  this session — verification was code-level: structure, naming, and gating logic cross-
+  checked across all 3 files, not run in a live page). Owner should click-test the dropdown
+  on wallstbots.tech first after deploy, confirm a non-webmaster account still sees the old
+  single-code UI with no dropdown.
+  **Still pending from earlier sessions, untouched today:** #42/#43 SELL.ts >= BUY.ts fix
+  verification — not part of this task.
+
+- **2026-06-22 night (External cron-job.org scheduler set up — fixes the "auto-refresh
+  silently didn't fire one morning" incident — NO repo code changed; pure external
+  infrastructure.)** Earlier today all 3 product sites failed to auto-refresh on schedule;
+  the owner had to manually trigger a refresh at 1pm. Root cause: GitHub Actions' native
+  `schedule:` (cron) trigger is a documented **best-effort** feature with no SLA — GitHub can
+  and does silently skip or delay scheduled runs under load, with no error, no notification,
+  nothing in the Actions log to show it was even supposed to run. `development-rules.md`
+  requires "Execution Fidelity" (signals must arrive precisely at market open/close) and
+  "fail loudly" error handling, which rules out a monitor-only fix (an alert that fires after
+  a missed morning is still a missed morning).
+  **Fix:** added **cron-job.org** (a free external scheduler with an actual SLA) as a second,
+  independent trigger. It calls GitHub's REST API `workflow_dispatch` endpoint directly —
+  `POST /repos/lvl13tech/wallstbots/actions/workflows/{workflow}.yml/dispatches` — at the
+  exact same times already defined in each `.yml`'s `schedule:` block, using a fine-grained
+  GitHub PAT the owner generated. This does NOT replace the existing GitHub-native cron
+  triggers (left in place as a redundant first attempt); it adds a second, independent path
+  that doesn't depend on GitHub's own scheduler at all, so even if GitHub's internal cron
+  skips a tick, cron-job.org still fires the same workflow on time.
+  **Built all 15 jobs** (one per cron line across the 3 workflow files):
+  - **wallstbots** (`refresh-wallstbots.yml`, 6 jobs): open 9:30/9:45am ET, midday
+    10am-2:45pm ET every 15min, close-out 3:30pm ET, 3:45pm ET, 4pm ET, 4:45pm ET.
+  - **aistocks** (`refresh-lvl13.yml` — historically named after the old lvl13 trading site;
+    confirmed via the file's own trailing comment that it drives aistocks.tech via the
+    backend's `"aistocks"` platform key and does NOT touch the lvl13.tech parent site; 6 jobs,
+    same 6 time slots as wallstbots).
+  - **bitbot13** (`refresh-bitbot13.yml`, 3 jobs, since crypto trades 7 days/week with no
+    market-hours gate): every 15 min 13:00-23:45 UTC (daytime), every 15 min 00:00-02:45 UTC
+    (evening wraparound), and one quiet `0 6 * * *` UTC overnight reprice. All 3 bitbot13 jobs
+    set their **Time zone to UTC** in cron-job.org's Advanced tab (rather than the account
+    default America/New_York), matching the workflow's own UTC-native cron literals exactly —
+    avoids any manual ET/UTC or DST conversion error.
+  **Verified live, not just configured:** read back all 15 jobs from the cron-job.org
+  dashboard — correct title, correct GitHub dispatch URL, correct next-execution time for
+  every job. Better proof: the "bitbot13 - evening wraparound (UTC)" job already fired for
+  real tonight at 10:15:33 PM ET and got a successful response (1.71s) — live confirmation the
+  whole chain works end-to-end (cron-job.org → GitHub API → workflow dispatch → refresh runs).
+  **One display quirk worth knowing, not a bug:** cron-job.org's job-list page always shows
+  "Next execution" in **America/New_York**, even for the 3 bitbot13 jobs configured with an
+  individual UTC timezone. The job's actual schedule is correct in UTC; only the list page's
+  display column uses ET. (E.g. the 6am UTC overnight job correctly shows as "~2:00 AM" ET.)
+  **What this affects:** nothing in the repo or live sites changed — this is purely an
+  additional trigger path sitting outside the codebase, on a separate third-party service.
+  **How to verify going forward:** check the cron-job.org dashboard's execution history (shows
+  every fire + HTTP response code) or the GitHub Actions tab on the repo for on-time
+  `workflow_dispatch`-triggered runs. If a morning refresh is ever late again, that dashboard
+  is the first place to look. **Login:** cron-job.org account belongs to the owner; the PAT
+  used was pasted directly into chat and only ever typed into cron-job.org's own curl-import
+  field — never written to any file in this repo. lvl13.tech not touched.
+  **Not yet done, optional follow-up:** owner has not yet decided whether to add a "dead man's
+  switch" heartbeat alert (e.g. a check that pages if NO refresh has run in 30+ minutes during
+  trading hours) as additional belt-and-suspenders on top of this fix.
 
 - **2026-06-22 — BOT13 daily close-out built (the real fix for the "SELL shows before
   BUY" timestamp bug) + SELL-floor safety clamp. Code changed, NOT YET py_compile-verified

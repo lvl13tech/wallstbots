@@ -1,0 +1,234 @@
+PERMANENT_FIX_GIT_ONEDRIVE_2026-06-23 - run started Tue 06/23/2026 19:06:05.93 
+=== Step 0: Pausing OneDrive sync for this one-time move === 
+SUCCESS: The process "OneDrive.exe" with PID 2276 has been terminated.
+OneDrive paused (it auto-restarts at next login if it doesn't restart itself). 
+Confirmed: .git folder found here. 
+=== Step 2: Clearing any stale lock so git is in a known state === 
+Lock cleared if present. 
+=== Step 3: Rebuilding the index one last time before the move === 
+Index rebuilt successfully. 
+=== Step 4: Confirming nothing is actually different from your last commit === 
+ M Backend/deploy.bat
+ M COMMIT-AND-PUSH-doubleclick-me.bat
+ M Context/BUSINESS_MODEL.md
+ M Context/WallStBots_Strategy_OnePager.html
+ M DEPLOY-ALL-CHANGES.bat
+ M DEPLOY-ALL.bat
+ M DEPLOY-BACKEND-NOW.bat
+ M DEPLOY-VIA-WSL.bat
+ M DEPLOY-admin-system.bat
+ M DEPLOY_BACKEND.md
+ M FINAL-PUSH-V2.bat
+ M FINAL-PUSH.bat
+ M FIX-WORKFLOW-doubleclick-me.bat
+ M FORCE-PUSH-doubleclick-me.bat
+ M Frontends/aistocks.tech/dashboard.html
+ M Frontends/aistocks.tech/data/signals.json
+ M Frontends/bitbot13.tech/auth.js
+ M Frontends/bitbot13.tech/dashboard.html
+ M Frontends/wallstbots.tech/dashboard.html
+ M PROJECT_STATUS.md
+ M PUSH-AND-DEPLOY-BACKEND.bat
+ M PUSH-FINAL-FIXES.bat
+ M PUSH-FORCE-PULL-REBASE.bat
+ M PUSH-auth-fixes.bat
+ M PUSH-bitbot13-auth.bat
+ M PUSH-doubleclick-me.bat
+ M PUSH-full-fix.bat
+ M PUSH-header-fix.bat
+ M PUSH-logos.bat
+ M PUSH-news-fix.bat
+ M PUSH-price-fix.bat
+ M PUSH-rss-news.bat
+ M Project/public_html/admin.html
+ M Project/public_html/assets/app.js
+ M Project/public_html/index.html
+ M Project/scripts/refresh_all_frontends.py
+ M Project/scripts/refresh_data.py
+ M Project/scripts/reset_fund_data.py
+ M Project/scripts/seed_tracker_db.py
+ M Project/scripts/upload_lvl13_full.py
+ M REFRESH-DATA-NOW.bat
+ M RUN-seed-all.bat
+ M RUN-seed-news.bat
+ M SETUP-github-secrets.bat
+ M SITE_SPEC.md
+ M finish-deploy.sh
+ M fix_lvl13_dns.py
+?? BOT_SCHEDULE.md
+?? PERMANENT_FIX_GIT_ONEDRIVE_2026-06-23_LOG.txt
+?? PUSH_CLOSEOUT_FIX_2026-06-23_LOG.txt
+?? development-rules.md
+Changed-path count after rebuild: 51 
+problem cannot recur. Your actual project files (.py/.html/.js/etc.) still live in OneDrive 
+and still sync/back up normally -- only the internal git bookkeeping folder moved. 
+You can now safely run PUSH_CLOSEOUT_FIX_2026-06-23.bat to finish pushing the fix commit. 
+problem cannot recur. Your actual project files (.py/.html/.js/etc.) still live in OneDrive 
+and still sync/back up normally -- only the internal git bookkeeping folder moved. 
+You can now safely run PUSH_CLOSEOUT_FIX_2026-06-23.bat to finish pushing the fix commit. 
+=== Step 5: Creating C:\GitRepos (the new permanent home for .git, outside OneDrive) === 
+C:\GitRepos ready. 
+=== Step 7: Creating the junction so this folder still has a working .git === 
+Cannot create a file when that file already exists.
+FAILED at Step 7 - junction creation failed. Restoring .git from the verified copy to undo this safely. 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : Tuesday, June 23, 2026 7:06:06 PM
+   Source : C:\GitRepos\WallStBots.git\
+     Dest : C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\.git\
+
+    Files : *.*
+	    
+  Options : *.* /NDL /NFL /S /E /DCOPY:DA /COPY:DAT /R:3 /W:2 
+
+------------------------------------------------------------------------------
+
+2026/06/23 19:06:06 ERROR 2 (0x00000002) Accessing Source Directory C:\GitRepos\WallStBots.git\
+The system cannot find the file specified.
+Restored .git here from the verified copy. Your repo is back to working exactly as before this script ran. 
+(The copy also still exists at C:\GitRepos\WallStBots.git -- harmless leftover, safe to delete manually later or leave it.) 
+Send the log file. 
+Restarting OneDrive before exiting (so it doesn't stay paused). 
+=== RUN RESULT: FAILED -- see steps above for where it stopped. Nothing destructive was done. === 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : Tuesday, June 23, 2026 7:06:07 PM
+   Source : C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\.git\
+     Dest : C:\GitRepos\WallStBots.git\
+
+    Files : *.*
+	    
+  Options : *.* /NDL /NFL /S /E /DCOPY:DA /COPY:DAT /R:3 /W:2 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :       275       274         1         0         0         0
+   Files :      5609      5609         0         0         0         0
+   Bytes :   84.20 m   84.20 m         0         0         0         0
+   Times :   0:00:11   0:00:11                       0:00:00   0:00:00
+
+
+   Speed :           8,003,216 Bytes/sec.
+   Speed :             457.948 MegaBytes/min.
+   Ended : Tuesday, June 23, 2026 7:06:18 PM
+
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : Tuesday, June 23, 2026 7:06:18 PM
+   Source : C:\GitRepos\WallStBots.git\
+     Dest : C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\.git\
+
+    Files : *.*
+	    
+  Options : *.* /NDL /NFL /S /E /DCOPY:DA /COPY:DAT /R:3 /W:2 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :       275         0       275         0         0         0
+   Files :      5609         4      5605         0         0         0
+   Bytes :   84.20 m    10.5 k   84.19 m         0         0         0
+   Times :   0:00:00   0:00:00                       0:00:00   0:00:00
+   Ended : Tuesday, June 23, 2026 7:06:18 PM
+
+Restored .git here from the verified copy. Your repo is back to working exactly as before this script ran. 
+(The copy also still exists at C:\GitRepos\WallStBots.git -- harmless leftover, safe to delete manually later or leave it.) 
+Send the log file. 
+Restarting OneDrive before exiting (so it doesn't stay paused). 
+=== RUN RESULT: FAILED -- see steps above for where it stopped. Nothing destructive was done. === 
+=== Step 6b: Verifying the copy is complete and intact before touching the original === 
+Source .git item count: 5883 -- copied item count: 5883 
+Copy verified complete. 
+=== Step 6c: Removing the original .git now that the copy at C:\GitRepos\WallStBots.git is verified === 
+File not found - .git
+Marked .git as a system+hidden item (extra signal to OneDrive/Explorer to leave it alone). 
+=== Step 9: Verifying git still works correctly through the junction === 
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+FAILED at Step 9 - git cannot read through the junction. This needs a human look. Send the log file -- do not delete C:\GitRepos\WallStBots.git, your repo history is safely there. 
+Restarting OneDrive before exiting (so it doesn't stay paused). 
+=== RUN RESULT: FAILED -- see steps above for where it stopped. Nothing destructive was done. === 
+=== Step 7: Creating the junction so this folder still has a working .git === 
+Junction created for .git <<===>> C:\GitRepos\WallStBots.git
+Junction created. This folder's .git now transparently points at C:\GitRepos\WallStBots.git. 
+=== Step 8: Telling OneDrive to ignore the (now harmless) .git junction, belt-and-suspenders === 
+Marked .git as a system+hidden item (extra signal to OneDrive/Explorer to leave it alone). 
+=== Step 9: Verifying git still works correctly through the junction === 
+ M Backend/deploy.bat
+ M COMMIT-AND-PUSH-doubleclick-me.bat
+ M Context/BUSINESS_MODEL.md
+ M Context/WallStBots_Strategy_OnePager.html
+ M DEPLOY-ALL-CHANGES.bat
+ M DEPLOY-ALL.bat
+ M DEPLOY-BACKEND-NOW.bat
+ M DEPLOY-VIA-WSL.bat
+ M DEPLOY-admin-system.bat
+ M DEPLOY_BACKEND.md
+ M FINAL-PUSH-V2.bat
+ M FINAL-PUSH.bat
+ M FIX-WORKFLOW-doubleclick-me.bat
+ M FORCE-PUSH-doubleclick-me.bat
+ M Frontends/aistocks.tech/dashboard.html
+ M Frontends/aistocks.tech/data/signals.json
+ M Frontends/bitbot13.tech/auth.js
+ M Frontends/bitbot13.tech/dashboard.html
+ M Frontends/wallstbots.tech/dashboard.html
+ M PROJECT_STATUS.md
+ M PUSH-AND-DEPLOY-BACKEND.bat
+ M PUSH-FINAL-FIXES.bat
+ M PUSH-FORCE-PULL-REBASE.bat
+ M PUSH-auth-fixes.bat
+ M PUSH-bitbot13-auth.bat
+ M PUSH-doubleclick-me.bat
+ M PUSH-full-fix.bat
+ M PUSH-header-fix.bat
+ M PUSH-logos.bat
+ M PUSH-news-fix.bat
+ M PUSH-price-fix.bat
+ M PUSH-rss-news.bat
+ M Project/public_html/admin.html
+ M Project/public_html/assets/app.js
+ M Project/public_html/index.html
+ M Project/scripts/refresh_all_frontends.py
+ M Project/scripts/refresh_data.py
+ M Project/scripts/reset_fund_data.py
+ M Project/scripts/seed_tracker_db.py
+ M Project/scripts/upload_lvl13_full.py
+ M REFRESH-DATA-NOW.bat
+ M RUN-seed-all.bat
+ M RUN-seed-news.bat
+ M SETUP-github-secrets.bat
+ M SITE_SPEC.md
+ M finish-deploy.sh
+ M fix_lvl13_dns.py
+?? BOT_SCHEDULE.md
+?? PERMANENT_FIX_GIT_ONEDRIVE_2026-06-23_LOG.txt
+?? PUSH_CLOSEOUT_FIX_2026-06-23_LOG.txt
+?? development-rules.md
+d112334 Fix BOT13 fund-page contradiction: mirror close-out flatten into refresh_portfolios.py (member-side state) so Holdings/Strategy/Trade History never disagree after 3:30pm ET / 9pm ET close-out
+Verified: git log and git status work correctly through the junction. 
+=== Step 10: Restarting OneDrive === 
+OneDrive restarted. 
+=== DONE: PASS === 
+Your .git folder now physically lives at C:\GitRepos\WallStBots.git, outside OneDrive. 
+This folder (WallStBots) still has a .git that works exactly the same -- nothing about how 
+you use the repo changes. OneDrive will no longer see or sync .git, so the index-corruption 
+problem cannot recur. Your actual project files (.py/.html/.js/etc.) still live in OneDrive 
+and still sync/back up normally -- only the internal git bookkeeping folder moved. 
+You can now safely run PUSH_CLOSEOUT_FIX_2026-06-23.bat to finish pushing the fix commit. 

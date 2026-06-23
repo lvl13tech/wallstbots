@@ -645,6 +645,17 @@
       </div>
     </div>
 
+    <!-- Webmaster-only: choose which code to share -->
+    <div id="wmCodeSelectorWrap" style="display:none;margin-bottom:10px">
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">Code to Share</div>
+      <select id="wmCodeSelector" onchange="onWmCodeChange()"
+        style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--fg);font-size:0.85rem;outline:none">
+        <option value="personal">My Personal Code (50% off referral)</option>
+        <option value="admin13">Insider — Free Lifetime (admin13)</option>
+        <option value="adminm13">Syndicate — Free Lifetime (adminm13)</option>
+      </select>
+    </div>
+
     <!-- Referral code -->
     <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">Your Referral Code</div>
     <div class="referral-box" style="margin-bottom:10px">
@@ -671,7 +682,7 @@
     <div id="inviteEmailMsg" style="font-size:0.75rem;min-height:16px;color:var(--muted)"></div>
 
     <!-- How it works -->
-    <div style="margin-top:14px;padding:10px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;font-size:0.75rem;color:var(--muted);line-height:1.6">
+    <div style="margin-top:14px;padding:10px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;font-size:0.75rem;color:var(--muted);line-height:1.6" id="referralHowItWorks">
       <strong style="color:var(--fg)">How it works:</strong> Your friend gets <strong style="color:var(--accent)">50% off their first month</strong> or <strong style="color:var(--accent)">$100 off annual</strong>. You earn <strong style="color:var(--accent)">$35 credit</strong> per signup — automatically applied to your next bill. No cap.
     </div>
   </div>
@@ -1181,6 +1192,8 @@
       if (link) link.style.display = "";
       const mob = document.getElementById("wmNavLinkMob");
       if (mob) mob.style.display = "";
+      const codeWrap = document.getElementById("wmCodeSelectorWrap");
+      if (codeWrap) codeWrap.style.display = "";
     }
     document.getElementById("drawerTierBadge").textContent = plan;
     document.getElementById("drawerTierBadge").className = "tier-badge " + badgeClass;
@@ -1196,12 +1209,13 @@
     try {
       api.getReferralStats().then(r => {
         if (!r) return;
-        document.getElementById("drawerRefCode").textContent   = r.referral_code   || "—";
+        window._personalRefCode = r.referral_code || "—";
+        window._personalRefLink = r.share_link || ("https://wallstbots.tech/#/get-yours?ref=" + (r.referral_code || ""));
+        document.getElementById("drawerRefCode").textContent   = window._personalRefCode;
         document.getElementById("drawerRefCount").textContent  = r.referred_count  || 0;
         document.getElementById("drawerCreditBalance").textContent = "$" + (parseFloat(r.credit_balance  || 0).toFixed(2));
         document.getElementById("drawerTotalEarned").textContent   = "$" + (parseFloat(r.total_earned    || 0).toFixed(2));
-        document.getElementById("drawerRefLink").value =
-          r.share_link || ("https://wallstbots.tech/#/get-yours?ref=" + (r.referral_code || ""));
+        document.getElementById("drawerRefLink").value = window._personalRefLink;
       });
     } catch(e) {}
   }
@@ -1476,23 +1490,51 @@
     if(!link||link==="—")return;
     navigator.clipboard.writeText(link).then(()=>showToast("Invite link copied!","success")).catch(()=>showToast("Could not copy","error"));
   }
+  // Webmaster-only: switch the displayed code/link/copy text between the
+  // user's own personal referral code and the two admin comp codes
+  // (admin13 = Insider free-lifetime, adminm13 = Syndicate free-lifetime).
+  // Does NOT touch /account/invite or /admin/send-invite by itself — it
+  // only changes what Copy Code / Copy Link / Send will act on next.
+  function onWmCodeChange(){
+    const sel=document.getElementById("wmCodeSelector").value;
+    const howItWorks=document.getElementById("referralHowItWorks");
+    if(sel==="personal"){
+      document.getElementById("drawerRefCode").textContent = window._personalRefCode || "—";
+      document.getElementById("drawerRefLink").value = window._personalRefLink || "—";
+      if(howItWorks) howItWorks.innerHTML = '<strong style="color:var(--fg)">How it works:</strong> Your friend gets <strong style="color:var(--accent)">50% off their first month</strong> or <strong style="color:var(--accent)">$100 off annual</strong>. You earn <strong style="color:var(--accent)">$35 credit</strong> per signup — automatically applied to your next bill. No cap.';
+    } else {
+      const tierName = sel==="adminm13" ? "Syndicate" : "Insider";
+      document.getElementById("drawerRefCode").textContent = sel;
+      document.getElementById("drawerRefLink").value = "https://wallstbots.tech/#/get-yours?ref="+sel;
+      if(howItWorks) howItWorks.innerHTML = '<strong style="color:var(--fg)">Admin code:</strong> Sends a <strong style="color:var(--accent)">free lifetime '+tierName+' account</strong> — no billing, ever. Use for comped accounts only.';
+    }
+  }
   async function sendInviteEmail(){
     const email=document.getElementById("inviteEmailInput").value.trim();
     const msg=document.getElementById("inviteEmailMsg");
     const btn=document.getElementById("inviteEmailBtn");
     if(!email||!email.includes("@")){msg.style.color="var(--red)";msg.textContent="Enter a valid email address.";return;}
-    const refCode=document.getElementById("drawerRefCode").textContent;
+    const refCode=document.getElementById("drawerRefCode").textContent.trim();
     if(!refCode||refCode==="—"||refCode==="———"){msg.style.color="var(--red)";msg.textContent="Referral code not loaded yet — try again in a moment.";return;}
+    const selEl=document.getElementById("wmCodeSelector");
+    const sel=selEl?selEl.value:"personal";
     btn.disabled=true;btn.textContent="Sending…";msg.textContent="";
     try{
       const tok=localStorage.getItem("auth_token")||localStorage.getItem("aistocks_jwt");
-      const resp=await fetch(BACKEND_URL+"/account/invite",{
+      // Admin comp codes (admin13/adminm13) route through the webmaster-only
+      // /admin/send-invite endpoint, which sends the "free lifetime account"
+      // template. The personal code keeps using /account/invite (50%-off
+      // referral template) exactly as before — no change for normal members.
+      const isAdminCode = (sel==="admin13"||sel==="adminm13");
+      const url = isAdminCode ? (BACKEND_URL+"/admin/send-invite") : (BACKEND_URL+"/account/invite");
+      const body = isAdminCode ? {email, admin_code: sel} : {email, referral_code: refCode};
+      const resp=await fetch(url,{
         method:"POST",
         headers:{"Content-Type":"application/json","Authorization":"Bearer "+tok},
-        body:JSON.stringify({email,referral_code:refCode})
+        body:JSON.stringify(body)
       });
       const d=await resp.json();
-      if(d.success){
+      if(resp.ok){
         msg.style.color="var(--accent)";
         msg.textContent="Invite sent to "+email+"!";
         document.getElementById("inviteEmailInput").value="";
