@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-06-23T21:20:02",
+    "last_refresh": "2026-06-23T21:41:30",
     "snapshots": [
       {
         "date": "2026-06-02",
@@ -128,8 +128,8 @@
         "bot13": 111406.18,
         "oracle": 51570.85,
         "wizard": 55036.86,
-        "equalizer": 54053.89,
-        "titan": 53271.36
+        "equalizer": 54041.13,
+        "titan": 53263.56
       }
     ],
     "funds": {
@@ -728,13 +728,13 @@
         "inception": "2026-06-02",
         "starting_capital": 55000.0,
         "value": {
-          "total": 54053.89,
+          "total": 54041.13,
           "cash": 0.0,
-          "pos_val": 54053.89,
-          "pnl": -946.11,
-          "pnl_pct": -1.72,
-          "day_pnl": -274.4,
-          "day_pct": -0.51,
+          "pos_val": 54041.13,
+          "pnl": -958.87,
+          "pnl_pct": -1.74,
+          "day_pnl": -272.03,
+          "day_pct": -0.5,
           "positions": [
             {
               "symbol": "XOM",
@@ -844,14 +844,14 @@
               "symbol": "APD",
               "shares": 3.585643,
               "entry_price": 278.89,
-              "current_price": 282.45,
+              "current_price": 278.89,
               "cost_basis": 1000.0,
-              "price": 282.45,
-              "value": 1012.76,
-              "pnl": 12.76,
-              "pnl_pct": 1.28,
-              "day_pnl": -2.37,
-              "day_pct": -0.23
+              "price": 278.89,
+              "value": 1000.0,
+              "pnl": 0.0,
+              "pnl_pct": 0.0,
+              "day_pnl": 0.0,
+              "day_pct": 0.0
             },
             {
               "symbol": "ALB",
@@ -1470,13 +1470,13 @@
         "inception": "2026-06-02",
         "starting_capital": 55000.0,
         "value": {
-          "total": 53271.36,
+          "total": 53263.56,
           "cash": 0.05,
-          "pos_val": 53271.31,
-          "pnl": -1728.64,
-          "pnl_pct": -3.14,
-          "day_pnl": -206.98,
-          "day_pct": -0.39,
+          "pos_val": 53263.51,
+          "pnl": -1736.44,
+          "pnl_pct": -3.16,
+          "day_pnl": -205.53,
+          "day_pct": -0.38,
           "positions": [
             {
               "symbol": "NVDA",
@@ -1716,14 +1716,14 @@
               "symbol": "APD",
               "shares": 2.191222,
               "entry_price": 278.89,
-              "current_price": 282.45,
+              "current_price": 278.89,
               "cost_basis": 611.11,
-              "price": 282.45,
-              "value": 618.91,
-              "pnl": 7.8,
-              "pnl_pct": 1.28,
-              "day_pnl": -1.45,
-              "day_pct": -0.23
+              "price": 278.89,
+              "value": 611.11,
+              "pnl": 0.0,
+              "pnl_pct": 0.0,
+              "day_pnl": 0.0,
+              "day_pct": 0.0
             },
             {
               "symbol": "ALB",
@@ -2225,14 +2225,14 @@
         },
         {
           "fund": "titan",
-          "week_pnl": -206.99,
-          "week_pct": -0.39,
+          "week_pnl": -214.79,
+          "week_pct": -0.4,
           "week_grade": "D"
         },
         {
           "fund": "equalizer",
-          "week_pnl": -274.37,
-          "week_pct": -0.51,
+          "week_pnl": -287.13,
+          "week_pct": -0.53,
           "week_grade": "D"
         },
         {
@@ -2263,14 +2263,14 @@
         },
         {
           "fund": "equalizer",
-          "all_pnl": -946.11,
-          "all_pct": -1.72,
+          "all_pnl": -958.87,
+          "all_pct": -1.74,
           "overall_grade": "D"
         },
         {
           "fund": "titan",
-          "all_pnl": -1728.64,
-          "all_pct": -3.14,
+          "all_pnl": -1736.44,
+          "all_pct": -3.16,
           "overall_grade": "D"
         },
         {
