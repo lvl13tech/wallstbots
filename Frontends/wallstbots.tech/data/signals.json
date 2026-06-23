@@ -502,6 +502,16 @@
         "date": "2026-06-23"
       },
       {
+        "symbol": "APD",
+        "action": "HOLD",
+        "confidence": 0.05,
+        "reason": "Flat -0.23% -- no clear edge today.",
+        "price": 282.45,
+        "upside_pct": -0.23,
+        "sector": "MATERIALS",
+        "date": "2026-06-23"
+      },
+      {
         "symbol": "SMMT",
         "action": "HOLD",
         "confidence": 0.04,
@@ -545,10 +555,10 @@
     "summary": {
       "STRONG BUY": 3,
       "BUY": 3,
-      "HOLD": 34,
+      "HOLD": 35,
       "SELL": 7,
       "STRONG SELL": 7
     },
-    "generated_at": "2026-06-23T21:41:36"
+    "generated_at": "2026-06-23T22:05:04"
   }
 }
