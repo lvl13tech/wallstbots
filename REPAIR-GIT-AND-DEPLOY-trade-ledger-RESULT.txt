@@ -1,9 +1,0 @@
-trade-ledger deploy - Sun 06/21/2026 20:19:34.84
-[master ef3099b] feat: trade ledger - immutable entry_time on all bots + append-only BUY/SELL trade log with realized P&L, shown in holdings (Bought column) and a Trade History panel on every bot detail page (public + members), all 3 product sites
- 6 files changed, 6 insertions(+), 6 deletions(-)
-From https://github.com/lvl13tech/wallstbots
- * branch            master     -> FETCH_HEAD
-Already up to date.
-To https://github.com/lvl13tech/wallstbots.git
-   9306679..ef3099b  master -> master
-SUCCESS (frontends+scripts). Backend deploy still required.

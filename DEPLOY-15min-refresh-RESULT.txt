@@ -1,9 +1,0 @@
-15-min refresh deploy - Sun 06/21/2026 23:21:35.85
-[master d80ac6f] ops: 15-minute refresh for all 3 sites during trading hours (tighter stop/target enforcement, no logic change) + email fires only on a NEW buy/sell to prevent spam at higher frequency
- 4 files changed, 94 insertions(+), 54 deletions(-)
-From https://github.com/lvl13tech/wallstbots
- * branch            master     -> FETCH_HEAD
-Already up to date.
-To https://github.com/lvl13tech/wallstbots.git
-   5fd0f8c..d80ac6f  master -> master
-SUCCESS
