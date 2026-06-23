@@ -40,7 +40,7 @@ from bot13_engine import (
     et_now, window_open as _window_open,
     session_phase as _session_phase,
     check_drawdown, enrich_position,
-    stamp_and_log,
+    stamp_and_log, past_close_out,
 )
 
 try:
@@ -602,7 +602,38 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                           f"${b13_capital:,.0f} is {b13_capital/member_value:.1f}x the "
                           f"clean scaled ${member_value:,.0f} -- bad data, using scaled.")
                     b13_capital = member_value
-                if is_equity:
+                # Daily close-out: BOT13 must be fully flat by 3:30 PM ET (equity) /
+                # 9 PM ET (crypto). If we're past that cutoff and the member's stored
+                # state still shows today's strategy as TRADE with open positions, the
+                # platform tracker (refresh_wallstbots.py / refresh_lvl13.py /
+                # refresh_bitbot13.py) has already force-flattened for the day -- this
+                # member-side script must mirror that, instead of re-asking
+                # run_bot13_equity/run_bot13_crypto "what would you do right now" and
+                # getting a fresh HOLD/0% that wipes Holdings while Trade History and
+                # Today's Change (scaled from the tracker) still reflect the real,
+                # already-closed trade. See bot13_engine.past_close_out().
+                prev_b13_strategy = b13_state.get("strategy") or {}
+                close_out_due = (
+                    past_close_out(cfg)
+                    and prev_b13_strategy.get("day") == today_iso
+                    and prev_b13_strategy.get("decision") == "TRADE"
+                    and bool(b13_state.get("positions"))
+                )
+                if close_out_due:
+                    now_close = et_now().isoformat(timespec="seconds")
+                    stored_b13_positions = b13_state.get("positions") or []
+                    for p in stored_b13_positions:
+                        p["exit_reason"] = p.get("exit_reason") or "daily close-out"
+                        p["exit_time"]   = p.get("exit_time") or now_close
+                    b13_dec      = "HOLD"
+                    b13_pos      = []
+                    b13_picks    = prev_b13_strategy.get("picks", [])
+                    b13_rat      = "HOLD -- daily close-out. All positions flattened for the day."
+                    b13_log      = b13_state.get("trade_log", [])
+                    b13_proj     = 0.0
+                    print(f"  [portfolios] BOT13 close-out -- flattened "
+                          f"{len(stored_b13_positions)} position(s) (member-side mirror)")
+                elif is_equity:
                     portfolio_cfg = dict(cfg)
                     portfolio_cfg["min_picks"] = max(1, min(3, max(1, round(len(universe) / 3))))
                     b13_dec, b13_pos, b13_picks, b13_rat, b13_log, b13_proj = run_bot13_equity(
