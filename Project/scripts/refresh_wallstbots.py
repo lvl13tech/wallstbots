@@ -991,6 +991,18 @@ def main():
             b13_log       = (prev_b13_strategy or {}).get("session_log", [])
             b13_proj      = float((prev_b13_strategy or {}).get("projected_return", 0.0))
             print(f"  BOT13: recovered {len(_stored_pos)} stored positions after close (prior strategy chain was not TRADE)")
+        elif (prev_b13_strategy or {}).get("day") == today_iso and (prev_b13_strategy or {}).get("rationale"):
+            # Today already had a real trade (close-out already flattened it, so
+            # _prior_dec is "HOLD" and _stored_pos is empty) -- keep showing what
+            # the bot actually did today instead of overwriting it with the
+            # generic never-traded message below.
+            b13_decision  = "HOLD"
+            b13_positions = []
+            b13_picks     = (prev_b13_strategy or {}).get("picks", [])
+            b13_rationale = prev_b13_strategy.get("rationale")
+            b13_log       = (prev_b13_strategy or {}).get("session_log", [])
+            b13_proj      = float((prev_b13_strategy or {}).get("projected_return", 0.0))
+            print("  BOT13: HOLD (preserving today's trade story after close-out)")
         else:
             b13_decision  = "HOLD"
             b13_positions = []

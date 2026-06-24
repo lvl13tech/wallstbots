@@ -3,10 +3,93 @@
 **Keep this file honest and current.** Update it at the end of every work session.
 When Claude finishes a change, the LAST step is to update this file.
 
-Last updated: 2026-06-23 (BOT13 member-fund-page close-out regression fixed, NOT YET PUSHED — see below) ·
-Status: **FIX READY LOCALLY, COMMIT/PUSH BLOCKED on a corrupted .git\index — run `FIX_PORTFOLIOS_CLOSEOUT_2026-06-23.bat`** ·
+Last updated: 2026-06-24 (Today's Strategy fallback fix — `refresh_wallstbots.py`,
+`refresh_lvl13.py`, `refresh_bitbot13.py` — written and verified locally, **NOT YET
+COMMITTED/PUSHED**) ·
+Status: **CODE FIXED AND COMPILE-VERIFIED ON ALL 3 PRODUCT SITES. Owner still needs to run
+the git commit/push step (see ".bat to run" below) before any live site picks this up.** ·
 
-**2026-06-23 — Real regression found and fixed: BOT13 fund page contradicted itself
+---
+
+**2026-06-24 — Real regression found and fixed: "Today's Strategy" box on the BOT13 fund
+page fell back to the generic "Market closed -- waiting for next trading session." message
+on days BOT13 actually traded.** Owner's proof point: `bitbot13.tech/#/fund/bot13` was
+showing the real trade story (`TRADE`, "Deployed into 1 coins with momentum + volume
+confirmation (RUNE +3.73%)...") because bitbot13's BOT13 still had an open position today,
+while `wallstbots.tech/#/fund/bot13` showed the generic fallback even though wallstbots' own
+BOT13 verifiably DID trade today (confirmed on the live backend: BUY 5 names at 9:45 AM ET,
+force-closed at 3:30pm ET with reason "daily close-out (3:30pm ET)"). Owner confirmed this
+used to work correctly and is a regression, not new design.
+- **Root cause:** in each `refresh_<platform>.py`'s `not _engine_window_open(...)` branch
+  (market closed, no new entries), the final fallback case — when the previous decision
+  isn't `"TRADE"` AND there are no stored positions, which is exactly the state right after
+  close-out flattens everything — unconditionally overwrote the rationale with the generic
+  hardcoded string, discarding the real trade narrative that was still sitting in
+  `prev_b13_strategy`/`b13_prev_strategy` from earlier that day.
+- **Fix:** added one more `elif` branch, checked before the generic fallback, that keeps
+  showing today's real rationale/picks/projected-return whenever
+  `prev_b13_strategy.get("day") == today` and a real rationale already exists. Only falls
+  back to the generic "waiting for next session" message when BOT13 genuinely did not trade
+  at all today. Applied identically (Parity Rule) to `refresh_wallstbots.py`,
+  `refresh_lvl13.py` (this is the aistocks.tech engine — see Architecture note below),
+  and `refresh_bitbot13.py` (crypto variable is named `b13_prev_strategy`, not
+  `prev_b13_strategy`, but same logic).
+- **Separately discovered and fixed in the same pass (unrelated, pre-existing): all three
+  `refresh_*.py` files were truncated mid-save**, cut off inside the `news_data = {...}`
+  dict literal near the end of the file — missing the `generated_at` key, the closing
+  brace, the news push call, the reports push, the member-portfolio-simulation call, and
+  the snapshot trigger. This is the same failure mode flagged in the truncation-guard memory
+  (mid-save cutoff on `.py`/`.html` files) recurring on files the guard was supposed to
+  already cover — worth a closer look at whether the guard is actually catching every save
+  path, since it visibly did not catch these three. Recovered `refresh_wallstbots.py`'s tail
+  from an untouched backup copy found on disk (`/tmp/wsb_check/...`, pre-dated my fix, so the
+  fix was re-applied on top of it); reconstructed `refresh_lvl13.py`'s and
+  `refresh_bitbot13.py`'s tails by hand using the recovered wallstbots tail as the template
+  (same news/reports/portfolio-simulation/snapshot structure, just swapping the platform name
+  and print-prefix strings). All three now `py_compile` clean.
+- **Verified:** all three files compile with `python3 -m py_compile`; the new `elif` branch
+  text is present exactly once in each file; confirmed via direct read that the branch sits
+  in the correct place (before the generic fallback `else`, after the `_stored_pos`
+  graceful-recovery `elif`).
+- **NOT yet verified live** — this requires the owner to commit + push (see below), then
+  wait for the next scheduled refresh to run, then check `wallstbots.tech/#/fund/bot13` on a
+  day BOT13 trades and gets closed out.
+
+---
+
+**2026-06-23 — Push completed: `d112334` (BOT13 close-out mirror fix) is now on GitHub
+master.** This had been blocked for most of the session by a recurring git problem on the
+owner's machine, now diagnosed and permanently fixed:
+- **Root cause of the original "fatal: ... is not a valid object" / "fatal: stash failed"
+  error during merge:** the push script's own log file
+  (`PUSH_CLOSEOUT_FIX_2026-06-23_LOG.txt`) was tracked by git. Every line the script wrote
+  to its log *after* committing made the working tree dirty again with a trivial
+  CRLF-only diff, right before the merge step ran. `git merge` tried to autostash that
+  1-line diff and hit a missing/corrupted object in the local object database — an
+  isolated, pre-existing piece of repo damage unrelated to any real commit or file.
+  **Fixed permanently:** added `*_LOG.txt`, `*-log.txt`, `*-result.txt`, `*-RESULT.txt` to
+  `.gitignore`; the push script now untracks any currently-tracked log files
+  (`git rm -r --cached`) and does a final clean-check immediately before merging; the merge
+  command now also runs with `--no-autostash` as a backstop. This class of error cannot
+  recur from this script or any future one that follows the same log-file naming pattern.
+- **Separate, one-time benign hiccup after that fix:** the first hardened run merged
+  cleanly but then `git push` was rejected ("cannot lock ref ... is at X but expected Y")
+  because an automated bot auto-refresh commit landed on GitHub in the few seconds between
+  the script's fetch and its push. Not corruption — just a timing race. The script is
+  designed to stop safely without force-pushing when this happens; the fix was simply to
+  re-run it once more, which fetched the latest state and pushed clean.
+- **Final result, confirmed from the script's own log:** Step 3 merge succeeded
+  (`Merge made by the 'ort' strategy`), Step 4 push succeeded
+  (`6f17411..edf3bbc master -> master`), final line `=== DONE: PASS ===`. Commit `d112334`
+  plus a bundled commit cleaning up 69 stale helper-script result/log files are both now on
+  `origin/master`.
+- **What this means for the owner:** nothing further to do. The fix takes effect
+  automatically on the next scheduled refresh for wallstbots/aistocks/bitbot13 — no manual
+  deploy, no redeploy of the backend, no site visit required.
+
+---
+
+**2026-06-23 (earlier this session) — Real regression found and fixed: BOT13 fund page contradicted itself
 post-close-out (Strategy=HOLD/0%/blank Holdings next to a positive Today's Change and a
 populated Trade History).** Owner correctly rejected my first read of this as a labeling
 issue — it was a real data bug. Root cause: commit `5374245` (2026-06-22) added a 3:30pm ET
@@ -33,14 +116,9 @@ or imported correctly at all regardless of the close-out bug. Restored the missi
 a clean GitHub clone. Verified with `py_compile` + `ast.parse` against a patched copy of the
 clean clone (the working-directory file lives on a Windows-mounted drive the sandbox shell
 can't reliably re-read after edits — confirmed correct via the file-editing tool's own
-read-back instead). **NOT YET committed or pushed** — `.git\index` in the working copy is
-corrupted (a pre-existing issue, not caused by this session), which also blocks a normal
-`git status`/`git commit`. A real autostash (`stash@{0}: autostash`) holding your own
-uncommitted work is intact and untouched. Run `FIX_PORTFOLIOS_CLOSEOUT_2026-06-23.bat` from
-Windows (not the sandbox) to safely rebuild the index and commit+push just this fix — it
-will not touch your stash or any other uncommitted files. Once pushed, no separate deploy
-step is needed: the next scheduled GitHub Action / cron-job.org tick for any of the 3
-product sites will pick it up automatically.
+read-back instead). **NOW COMMITTED AND PUSHED** — see the entry at the top of this file
+for the full story of the index corruption, the OneDrive/.git junction fix, and the
+log-file-autostash bug that delayed this push. Final commit on `origin/master`: `edf3bbc`.
 
 
 Backend redeployed and verified healthy (`wallstbots-backend-00109-7v8`); **bitbot13 full

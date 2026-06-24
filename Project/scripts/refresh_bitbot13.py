@@ -1095,6 +1095,18 @@ def main():
             b13_log       = (b13_prev_strategy or {}).get("session_log", [])
             b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
             print(f"  BOT13: recovered {len(_stored_pos)} stored positions after close (prior strategy chain was not TRADE)")
+        elif (b13_prev_strategy or {}).get("day") == today_iso and (b13_prev_strategy or {}).get("rationale"):
+            # Today already had a real trade (close-out already flattened it, so
+            # _prior_dec is "HOLD" and _stored_pos is empty) -- keep showing what
+            # the bot actually did today instead of overwriting it with the
+            # generic never-traded message below.
+            b13_decision  = "HOLD"
+            b13_positions = []
+            b13_picks     = (b13_prev_strategy or {}).get("picks", [])
+            b13_rationale = b13_prev_strategy.get("rationale")
+            b13_log       = (b13_prev_strategy or {}).get("session_log", [])
+            b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
+            print("  BOT13: HOLD (preserving today's trade story after close-out)")
         else:
             b13_decision  = "HOLD"
             b13_positions = []
@@ -1406,12 +1418,13 @@ def main():
     print(f"[bitbot13] news -- {len(news_items)} articles")
     push_to_api("news", news_data, secrets)
 
-    # -- Reports ---------------------------------------------------------------
+    # -- Reports (placeholder -- keeps API consistent) --------------------------
     push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
 
+    # -- Portfolio performance snapshots ----------------------------------------
     # -- Member portfolio simulations ------------------------------------------
     print("[bitbot13] running member portfolio simulations...")
-    refresh_portfolios.run("bitbot13", prices, prev_closes, hist_data, secrets)
+    refresh_portfolios.run("bitbot13", prices, prev_closes, intraday_data, secrets)
 
     # -- Portfolio snapshots ---------------------------------------------------
     trigger_portfolio_snapshots(secrets)
