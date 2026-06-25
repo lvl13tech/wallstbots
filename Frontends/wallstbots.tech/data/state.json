@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-06-25T21:08:29",
+    "last_refresh": "2026-06-25T21:17:56",
     "snapshots": [
       {
         "date": "2026-06-02",
@@ -144,8 +144,8 @@
         "bot13": 121537.89,
         "oracle": 52483.45,
         "wizard": 55330.06,
-        "equalizer": 53927.81,
-        "titan": 52758.06
+        "equalizer": 53903.8,
+        "titan": 52743.39
       }
     ],
     "funds": {
@@ -159,8 +159,8 @@
         "starting_capital": 55000.0,
         "value": {
           "total": 121537.89,
-          "cash": 121537.89,
-          "pos_val": 0.0,
+          "cash": 0.0,
+          "pos_val": 121537.88,
           "pnl": 66537.89,
           "pnl_pct": 120.98,
           "day_pnl": 3848.22,
@@ -608,7 +608,7 @@
         },
         "current_strategy": {
           "day": "2026-06-25",
-          "decision": "HOLD",
+          "decision": "TRADE",
           "rationale": "HOLD -- daily close-out at 3:30pm ET. All positions flattened for the day.",
           "picks": [
             {
@@ -987,13 +987,13 @@
         "inception": "2026-06-02",
         "starting_capital": 55000.0,
         "value": {
-          "total": 53927.81,
+          "total": 53903.8,
           "cash": 0.0,
-          "pos_val": 53927.82,
-          "pnl": -1072.19,
-          "pnl_pct": -1.95,
-          "day_pnl": -231.16,
-          "day_pct": -0.43,
+          "pos_val": 53903.81,
+          "pnl": -1096.2,
+          "pnl_pct": -1.99,
+          "day_pnl": -225.86,
+          "day_pct": -0.42,
           "positions": [
             {
               "symbol": "XOM",
@@ -1415,14 +1415,14 @@
               "symbol": "V",
               "shares": 3.098181,
               "entry_price": 322.77,
-              "current_price": 330.52,
+              "current_price": 322.77,
               "cost_basis": 1000.0,
-              "price": 330.52,
-              "value": 1024.01,
-              "pnl": 24.01,
-              "pnl_pct": 2.4,
-              "day_pnl": -5.3,
-              "day_pct": -0.51
+              "price": 322.77,
+              "value": 1000.0,
+              "pnl": 0.0,
+              "pnl_pct": 0.0,
+              "day_pnl": 0.0,
+              "day_pct": 0.0
             },
             {
               "symbol": "SOFI",
@@ -1729,13 +1729,13 @@
         "inception": "2026-06-02",
         "starting_capital": 55000.0,
         "value": {
-          "total": 52758.06,
+          "total": 52743.39,
           "cash": 0.05,
-          "pos_val": 52758.01,
-          "pnl": -2241.94,
-          "pnl_pct": -4.08,
-          "day_pnl": -499.92,
-          "day_pct": -0.94,
+          "pos_val": 52743.34,
+          "pnl": -2256.61,
+          "pnl_pct": -4.1,
+          "day_pnl": -496.68,
+          "day_pct": -0.93,
           "positions": [
             {
               "symbol": "NVDA",
@@ -2235,14 +2235,14 @@
               "symbol": "V",
               "shares": 1.89333,
               "entry_price": 322.77,
-              "current_price": 330.52,
+              "current_price": 322.77,
               "cost_basis": 611.11,
-              "price": 330.52,
-              "value": 625.78,
-              "pnl": 14.67,
-              "pnl_pct": 2.4,
-              "day_pnl": -3.24,
-              "day_pct": -0.51
+              "price": 322.77,
+              "value": 611.11,
+              "pnl": 0.0,
+              "pnl_pct": 0.0,
+              "day_pnl": 0.0,
+              "day_pct": 0.0
             },
             {
               "symbol": "SOFI",
@@ -2484,14 +2484,14 @@
         },
         {
           "fund": "equalizer",
-          "week_pnl": -400.45,
-          "week_pct": -0.74,
+          "week_pnl": -424.46,
+          "week_pct": -0.78,
           "week_grade": "D"
         },
         {
           "fund": "titan",
-          "week_pnl": -720.29,
-          "week_pct": -1.35,
+          "week_pnl": -734.96,
+          "week_pct": -1.37,
           "week_grade": "D"
         },
         {
@@ -2522,14 +2522,14 @@
         },
         {
           "fund": "equalizer",
-          "all_pnl": -1072.19,
-          "all_pct": -1.95,
+          "all_pnl": -1096.2,
+          "all_pct": -1.99,
           "overall_grade": "D"
         },
         {
           "fund": "titan",
-          "all_pnl": -2241.94,
-          "all_pct": -4.08,
+          "all_pnl": -2256.61,
+          "all_pct": -4.1,
           "overall_grade": "D"
         },
         {
