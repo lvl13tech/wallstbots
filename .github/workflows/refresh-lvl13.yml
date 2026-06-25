@@ -95,7 +95,9 @@ jobs:
           git add Frontends/aistocks.tech/.heartbeat
           git diff --staged --quiet || git commit -m "auto: aistocks refresh heartbeat [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git pull --rebase --autostash origin master || true
-          git push
+          # Resilient push: a lost race vs. another cron run must NOT abort the
+          # job, or later steps (the email send) never run. Retry once, then continue.
+          git push || (git pull --no-edit --no-rebase && git push) || echo "push skipped (non-fatal)"
 
       # Email sending intentionally REMOVED from this workflow (2026-06-24).
       # The single daily consolidated email (which already covers the AI/quantum

@@ -78,9 +78,12 @@ jobs:
           git config user.email "bot@wallstbots.tech"
           git add Frontends/wallstbots.tech/data/
           git diff --staged --quiet || git commit -m "auto: wallstbots data refresh [$(date -u '+%Y-%m-%d %H:%M UTC')]"
-          git push
+          # Resilient push: a lost race vs. another cron run must NOT abort the
+          # job, or later steps (the email send) never run. Retry once, then continue.
+          git push || (git pull --no-edit --no-rebase && git push) || echo "push skipped (non-fatal)"
 
       - name: Send member emails (open digest + trade alerts + stock close-out)
+        if: always()
         # wallstbots OWNS the weekday open digest + the stock close-out email, and
         # fires intraday trade alerts. send_emails.py self-gates with per-kind
         # once-a-day markers, so we simply call each --kind on EVERY run: the right

@@ -62,9 +62,12 @@ jobs:
           git add Frontends/bitbot13.tech/data/
           # Only commit if files actually changed (avoids empty commit errors)
           git diff --staged --quiet || git commit -m "auto: bitbot13 data refresh [$(date -u '+%Y-%m-%d %H:%M UTC')]"
-          git push
+          # Resilient push: a lost race vs. another cron run must NOT abort the
+          # job, or later steps (the email send) never run. Retry once, then continue.
+          git push || (git pull --no-edit --no-rebase && git push) || echo "push skipped (non-fatal)"
 
       - name: Send member emails (weekend open + crypto trade alerts + crypto close-out)
+        if: always()
         # bitbot13 owns: the WEEKEND open digest (crypto trades 7 days; wallstbots is
         # Mon-Fri only), intraday crypto trade alerts, and the 9 PM ET crypto
         # close-out email. send_emails.py self-gates via per-kind once-a-day markers

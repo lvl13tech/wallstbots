@@ -3289,27 +3289,40 @@ async def get_email_subscribers(
             # Per-member BOT13 activity today (for trade-alert + close-out emails).
             # Joins the user's bots to their bot13 bot_fund_state row written by
             # refresh_portfolios.py this ET day. Keyed by the bot's platform.
-            cursor.execute("""
-                SELECT b.platform,
-                       bfs.trade_log, bfs.positions,
-                       bfs.traded_today, bfs.closed_out,
-                       bfs.window_open, bfs.holding_cash, bfs.snapshot_date
-                FROM bots b
-                JOIN bot_fund_state bfs ON bfs.bot_id = b.id AND bfs.fund_name = 'bot13'
-                WHERE b.user_id = %s
-            """, (u["id"],))
+            # IMPORTANT: this is wrapped defensively. The traded_today/closed_out
+            # columns are added lazily by the upsert endpoint; if they (or the whole
+            # join) aren't available yet, we must NOT let this break the subscriber
+            # list — that would silently zero out ALL emails. On any error we roll
+            # back the failed statement and continue with empty activity.
             bot13_activity: dict[str, dict] = {}
-            for r in cursor.fetchall():
-                plat = r["platform"]
-                bot13_activity[plat] = {
-                    "trade_log":    r["trade_log"] or [],
-                    "positions":    r["positions"] or [],
-                    "traded_today": bool(r["traded_today"]),
-                    "closed_out":   bool(r["closed_out"]),
-                    "window_open":  bool(r["window_open"]),
-                    "holding_cash": bool(r["holding_cash"]),
-                    "snapshot_date": str(r["snapshot_date"]) if r["snapshot_date"] else None,
-                }
+            try:
+                cursor.execute("""
+                    SELECT b.platform,
+                           bfs.trade_log, bfs.positions,
+                           COALESCE(bfs.traded_today, FALSE) AS traded_today,
+                           COALESCE(bfs.closed_out,   FALSE) AS closed_out,
+                           COALESCE(bfs.window_open,  FALSE) AS window_open,
+                           COALESCE(bfs.holding_cash, FALSE) AS holding_cash,
+                           bfs.snapshot_date
+                    FROM bots b
+                    JOIN bot_fund_state bfs ON bfs.bot_id = b.id AND bfs.fund_name = 'bot13'
+                    WHERE b.user_id = %s
+                """, (u["id"],))
+                for r in cursor.fetchall():
+                    plat = r["platform"]
+                    bot13_activity[plat] = {
+                        "trade_log":    r["trade_log"] or [],
+                        "positions":    r["positions"] or [],
+                        "traded_today": bool(r["traded_today"]),
+                        "closed_out":   bool(r["closed_out"]),
+                        "window_open":  bool(r["window_open"]),
+                        "holding_cash": bool(r["holding_cash"]),
+                        "snapshot_date": str(r["snapshot_date"]) if r["snapshot_date"] else None,
+                    }
+            except Exception as _act_err:
+                # Don't let a missing column / bad row drop the subscriber.
+                conn.rollback()
+                print(f"[email-subscribers] activity lookup skipped for {u.get('email')}: {_act_err}")
 
             # Parse first name
             full = u.get("full_name") or ""
