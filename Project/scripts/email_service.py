@@ -688,6 +688,184 @@ def build_monthly_email(
 # ===================================================================
 # EMAIL TEMPLATE 5 — Consolidated Daily Report (all three sites)
 # ===================================================================
+def _site_decision_block(plat, pdata, is_weekly=False, is_monthly=False, alt=False):
+    """One site's BOT13 decision card + positions + top signals (open digest)."""
+    funds   = pdata.get("funds", {})
+    signals = pdata.get("signals", [])
+    out = ""
+    out += _pad(_section_divider(plat).strip(), alt_bg=alt); alt = not alt
+    bot13_data = funds.get("bot13") or funds.get("BOT13") or {}
+    strategy   = bot13_data.get("strategy") or bot13_data
+    decision   = strategy.get("decision", "HOLD")
+    rationale  = strategy.get("rationale", "")
+    picks      = strategy.get("picks", [])
+    out += _pad(_decision_card(decision, PLATFORM_LABELS[plat],
+                strategy.get("confidence"),
+                strategy.get("target") or strategy.get("price_target"),
+                rationale).strip(), alt_bg=alt); alt = not alt
+    if picks and decision in ("TRADE", "BUY", "STRONG BUY"):
+        out += _pad(_section_label("POSITIONS") + _picks_table(picks), alt_bg=alt); alt = not alt
+    if signals:
+        actionable = [x for x in signals
+                      if x.get("action","").upper() in ("STRONG BUY","BUY","SELL","STRONG SELL")][:6]
+        display = actionable if actionable else signals[:6]
+        out += _pad(_section_label("TOP SIGNALS") + _terminal_signals_table(display), alt_bg=alt); alt = not alt
+    out += _pad(_dashboard_link(plat), alt_bg=alt)
+    return out
+
+
+def _market_closed_block(plat, alt=False):
+    """Weekend notice that an equity site's market is closed."""
+    site_url = SITE_URLS[plat]
+    body = (_section_divider(plat).strip()
+            + f'<p style="font-family:\'Courier New\',Courier,monospace;font-size:11px;'
+              f'color:#888888;margin:8px 0;letter-spacing:1px;">MARKET CLOSED &mdash; '
+              f'{PLATFORM_LABELS[plat]} equities resume Monday 9:30 AM ET. '
+              f'<a href="{site_url}/dashboard.html" style="color:#0d0d0d;">VIEW LAST UPDATE &rarr;</a></p>')
+    return _pad(body, alt_bg=alt)
+
+
+def build_open_email(recipient, platform_data, weekend=False, is_weekly=False, is_monthly=False):
+    """A (weekday) / B (weekend) market-open digest: member portfolio + per-site
+    BOT13 decisions & signals. On weekends, equities show a 'market closed' notice."""
+    today_str = _et_now().date().strftime("%B %d, %Y")
+    preheader = (f"Weekend Crypto Report &mdash; {today_str}" if weekend
+                 else f"BOT13 Daily Report &mdash; {today_str}")
+    show = {p: recipient.get(f"email_{p}", True) for p in ("wallstbots","bitbot13","lvl13")}
+    show_portfolio = recipient.get("email_portfolio", True)
+    body = ""
+
+    # combined signal bar (only open markets contribute)
+    open_plats = ["bitbot13"] if weekend else ["wallstbots","lvl13","bitbot13"]
+    all_sig = []
+    for plat in open_plats:
+        if show.get(plat):
+            all_sig.extend(platform_data.get(plat, {}).get("signals", []))
+    if all_sig:
+        body += _signal_summary_bar(all_sig)
+
+    alt = False
+    # Site order: stocks first on weekdays; on weekends show crypto then the closed notices
+    if weekend:
+        if show["bitbot13"]:
+            body += _site_decision_block("bitbot13", platform_data.get("bitbot13", {}),
+                                         is_weekly, is_monthly, alt); alt = not alt
+        for plat in ("wallstbots","lvl13"):
+            if show[plat]:
+                body += _market_closed_block(plat, alt); alt = not alt
+    else:
+        for plat in ("wallstbots","lvl13","bitbot13"):
+            if show[plat]:
+                body += _site_decision_block(plat, platform_data.get(plat, {}),
+                                             is_weekly, is_monthly, alt); alt = not alt
+
+    if show_portfolio:
+        body += _pad('<div style="font-family:\'Courier New\',Courier,monospace;font-size:9px;'
+                     'font-weight:700;color:#0d0d0d;letter-spacing:3px;border-left:3px solid #0d0d0d;'
+                     'padding-left:8px;margin-bottom:12px;">YOUR PORTFOLIO</div>'
+                     + _portfolio_section(recipient), alt_bg=alt)
+    return _wrap_consolidated(preheader, body)
+
+
+def _member_trade_rows(act):
+    """Render this run's BUY/SELL rows from a member bot13_activity blob."""
+    log = (act or {}).get("trade_log", []) or []
+    rows = [e for e in log if str(e.get("action","")).upper() in ("BUY","SELL")]
+    if not rows:
+        return ""
+    cells = ""
+    for e in rows[-12:]:
+        act_s = str(e.get("action","")).upper()
+        color = "#0a7a0a" if act_s == "BUY" else "#b00000"
+        realized = e.get("realized")
+        rcol = ("" if realized is None else
+                f'<td style="font-family:\'Courier New\',monospace;font-size:11px;text-align:right;'
+                f'color:{"#0a7a0a" if realized>=0 else "#b00000"};">{("+" if realized>=0 else "")}{realized:.0f}</td>')
+        if realized is None:
+            rcol = '<td style="font-size:11px;text-align:right;color:#888;">-</td>'
+        cells += (f'<tr><td style="font-family:\'Courier New\',monospace;font-size:11px;color:{color};'
+                  f'font-weight:700;">{act_s}</td>'
+                  f'<td style="font-family:\'Courier New\',monospace;font-size:11px;">{e.get("symbol","")}</td>'
+                  f'<td style="font-family:\'Courier New\',monospace;font-size:11px;text-align:right;">'
+                  f'${float(e.get("price",0)):.2f}</td>{rcol}</tr>')
+    return ('<table width="100%" cellpadding="4" cellspacing="0" style="border-collapse:collapse;">'
+            '<tr><th align="left" style="font-size:9px;letter-spacing:1px;color:#888;">ACTION</th>'
+            '<th align="left" style="font-size:9px;letter-spacing:1px;color:#888;">SYM</th>'
+            '<th align="right" style="font-size:9px;letter-spacing:1px;color:#888;">PRICE</th>'
+            '<th align="right" style="font-size:9px;letter-spacing:1px;color:#888;">REALIZED</th></tr>'
+            + cells + '</table>')
+
+
+def build_trade_alert_email(recipient, platform_data, platforms):
+    """C: intraday buy/sell alert. Shows the member's portfolio trade rows + the
+    site-level BOT13 trade rows for whichever platforms had activity this run."""
+    today_str = _et_now().date().strftime("%B %d, %Y")
+    preheader = f"BOT13 Trade Alert &mdash; {today_str}"
+    body = _pad('<div style="font-family:\'Courier New\',Courier,monospace;font-size:11px;'
+                'color:#0d0d0d;letter-spacing:1px;margin-bottom:6px;">BOT13 placed trades this session:</div>')
+    alt = True
+    # Member portfolio trades per platform
+    member_any = False
+    for plat in platforms:
+        act = recipient.get(f"bot13_activity_{plat}") or {}
+        if act.get("traded_today"):
+            rows = _member_trade_rows(act)
+            if rows:
+                member_any = True
+                body += _pad(_section_divider(plat, "YOUR " + PLATFORM_LABELS[plat]).strip() + rows, alt_bg=alt)
+                alt = not alt
+    if not member_any:
+        body += _pad('<p style="font-size:11px;color:#888;font-family:\'Courier New\',monospace;">'
+                     'No trades in your own portfolio this run.</p>', alt_bg=alt); alt = not alt
+    # Site-level BOT13 trades
+    for plat in platforms:
+        funds = platform_data.get(plat, {}).get("funds", {})
+        b13   = funds.get("bot13") or {}
+        val   = b13.get("value") or b13
+        tl    = val.get("trade_log", []) or []
+        rows  = [e for e in tl if str(e.get("action","")).upper() in ("BUY","SELL")]
+        if rows:
+            body += _pad(_section_divider(plat).strip()
+                         + _member_trade_rows({"trade_log": rows}), alt_bg=alt)
+            alt = not alt
+    body += _pad(_dashboard_link(platforms[0] if platforms else "wallstbots"), alt_bg=alt)
+    return _wrap_consolidated(preheader, body)
+
+
+def build_closeout_email(recipient, platform_data, platforms, kind_label):
+    """D (stock) / E (crypto): close-out reminder. Member sells + site sells for the
+    platforms that closed out. kind_label = 'stock' or 'crypto'."""
+    today_str = _et_now().date().strftime("%B %d, %Y")
+    if kind_label == "stock":
+        preheader = f"Stock Markets Closed &mdash; positions flat &mdash; {today_str}"
+        headline  = "Stock markets are closed. BOT13 has flattened all stock positions for the day."
+    else:
+        preheader = f"BitBot13 session closed &mdash; positions flat &mdash; {today_str}"
+        headline  = "BitBot13's session has closed. BOT13 has flattened all crypto positions for the day."
+    body = _pad(f'<div style="font-family:\'Courier New\',Courier,monospace;font-size:11px;'
+                f'color:#0d0d0d;letter-spacing:1px;margin-bottom:6px;">{headline}</div>')
+    alt = True
+    # Member close-out rows
+    for plat in platforms:
+        act = recipient.get(f"bot13_activity_{plat}") or {}
+        rows = _member_trade_rows(act) if act.get("trade_log") else ""
+        if rows:
+            body += _pad(_section_divider(plat, "YOUR " + PLATFORM_LABELS[plat]).strip() + rows, alt_bg=alt)
+            alt = not alt
+    # Site close-out summary
+    for plat in platforms:
+        funds = platform_data.get(plat, {}).get("funds", {})
+        b13   = funds.get("bot13") or {}
+        val   = b13.get("value") or b13
+        tl    = val.get("trade_log", []) or []
+        sells = [e for e in tl if str(e.get("action","")).upper() == "SELL"]
+        if sells:
+            body += _pad(_section_divider(plat).strip() + _member_trade_rows({"trade_log": sells}), alt_bg=alt)
+            alt = not alt
+    body += _pad(_dashboard_link(platforms[0] if platforms else "wallstbots"), alt_bg=alt)
+    return _wrap_consolidated(preheader, body)
+
+
 def build_consolidated_email(
     recipient: dict,
     platform_data: dict,

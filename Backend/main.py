@@ -1864,6 +1864,8 @@ async def upsert_portfolio_bot_state(
             "ALTER TABLE bot_fund_state ADD COLUMN IF NOT EXISTS window_open  BOOLEAN DEFAULT FALSE",
             "ALTER TABLE bot_fund_state ADD COLUMN IF NOT EXISTS holding_cash BOOLEAN DEFAULT FALSE",
             "ALTER TABLE bot_fund_state ADD COLUMN IF NOT EXISTS trade_log    JSONB",
+            "ALTER TABLE bot_fund_state ADD COLUMN IF NOT EXISTS traded_today BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE bot_fund_state ADD COLUMN IF NOT EXISTS closed_out   BOOLEAN DEFAULT FALSE",
         ]:
             cursor.execute(col_ddl)
 
@@ -1873,8 +1875,9 @@ async def upsert_portfolio_bot_state(
                 INSERT INTO bot_fund_state
                     (bot_id, fund_name, snapshot_date, positions, strategy,
                      total_value, entry_cost, gain_loss, gain_loss_pct,
-                     day_pnl, day_pct, window_open, holding_cash, trade_log, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                     day_pnl, day_pct, window_open, holding_cash, trade_log,
+                     traded_today, closed_out, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
                 ON CONFLICT (bot_id, fund_name) DO UPDATE SET
                     snapshot_date = EXCLUDED.snapshot_date,
                     positions     = EXCLUDED.positions,
@@ -1888,6 +1891,8 @@ async def upsert_portfolio_bot_state(
                     window_open   = EXCLUDED.window_open,
                     holding_cash  = EXCLUDED.holding_cash,
                     trade_log     = EXCLUDED.trade_log,
+                    traded_today  = EXCLUDED.traded_today,
+                    closed_out    = EXCLUDED.closed_out,
                     updated_at    = NOW()
             """, (
                 r["bot_id"], r["fund_name"], today_str,
@@ -1902,6 +1907,8 @@ async def upsert_portfolio_bot_state(
                 bool(r.get("window_open", False)),
                 bool(r.get("holding_cash", False)),
                 json.dumps(r.get("trade_log", [])),
+                bool(r.get("traded_today", False)),
+                bool(r.get("closed_out", False)),
             ))
             upserted += 1
 
@@ -3279,6 +3286,31 @@ async def get_email_subscribers(
             for r in cursor.fetchall():
                 holdings_by_platform.setdefault(r["platform"], []).append(r["symbol"])
 
+            # Per-member BOT13 activity today (for trade-alert + close-out emails).
+            # Joins the user's bots to their bot13 bot_fund_state row written by
+            # refresh_portfolios.py this ET day. Keyed by the bot's platform.
+            cursor.execute("""
+                SELECT b.platform,
+                       bfs.trade_log, bfs.positions,
+                       bfs.traded_today, bfs.closed_out,
+                       bfs.window_open, bfs.holding_cash, bfs.snapshot_date
+                FROM bots b
+                JOIN bot_fund_state bfs ON bfs.bot_id = b.id AND bfs.fund_name = 'bot13'
+                WHERE b.user_id = %s
+            """, (u["id"],))
+            bot13_activity: dict[str, dict] = {}
+            for r in cursor.fetchall():
+                plat = r["platform"]
+                bot13_activity[plat] = {
+                    "trade_log":    r["trade_log"] or [],
+                    "positions":    r["positions"] or [],
+                    "traded_today": bool(r["traded_today"]),
+                    "closed_out":   bool(r["closed_out"]),
+                    "window_open":  bool(r["window_open"]),
+                    "holding_cash": bool(r["holding_cash"]),
+                    "snapshot_date": str(r["snapshot_date"]) if r["snapshot_date"] else None,
+                }
+
             # Parse first name
             full = u.get("full_name") or ""
             first_name = full.split()[0] if full.strip() else ""
@@ -3299,7 +3331,12 @@ async def get_email_subscribers(
                 # Holdings per platform for personal signal matching
                 "holdings_wallstbots": list(set(holdings_by_platform.get("wallstbots", []))),
                 "holdings_bitbot13":   list(set(holdings_by_platform.get("bitbot13",   []))),
-                "holdings_lvl13":      list(set(holdings_by_platform.get("lvl13",      []))),
+                "holdings_lvl13":      list(set(holdings_by_platform.get("lvl13",      []) + holdings_by_platform.get("aistocks", []))),
+                # Per-member BOT13 trade activity today, keyed by platform
+                # (aistocks stored under either "lvl13" or "aistocks").
+                "bot13_activity_wallstbots": bot13_activity.get("wallstbots", {}),
+                "bot13_activity_bitbot13":   bot13_activity.get("bitbot13", {}),
+                "bot13_activity_lvl13":      bot13_activity.get("lvl13") or bot13_activity.get("aistocks") or {},
             })
 
         return {"subscribers": subscribers, "count": len(subscribers)}

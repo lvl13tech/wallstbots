@@ -586,6 +586,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
             # -- Strategy / positions (for display only -- not used for dollar values) --
             positions = []
             strategy  = {}
+            _member_closed_out = False   # set True below if bot13 force-flattened today
 
             if fund_name == "bot13":
                 b13_capital = float(b13_state.get("total_value") or original_cost)
@@ -620,6 +621,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                     and bool(b13_state.get("positions"))
                 )
                 if close_out_due:
+                    _member_closed_out = True
                     now_close = et_now().isoformat(timespec="seconds")
                     stored_b13_positions = b13_state.get("positions") or []
                     for p in stored_b13_positions:
@@ -746,11 +748,20 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
             # Box F (Trade History) is BOT13-ONLY. Baselines/swing/hold bots were
             # generating spurious BUY/SELL/RESIZE rows from the >2% share-drift rule,
             # so we only run the ledger for bot13 and clear any stale log otherwise.
+            _member_traded_today = False
             if fund_name == "bot13":
                 _pstate   = prev_states.get(fund_name) or {}
                 _prev_pos = _pstate.get("positions") or []
                 _prev_log = _pstate.get("trade_log") or []
+                def _bs_count(log):
+                    return sum(1 for e in (log or [])
+                               if str(e.get("action", "")).upper() in ("BUY", "SELL"))
+                _prev_bs = _bs_count(_prev_log)
                 _trade_log = stamp_and_log(_prev_pos, positions, _prev_log, et_now().isoformat(timespec="seconds"))
+                _new_bs  = _bs_count(_trade_log)
+                # New buy/sell this run (drives intraday trade-alert emails), per member.
+                # A close-out also counts as activity for the close-out email.
+                _member_traded_today = (_new_bs > _prev_bs) or _member_closed_out
             else:
                 _trade_log = []
 
@@ -768,6 +779,8 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 "day_pct":       day_pct,
                 "window_open":   win_open,
                 "holding_cash":  holding_cash,
+                "traded_today":  bool(_member_traded_today),
+                "closed_out":    bool(_member_closed_out),
             })
             print(f"  [portfolios] bot_id={bot_id} {fund_name}: value=${member_value} gain={gain_loss_pct:.2f}% today={day_pct:.2f}%")
 

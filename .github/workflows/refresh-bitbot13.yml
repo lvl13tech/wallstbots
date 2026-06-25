@@ -64,35 +64,31 @@ jobs:
           git diff --staged --quiet || git commit -m "auto: bitbot13 data refresh [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push
 
-      - name: Send daily email notifications
-        # Hour 14 UTC (9-10am ET): morning digest — all days (crypto trades 7 days).
-        # Hour 17 UTC (~noon ET): trade-alert only if BOT13 entered TRADE — catches mid-session entries.
-        # Manual (workflow_dispatch): always sends — useful for testing.
-        # (Other hours skipped to avoid flooding — bitbot13 runs every 30 min.)
+      - name: Send member emails (weekend open + crypto trade alerts + crypto close-out)
+        # bitbot13 owns: the WEEKEND open digest (crypto trades 7 days; wallstbots is
+        # Mon-Fri only), intraday crypto trade alerts, and the 9 PM ET crypto
+        # close-out email. send_emails.py self-gates via per-kind once-a-day markers
+        # and a weekend-only guard on the open digest, so we call each --kind every
+        # run and the wrong ones skip themselves.
         env:
           RESEND_API_KEY:   ${{ secrets.RESEND_API_KEY }}
           INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
           BACKEND_URL:      ${{ secrets.BACKEND_URL }}
           EVENT_NAME:       ${{ github.event_name }}
-          FORCE_SEND:       ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
         run: |
-          HOUR=$(date -u +%H)
-          MIN=$(date -u +%M)
-          echo "=== Email dispatch check: event=$EVENT_NAME hour=${HOUR}UTC force=$FORCE_SEND ==="
-          echo "=== Secrets present: RESEND=$([ -n "$RESEND_API_KEY" ] && echo YES || echo MISSING) BACKEND=$([ -n "$BACKEND_URL" ] && echo YES || echo MISSING) APIKEY=$([ -n "$INTERNAL_API_KEY" ] && echo YES || echo MISSING) ==="
           python -m pip install --quiet requests
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] || { [ "$HOUR" = "14" ] && [ "$MIN" -lt 45 ]; }; then
-            echo "=== Dispatching morning daily email ==="
-            python Project/scripts/send_emails.py
-          elif [ "$HOUR" = "17" ]; then
-            TRADED=$(python3 Project/scripts/check_bot13_traded_today.py Frontends/bitbot13.tech/data/state.json /tmp/prev_state.json 2>/dev/null || echo "NO")
-            echo "=== BOT13 bought or sold this run? $TRADED ==="
-            if [ "$TRADED" = "YES" ]; then
-              echo "=== BOT13 traded — sending buy/sell alert email ==="
-              python Project/scripts/send_emails.py
-            else
-              echo "=== Skipping email (BOT13 made no buy/sell at hour $HOUR) ==="
-            fi
-          else
-            echo "=== Skipping email (hour=$HOUR — not a scheduled email window) ==="
-          fi
+          echo "=== Email dispatch: event=$EVENT_NAME ==="
+          echo "=== Secrets: RESEND=$([ -n "$RESEND_API_KEY" ] && echo YES || echo MISSING) BACKEND=$([ -n "$BACKEND_URL" ] && echo YES || echo MISSING) APIKEY=$([ -n "$INTERNAL_API_KEY" ] && echo YES || echo MISSING) ==="
+          FORCE=""
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then FORCE="--force"; fi
+          echo "--- weekend open digest ---";  python Project/scripts/send_emails.py --kind open --weekend-only $FORCE || true
+          echo "--- crypto trade alert ---";    python Project/scripts/send_emails.py --kind trade              $FORCE || true
+          echo "--- crypto close-out ---";      python Project/scripts/send_emails.py --kind close-crypto       $FORCE || true
+
+      - name: Commit email markers
+        run: |
+          git config user.name  "BitBot13 Bot"
+          git config user.email "bot@bitbot13.tech"
+          git add Frontends/wallstbots.tech/data/.email_*_sent 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "auto: email markers (bitbot13) [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git push || true

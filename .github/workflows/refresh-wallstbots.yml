@@ -80,31 +80,32 @@ jobs:
           git diff --staged --quiet || git commit -m "auto: wallstbots data refresh [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push
 
-      - name: Send daily email notifications
-        # Hour 14 UTC (9:35am ET): always send morning digest.
-        # Hour 16 + 21 UTC (midday/close): only send if BOT13 entered TRADE — "trading began" alert.
-        # Manual (workflow_dispatch): always sends — useful for testing.
+      - name: Send member emails (open digest + trade alerts + stock close-out)
+        # wallstbots OWNS the weekday open digest + the stock close-out email, and
+        # fires intraday trade alerts. send_emails.py self-gates with per-kind
+        # once-a-day markers, so we simply call each --kind on EVERY run: the right
+        # run actually sends, all others (backups/re-runs) see the marker or the
+        # no-activity / not-closed-out guard and skip. No fragile time gates here.
         env:
           RESEND_API_KEY:   ${{ secrets.RESEND_API_KEY }}
           INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
           BACKEND_URL:      ${{ secrets.BACKEND_URL }}
           EVENT_NAME:       ${{ github.event_name }}
-          FORCE_SEND:       ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
         run: |
-          HOUR=$(date -u +%H)
-          MIN=$(date -u +%M)
-          echo "=== Email dispatch check: event=$EVENT_NAME hour=${HOUR}UTC force=$FORCE_SEND ==="
-          echo "=== Secrets present: RESEND=$([ -n "$RESEND_API_KEY" ] && echo YES || echo MISSING) BACKEND=$([ -n "$BACKEND_URL" ] && echo YES || echo MISSING) APIKEY=$([ -n "$INTERNAL_API_KEY" ] && echo YES || echo MISSING) ==="
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] || { [ "$HOUR" = "13" ] && [ "$MIN" -lt 45 ]; }; then
-            echo "=== Dispatching morning daily email ==="
-            python Project/scripts/send_emails.py
-          else
-            TRADED=$(python3 Project/scripts/check_bot13_traded_today.py Frontends/wallstbots.tech/data/state.json /tmp/prev_state.json 2>/dev/null || echo "NO")
-            echo "=== BOT13 bought or sold this run? $TRADED ==="
-            if [ "$TRADED" = "YES" ]; then
-              echo "=== BOT13 traded — sending buy/sell alert email ==="
-              python Project/scripts/send_emails.py
-            else
-              echo "=== Skipping email (hour=$HOUR — BOT13 made no buy/sell this run) ==="
-            fi
-          fi
+          echo "=== Email dispatch: event=$EVENT_NAME ==="
+          echo "=== Secrets: RESEND=$([ -n "$RESEND_API_KEY" ] && echo YES || echo MISSING) BACKEND=$([ -n "$BACKEND_URL" ] && echo YES || echo MISSING) APIKEY=$([ -n "$INTERNAL_API_KEY" ] && echo YES || echo MISSING) ==="
+          FORCE=""
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then FORCE="--force"; fi
+          echo "--- open digest ---";       python Project/scripts/send_emails.py --kind open        $FORCE || true
+          echo "--- intraday trade alert ---"; python Project/scripts/send_emails.py --kind trade       $FORCE || true
+          echo "--- stock close-out ---";   python Project/scripts/send_emails.py --kind close-stock $FORCE || true
+
+      - name: Commit email markers
+        # The per-kind once-a-day markers written by send_emails.py must persist
+        # across runs, so commit them (they live under Frontends/wallstbots.tech/data/).
+        run: |
+          git config user.name  "WallStBots Bot"
+          git config user.email "bot@wallstbots.tech"
+          git add Frontends/wallstbots.tech/data/.email_*_sent 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "auto: email markers [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git push || true

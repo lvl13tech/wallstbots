@@ -3,11 +3,44 @@
 **Keep this file honest and current.** Update it at the end of every work session.
 When Claude finishes a change, the LAST step is to update this file.
 
-Last updated: 2026-06-24 (BOT13 page during/after-hours fix — Box C/D/E/F, all 3 sites + member pages — verified locally, NOT YET PUSHED; prior Today's Strategy fallback fix also still pending push)
+Last updated: 2026-06-24 (FULL email rebuild built+verified locally, NOT YET PUSHED — DEPLOY-email-rebuild_2026-06-24.bat; also still pending: BOT13 page during/after-hours fix + prior Today's Strategy fix)
 `refresh_lvl13.py`, `refresh_bitbot13.py` — written and verified locally, **NOT YET
 COMMITTED/PUSHED**) ·
 Status: **CODE FIXED AND COMPILE-VERIFIED ON ALL 3 PRODUCT SITES. Owner still needs to run
 the git commit/push step (see ".bat to run" below) before any live site picks this up.** ·
+
+---
+
+**2026-06-24 — FULL MEMBER-EMAIL REBUILD. Built + verified locally, NOT YET PUSHED.**
+Implements the owner's complete email blueprint (six email types), all at once.
+- **Root cause of the multi-day outage (confirmed):** the morning send was gated on
+  `HOUR=13 && MIN<45` UTC — only the single 13:30 cron tick matched; a dropped tick (GitHub
+  best-effort cron) = no email, and cron-job.org backups didn't help because the workflow
+  re-checked the same minute-gate. Manual workflow_dispatch sent fine, proving Resend/domain
+  were never the problem. FROM stays info@lvl13.tech (owner confirmed).
+- **New design:** all gating moved OUT of YAML into `send_emails.py --kind {open,trade,
+  close-stock,close-crypto}` with per-kind once-per-ET-day markers (committed under
+  Frontends/wallstbots.tech/data/.email_*_sent). Immune to dropped ticks + double-sends.
+  wallstbots owns weekday open + stock close-out + trade alerts; bitbot13 owns weekend open
+  (--weekend-only) + crypto trade alerts + crypto close-out; lvl13 sends nothing.
+- **Six emails:** weekday open (member + all 3 sites decisions/signals); weekend open
+  (member + BitBot13, "market closed" notice for stocks); intraday trade alert (one per
+  refresh-with-activity); stock close-out 3:30pm (member+wallstbots+aistocks sells); crypto
+  close-out 9pm (member+bitbot13 sells). New templates in email_service.py.
+- **Per-member trade detection:** refresh_portfolios.py now diffs each member's BOT13
+  trade_log/positions vs prev_states -> traded_today/closed_out; Backend bot_fund_state
+  gained traded_today/closed_out columns; /admin/email-subscribers now returns per-member
+  bot13_activity_<platform> so each member's own buys/sells appear in their alerts.
+- **Aistocks section fixed:** send_emails.py reads aistocks from the backend API (was the
+  dead Frontends/lvl13.tech/data path).
+- **Verified:** all .py py_compile clean; 3 workflows valid YAML; dispatch unit-tested
+  (weekday open->"Daily", repeat->skip via marker, trade, both close-outs; weekend
+  open->"Weekend Crypto", close-stock skips); every template renders real HTML with fake
+  member activity.
+- **Deploy:** `DEPLOY-email-rebuild_2026-06-24.bat` (one-click, logged; guard+compile+YAML
+  gates, commit/merge/push; pushing Backend/** auto-deploys Cloud Run). NOT RUN YET.
+  Post-deploy: workflow_dispatch on Refresh wallstbots (passes --force) to test live.
+- Supersedes the earlier partial send-once fix from this date.
 
 ---
 

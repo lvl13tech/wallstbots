@@ -97,35 +97,12 @@ jobs:
           git pull --rebase --autostash origin master || true
           git push
 
-      - name: Send daily email notifications
-        # Hour 14 UTC (9:35am ET): always send morning digest.
-        # Hour 16 + 21 UTC (midday/close): only send if BOT13 entered TRADE — "trading began" alert.
-        # Manual (workflow_dispatch): always sends — useful for testing.
-        env:
-          RESEND_API_KEY:   ${{ secrets.RESEND_API_KEY }}
-          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
-          BACKEND_URL:      ${{ secrets.BACKEND_URL }}
-          EVENT_NAME:       ${{ github.event_name }}
-          FORCE_SEND:       ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
-        run: |
-          HOUR=$(date -u +%H)
-          MIN=$(date -u +%M)
-          echo "=== Email dispatch check: event=$EVENT_NAME hour=${HOUR}UTC force=$FORCE_SEND ==="
-          echo "=== Secrets present: RESEND=$([ -n "$RESEND_API_KEY" ] && echo YES || echo MISSING) BACKEND=$([ -n "$BACKEND_URL" ] && echo YES || echo MISSING) APIKEY=$([ -n "$INTERNAL_API_KEY" ] && echo YES || echo MISSING) ==="
-          python -m pip install --quiet requests
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] || { [ "$HOUR" = "13" ] && [ "$MIN" -lt 45 ]; }; then
-            echo "=== Dispatching morning daily email ==="
-            python Project/scripts/send_emails.py
-          else
-            TRADED=$(python3 Project/scripts/check_bot13_traded_today.py Frontends/lvl13.tech/data/state.json /tmp/prev_state.json 2>/dev/null || echo "NO")
-            echo "=== BOT13 bought or sold this run? $TRADED ==="
-            if [ "$TRADED" = "YES" ]; then
-              echo "=== BOT13 traded — sending buy/sell alert email ==="
-              python Project/scripts/send_emails.py
-            else
-              echo "=== Skipping email (hour=$HOUR — BOT13 made no buy/sell this run) ==="
-            fi
-          fi
+      # Email sending intentionally REMOVED from this workflow (2026-06-24).
+      # The single daily consolidated email (which already covers the AI/quantum
+      # aistocks section, pulled from the backend) is owned exclusively by
+      # refresh-wallstbots.yml, gated to once per day by send_emails.py. Having all
+      # three workflows call send_emails.py caused duplicate emails. This workflow
+      # now only refreshes aistocks data; it sends no email.
 
       # Data flow note (post-migration): this workflow drives the AI/QUANTUM
       # product site, aistocks.tech. refresh_lvl13.py pushes tracker data to the
