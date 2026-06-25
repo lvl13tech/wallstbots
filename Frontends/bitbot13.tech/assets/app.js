@@ -442,9 +442,47 @@ function fmtTradeTime(iso){
   var h=d.getHours(), m=d.getMinutes(); var ap=h>=12?'PM':'AM'; var h12=h%12; if(h12===0) h12=12;
   return h12+':'+(m<10?'0':'')+m+' '+ap+' ET';
 }
-function renderTradeLog(tl, fid){
-  if(!tl || !tl.length) return '';
-  var rows = tl.slice().reverse().map(function(t){
+// Sort a COPY of the immutable trade_log for display only (never mutate source).
+//  - During the session (windowOpen): strict chronological so members follow live.
+//  - After hours (!windowOpen): grouped alphabetically by symbol, BUY before SELL
+//    within each symbol, so members can scan "bought X / sold X" per asset.
+function sortTradeLog(tl, windowOpen){
+  var arr = (tl||[]).slice();
+  if (windowOpen) {
+    arr.sort(function(a,b){
+      var ta=String(a&&a.ts||''), tb=String(b&&b.ts||'');
+      return ta<tb?-1:ta>tb?1:0;       // oldest first -> newest at bottom
+    });
+  } else {
+    var rank = function(act){ return act==='BUY'?0:act==='SELL'?2:1; };
+    arr.sort(function(a,b){
+      var sa=String(a&&a.symbol||''), sb=String(b&&b.symbol||'');
+      if (sa!==sb) return sa<sb?-1:1;   // symbol A->Z
+      var ra=rank(a&&a.action), rb=rank(b&&b.action);
+      if (ra!==rb) return ra-rb;        // BUY before SELL within a symbol
+      var ta=String(a&&a.ts||''), tb=String(b&&b.ts||'');
+      return ta<tb?-1:ta>tb?1:0;        // then by time
+    });
+  }
+  return arr;
+}
+// Box F - Trade History. BOT13 ONLY. Never hidden for bot13: shows "No trades today"
+// on a pure cash day instead of disappearing.
+function renderTradeLog(tl, fid, windowOpen){
+  if (fid !== 'bot13') return '';            // Box F is BOT13-only
+  var open = windowOpen !== false;
+  var sub  = open ? 'Every buy and sell is timestamped, in the order it happened.'
+                  : 'Today\u2019s trades, grouped by symbol \u2014 buy then sell.';
+  var head = '<div class="panel"><h3>Trade History</h3>'
+    + '<div style="color:var(--muted);font-size:12px;margin:-4px 0 10px">'+sub+'</div>'
+    + '<div class="tbl-wrap"><table>'
+    + '<thead><tr><th>Time</th><th>Action</th><th>Symbol</th><th class="num">Units</th><th class="num">Price</th><th class="num">Realized P&amp;L</th><th>Note</th></tr></thead>'
+    + '<tbody>';
+  if (!tl || !tl.length) {
+    return head + '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:18px">No trades today</td></tr>'
+      + '</tbody></table></div></div>';
+  }
+  var rows = sortTradeLog(tl, open).map(function(t){
     var act=t.action||''; var c = act==='BUY'?'var(--green)':act==='SELL'?'var(--red)':'var(--muted)';
     var realized = (t.realized!=null && act==='SELL')
       ? '<td class="num '+cls(t.realized)+'">'+fmt$0(t.realized)+'</td>' : '<td class="num">-</td>';
@@ -456,11 +494,7 @@ function renderTradeLog(tl, fid){
       + realized
       + '<td style="color:var(--muted);font-size:12px">'+escapeHtml(t.reason||'')+'</td></tr>';
   }).join('');
-  return '<div class="panel"><h3>Trade History</h3>'
-    + '<div style="color:var(--muted);font-size:12px;margin:-4px 0 10px">Every buy and sell is timestamped.</div>'
-    + '<div class="tbl-wrap"><table>'
-    + '<thead><tr><th>Time</th><th>Action</th><th>Symbol</th><th class="num">Units</th><th class="num">Price</th><th class="num">Realized P&amp;L</th><th>Note</th></tr></thead>'
-    + '<tbody>'+rows+'</tbody></table></div></div>';
+  return head + rows + '</tbody></table></div></div>';
 }
 
 // ============ PAGE: INDIVIDUAL FUND ============
@@ -478,9 +512,14 @@ function renderFund(fid) {
 
   const holdingCash = v.holding_cash === true;
   const windowOpen = v.window_open !== false;
+  const tradedToday = v.traded_today === true;
+  // Box E summary row: during hours -> "Holding cash"; after hours -> "End of trading
+  // - now holding cash" if it traded today, else "Holding cash - no trades made today".
   const cashRow = windowOpen
     ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
-    : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>';
+    : (tradedToday
+        ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>'
+        : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash - no trades made today</td></tr>');
   const positionRows = (v.positions || []).length
     ? v.positions.map(p => {
         const entry  = p.entry_price || p.entry || 0;
@@ -525,7 +564,7 @@ function renderFund(fid) {
     + '<th class="num">Price</th><th class="num">Value</th><th class="num">Today</th>'
     + '<th class="num">Total P&amp;L</th><th class="num">%</th></tr></thead>'
     + '<tbody>'+positionRows+'</tbody></table></div></div>'
-    + renderTradeLog((v.trade_log||[]), fid)
+    + renderTradeLog((v.trade_log||[]), fid, windowOpen)
     + (fid === 'bot13' ? bot13RecordTile() : '')
     + getYoursHint('Want a '+meta.name.toLowerCase()+'-style bot on YOUR coin list?');
 }
@@ -550,8 +589,12 @@ function renderStrategyPanel(fid, strat) {
       + (projRet > 0 ? '+' : '')+projRet.toFixed(2)+'%</span>'
       + '<span style="color:var(--muted);font-size:11px;margin-left:6px">(must exceed 1.74% to trade)</span></div>'
     : '';
+  // After a day BOT13 traded, the engine flips decision to HOLD for accounting at
+  // close-out. For DISPLAY (Box D), keep showing the day's picks and a "closed for
+  // the day" note instead of the 100% CASH card -- HOLD card only on true no-trade days.
+  var _tradedToday = strat.traded_today === true;
   let picks = '';
-  if (strat.decision === 'CASH' || strat.decision === 'HOLD') {
+  if ((strat.decision === 'CASH' || strat.decision === 'HOLD') && !_tradedToday) {
     picks = '<div class="pick-card"><div class="pick-head"><div class="pick-sym">100% CASH</div><div class="pick-meta">No positions — holding cash</div></div>'
       + '<div class="pick-rationale" style="color:var(--muted)">'+escapeHtml(strat.rationale||'')+'</div></div>';
   } else {
@@ -573,7 +616,7 @@ function renderStrategyPanel(fid, strat) {
   }
   const cleanRationale = (strat.rationale||'').replace(/^Projected\s+\w*\s*return:[^.]*\.\s*/i, '');
   return '<div class="strategy-panel '+fid+'"><h3>'+label+'</h3>'
-    + '<div class="strategy-meta">'+escapeHtml(period)+' · '+escapeHtml(strat.decision||'')+'</div>'
+    + '<div class="strategy-meta">'+escapeHtml(period)+' · '+escapeHtml(_tradedToday && (strat.decision==='HOLD'||strat.decision==='CASH') ? 'TRADED — closed for the day' : (strat.decision||''))+'</div>'
     + projHtml
     + '<p class="strategy-rationale">'+escapeHtml(cleanRationale)+'</p>'+picks+'</div>';
 }

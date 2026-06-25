@@ -1083,14 +1083,29 @@ def main():
             window_open  = _engine_window_open(EQUITY_CFG)
             holding_cash = (b13_decision != "TRADE") or not window_open
 
+            # -- After-hours DISPLAY freeze (Box D/E) ---------------------------------
+            # When bot13 is flat but TRADED earlier today (closed out at 3:30 PM ET),
+            # keep the day's positions visible READ-ONLY so Holdings + Trade History
+            # tell the same story until the next session opens. Display only -- the
+            # flat total/pnl/day above are NOT touched (Box C already holds value-at-
+            # close here because HOLD carries prev_b13_total). traded_today lets the
+            # frontend show "End of trading - now holding cash" vs
+            # "Holding cash - no trades made today".
+            traded_today = ((prev_b13_strategy or {}).get("day") == today_iso
+                            and bool((prev_b13_strategy or {}).get("picks")))
+            display_positions = enriched
+            if not enriched and traded_today and stored_positions:
+                display_positions = [enrich_position(p, prices, prev_closes) for p in stored_positions]
+
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
                         "day_pnl": round(day_pnl_total,2), "day_pct": round(day_pct,2),
                         "day_open": round(b13_day_open,2), "holding_cash": holding_cash,
                         "window_open":     window_open,
+                        "traded_today":    traded_today,
                         "session_open_et": "9:30",
                         "session_close_et": "16:00",
-                        "positions": enriched}
+                        "positions": display_positions}
             strategy = {
                 "day":              today_iso,
                 "decision":         b13_decision,
@@ -1100,6 +1115,7 @@ def main():
                 "target_pct":       3.0,
                 "session_log":      b13_log,
                 "projected_return": round(b13_proj, 2),
+                "traded_today":     traded_today,
             }
 
         elif fid == "oracle":
@@ -1235,9 +1251,16 @@ def main():
             strategy = {**(fund.get("current_strategy") or {}), "month": month_str}
 
         # --- Transparency ledger: stamp entry_time on opens + append BUY/SELL log ---
-        _prev_pos = (fund.get("value") or {}).get("positions") or []
-        _prev_log = (fund.get("value") or {}).get("trade_log") or []
-        value["trade_log"] = stamp_and_log(_prev_pos, value.get("positions") or [], _prev_log, et_now().isoformat(timespec="seconds"))
+        # Box F (Trade History) is BOT13-ONLY. The buy-and-hold baselines (oracle,
+        # wizard, equalizer, titan) were generating spurious BUY/SELL/RESIZE rows
+        # from the >2% share-drift rule, so we never run the ledger for them and we
+        # clear any stale log they may already carry.
+        if fid == "bot13":
+            _prev_pos = (fund.get("value") or {}).get("positions") or []
+            _prev_log = (fund.get("value") or {}).get("trade_log") or []
+            value["trade_log"] = stamp_and_log(_prev_pos, value.get("positions") or [], _prev_log, et_now().isoformat(timespec="seconds"))
+        else:
+            value["trade_log"] = []
 
         funds_out[fid] = {
             "id":               fid,

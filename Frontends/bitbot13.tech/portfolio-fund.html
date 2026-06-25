@@ -247,7 +247,7 @@
   <!-- Trade History (transparency feature) -->
   <div class="panel" id="tradeLogPanel" style="display:none">
     <h3>Trade History</h3>
-    <div style="color:var(--muted);font-size:12px;margin:-4px 0 10px">Every buy and sell is timestamped.</div>
+    <div id="tradeLogSubtitle" style="color:var(--muted);font-size:12px;margin:-4px 0 10px">Every buy and sell is timestamped.</div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>Time</th><th>Action</th><th>Symbol</th><th class="num">Shares</th><th class="num">Price</th><th class="num">Realized P&amp;L</th><th>Note</th></tr></thead>
       <tbody id="tradeLogTbody"></tbody>
@@ -554,7 +554,11 @@ function renderStrategyPanel(fid, strat) {
       + '<span style="color:var(--muted);font-size:11px;margin-left:6px">(must exceed 1.74% to trade)</span></div>'
     : '';
   let picks = '';
-  if (strat.decision === 'CASH' || strat.decision === 'HOLD') {
+  // After a day BOT13 traded, decision flips to HOLD for accounting at close-out.
+  // For DISPLAY keep showing the picks + "closed for the day" -- HOLD card only on
+  // true no-trade days.
+  var _tradedToday = strat.traded_today === true;
+  if ((strat.decision === 'CASH' || strat.decision === 'HOLD') && !_tradedToday) {
     picks = '<div class="pick-card"><div class="pick-head"><div class="pick-sym">100% CASH</div>'
       + '<div class="pick-meta">No positions — holding cash</div></div>'
       + '<div class="pick-rationale" style="color:var(--muted)">'+escHtml(strat.rationale||'')+'</div></div>';
@@ -577,7 +581,7 @@ function renderStrategyPanel(fid, strat) {
   }
   const cleanRationale = (strat.rationale||'').replace(/^Projected\s+\w*\s*return:[^.]*\.\s*/i, '');
   return '<div class="strategy-panel '+fid+'"><h3>'+label+'</h3>'
-    + '<div class="strategy-meta">'+escHtml(period)+' · '+escHtml(strat.decision||'')+'</div>'
+    + '<div class="strategy-meta">'+escHtml(period)+' · '+escHtml(_tradedToday && (strat.decision==='HOLD'||strat.decision==='CASH') ? 'TRADED — closed for the day' : (strat.decision||''))+'</div>'
     + projHtml
     + '<p class="strategy-rationale">'+escHtml(cleanRationale)+'</p>'+picks+'</div>';
 }
@@ -591,13 +595,43 @@ function fmtTradeTime(iso){
   var h=d.getHours(), m=d.getMinutes(); var ap=h>=12?'PM':'AM'; var h12=h%12; if(h12===0) h12=12;
   return h12+':'+(m<10?'0':'')+m+' '+ap+' ET';
 }
+// Sort a COPY of the immutable trade_log for display only (never mutate source).
+//  - During the session (windowOpen): strict chronological so members follow live.
+//  - After hours (!windowOpen): grouped alphabetically by symbol, BUY before SELL.
+function sortTradeLog(tl, windowOpen){
+  var arr=(tl||[]).slice();
+  if(windowOpen){
+    arr.sort(function(a,b){ var ta=String(a&&a.ts||''),tb=String(b&&b.ts||''); return ta<tb?-1:ta>tb?1:0; });
+  } else {
+    var rank=function(act){ return act==='BUY'?0:act==='SELL'?2:1; };
+    arr.sort(function(a,b){
+      var sa=String(a&&a.symbol||''),sb=String(b&&b.symbol||'');
+      if(sa!==sb) return sa<sb?-1:1;
+      var ra=rank(a&&a.action),rb=rank(b&&b.action);
+      if(ra!==rb) return ra-rb;
+      var ta=String(a&&a.ts||''),tb=String(b&&b.ts||''); return ta<tb?-1:ta>tb?1:0;
+    });
+  }
+  return arr;
+}
+// Box F - Trade History. BOT13 ONLY. Never hidden for bot13: shows "No trades today".
 function renderTradeLog(){
   var panel=document.getElementById('tradeLogPanel');
   var tb=document.getElementById('tradeLogTbody');
+  var sub=document.getElementById('tradeLogSubtitle');
   if(!panel||!tb) return;
+  if(BOT_SLUG!=='bot13'){ panel.style.display='none'; return; }   // BOT13-only
+  var open=!(fundState && fundState.window_open===false);
+  if(sub) sub.textContent = open
+    ? 'Every buy and sell is timestamped, in the order it happened.'
+    : 'Today\u2019s trades, grouped by symbol \u2014 buy then sell.';
   var tl=(fundState && fundState.trade_log) ? fundState.trade_log : [];
-  if(!tl.length){ panel.style.display='none'; return; }
-  tb.innerHTML = tl.slice().reverse().map(function(t){
+  panel.style.display='';
+  if(!tl.length){
+    tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:18px">No trades today</td></tr>';
+    return;
+  }
+  tb.innerHTML = sortTradeLog(tl, open).map(function(t){
     var act=t.action||''; var c=act==='BUY'?'var(--green)':act==='SELL'?'var(--red)':'var(--muted)';
     var realized=(t.realized!=null && act==='SELL')?'<td class="num '+cls(t.realized)+'">'+fmt$0(t.realized)+'</td>':'<td class="num">-</td>';
     return '<tr><td style="white-space:nowrap;color:var(--muted);font-size:12px">'+escHtml(fmtTradeTime(t.ts))+'</td>'
@@ -608,7 +642,6 @@ function renderTradeLog(){
       + realized
       + '<td style="color:var(--muted);font-size:12px">'+escHtml(t.reason||'')+'</td></tr>';
   }).join('');
-  panel.style.display='';
 }
 
 function renderPositions() {
@@ -622,9 +655,14 @@ function renderPositions() {
 
   const holdingCash = (fundState && fundState.holding_cash === true);
   const windowOpen  = (!fundState || fundState.window_open !== false);
+  const tradedToday = (fundState && fundState.traded_today === true);
+  // Box E summary row: during hours -> "Holding cash"; after hours -> "End of trading
+  // - now holding cash" if it traded today, else "Holding cash - no trades made today".
   const cashRow = windowOpen
     ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
-    : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>';
+    : (tradedToday
+        ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>'
+        : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash - no trades made today</td></tr>');
 
   // Hard guard: never show global positions without member holdings
   if (!holdingTickers.length) {

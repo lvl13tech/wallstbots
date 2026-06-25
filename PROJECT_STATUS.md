@@ -3,11 +3,46 @@
 **Keep this file honest and current.** Update it at the end of every work session.
 When Claude finishes a change, the LAST step is to update this file.
 
-Last updated: 2026-06-24 (Today's Strategy fallback fix — `refresh_wallstbots.py`,
+Last updated: 2026-06-24 (BOT13 page during/after-hours fix — Box C/D/E/F, all 3 sites + member pages — verified locally, NOT YET PUSHED; prior Today's Strategy fallback fix also still pending push)
 `refresh_lvl13.py`, `refresh_bitbot13.py` — written and verified locally, **NOT YET
 COMMITTED/PUSHED**) ·
 Status: **CODE FIXED AND COMPILE-VERIFIED ON ALL 3 PRODUCT SITES. Owner still needs to run
 the git commit/push step (see ".bat to run" below) before any live site picks this up.** ·
+
+---
+
+**2026-06-24 (later session) — BOT13 page during-vs-after trading-hours fix (Box C/D/E/F),
+all 3 sites + member pages. CODE COMPLETE & VERIFIED LOCALLY, NOT YET PUSHED.**
+Owner reported the BOT13 fund page (public `#/fund/bot13` and the member `portfolio-fund.html`)
+stopped behaving correctly after the Trade History timestamp box was added.
+- **Box F (Trade History):** now sorts CHRONOLOGICALLY while the session is open, and
+  A-Z by symbol (BUY before SELL per symbol) after close. Sorting is display-only on a COPY
+  of the immutable `trade_log` (frontend `sortTradeLog()`), so the ledger can never be
+  reordered/corrupted and a missed refresh can't show a stale order. Now BOT13-ONLY: removed
+  `stamp_and_log` from the per-fund loop for oracle/wizard/equalizer/titan in all 3 public
+  engines AND `refresh_portfolios.py` (baselines were emitting phantom BUY/SELL/RESIZE rows
+  from the >2% share-drift rule — the "broke other areas" cause). No longer hidden on a cash
+  day — shows "No trades today".
+- **Boxes C/D/E freeze after hours, reset at next open.** Engine now preserves the day's
+  closed-out positions READ-ONLY in `value.positions` + a new `traded_today` flag (display
+  only — flat total/pnl accounting untouched). Box C holds value-at-close (bitbot13 recomputes
+  realized day P&L since crypto HOLD uses day_open; equity already carried prev_b13_total).
+  Box D shows the picks + "TRADED — closed for the day" instead of a HOLD/CASH card on days it
+  traded (HOLD card only on true no-trade days). Box E keeps the day's assets with summary row
+  "End of trading — now holding cash" (traded) or "Holding cash - no trades made today" (none).
+- **Files:** 6 frontend (`assets/app.js` + `portfolio-fund.html` × wallstbots/aistocks/bitbot13;
+  bitbot13 keeps "Units" header, others "Shares") + 4 engines (`refresh_wallstbots.py`,
+  `refresh_lvl13.py` = aistocks engine, `refresh_bitbot13.py`, `refresh_portfolios.py`).
+  lvl13.tech corporate landing NOT touched.
+- **Truncation recurrence:** during this session the Edit tool truncated all 10 files mid-save
+  again (caught by py_compile + node --check; the Read tool had cached full-length views,
+  masking it). Recovered via `RESTORE-truncated-bot13-files_2026-06-24.bat` (git checkout) and
+  re-applied every edit through bash+Python writes (proven non-truncating), verifying each file
+  on disk after every write.
+- **Verified:** all 5 .py `py_compile` clean; all 3 app.js pass `node --check`; parity shas
+  match across sites; truncation guard (HTML + .py) passes.
+- **.bat to run:** `DEPLOY-bot13-hours-fix_2026-06-24.bat` (one-click, logged, runs guard +
+  compile gate first, then commit/merge/push). Live data corrects on the next 15-min refresh.
 
 ---
 

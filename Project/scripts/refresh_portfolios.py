@@ -743,10 +743,16 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 holding_cash = False
 
             # --- Transparency ledger (member side): stamp opens + BUY/SELL log ---
-            _pstate   = prev_states.get(fund_name) or {}
-            _prev_pos = _pstate.get("positions") or []
-            _prev_log = _pstate.get("trade_log") or []
-            _trade_log = stamp_and_log(_prev_pos, positions, _prev_log, et_now().isoformat(timespec="seconds"))
+            # Box F (Trade History) is BOT13-ONLY. Baselines/swing/hold bots were
+            # generating spurious BUY/SELL/RESIZE rows from the >2% share-drift rule,
+            # so we only run the ledger for bot13 and clear any stale log otherwise.
+            if fund_name == "bot13":
+                _pstate   = prev_states.get(fund_name) or {}
+                _prev_pos = _pstate.get("positions") or []
+                _prev_log = _pstate.get("trade_log") or []
+                _trade_log = stamp_and_log(_prev_pos, positions, _prev_log, et_now().isoformat(timespec="seconds"))
+            else:
+                _trade_log = []
 
             results.append({
                 "bot_id":        bot_id,
