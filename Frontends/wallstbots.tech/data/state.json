@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-06-25T20:45:35",
+    "last_refresh": "2026-06-25T20:49:58",
     "snapshots": [
       {
         "date": "2026-06-02",
@@ -141,7 +141,7 @@
       },
       {
         "date": "2026-06-25",
-        "bot13": 121375.79,
+        "bot13": 121537.89,
         "oracle": 52483.45,
         "wizard": 55330.06,
         "equalizer": 53927.81,
@@ -158,13 +158,13 @@
         "inception": "2026-06-02",
         "starting_capital": 55000.0,
         "value": {
-          "total": 121375.79,
-          "cash": 121375.79,
-          "pos_val": 0.0,
-          "pnl": 66375.79,
-          "pnl_pct": 120.68,
-          "day_pnl": 3686.12,
-          "day_pct": 3.13,
+          "total": 121537.89,
+          "cash": 0.0,
+          "pos_val": 121537.88,
+          "pnl": 66537.89,
+          "pnl_pct": 120.98,
+          "day_pnl": 3848.22,
+          "day_pct": 3.27,
           "day_open": 117689.67,
           "holding_cash": true,
           "window_open": false,
@@ -608,7 +608,7 @@
         },
         "current_strategy": {
           "day": "2026-06-25",
-          "decision": "HOLD",
+          "decision": "TRADE",
           "rationale": "HOLD -- daily close-out at 3:30pm ET. All positions flattened for the day.",
           "picks": [
             {
@@ -2478,8 +2478,8 @@
       "week": [
         {
           "fund": "bot13",
-          "week_pnl": 12960.76,
-          "week_pct": 11.95,
+          "week_pnl": 13122.86,
+          "week_pct": 12.1,
           "week_grade": "A+"
         },
         {
@@ -2510,8 +2510,8 @@
       "all": [
         {
           "fund": "bot13",
-          "all_pnl": 66375.79,
-          "all_pct": 120.68,
+          "all_pnl": 66537.89,
+          "all_pct": 120.98,
           "overall_grade": "A+"
         },
         {
