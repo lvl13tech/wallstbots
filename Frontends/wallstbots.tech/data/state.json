@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-06-24T21:20:23",
+    "last_refresh": "2026-06-25T03:06:20",
     "snapshots": [
       {
         "date": "2026-06-02",
@@ -160,6 +160,7 @@
           "day_open": 111406.18,
           "holding_cash": true,
           "window_open": false,
+          "traded_today": true,
           "session_open_et": "9:30",
           "session_close_et": "16:00",
           "positions": [],
@@ -512,7 +513,8 @@
               "detail": "AFRM +9.61%, GRAL +4.88%, BIRK +4.70%, SOFI +5.29%, HD +3.88%. Breadth: 25/55 green. Stops at -1.5%, targets at +3.0%. Capital deployed."
             }
           ],
-          "projected_return": 0.0
+          "projected_return": 0.0,
+          "traded_today": true
         },
         "top10": null,
         "per_top_dollars": null,
