@@ -5,30 +5,20 @@
         "symbol": "LLY",
         "action": "STRONG BUY",
         "confidence": 1.0,
-        "reason": "Up +7.46% with uptrend -- strong confirmed momentum.",
-        "price": 1211.86,
-        "upside_pct": 7.46,
+        "reason": "Up +7.11% with uptrend -- strong confirmed momentum.",
+        "price": 1207.82,
+        "upside_pct": 7.11,
         "sector": "HEALTH CARE",
         "date": "2026-06-26"
       },
       {
-        "symbol": "CAT",
-        "action": "STRONG SELL",
+        "symbol": "IBTA",
+        "action": "STRONG BUY",
         "confidence": 1.0,
-        "reason": "Down -5.87% -- sharp decline, avoid.",
-        "price": 994.96,
-        "upside_pct": -5.87,
-        "sector": "INDUSTRIALS",
-        "date": "2026-06-26"
-      },
-      {
-        "symbol": "ALB",
-        "action": "STRONG SELL",
-        "confidence": 1.0,
-        "reason": "Down -5.71% -- sharp decline, avoid.",
-        "price": 133.0,
-        "upside_pct": -5.71,
-        "sector": "MATERIALS",
+        "reason": "Up +6.24% with uptrend -- strong confirmed momentum.",
+        "price": 33.89,
+        "upside_pct": 6.24,
+        "sector": "CONSUMER DISCRETIONARY",
         "date": "2026-06-26"
       },
       {
@@ -45,29 +35,39 @@
         "symbol": "RDDT",
         "action": "HOLD",
         "confidence": 1.0,
-        "reason": "Up +5.65% but against 5d trend -- wait for confirmation.",
-        "price": 166.95,
-        "upside_pct": 5.65,
+        "reason": "Up +5.61% but against 5d trend -- wait for confirmation.",
+        "price": 166.88,
+        "upside_pct": 5.61,
         "sector": "COMMUNICATION SERVICES",
         "date": "2026-06-26"
       },
       {
-        "symbol": "IBTA",
-        "action": "STRONG BUY",
+        "symbol": "CAT",
+        "action": "STRONG SELL",
         "confidence": 1.0,
-        "reason": "Up +5.45% with uptrend -- strong confirmed momentum.",
-        "price": 33.64,
-        "upside_pct": 5.45,
-        "sector": "CONSUMER DISCRETIONARY",
+        "reason": "Down -5.58% -- sharp decline, avoid.",
+        "price": 998.02,
+        "upside_pct": -5.58,
+        "sector": "INDUSTRIALS",
+        "date": "2026-06-26"
+      },
+      {
+        "symbol": "ALB",
+        "action": "STRONG SELL",
+        "confidence": 1.0,
+        "reason": "Down -5.26% -- sharp decline, avoid.",
+        "price": 133.63,
+        "upside_pct": -5.26,
+        "sector": "MATERIALS",
         "date": "2026-06-26"
       },
       {
         "symbol": "SPOT",
         "action": "STRONG BUY",
-        "confidence": 0.9,
-        "reason": "Up +4.50% with uptrend -- strong confirmed momentum.",
-        "price": 461.06,
-        "upside_pct": 4.5,
+        "confidence": 0.86,
+        "reason": "Up +4.30% with uptrend -- strong confirmed momentum.",
+        "price": 460.18,
+        "upside_pct": 4.3,
         "sector": "COMMUNICATION SERVICES",
         "date": "2026-06-26"
       },
@@ -82,22 +82,12 @@
         "date": "2026-06-26"
       },
       {
-        "symbol": "JNJ",
-        "action": "STRONG BUY",
-        "confidence": 0.81,
-        "reason": "Up +4.06% with uptrend -- strong confirmed momentum.",
-        "price": 254.82,
-        "upside_pct": 4.06,
-        "sector": "HEALTH CARE",
-        "date": "2026-06-26"
-      },
-      {
         "symbol": "AMT",
         "action": "HOLD",
-        "confidence": 0.81,
-        "reason": "Up +4.04% but against 5d trend -- wait for confirmation.",
-        "price": 175.54,
-        "upside_pct": 4.04,
+        "confidence": 0.8,
+        "reason": "Up +3.98% but against 5d trend -- wait for confirmation.",
+        "price": 175.44,
+        "upside_pct": 3.98,
         "sector": "REAL ESTATE",
         "date": "2026-06-26"
       },
@@ -109,6 +99,16 @@
         "price": 334.27,
         "upside_pct": -3.87,
         "sector": "IT",
+        "date": "2026-06-26"
+      },
+      {
+        "symbol": "JNJ",
+        "action": "STRONG BUY",
+        "confidence": 0.77,
+        "reason": "Up +3.85% with uptrend -- strong confirmed momentum.",
+        "price": 254.31,
+        "upside_pct": 3.85,
+        "sector": "HEALTH CARE",
         "date": "2026-06-26"
       },
       {
@@ -142,13 +142,33 @@
         "date": "2026-06-26"
       },
       {
+        "symbol": "AAPL",
+        "action": "HOLD",
+        "confidence": 0.63,
+        "reason": "Up +3.14% but against 5d trend -- wait for confirmation.",
+        "price": 283.78,
+        "upside_pct": 3.14,
+        "sector": "IT",
+        "date": "2026-06-26"
+      },
+      {
         "symbol": "UNH",
         "action": "BUY",
-        "confidence": 0.58,
-        "reason": "Up +2.90% with trend support -- positive momentum.",
-        "price": 427.58,
-        "upside_pct": 2.9,
+        "confidence": 0.57,
+        "reason": "Up +2.85% with trend support -- positive momentum.",
+        "price": 427.39,
+        "upside_pct": 2.85,
         "sector": "HEALTH CARE",
+        "date": "2026-06-26"
+      },
+      {
+        "symbol": "VST",
+        "action": "SELL",
+        "confidence": 0.51,
+        "reason": "Down -2.56% -- negative momentum.",
+        "price": 163.47,
+        "upside_pct": -2.56,
+        "sector": "UTILITIES",
         "date": "2026-06-26"
       },
       {
@@ -162,63 +182,43 @@
         "date": "2026-06-26"
       },
       {
-        "symbol": "VST",
+        "symbol": "JPM",
         "action": "SELL",
-        "confidence": 0.49,
-        "reason": "Down -2.46% -- negative momentum.",
-        "price": 163.63,
-        "upside_pct": -2.46,
+        "confidence": 0.43,
+        "reason": "Down -2.16% -- negative momentum.",
+        "price": 327.88,
+        "upside_pct": -2.16,
+        "sector": "FINANCIALS",
+        "date": "2026-06-26"
+      },
+      {
+        "symbol": "OKLO",
+        "action": "SELL",
+        "confidence": 0.39,
+        "reason": "Down -1.93% -- negative momentum.",
+        "price": 50.02,
+        "upside_pct": -1.93,
         "sector": "UTILITIES",
         "date": "2026-06-26"
       },
       {
-        "symbol": "AAPL",
-        "action": "HOLD",
-        "confidence": 0.45,
-        "reason": "Up +2.26% but against 5d trend -- wait for confirmation.",
-        "price": 281.36,
-        "upside_pct": 2.26,
-        "sector": "IT",
-        "date": "2026-06-26"
-      },
-      {
-        "symbol": "V",
+        "symbol": "BRK.B",
         "action": "BUY",
-        "confidence": 0.44,
-        "reason": "Up +2.19% with trend support -- positive momentum.",
-        "price": 337.76,
-        "upside_pct": 2.19,
+        "confidence": 0.39,
+        "reason": "Up +1.93% with trend support -- positive momentum.",
+        "price": 497.24,
+        "upside_pct": 1.93,
         "sector": "FINANCIALS",
         "date": "2026-06-26"
       },
       {
         "symbol": "RBRK",
         "action": "BUY",
-        "confidence": 0.41,
-        "reason": "Up +2.05% with trend support -- positive momentum.",
-        "price": 72.47,
-        "upside_pct": 2.05,
+        "confidence": 0.38,
+        "reason": "Up +1.89% with trend support -- positive momentum.",
+        "price": 72.36,
+        "upside_pct": 1.89,
         "sector": "IT",
-        "date": "2026-06-26"
-      },
-      {
-        "symbol": "BRK.B",
-        "action": "BUY",
-        "confidence": 0.4,
-        "reason": "Up +2.02% with trend support -- positive momentum.",
-        "price": 497.67,
-        "upside_pct": 2.02,
-        "sector": "FINANCIALS",
-        "date": "2026-06-26"
-      },
-      {
-        "symbol": "JPM",
-        "action": "SELL",
-        "confidence": 0.39,
-        "reason": "Down -1.96% -- negative momentum.",
-        "price": 328.54,
-        "upside_pct": -1.96,
-        "sector": "FINANCIALS",
         "date": "2026-06-26"
       },
       {
@@ -232,36 +232,6 @@
         "date": "2026-06-26"
       },
       {
-        "symbol": "SHW",
-        "action": "BUY",
-        "confidence": 0.35,
-        "reason": "Up +1.77% with trend support -- positive momentum.",
-        "price": 345.09,
-        "upside_pct": 1.77,
-        "sector": "MATERIALS",
-        "date": "2026-06-26"
-      },
-      {
-        "symbol": "WELL",
-        "action": "BUY",
-        "confidence": 0.35,
-        "reason": "Up +1.75% with trend support -- positive momentum.",
-        "price": 227.64,
-        "upside_pct": 1.75,
-        "sector": "REAL ESTATE",
-        "date": "2026-06-26"
-      },
-      {
-        "symbol": "OKLO",
-        "action": "SELL",
-        "confidence": 0.35,
-        "reason": "Down -1.73% -- negative momentum.",
-        "price": 50.13,
-        "upside_pct": -1.73,
-        "sector": "UTILITIES",
-        "date": "2026-06-26"
-      },
-      {
         "symbol": "NVDA",
         "action": "SELL",
         "confidence": 0.33,
@@ -272,6 +242,16 @@
         "date": "2026-06-26"
       },
       {
+        "symbol": "WELL",
+        "action": "BUY",
+        "confidence": 0.32,
+        "reason": "Up +1.59% with trend support -- positive momentum.",
+        "price": 227.28,
+        "upside_pct": 1.59,
+        "sector": "REAL ESTATE",
+        "date": "2026-06-26"
+      },
+      {
         "symbol": "ALAB",
         "action": "SELL",
         "confidence": 0.31,
@@ -279,6 +259,16 @@
         "price": 391.74,
         "upside_pct": -1.57,
         "sector": "IT",
+        "date": "2026-06-26"
+      },
+      {
+        "symbol": "SHW",
+        "action": "BUY",
+        "confidence": 0.3,
+        "reason": "Up +1.48% with trend support -- positive momentum.",
+        "price": 344.08,
+        "upside_pct": 1.48,
+        "sector": "MATERIALS",
         "date": "2026-06-26"
       },
       {
@@ -294,11 +284,21 @@
       {
         "symbol": "CART",
         "action": "BUY",
-        "confidence": 0.27,
-        "reason": "Up +1.37% with trend support -- positive momentum.",
-        "price": 47.44,
-        "upside_pct": 1.37,
+        "confidence": 0.28,
+        "reason": "Up +1.41% with trend support -- positive momentum.",
+        "price": 47.46,
+        "upside_pct": 1.41,
         "sector": "CONSUMER STAPLES",
+        "date": "2026-06-26"
+      },
+      {
+        "symbol": "V",
+        "action": "BUY",
+        "confidence": 0.28,
+        "reason": "Up +1.38% with trend support -- positive momentum.",
+        "price": 335.08,
+        "upside_pct": 1.38,
+        "sector": "FINANCIALS",
         "date": "2026-06-26"
       },
       {
@@ -332,13 +332,13 @@
         "date": "2026-06-26"
       },
       {
-        "symbol": "GRAL",
-        "action": "SELL",
-        "confidence": 0.23,
-        "reason": "Down -1.15% -- negative momentum.",
-        "price": 65.81,
-        "upside_pct": -1.15,
-        "sector": "HEALTH CARE",
+        "symbol": "SO",
+        "action": "BUY",
+        "confidence": 0.24,
+        "reason": "Up +1.18% with trend support -- positive momentum.",
+        "price": 97.04,
+        "upside_pct": 1.18,
+        "sector": "UTILITIES",
         "date": "2026-06-26"
       },
       {
@@ -352,143 +352,133 @@
         "date": "2026-06-26"
       },
       {
-        "symbol": "HD",
-        "action": "BUY",
-        "confidence": 0.2,
-        "reason": "Up +1.01% with trend support -- positive momentum.",
-        "price": 348.49,
-        "upside_pct": 1.01,
-        "sector": "CONSUMER DISCRETIONARY",
-        "date": "2026-06-26"
-      },
-      {
-        "symbol": "SO",
-        "action": "HOLD",
-        "confidence": 0.2,
-        "reason": "Flat +0.99% -- no clear edge today.",
-        "price": 96.86,
-        "upside_pct": 0.99,
-        "sector": "UTILITIES",
-        "date": "2026-06-26"
-      },
-      {
-        "symbol": "CVX",
-        "action": "HOLD",
-        "confidence": 0.17,
-        "reason": "Flat -0.86% -- no clear edge today.",
-        "price": 170.76,
-        "upside_pct": -0.86,
-        "sector": "ENERGY",
-        "date": "2026-06-26"
-      },
-      {
-        "symbol": "FCX",
-        "action": "HOLD",
-        "confidence": 0.16,
-        "reason": "Flat -0.82% -- no clear edge today.",
-        "price": 62.28,
-        "upside_pct": -0.82,
-        "sector": "MATERIALS",
-        "date": "2026-06-26"
-      },
-      {
         "symbol": "DUK",
         "action": "HOLD",
-        "confidence": 0.16,
-        "reason": "Flat +0.81% -- no clear edge today.",
-        "price": 128.14,
-        "upside_pct": 0.81,
+        "confidence": 0.2,
+        "reason": "Flat +1.00% -- no clear edge today.",
+        "price": 128.38,
+        "upside_pct": 1.0,
         "sector": "UTILITIES",
         "date": "2026-06-26"
       },
       {
-        "symbol": "APD",
+        "symbol": "GRAL",
         "action": "HOLD",
-        "confidence": 0.16,
-        "reason": "Flat -0.78% -- no clear edge today.",
-        "price": 277.75,
-        "upside_pct": -0.78,
-        "sector": "MATERIALS",
+        "confidence": 0.2,
+        "reason": "Flat -0.98% -- no clear edge today.",
+        "price": 65.92,
+        "upside_pct": -0.98,
+        "sector": "HEALTH CARE",
+        "date": "2026-06-26"
+      },
+      {
+        "symbol": "HD",
+        "action": "HOLD",
+        "confidence": 0.18,
+        "reason": "Flat +0.90% -- no clear edge today.",
+        "price": 348.1,
+        "upside_pct": 0.9,
+        "sector": "CONSUMER DISCRETIONARY",
         "date": "2026-06-26"
       },
       {
         "symbol": "XOM",
         "action": "HOLD",
-        "confidence": 0.15,
-        "reason": "Flat -0.76% -- no clear edge today.",
-        "price": 136.51,
-        "upside_pct": -0.76,
+        "confidence": 0.17,
+        "reason": "Flat -0.83% -- no clear edge today.",
+        "price": 136.41,
+        "upside_pct": -0.83,
         "sector": "ENERGY",
         "date": "2026-06-26"
       },
       {
-        "symbol": "PG",
+        "symbol": "CVX",
         "action": "HOLD",
-        "confidence": 0.15,
-        "reason": "Flat +0.74% -- no clear edge today.",
-        "price": 149.6,
-        "upside_pct": 0.74,
-        "sector": "CONSUMER STAPLES",
-        "date": "2026-06-26"
-      },
-      {
-        "symbol": "COP",
-        "action": "HOLD",
-        "confidence": 0.13,
-        "reason": "Flat -0.67% -- no clear edge today.",
-        "price": 105.69,
-        "upside_pct": -0.67,
+        "confidence": 0.16,
+        "reason": "Flat -0.78% -- no clear edge today.",
+        "price": 170.9,
+        "upside_pct": -0.78,
         "sector": "ENERGY",
         "date": "2026-06-26"
       },
       {
         "symbol": "GE",
         "action": "HOLD",
-        "confidence": 0.11,
-        "reason": "Flat -0.57% -- no clear edge today.",
-        "price": 369.26,
-        "upside_pct": -0.57,
+        "confidence": 0.16,
+        "reason": "Flat -0.78% -- no clear edge today.",
+        "price": 368.45,
+        "upside_pct": -0.78,
         "sector": "INDUSTRIALS",
         "date": "2026-06-26"
       },
       {
-        "symbol": "LIN",
+        "symbol": "APD",
         "action": "HOLD",
-        "confidence": 0.11,
-        "reason": "Flat -0.56% -- no clear edge today.",
-        "price": 519.36,
-        "upside_pct": -0.56,
+        "confidence": 0.15,
+        "reason": "Flat -0.76% -- no clear edge today.",
+        "price": 277.81,
+        "upside_pct": -0.76,
+        "sector": "MATERIALS",
+        "date": "2026-06-26"
+      },
+      {
+        "symbol": "FCX",
+        "action": "HOLD",
+        "confidence": 0.15,
+        "reason": "Flat -0.75% -- no clear edge today.",
+        "price": 62.33,
+        "upside_pct": -0.75,
         "sector": "MATERIALS",
         "date": "2026-06-26"
       },
       {
         "symbol": "NEE",
         "action": "HOLD",
-        "confidence": 0.11,
-        "reason": "Flat +0.55% -- no clear edge today.",
-        "price": 88.18,
-        "upside_pct": 0.55,
+        "confidence": 0.13,
+        "reason": "Flat +0.64% -- no clear edge today.",
+        "price": 88.26,
+        "upside_pct": 0.64,
         "sector": "UTILITIES",
-        "date": "2026-06-26"
-      },
-      {
-        "symbol": "BIRK",
-        "action": "HOLD",
-        "confidence": 0.11,
-        "reason": "Flat +0.53% -- no clear edge today.",
-        "price": 44.76,
-        "upside_pct": 0.53,
-        "sector": "CONSUMER DISCRETIONARY",
         "date": "2026-06-26"
       },
       {
         "symbol": "RTX",
         "action": "HOLD",
-        "confidence": 0.08,
-        "reason": "Flat +0.42% -- no clear edge today.",
-        "price": 187.37,
-        "upside_pct": 0.42,
+        "confidence": 0.13,
+        "reason": "Flat +0.63% -- no clear edge today.",
+        "price": 187.76,
+        "upside_pct": 0.63,
         "sector": "INDUSTRIALS",
+        "date": "2026-06-26"
+      },
+      {
+        "symbol": "COP",
+        "action": "HOLD",
+        "confidence": 0.12,
+        "reason": "Flat -0.58% -- no clear edge today.",
+        "price": 105.79,
+        "upside_pct": -0.58,
+        "sector": "ENERGY",
+        "date": "2026-06-26"
+      },
+      {
+        "symbol": "LIN",
+        "action": "HOLD",
+        "confidence": 0.1,
+        "reason": "Flat -0.51% -- no clear edge today.",
+        "price": 519.62,
+        "upside_pct": -0.51,
+        "sector": "MATERIALS",
+        "date": "2026-06-26"
+      },
+      {
+        "symbol": "PLD",
+        "action": "HOLD",
+        "confidence": 0.09,
+        "reason": "Flat -0.46% -- no clear edge today.",
+        "price": 139.88,
+        "upside_pct": -0.46,
+        "sector": "REAL ESTATE",
         "date": "2026-06-26"
       },
       {
@@ -512,23 +502,33 @@
         "date": "2026-06-26"
       },
       {
-        "symbol": "PLD",
+        "symbol": "PG",
         "action": "HOLD",
         "confidence": 0.06,
-        "reason": "Flat -0.32% -- no clear edge today.",
-        "price": 140.07,
-        "upside_pct": -0.32,
-        "sector": "REAL ESTATE",
+        "reason": "Flat +0.30% -- no clear edge today.",
+        "price": 148.95,
+        "upside_pct": 0.3,
+        "sector": "CONSUMER STAPLES",
         "date": "2026-06-26"
       },
       {
         "symbol": "SPCX",
         "action": "HOLD",
-        "confidence": 0.05,
-        "reason": "Flat -0.27% -- no clear edge today.",
-        "price": 152.58,
-        "upside_pct": -0.27,
+        "confidence": 0.03,
+        "reason": "Flat +0.15% -- no clear edge today.",
+        "price": 153.23,
+        "upside_pct": 0.15,
         "sector": "INDUSTRIALS",
+        "date": "2026-06-26"
+      },
+      {
+        "symbol": "KR",
+        "action": "HOLD",
+        "confidence": 0.02,
+        "reason": "Flat -0.09% -- no clear edge today.",
+        "price": 57.72,
+        "upside_pct": -0.09,
+        "sector": "CONSUMER STAPLES",
         "date": "2026-06-26"
       },
       {
@@ -542,23 +542,23 @@
         "date": "2026-06-26"
       },
       {
-        "symbol": "KR",
+        "symbol": "BIRK",
         "action": "HOLD",
-        "confidence": 0.0,
-        "reason": "Flat -0.02% -- no clear edge today.",
-        "price": 57.76,
-        "upside_pct": -0.02,
-        "sector": "CONSUMER STAPLES",
+        "confidence": 0.01,
+        "reason": "Flat -0.07% -- no clear edge today.",
+        "price": 44.49,
+        "upside_pct": -0.07,
+        "sector": "CONSUMER DISCRETIONARY",
         "date": "2026-06-26"
       }
     ],
     "summary": {
       "STRONG BUY": 9,
       "BUY": 9,
-      "HOLD": 25,
-      "SELL": 9,
+      "HOLD": 26,
+      "SELL": 8,
       "STRONG SELL": 3
     },
-    "generated_at": "2026-06-26T20:00:46"
+    "generated_at": "2026-06-26T20:08:14"
   }
 }
