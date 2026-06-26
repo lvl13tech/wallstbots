@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-06-26T21:15:35",
+    "last_refresh": "2026-06-26T21:53:05",
     "snapshots": [
       {
         "date": "2026-06-02",
@@ -167,8 +167,8 @@
         "starting_capital": 55000.0,
         "value": {
           "total": 128245.32,
-          "cash": 0.0,
-          "pos_val": 128245.31,
+          "cash": 128245.32,
+          "pos_val": 0.0,
           "pnl": 73245.32,
           "pnl_pct": 133.17,
           "day_pnl": 6707.43,
@@ -759,7 +759,7 @@
         },
         "current_strategy": {
           "day": "2026-06-26",
-          "decision": "TRADE",
+          "decision": "HOLD",
           "rationale": "HOLD -- daily close-out at 3:30pm ET. All positions flattened for the day.",
           "picks": [
             {
