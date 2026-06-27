@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 50000.0,
-    "last_refresh": "2026-06-27T19:45:52",
+    "last_refresh": "2026-06-27T19:53:03",
     "snapshots": [
       {
         "date": "2026-06-22",
@@ -46,10 +46,10 @@
       {
         "date": "2026-06-27",
         "bot13": 50000.0,
-        "oracle": 46341.87,
-        "wizard": 45003.22,
-        "equalizer": 46785.89,
-        "titan": 46869.66
+        "oracle": 46364.5,
+        "wizard": 45000.38,
+        "equalizer": 46804.04,
+        "titan": 46889.49
       }
     ],
     "funds": {
@@ -269,7 +269,7 @@
         "current_strategy": {
           "day": "2026-06-27",
           "decision": "HOLD",
-          "rationale": "HOLD \u2014 calculated edge score 1.20% \u2264 1.74% threshold. Not enough edge today.",
+          "rationale": "HOLD \u2014 calculated edge score 1.51% \u2264 1.74% threshold. Not enough edge today.",
           "picks": [],
           "session_log": [
             {
@@ -279,16 +279,16 @@
               "detail": "NEAR +2.03%, SHIB +6.75%, ONDO +1.16%, SOL +0.77%, WLD +0.13%. Stops at -1.5%, targets at +3.0%. Equal-weight $10,000/coin. Capital deployed."
             },
             {
-              "time": "15:45 PM",
+              "time": "15:53 PM",
               "phase": "CLOSE",
-              "action": "HOLD \u2014 INSUFFICIENT EDGE (1.20%)",
-              "detail": "Calculated edge score 1.20% \u2264 1.74% threshold. Not enough edge to justify risk. Standing down."
+              "action": "HOLD \u2014 INSUFFICIENT EDGE (1.51%)",
+              "detail": "Calculated edge score 1.51% \u2264 1.74% threshold. Not enough edge to justify risk. Standing down."
             }
           ],
           "stop_pct": -1.5,
           "target_pct": 3.0,
           "window_open": true,
-          "last_updated": "2026-06-27T19:45:52",
+          "last_updated": "2026-06-27T19:53:03",
           "projected_return": 0.0,
           "traded_today": false
         },
@@ -305,13 +305,13 @@
         "inception": "2026-06-02",
         "starting_capital": 50000.0,
         "value": {
-          "total": 46341.87,
+          "total": 46364.5,
           "cash": 1.69,
-          "pos_val": 46340.18,
-          "pnl": -3658.13,
-          "pnl_pct": -7.32,
-          "day_pnl": 11146.31,
-          "day_pct": 31.67,
+          "pos_val": 46362.81,
+          "pnl": -3635.5,
+          "pnl_pct": -7.27,
+          "day_pnl": 11168.93,
+          "day_pct": 31.73,
           "holding_cash": true,
           "positions": [
             {
@@ -331,23 +331,23 @@
               "shares": 27531.814854,
               "entry_price": 0.4242,
               "cost_basis": 11679.0,
-              "price": 0.3946,
-              "value": 10864.88,
-              "pnl": -814.11,
-              "pnl_pct": -6.97,
-              "day_pnl": -130.83,
-              "day_pct": -1.19
+              "price": 0.3945,
+              "value": 10862.15,
+              "pnl": -816.85,
+              "pnl_pct": -6.99,
+              "day_pnl": -133.56,
+              "day_pct": -1.21
             },
             {
               "symbol": "TRX",
               "shares": 27753.624466,
               "entry_price": 0.3333,
               "cost_basis": 9250.28,
-              "price": 0.32,
-              "value": 8882.19,
-              "pnl": -368.09,
-              "pnl_pct": -3.98,
-              "day_pnl": -2.21,
+              "price": 0.3201,
+              "value": 8882.82,
+              "pnl": -367.46,
+              "pnl_pct": -3.97,
+              "day_pnl": -1.59,
               "day_pct": -0.02
             },
             {
@@ -355,24 +355,24 @@
               "shares": 14520.815496,
               "entry_price": 0.6124,
               "cost_basis": 8892.55,
-              "price": 0.447,
-              "value": 6490.8,
-              "pnl": -2401.74,
-              "pnl_pct": -27.01,
-              "day_pnl": -277.17,
-              "day_pct": -4.1
+              "price": 0.4484,
+              "value": 6511.13,
+              "pnl": -2381.41,
+              "pnl_pct": -26.78,
+              "day_pnl": -256.84,
+              "day_pct": -3.79
             },
             {
               "symbol": "SOL",
               "shares": 110.106214,
               "entry_price": 71.87,
               "cost_basis": 7913.33,
-              "price": 71.05,
-              "value": 7823.05,
-              "pnl": -90.29,
-              "pnl_pct": -1.14,
-              "day_pnl": -86.47,
-              "day_pct": -1.09
+              "price": 71.09,
+              "value": 7827.45,
+              "pnl": -85.88,
+              "pnl_pct": -1.09,
+              "day_pnl": -82.07,
+              "day_pct": -1.04
             }
           ],
           "trade_log": []
@@ -428,25 +428,25 @@
         "inception": "2026-06-02",
         "starting_capital": 50000.0,
         "value": {
-          "total": 45003.22,
+          "total": 45000.38,
           "cash": 0.0,
-          "pos_val": 45024.22,
-          "pnl": -4996.78,
-          "pnl_pct": -9.99,
-          "day_pnl": -659.64,
-          "day_pct": -1.44,
+          "pos_val": 45021.38,
+          "pnl": -4999.62,
+          "pnl_pct": -10.0,
+          "day_pnl": -662.48,
+          "day_pct": -1.45,
           "positions": [
             {
               "symbol": "WLD",
               "shares": 15865.629237,
               "entry_price": 0.622,
               "cost_basis": 9868.42,
-              "price": 0.447,
-              "value": 7091.94,
-              "pnl": -2776.49,
-              "pnl_pct": -28.14,
-              "day_pnl": -302.84,
-              "day_pct": -4.1,
+              "price": 0.4484,
+              "value": 7114.15,
+              "pnl": -2754.27,
+              "pnl_pct": -27.91,
+              "day_pnl": -280.63,
+              "day_pct": -3.79,
               "stop_triggered": true
             },
             {
@@ -467,12 +467,12 @@
               "shares": 2812.851581,
               "entry_price": 2.11,
               "cost_basis": 5935.12,
-              "price": 1.85,
-              "value": 5198.15,
-              "pnl": -736.97,
-              "pnl_pct": -12.42,
-              "day_pnl": 139.17,
-              "day_pct": 2.75,
+              "price": 1.86,
+              "value": 5217.84,
+              "pnl": -717.28,
+              "pnl_pct": -12.09,
+              "day_pnl": 158.86,
+              "day_pct": 3.14,
               "stop_triggered": true
             },
             {
@@ -480,12 +480,12 @@
               "shares": 75728.267147,
               "entry_price": 0.0782,
               "cost_basis": 5921.95,
-              "price": 0.0842,
-              "value": 6378.19,
-              "pnl": 456.24,
-              "pnl_pct": 7.7,
-              "day_pnl": -8.27,
-              "day_pct": -0.13
+              "price": 0.0837,
+              "value": 6341.19,
+              "pnl": 419.24,
+              "pnl_pct": 7.08,
+              "day_pnl": -45.27,
+              "day_pct": -0.71
             },
             {
               "symbol": "XLM",
@@ -493,11 +493,11 @@
               "entry_price": 0.2036,
               "cost_basis": 5920.18,
               "price": 0.1738,
-              "value": 5054.28,
-              "pnl": -865.9,
-              "pnl_pct": -14.63,
-              "day_pnl": -106.37,
-              "day_pct": -2.06,
+              "value": 5052.86,
+              "pnl": -867.32,
+              "pnl_pct": -14.65,
+              "day_pnl": -107.79,
+              "day_pct": -2.09,
               "stop_triggered": true
             },
             {
@@ -505,12 +505,12 @@
               "shares": 1220.332305,
               "entry_price": 4.85,
               "cost_basis": 5918.61,
-              "price": 4.75,
-              "value": 5801.46,
-              "pnl": -117.15,
-              "pnl_pct": -1.98,
-              "day_pnl": -121.75,
-              "day_pct": -2.06,
+              "price": 4.74,
+              "value": 5788.04,
+              "pnl": -130.58,
+              "pnl_pct": -2.21,
+              "day_pnl": -135.17,
+              "day_pct": -2.28,
               "stop_triggered": true
             },
             {
@@ -518,12 +518,12 @@
               "shares": 9916.117335,
               "entry_price": 0.3317,
               "cost_basis": 3289.18,
-              "price": 0.3106,
-              "value": 3080.24,
-              "pnl": -208.93,
-              "pnl_pct": -6.35,
-              "day_pnl": -57.21,
-              "day_pct": -1.82,
+              "price": 0.3109,
+              "value": 3082.52,
+              "pnl": -206.65,
+              "pnl_pct": -6.28,
+              "day_pnl": -54.93,
+              "day_pct": -1.75,
               "stop_triggered": true
             },
             {
@@ -532,11 +532,11 @@
               "entry_price": 1.37,
               "cost_basis": 3299.11,
               "price": 1.24,
-              "value": 2988.46,
-              "pnl": -310.65,
-              "pnl_pct": -9.42,
-              "day_pnl": -73.49,
-              "day_pct": -2.4,
+              "value": 2993.28,
+              "pnl": -305.83,
+              "pnl_pct": -9.27,
+              "day_pnl": -68.67,
+              "day_pct": -2.24,
               "stop_triggered": true
             }
           ],
@@ -563,24 +563,24 @@
         "inception": "2026-06-02",
         "starting_capital": 50000.0,
         "value": {
-          "total": 46785.89,
-          "cash": 6.69,
-          "pos_val": 46779.2,
-          "pnl": -3214.11,
-          "pnl_pct": -6.43,
-          "day_pnl": 661.69,
-          "day_pct": 1.43,
+          "total": 46804.04,
+          "cash": 6.7,
+          "pos_val": 46797.34,
+          "pnl": -3195.96,
+          "pnl_pct": -6.39,
+          "day_pnl": 679.89,
+          "day_pct": 1.47,
           "positions": [
             {
               "symbol": "BTC",
               "shares": 0.015813,
               "entry_price": 63237.54,
               "cost_basis": 999.98,
-              "price": 60095.99,
-              "value": 950.3,
-              "pnl": -49.68,
+              "price": 60094.99,
+              "value": 950.28,
+              "pnl": -49.69,
               "pnl_pct": -4.97,
-              "day_pnl": 1.26,
+              "day_pnl": 1.24,
               "day_pct": 0.13
             },
             {
@@ -588,36 +588,36 @@
               "shares": 0.586655,
               "entry_price": 1704.58,
               "cost_basis": 1000.0,
-              "price": 1575.2,
-              "value": 924.1,
-              "pnl": -75.9,
-              "pnl_pct": -7.59,
-              "day_pnl": -0.83,
-              "day_pct": -0.09
+              "price": 1576.51,
+              "value": 924.87,
+              "pnl": -75.13,
+              "pnl_pct": -7.51,
+              "day_pnl": -0.06,
+              "day_pct": -0.01
             },
             {
               "symbol": "BNB",
               "shares": 1.713057,
               "entry_price": 583.75,
               "cost_basis": 1000.0,
-              "price": 558.54,
-              "value": 956.81,
-              "pnl": -43.19,
-              "pnl_pct": -4.32,
-              "day_pnl": -14.25,
-              "day_pct": -1.47
+              "price": 558.57,
+              "value": 956.86,
+              "pnl": -43.13,
+              "pnl_pct": -4.31,
+              "day_pnl": -14.2,
+              "day_pct": -1.46
             },
             {
               "symbol": "SOL",
               "shares": 13.808691,
               "entry_price": 72.42,
               "cost_basis": 1000.03,
-              "price": 71.05,
-              "value": 981.11,
-              "pnl": -18.92,
-              "pnl_pct": -1.89,
-              "day_pnl": -10.85,
-              "day_pct": -1.09
+              "price": 71.09,
+              "value": 981.66,
+              "pnl": -18.37,
+              "pnl_pct": -1.84,
+              "day_pnl": -10.29,
+              "day_pct": -1.04
             },
             {
               "symbol": "XRP",
@@ -625,23 +625,23 @@
               "entry_price": 1.12,
               "cost_basis": 996.07,
               "price": 1.05,
-              "value": 936.93,
-              "pnl": -59.14,
-              "pnl_pct": -5.94,
-              "day_pnl": 5.67,
-              "day_pct": 0.61
+              "value": 937.37,
+              "pnl": -58.7,
+              "pnl_pct": -5.89,
+              "day_pnl": 6.12,
+              "day_pct": 0.66
             },
             {
               "symbol": "ADA",
               "shares": 6384.309801,
               "entry_price": 0.1566,
               "cost_basis": 999.78,
-              "price": 0.1452,
-              "value": 927.0,
-              "pnl": -72.78,
-              "pnl_pct": -7.28,
-              "day_pnl": -19.19,
-              "day_pct": -2.03
+              "price": 0.1453,
+              "value": 927.64,
+              "pnl": -72.14,
+              "pnl_pct": -7.22,
+              "day_pnl": -18.55,
+              "day_pct": -1.96
             },
             {
               "symbol": "TON",
@@ -660,12 +660,12 @@
               "shares": 163.774656,
               "entry_price": 6.11,
               "cost_basis": 1000.66,
-              "price": 6.42,
-              "value": 1051.43,
-              "pnl": 50.77,
-              "pnl_pct": 5.07,
-              "day_pnl": -26.26,
-              "day_pct": -2.44
+              "price": 6.43,
+              "value": 1053.07,
+              "pnl": 52.41,
+              "pnl_pct": 5.24,
+              "day_pnl": -24.62,
+              "day_pct": -2.28
             },
             {
               "symbol": "DOGE",
@@ -673,22 +673,22 @@
               "entry_price": 0.0822,
               "cost_basis": 1000.34,
               "price": 0.0746,
-              "value": 907.49,
-              "pnl": -92.85,
-              "pnl_pct": -9.28,
-              "day_pnl": -13.29,
-              "day_pct": -1.44
+              "value": 907.85,
+              "pnl": -92.49,
+              "pnl_pct": -9.25,
+              "day_pnl": -12.92,
+              "day_pct": -1.4
             },
             {
               "symbol": "TRX",
               "shares": 3055.581008,
               "entry_price": 0.3273,
               "cost_basis": 1000.09,
-              "price": 0.32,
-              "value": 977.9,
-              "pnl": -22.19,
-              "pnl_pct": -2.22,
-              "day_pnl": -0.24,
+              "price": 0.3201,
+              "value": 977.97,
+              "pnl": -22.12,
+              "pnl_pct": -2.21,
+              "day_pnl": -0.17,
               "day_pct": -0.02
             },
             {
@@ -697,23 +697,23 @@
               "entry_price": 7.78,
               "cost_basis": 1000.6,
               "price": 7.32,
-              "value": 940.8,
-              "pnl": -59.8,
-              "pnl_pct": -5.98,
-              "day_pnl": -3.39,
-              "day_pct": -0.36
+              "value": 940.92,
+              "pnl": -59.68,
+              "pnl_pct": -5.96,
+              "day_pnl": -3.26,
+              "day_pct": -0.35
             },
             {
               "symbol": "DOT",
               "shares": 1062.624695,
               "entry_price": 0.9411,
               "cost_basis": 1000.04,
-              "price": 0.827,
-              "value": 878.79,
-              "pnl": -121.25,
-              "pnl_pct": -12.12,
-              "day_pnl": -25.1,
-              "day_pct": -2.78
+              "price": 0.828,
+              "value": 879.85,
+              "pnl": -120.18,
+              "pnl_pct": -12.02,
+              "day_pnl": -24.04,
+              "day_pct": -2.66
             },
             {
               "symbol": "SHIB",
@@ -732,24 +732,24 @@
               "shares": 5.133208,
               "entry_price": 194.81,
               "cost_basis": 1000.0,
-              "price": 196.58,
-              "value": 1009.09,
-              "pnl": 9.09,
-              "pnl_pct": 0.91,
-              "day_pnl": -1.02,
-              "day_pct": -0.1
+              "price": 196.45,
+              "value": 1008.42,
+              "pnl": 8.42,
+              "pnl_pct": 0.84,
+              "day_pnl": -1.68,
+              "day_pct": -0.17
             },
             {
               "symbol": "NEAR",
               "shares": 476.224722,
               "entry_price": 2.1,
               "cost_basis": 1000.07,
-              "price": 1.85,
-              "value": 880.06,
-              "pnl": -120.01,
-              "pnl_pct": -12.0,
-              "day_pnl": 23.56,
-              "day_pct": 2.75
+              "price": 1.86,
+              "value": 883.4,
+              "pnl": -116.68,
+              "pnl_pct": -11.67,
+              "day_pnl": 26.9,
+              "day_pct": 3.14
             },
             {
               "symbol": "UNI",
@@ -757,59 +757,59 @@
               "entry_price": 2.98,
               "cost_basis": 999.19,
               "price": 2.94,
-              "value": 986.45,
-              "pnl": -12.74,
-              "pnl_pct": -1.28,
-              "day_pnl": -5.6,
-              "day_pct": -0.56
+              "value": 986.78,
+              "pnl": -12.41,
+              "pnl_pct": -1.24,
+              "day_pnl": -5.26,
+              "day_pct": -0.53
             },
             {
               "symbol": "LTC",
               "shares": 22.502378,
               "entry_price": 44.44,
               "cost_basis": 1000.01,
-              "price": 42.28,
-              "value": 951.4,
-              "pnl": -48.61,
-              "pnl_pct": -4.86,
-              "day_pnl": 9.76,
-              "day_pct": 1.04
+              "price": 42.23,
+              "value": 950.28,
+              "pnl": -49.73,
+              "pnl_pct": -4.97,
+              "day_pnl": 8.64,
+              "day_pct": 0.92
             },
             {
               "symbol": "APT",
               "shares": 1545.430294,
               "entry_price": 0.6471,
               "cost_basis": 1000.05,
-              "price": 0.584,
-              "value": 902.53,
-              "pnl": -97.52,
-              "pnl_pct": -9.75,
-              "day_pnl": -20.59,
-              "day_pct": -2.23
+              "price": 0.5836,
+              "value": 901.91,
+              "pnl": -98.13,
+              "pnl_pct": -9.81,
+              "day_pnl": -21.21,
+              "day_pct": -2.3
             },
             {
               "symbol": "SUI",
               "shares": 1443.738882,
               "entry_price": 0.6926,
               "cost_basis": 999.93,
-              "price": 0.6902,
-              "value": 996.47,
-              "pnl": -3.47,
-              "pnl_pct": -0.35,
-              "day_pnl": -9.87,
-              "day_pct": -0.98
+              "price": 0.6873,
+              "value": 992.28,
+              "pnl": -7.65,
+              "pnl_pct": -0.77,
+              "day_pnl": -14.05,
+              "day_pct": -1.4
             },
             {
               "symbol": "ATOM",
               "shares": 570.094564,
               "entry_price": 1.75,
               "cost_basis": 997.67,
-              "price": 1.56,
-              "value": 891.63,
-              "pnl": -106.04,
-              "pnl_pct": -10.63,
-              "day_pnl": -17.92,
-              "day_pct": -1.97
+              "price": 1.57,
+              "value": 892.77,
+              "pnl": -104.9,
+              "pnl_pct": -10.51,
+              "day_pnl": -16.78,
+              "day_pct": -1.84
             },
             {
               "symbol": "ICP",
@@ -817,23 +817,23 @@
               "entry_price": 2.21,
               "cost_basis": 999.34,
               "price": 2.15,
-              "value": 970.4,
-              "pnl": -28.94,
-              "pnl_pct": -2.9,
-              "day_pnl": -24.66,
-              "day_pct": -2.48
+              "value": 973.11,
+              "pnl": -26.23,
+              "pnl_pct": -2.62,
+              "day_pnl": -21.95,
+              "day_pct": -2.21
             },
             {
               "symbol": "FIL",
               "shares": 1280.368759,
               "entry_price": 0.781,
               "cost_basis": 999.97,
-              "price": 0.731,
-              "value": 935.95,
-              "pnl": -64.02,
-              "pnl_pct": -6.4,
-              "day_pnl": -16.18,
-              "day_pct": -1.7
+              "price": 0.732,
+              "value": 937.23,
+              "pnl": -62.74,
+              "pnl_pct": -6.27,
+              "day_pnl": -14.9,
+              "day_pct": -1.57
             },
             {
               "symbol": "ARB",
@@ -852,12 +852,12 @@
               "shares": 13.525118,
               "entry_price": 73.94,
               "cost_basis": 1000.05,
-              "price": 93.71,
-              "value": 1267.44,
-              "pnl": 267.39,
-              "pnl_pct": 26.74,
-              "day_pnl": -15.02,
-              "day_pct": -1.17
+              "price": 94.08,
+              "value": 1272.44,
+              "pnl": 272.4,
+              "pnl_pct": 27.24,
+              "day_pnl": -10.02,
+              "day_pct": -0.78
             },
             {
               "symbol": "OP",
@@ -876,12 +876,12 @@
               "shares": 137.237956,
               "entry_price": 7.29,
               "cost_basis": 1000.46,
-              "price": 7.13,
-              "value": 978.51,
-              "pnl": -21.96,
-              "pnl_pct": -2.19,
-              "day_pnl": -14.98,
-              "day_pct": -1.51
+              "price": 7.14,
+              "value": 979.88,
+              "pnl": -20.59,
+              "pnl_pct": -2.06,
+              "day_pnl": -13.6,
+              "day_pct": -1.37
             },
             {
               "symbol": "VET",
@@ -900,12 +900,12 @@
               "shares": 207.636057,
               "entry_price": 4.82,
               "cost_basis": 1000.81,
-              "price": 4.75,
-              "value": 987.1,
-              "pnl": -13.7,
-              "pnl_pct": -1.37,
-              "day_pnl": -20.71,
-              "day_pct": -2.06
+              "price": 4.74,
+              "value": 984.82,
+              "pnl": -15.99,
+              "pnl_pct": -1.6,
+              "day_pnl": -23.0,
+              "day_pct": -2.28
             },
             {
               "symbol": "ALGO",
@@ -925,11 +925,11 @@
               "entry_price": 0.2098,
               "cost_basis": 999.84,
               "price": 0.1738,
-              "value": 828.38,
-              "pnl": -171.46,
-              "pnl_pct": -17.15,
-              "day_pnl": -17.43,
-              "day_pct": -2.06
+              "value": 828.14,
+              "pnl": -171.7,
+              "pnl_pct": -17.17,
+              "day_pnl": -17.67,
+              "day_pct": -2.09
             },
             {
               "symbol": "HBAR",
@@ -937,23 +937,23 @@
               "entry_price": 0.078,
               "cost_basis": 999.67,
               "price": 0.072,
-              "value": 922.9,
-              "pnl": -76.77,
-              "pnl_pct": -7.68,
-              "day_pnl": 16.05,
-              "day_pct": 1.77
+              "value": 923.03,
+              "pnl": -76.64,
+              "pnl_pct": -7.67,
+              "day_pnl": 16.17,
+              "day_pct": 1.78
             },
             {
               "symbol": "MKR",
               "shares": 0.633377,
               "entry_price": 1578.84,
               "cost_basis": 1000.0,
-              "price": 1292.14,
-              "value": 818.41,
-              "pnl": -181.59,
-              "pnl_pct": -18.16,
-              "day_pnl": -3.62,
-              "day_pct": -0.44
+              "price": 1291.42,
+              "value": 817.95,
+              "pnl": -182.05,
+              "pnl_pct": -18.2,
+              "day_pnl": -4.08,
+              "day_pct": -0.5
             },
             {
               "symbol": "JUP",
@@ -972,36 +972,36 @@
               "shares": 605.22173,
               "entry_price": 1.65,
               "cost_basis": 998.62,
-              "price": 1.57,
-              "value": 951.41,
-              "pnl": -47.21,
-              "pnl_pct": -4.73,
-              "day_pnl": 2.64,
-              "day_pct": 0.28
+              "price": 1.58,
+              "value": 954.43,
+              "pnl": -44.18,
+              "pnl_pct": -4.42,
+              "day_pnl": 5.67,
+              "day_pct": 0.6
             },
             {
               "symbol": "FET",
               "shares": 5581.291586,
               "entry_price": 0.1792,
               "cost_basis": 1000.17,
-              "price": 0.173,
-              "value": 965.56,
-              "pnl": -34.6,
-              "pnl_pct": -3.46,
-              "day_pnl": -22.48,
-              "day_pct": -2.27
+              "price": 0.1729,
+              "value": 965.01,
+              "pnl": -35.16,
+              "pnl_pct": -3.52,
+              "day_pnl": -23.03,
+              "day_pct": -2.33
             },
             {
               "symbol": "ONDO",
               "shares": 3032.628124,
               "entry_price": 0.3297,
               "cost_basis": 999.86,
-              "price": 0.3106,
-              "value": 942.03,
-              "pnl": -57.83,
-              "pnl_pct": -5.78,
-              "day_pnl": -17.5,
-              "day_pct": -1.82
+              "price": 0.3109,
+              "value": 942.72,
+              "pnl": -57.13,
+              "pnl_pct": -5.71,
+              "day_pnl": -16.8,
+              "day_pct": -1.75
             },
             {
               "symbol": "WIF",
@@ -1020,84 +1020,84 @@
               "shares": 2432.403483,
               "entry_price": 0.4111,
               "cost_basis": 999.96,
-              "price": 0.3946,
-              "value": 959.9,
-              "pnl": -40.06,
-              "pnl_pct": -4.01,
-              "day_pnl": -11.56,
-              "day_pct": -1.19
+              "price": 0.3945,
+              "value": 959.66,
+              "pnl": -40.3,
+              "pnl_pct": -4.03,
+              "day_pnl": -11.8,
+              "day_pct": -1.21
             },
             {
               "symbol": "QNT",
               "shares": 14.269463,
               "entry_price": 70.08,
               "cost_basis": 1000.0,
-              "price": 65.49,
-              "value": 934.51,
-              "pnl": -65.5,
-              "pnl_pct": -6.55,
-              "day_pnl": -31.26,
-              "day_pct": -3.24
+              "price": 65.52,
+              "value": 934.94,
+              "pnl": -65.07,
+              "pnl_pct": -6.51,
+              "day_pnl": -30.83,
+              "day_pct": -3.19
             },
             {
               "symbol": "KAS",
               "shares": 34282.970843,
               "entry_price": 0.0292,
               "cost_basis": 1001.06,
-              "price": 0.0283,
-              "value": 968.58,
-              "pnl": -32.48,
-              "pnl_pct": -3.24,
-              "day_pnl": 6.39,
-              "day_pct": 0.66
+              "price": 0.0282,
+              "value": 967.89,
+              "pnl": -33.18,
+              "pnl_pct": -3.31,
+              "day_pnl": 5.7,
+              "day_pct": 0.59
             },
             {
               "symbol": "THETA",
               "shares": 6547.5448,
               "entry_price": 0.1527,
               "cost_basis": 999.81,
-              "price": 0.1297,
-              "value": 849.26,
-              "pnl": -150.55,
-              "pnl_pct": -15.06,
-              "day_pnl": -17.1,
-              "day_pct": -1.97
+              "price": 0.13,
+              "value": 851.28,
+              "pnl": -148.53,
+              "pnl_pct": -14.86,
+              "day_pnl": -15.07,
+              "day_pct": -1.74
             },
             {
               "symbol": "WLD",
               "shares": 1653.092017,
               "entry_price": 0.6049,
               "cost_basis": 999.96,
-              "price": 0.447,
-              "value": 738.93,
-              "pnl": -261.02,
-              "pnl_pct": -26.1,
-              "day_pnl": -31.55,
-              "day_pct": -4.1
+              "price": 0.4484,
+              "value": 741.25,
+              "pnl": -258.71,
+              "pnl_pct": -25.87,
+              "day_pnl": -29.24,
+              "day_pct": -3.79
             },
             {
               "symbol": "SEI",
               "shares": 18359.404211,
               "entry_price": 0.0545,
               "cost_basis": 1000.59,
-              "price": 0.0501,
-              "value": 920.72,
-              "pnl": -79.86,
-              "pnl_pct": -7.98,
-              "day_pnl": -54.03,
-              "day_pct": -5.54
+              "price": 0.0502,
+              "value": 921.83,
+              "pnl": -78.76,
+              "pnl_pct": -7.87,
+              "day_pnl": -52.93,
+              "day_pct": -5.43
             },
             {
               "symbol": "EGLD",
               "shares": 356.181051,
               "entry_price": 2.81,
               "cost_basis": 1000.87,
-              "price": 2.53,
-              "value": 901.14,
-              "pnl": -99.73,
-              "pnl_pct": -9.96,
-              "day_pnl": -10.94,
-              "day_pct": -1.2
+              "price": 2.52,
+              "value": 897.58,
+              "pnl": -103.29,
+              "pnl_pct": -10.32,
+              "day_pnl": -14.5,
+              "day_pct": -1.59
             },
             {
               "symbol": "CRV",
@@ -1116,12 +1116,12 @@
               "shares": 12554.297226,
               "entry_price": 0.0797,
               "cost_basis": 1000.58,
-              "price": 0.0842,
-              "value": 1057.38,
-              "pnl": 56.8,
-              "pnl_pct": 5.68,
-              "day_pnl": -1.37,
-              "day_pct": -0.13
+              "price": 0.0837,
+              "value": 1051.25,
+              "pnl": 50.67,
+              "pnl_pct": 5.06,
+              "day_pnl": -7.51,
+              "day_pct": -0.71
             },
             {
               "symbol": "PEPE",
@@ -1140,12 +1140,12 @@
               "shares": 40000001.010485,
               "entry_price": 2.5e-05,
               "cost_basis": 1000.0,
-              "price": 2.17e-05,
-              "value": 868.0,
-              "pnl": -132.0,
-              "pnl_pct": -13.2,
-              "day_pnl": -12.0,
-              "day_pct": -1.36
+              "price": 2.18e-05,
+              "value": 872.0,
+              "pnl": -128.0,
+              "pnl_pct": -12.8,
+              "day_pnl": -8.0,
+              "day_pct": -0.91
             },
             {
               "symbol": "PENDLE",
@@ -1153,23 +1153,23 @@
               "entry_price": 1.39,
               "cost_basis": 996.9,
               "price": 1.24,
-              "value": 890.04,
-              "pnl": -106.86,
-              "pnl_pct": -10.72,
-              "day_pnl": -21.89,
-              "day_pct": -2.4
+              "value": 891.48,
+              "pnl": -105.43,
+              "pnl_pct": -10.58,
+              "day_pnl": -20.45,
+              "day_pct": -2.24
             },
             {
               "symbol": "NOT",
               "shares": 2433090.105179,
               "entry_price": 0.000411,
               "cost_basis": 1000.0,
-              "price": 0.00038657,
-              "value": 940.55,
-              "pnl": -59.45,
-              "pnl_pct": -5.95,
-              "day_pnl": 11.11,
-              "day_pct": 1.2
+              "price": 0.00038775,
+              "value": 943.43,
+              "pnl": -56.57,
+              "pnl_pct": -5.66,
+              "day_pnl": 13.99,
+              "day_pct": 1.51
             }
           ],
           "trade_log": []
@@ -1195,24 +1195,24 @@
         "inception": "2026-06-02",
         "starting_capital": 50000.0,
         "value": {
-          "total": 46869.66,
-          "cash": 9.88,
-          "pos_val": 46859.78,
-          "pnl": -3130.34,
-          "pnl_pct": -6.26,
-          "day_pnl": 247.25,
-          "day_pct": 0.53,
+          "total": 46889.49,
+          "cash": 9.89,
+          "pos_val": 46879.6,
+          "pnl": -3110.51,
+          "pnl_pct": -6.22,
+          "day_pnl": 267.06,
+          "day_pct": 0.57,
           "positions": [
             {
               "symbol": "BTC",
               "shares": 0.039533,
               "entry_price": 63237.54,
               "cost_basis": 2499.97,
-              "price": 60095.99,
-              "value": 2375.77,
-              "pnl": -124.19,
+              "price": 60094.99,
+              "value": 2375.74,
+              "pnl": -124.23,
               "pnl_pct": -4.97,
-              "day_pnl": 3.15,
+              "day_pnl": 3.11,
               "day_pct": 0.13
             },
             {
@@ -1220,36 +1220,36 @@
               "shares": 1.466636,
               "entry_price": 1704.58,
               "cost_basis": 2500.0,
-              "price": 1575.2,
-              "value": 2310.24,
-              "pnl": -189.75,
-              "pnl_pct": -7.59,
-              "day_pnl": -2.08,
-              "day_pct": -0.09
+              "price": 1576.51,
+              "value": 2312.17,
+              "pnl": -187.83,
+              "pnl_pct": -7.51,
+              "day_pnl": -0.16,
+              "day_pct": -0.01
             },
             {
               "symbol": "BNB",
               "shares": 4.282643,
               "entry_price": 583.75,
               "cost_basis": 2499.99,
-              "price": 558.54,
-              "value": 2392.03,
-              "pnl": -107.97,
-              "pnl_pct": -4.32,
-              "day_pnl": -35.63,
-              "day_pct": -1.47
+              "price": 558.57,
+              "value": 2392.16,
+              "pnl": -107.84,
+              "pnl_pct": -4.31,
+              "day_pnl": -35.5,
+              "day_pct": -1.46
             },
             {
               "symbol": "SOL",
               "shares": 34.521728,
               "entry_price": 72.42,
               "cost_basis": 2500.06,
-              "price": 71.05,
-              "value": 2452.77,
-              "pnl": -47.29,
-              "pnl_pct": -1.89,
-              "day_pnl": -27.11,
-              "day_pct": -1.09
+              "price": 71.09,
+              "value": 2454.15,
+              "pnl": -45.91,
+              "pnl_pct": -1.84,
+              "day_pnl": -25.73,
+              "day_pct": -1.04
             },
             {
               "symbol": "XRP",
@@ -1257,23 +1257,23 @@
               "entry_price": 1.12,
               "cost_basis": 2490.17,
               "price": 1.05,
-              "value": 2342.32,
-              "pnl": -147.85,
-              "pnl_pct": -5.94,
-              "day_pnl": 14.19,
-              "day_pct": 0.61
+              "value": 2343.43,
+              "pnl": -146.74,
+              "pnl_pct": -5.89,
+              "day_pnl": 15.3,
+              "day_pct": 0.66
             },
             {
               "symbol": "ADA",
               "shares": 15960.774502,
               "entry_price": 0.1566,
               "cost_basis": 2499.46,
-              "price": 0.1452,
-              "value": 2317.5,
-              "pnl": -181.95,
-              "pnl_pct": -7.28,
-              "day_pnl": -47.98,
-              "day_pct": -2.03
+              "price": 0.1453,
+              "value": 2319.1,
+              "pnl": -180.36,
+              "pnl_pct": -7.22,
+              "day_pnl": -46.38,
+              "day_pct": -1.96
             },
             {
               "symbol": "TON",
@@ -1292,12 +1292,12 @@
               "shares": 409.436641,
               "entry_price": 6.11,
               "cost_basis": 2501.66,
-              "price": 6.42,
-              "value": 2628.58,
-              "pnl": 126.93,
-              "pnl_pct": 5.07,
-              "day_pnl": -65.64,
-              "day_pct": -2.44
+              "price": 6.43,
+              "value": 2632.68,
+              "pnl": 131.02,
+              "pnl_pct": 5.24,
+              "day_pnl": -61.55,
+              "day_pct": -2.28
             },
             {
               "symbol": "DOGE",
@@ -1305,22 +1305,22 @@
               "entry_price": 0.0822,
               "cost_basis": 2500.85,
               "price": 0.0746,
-              "value": 2268.72,
-              "pnl": -232.14,
-              "pnl_pct": -9.28,
-              "day_pnl": -33.22,
-              "day_pct": -1.44
+              "value": 2269.63,
+              "pnl": -231.22,
+              "pnl_pct": -9.25,
+              "day_pnl": -32.31,
+              "day_pct": -1.4
             },
             {
               "symbol": "TRX",
               "shares": 7638.952519,
               "entry_price": 0.3273,
               "cost_basis": 2500.23,
-              "price": 0.32,
-              "value": 2444.75,
-              "pnl": -55.48,
-              "pnl_pct": -2.22,
-              "day_pnl": -0.61,
+              "price": 0.3201,
+              "value": 2444.92,
+              "pnl": -55.31,
+              "pnl_pct": -2.21,
+              "day_pnl": -0.44,
               "day_pct": -0.02
             },
             {
@@ -1329,23 +1329,23 @@
               "entry_price": 7.78,
               "cost_basis": 625.37,
               "price": 7.32,
-              "value": 588.0,
-              "pnl": -37.38,
-              "pnl_pct": -5.98,
-              "day_pnl": -2.12,
-              "day_pct": -0.36
+              "value": 588.08,
+              "pnl": -37.3,
+              "pnl_pct": -5.96,
+              "day_pnl": -2.04,
+              "day_pct": -0.35
             },
             {
               "symbol": "DOT",
               "shares": 664.140435,
               "entry_price": 0.9411,
               "cost_basis": 625.02,
-              "price": 0.827,
-              "value": 549.24,
-              "pnl": -75.78,
-              "pnl_pct": -12.12,
-              "day_pnl": -15.69,
-              "day_pct": -2.78
+              "price": 0.828,
+              "value": 549.91,
+              "pnl": -75.11,
+              "pnl_pct": -12.02,
+              "day_pnl": -15.03,
+              "day_pct": -2.66
             },
             {
               "symbol": "SHIB",
@@ -1364,24 +1364,24 @@
               "shares": 3.208255,
               "entry_price": 194.81,
               "cost_basis": 625.0,
-              "price": 196.58,
-              "value": 630.68,
-              "pnl": 5.68,
-              "pnl_pct": 0.91,
-              "day_pnl": -0.64,
-              "day_pct": -0.1
+              "price": 196.45,
+              "value": 630.26,
+              "pnl": 5.26,
+              "pnl_pct": 0.84,
+              "day_pnl": -1.05,
+              "day_pct": -0.17
             },
             {
               "symbol": "NEAR",
               "shares": 297.640451,
               "entry_price": 2.1,
               "cost_basis": 625.04,
-              "price": 1.85,
-              "value": 550.04,
-              "pnl": -75.01,
-              "pnl_pct": -12.0,
-              "day_pnl": 14.73,
-              "day_pct": 2.75
+              "price": 1.86,
+              "value": 552.12,
+              "pnl": -72.92,
+              "pnl_pct": -11.67,
+              "day_pnl": 16.81,
+              "day_pct": 3.14
             },
             {
               "symbol": "UNI",
@@ -1389,59 +1389,59 @@
               "entry_price": 2.98,
               "cost_basis": 624.49,
               "price": 2.94,
-              "value": 616.53,
-              "pnl": -7.96,
-              "pnl_pct": -1.28,
-              "day_pnl": -3.5,
-              "day_pct": -0.56
+              "value": 616.74,
+              "pnl": -7.75,
+              "pnl_pct": -1.24,
+              "day_pnl": -3.29,
+              "day_pct": -0.53
             },
             {
               "symbol": "LTC",
               "shares": 14.063987,
               "entry_price": 44.44,
               "cost_basis": 625.0,
-              "price": 42.28,
-              "value": 594.63,
-              "pnl": -30.38,
-              "pnl_pct": -4.86,
-              "day_pnl": 6.1,
-              "day_pct": 1.04
+              "price": 42.23,
+              "value": 593.92,
+              "pnl": -31.08,
+              "pnl_pct": -4.97,
+              "day_pnl": 5.4,
+              "day_pct": 0.92
             },
             {
               "symbol": "APT",
               "shares": 965.893934,
               "entry_price": 0.6471,
               "cost_basis": 625.03,
-              "price": 0.584,
-              "value": 564.08,
-              "pnl": -60.95,
-              "pnl_pct": -9.75,
-              "day_pnl": -12.87,
-              "day_pct": -2.23
+              "price": 0.5836,
+              "value": 563.7,
+              "pnl": -61.33,
+              "pnl_pct": -9.81,
+              "day_pnl": -13.26,
+              "day_pct": -2.3
             },
             {
               "symbol": "SUI",
               "shares": 902.336801,
               "entry_price": 0.6926,
               "cost_basis": 624.96,
-              "price": 0.6902,
-              "value": 622.79,
-              "pnl": -2.17,
-              "pnl_pct": -0.35,
-              "day_pnl": -6.17,
-              "day_pct": -0.98
+              "price": 0.6873,
+              "value": 620.18,
+              "pnl": -4.78,
+              "pnl_pct": -0.77,
+              "day_pnl": -8.78,
+              "day_pct": -1.4
             },
             {
               "symbol": "ATOM",
               "shares": 356.309102,
               "entry_price": 1.75,
               "cost_basis": 623.54,
-              "price": 1.56,
-              "value": 557.27,
-              "pnl": -66.27,
-              "pnl_pct": -10.63,
-              "day_pnl": -11.2,
-              "day_pct": -1.97
+              "price": 1.57,
+              "value": 557.98,
+              "pnl": -65.56,
+              "pnl_pct": -10.51,
+              "day_pnl": -10.49,
+              "day_pct": -1.84
             },
             {
               "symbol": "ICP",
@@ -1449,23 +1449,23 @@
               "entry_price": 2.21,
               "cost_basis": 624.59,
               "price": 2.15,
-              "value": 606.5,
-              "pnl": -18.09,
-              "pnl_pct": -2.9,
-              "day_pnl": -15.41,
-              "day_pct": -2.48
+              "value": 608.2,
+              "pnl": -16.39,
+              "pnl_pct": -2.62,
+              "day_pnl": -13.72,
+              "day_pct": -2.21
             },
             {
               "symbol": "FIL",
               "shares": 800.230474,
               "entry_price": 0.781,
               "cost_basis": 624.98,
-              "price": 0.731,
-              "value": 584.97,
-              "pnl": -40.01,
-              "pnl_pct": -6.4,
-              "day_pnl": -10.11,
-              "day_pct": -1.7
+              "price": 0.732,
+              "value": 585.77,
+              "pnl": -39.21,
+              "pnl_pct": -6.27,
+              "day_pnl": -9.31,
+              "day_pct": -1.57
             },
             {
               "symbol": "ARB",
@@ -1484,12 +1484,12 @@
               "shares": 8.453199,
               "entry_price": 73.94,
               "cost_basis": 625.03,
-              "price": 93.71,
-              "value": 792.15,
-              "pnl": 167.12,
-              "pnl_pct": 26.74,
-              "day_pnl": -9.39,
-              "day_pct": -1.17
+              "price": 94.08,
+              "value": 795.28,
+              "pnl": 170.25,
+              "pnl_pct": 27.24,
+              "day_pnl": -6.26,
+              "day_pct": -0.78
             },
             {
               "symbol": "OP",
@@ -1508,12 +1508,12 @@
               "shares": 85.773722,
               "entry_price": 7.29,
               "cost_basis": 625.29,
-              "price": 7.13,
-              "value": 611.57,
-              "pnl": -13.72,
-              "pnl_pct": -2.19,
-              "day_pnl": -9.36,
-              "day_pct": -1.51
+              "price": 7.14,
+              "value": 612.42,
+              "pnl": -12.87,
+              "pnl_pct": -2.06,
+              "day_pnl": -8.5,
+              "day_pct": -1.37
             },
             {
               "symbol": "VET",
@@ -1532,12 +1532,12 @@
               "shares": 129.772536,
               "entry_price": 4.82,
               "cost_basis": 625.5,
-              "price": 4.75,
-              "value": 616.94,
-              "pnl": -8.56,
-              "pnl_pct": -1.37,
-              "day_pnl": -12.95,
-              "day_pct": -2.06
+              "price": 4.74,
+              "value": 615.51,
+              "pnl": -9.99,
+              "pnl_pct": -1.6,
+              "day_pnl": -14.37,
+              "day_pct": -2.28
             },
             {
               "symbol": "ALGO",
@@ -1557,11 +1557,11 @@
               "entry_price": 0.2098,
               "cost_basis": 624.9,
               "price": 0.1738,
-              "value": 517.74,
-              "pnl": -107.17,
-              "pnl_pct": -17.15,
-              "day_pnl": -10.9,
-              "day_pct": -2.06
+              "value": 517.59,
+              "pnl": -107.31,
+              "pnl_pct": -17.17,
+              "day_pnl": -11.04,
+              "day_pct": -2.09
             },
             {
               "symbol": "HBAR",
@@ -1569,23 +1569,23 @@
               "entry_price": 0.078,
               "cost_basis": 624.79,
               "price": 0.072,
-              "value": 576.81,
-              "pnl": -47.98,
-              "pnl_pct": -7.68,
-              "day_pnl": 10.03,
-              "day_pct": 1.77
+              "value": 576.89,
+              "pnl": -47.9,
+              "pnl_pct": -7.67,
+              "day_pnl": 10.11,
+              "day_pct": 1.78
             },
             {
               "symbol": "MKR",
               "shares": 0.39586,
               "entry_price": 1578.84,
               "cost_basis": 625.0,
-              "price": 1292.14,
-              "value": 511.51,
-              "pnl": -113.49,
-              "pnl_pct": -18.16,
-              "day_pnl": -2.26,
-              "day_pct": -0.44
+              "price": 1291.42,
+              "value": 511.22,
+              "pnl": -113.78,
+              "pnl_pct": -18.2,
+              "day_pnl": -2.55,
+              "day_pct": -0.5
             },
             {
               "symbol": "JUP",
@@ -1604,36 +1604,36 @@
               "shares": 378.263581,
               "entry_price": 1.65,
               "cost_basis": 624.13,
-              "price": 1.57,
-              "value": 594.63,
-              "pnl": -29.5,
-              "pnl_pct": -4.73,
-              "day_pnl": 1.65,
-              "day_pct": 0.28
+              "price": 1.58,
+              "value": 596.52,
+              "pnl": -27.61,
+              "pnl_pct": -4.42,
+              "day_pnl": 3.54,
+              "day_pct": 0.6
             },
             {
               "symbol": "FET",
               "shares": 3488.307242,
               "entry_price": 0.1792,
               "cost_basis": 625.1,
-              "price": 0.173,
-              "value": 603.48,
-              "pnl": -21.63,
-              "pnl_pct": -3.46,
-              "day_pnl": -14.05,
-              "day_pct": -2.27
+              "price": 0.1729,
+              "value": 603.13,
+              "pnl": -21.98,
+              "pnl_pct": -3.52,
+              "day_pnl": -14.4,
+              "day_pct": -2.33
             },
             {
               "symbol": "ONDO",
               "shares": 1895.392578,
               "entry_price": 0.3297,
               "cost_basis": 624.91,
-              "price": 0.3106,
-              "value": 588.77,
-              "pnl": -36.15,
-              "pnl_pct": -5.78,
-              "day_pnl": -10.93,
-              "day_pct": -1.82
+              "price": 0.3109,
+              "value": 589.2,
+              "pnl": -35.71,
+              "pnl_pct": -5.71,
+              "day_pnl": -10.5,
+              "day_pct": -1.75
             },
             {
               "symbol": "WIF",
@@ -1652,84 +1652,84 @@
               "shares": 1520.252177,
               "entry_price": 0.4111,
               "cost_basis": 624.98,
-              "price": 0.3946,
-              "value": 599.94,
-              "pnl": -25.04,
-              "pnl_pct": -4.01,
-              "day_pnl": -7.22,
-              "day_pct": -1.19
+              "price": 0.3945,
+              "value": 599.79,
+              "pnl": -25.19,
+              "pnl_pct": -4.03,
+              "day_pnl": -7.37,
+              "day_pct": -1.21
             },
             {
               "symbol": "QNT",
               "shares": 8.918415,
               "entry_price": 70.08,
               "cost_basis": 625.0,
-              "price": 65.49,
-              "value": 584.07,
-              "pnl": -40.94,
-              "pnl_pct": -6.55,
-              "day_pnl": -19.54,
-              "day_pct": -3.24
+              "price": 65.52,
+              "value": 584.33,
+              "pnl": -40.67,
+              "pnl_pct": -6.51,
+              "day_pnl": -19.27,
+              "day_pct": -3.19
             },
             {
               "symbol": "KAS",
               "shares": 21426.856777,
               "entry_price": 0.0292,
               "cost_basis": 625.66,
-              "price": 0.0283,
-              "value": 605.36,
-              "pnl": -20.3,
-              "pnl_pct": -3.24,
-              "day_pnl": 4.0,
-              "day_pct": 0.66
+              "price": 0.0282,
+              "value": 604.93,
+              "pnl": -20.74,
+              "pnl_pct": -3.31,
+              "day_pnl": 3.56,
+              "day_pct": 0.59
             },
             {
               "symbol": "THETA",
               "shares": 4092.2155,
               "entry_price": 0.1527,
               "cost_basis": 624.88,
-              "price": 0.1297,
-              "value": 530.79,
-              "pnl": -94.1,
-              "pnl_pct": -15.06,
-              "day_pnl": -10.68,
-              "day_pct": -1.97
+              "price": 0.13,
+              "value": 532.05,
+              "pnl": -92.83,
+              "pnl_pct": -14.86,
+              "day_pnl": -9.42,
+              "day_pct": -1.74
             },
             {
               "symbol": "WLD",
               "shares": 1033.18251,
               "entry_price": 0.6049,
               "cost_basis": 624.97,
-              "price": 0.447,
-              "value": 461.83,
-              "pnl": -163.14,
-              "pnl_pct": -26.1,
-              "day_pnl": -19.72,
-              "day_pct": -4.1
+              "price": 0.4484,
+              "value": 463.28,
+              "pnl": -161.69,
+              "pnl_pct": -25.87,
+              "day_pnl": -18.27,
+              "day_pct": -3.79
             },
             {
               "symbol": "SEI",
               "shares": 11474.627632,
               "entry_price": 0.0545,
               "cost_basis": 625.37,
-              "price": 0.0501,
-              "value": 575.45,
-              "pnl": -49.91,
-              "pnl_pct": -7.98,
-              "day_pnl": -33.77,
-              "day_pct": -5.54
+              "price": 0.0502,
+              "value": 576.14,
+              "pnl": -49.23,
+              "pnl_pct": -7.87,
+              "day_pnl": -33.08,
+              "day_pct": -5.43
             },
             {
               "symbol": "EGLD",
               "shares": 222.613157,
               "entry_price": 2.81,
               "cost_basis": 625.54,
-              "price": 2.53,
-              "value": 563.21,
-              "pnl": -62.33,
-              "pnl_pct": -9.96,
-              "day_pnl": -6.84,
-              "day_pct": -1.2
+              "price": 2.52,
+              "value": 560.99,
+              "pnl": -64.56,
+              "pnl_pct": -10.32,
+              "day_pnl": -9.07,
+              "day_pct": -1.59
             },
             {
               "symbol": "CRV",
@@ -1748,12 +1748,12 @@
               "shares": 7846.435766,
               "entry_price": 0.0797,
               "cost_basis": 625.36,
-              "price": 0.0842,
-              "value": 660.86,
-              "pnl": 35.5,
-              "pnl_pct": 5.68,
-              "day_pnl": -0.86,
-              "day_pct": -0.13
+              "price": 0.0837,
+              "value": 657.03,
+              "pnl": 31.67,
+              "pnl_pct": 5.06,
+              "day_pnl": -4.69,
+              "day_pct": -0.71
             },
             {
               "symbol": "PEPE",
@@ -1772,12 +1772,12 @@
               "shares": 25000000.631553,
               "entry_price": 2.5e-05,
               "cost_basis": 625.0,
-              "price": 2.17e-05,
-              "value": 542.5,
-              "pnl": -82.5,
-              "pnl_pct": -13.2,
-              "day_pnl": -7.5,
-              "day_pct": -1.36
+              "price": 2.18e-05,
+              "value": 545.0,
+              "pnl": -80.0,
+              "pnl_pct": -12.8,
+              "day_pnl": -5.0,
+              "day_pct": -0.91
             },
             {
               "symbol": "PENDLE",
@@ -1785,23 +1785,23 @@
               "entry_price": 1.39,
               "cost_basis": 623.06,
               "price": 1.24,
-              "value": 556.28,
-              "pnl": -66.79,
-              "pnl_pct": -10.72,
-              "day_pnl": -13.68,
-              "day_pct": -2.4
+              "value": 557.17,
+              "pnl": -65.89,
+              "pnl_pct": -10.58,
+              "day_pnl": -12.78,
+              "day_pct": -2.24
             },
             {
               "symbol": "NOT",
               "shares": 1520681.315737,
               "entry_price": 0.000411,
               "cost_basis": 625.0,
-              "price": 0.00038657,
-              "value": 587.84,
-              "pnl": -37.16,
-              "pnl_pct": -5.95,
-              "day_pnl": 6.94,
-              "day_pct": 1.2
+              "price": 0.00038775,
+              "value": 589.65,
+              "pnl": -35.35,
+              "pnl_pct": -5.66,
+              "day_pnl": 8.75,
+              "day_pct": 1.51
             }
           ],
           "trade_log": []
@@ -1840,26 +1840,26 @@
         },
         {
           "fund": "titan",
-          "week_pnl": -2868.97,
-          "week_pct": -5.77,
+          "week_pnl": -2849.14,
+          "week_pct": -5.73,
           "week_grade": "F"
         },
         {
           "fund": "equalizer",
-          "week_pnl": -3035.38,
-          "week_pct": -6.09,
+          "week_pnl": -3017.23,
+          "week_pct": -6.06,
           "week_grade": "F"
         },
         {
           "fund": "oracle",
-          "week_pnl": -3659.8,
-          "week_pct": -7.32,
+          "week_pnl": -3637.17,
+          "week_pct": -7.27,
           "week_grade": "F"
         },
         {
           "fund": "wizard",
-          "week_pnl": -4366.51,
-          "week_pct": -8.84,
+          "week_pnl": -4369.35,
+          "week_pct": -8.85,
           "week_grade": "F"
         }
       ],
@@ -1872,26 +1872,26 @@
         },
         {
           "fund": "titan",
-          "all_pnl": -3130.34,
-          "all_pct": -6.26,
+          "all_pnl": -3110.51,
+          "all_pct": -6.22,
           "overall_grade": "D"
         },
         {
           "fund": "equalizer",
-          "all_pnl": -3214.11,
-          "all_pct": -6.43,
+          "all_pnl": -3195.96,
+          "all_pct": -6.39,
           "overall_grade": "D"
         },
         {
           "fund": "oracle",
-          "all_pnl": -3658.13,
-          "all_pct": -7.32,
+          "all_pnl": -3635.5,
+          "all_pct": -7.27,
           "overall_grade": "F"
         },
         {
           "fund": "wizard",
-          "all_pnl": -4996.78,
-          "all_pct": -9.99,
+          "all_pnl": -4999.62,
+          "all_pct": -10.0,
           "overall_grade": "F"
         }
       ]
