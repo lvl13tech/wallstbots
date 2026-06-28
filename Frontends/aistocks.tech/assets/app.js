@@ -486,9 +486,11 @@ function fmtTradeTime(iso){
   return h12+':'+(m<10?'0':'')+m+' '+ap+' ET';
 }
 // Sort a COPY of the immutable trade_log for display only (never mutate source).
-//  - During the session (windowOpen): strict chronological so members follow live.
-//  - After hours (!windowOpen): grouped alphabetically by symbol, BUY before SELL
-//    within each symbol, so members can scan "bought X / sold X" per asset.
+//  - During the session (windowOpen): strict chronological, oldest -> newest.
+//  - After hours (!windowOpen): each symbol shown as a BUY->SELL pair, and the
+//    PAIRS ordered by the symbol's earliest BUY time. Reads as a clean round-trip
+//    log: 9:35 BUY SPCX / 2:00 SELL SPCX, then 9:35 BUY XYZ / 2:00 SELL XYZ, ...
+//    Close-out sells therefore sit with their buys, and the day reads in order.
 function sortTradeLog(tl, windowOpen){
   var arr = (tl||[]).slice();
   if (windowOpen) {
@@ -497,12 +499,24 @@ function sortTradeLog(tl, windowOpen){
       return ta<tb?-1:ta>tb?1:0;       // oldest first -> newest at bottom
     });
   } else {
+    // first BUY timestamp per symbol = the pair's sort key
+    var firstBuy = {};
+    arr.forEach(function(e){
+      var s=String(e&&e.symbol||''), t=String(e&&e.ts||'');
+      if (String(e&&e.action)==='BUY' && (!(s in firstBuy) || t<firstBuy[s])) firstBuy[s]=t;
+    });
+    var keyOf = function(e){
+      var s=String(e&&e.symbol||'');
+      return (s in firstBuy) ? firstBuy[s] : String(e&&e.ts||'');  // fallback: own ts
+    };
     var rank = function(act){ return act==='BUY'?0:act==='SELL'?2:1; };
     arr.sort(function(a,b){
+      var ka=keyOf(a), kb=keyOf(b);
+      if (ka!==kb) return ka<kb?-1:1;   // pairs ordered by earliest BUY time
       var sa=String(a&&a.symbol||''), sb=String(b&&b.symbol||'');
-      if (sa!==sb) return sa<sb?-1:1;   // symbol A->Z
+      if (sa!==sb) return sa<sb?-1:1;   // tie-break: keep same symbol together
       var ra=rank(a&&a.action), rb=rank(b&&b.action);
-      if (ra!==rb) return ra-rb;        // BUY before SELL within a symbol
+      if (ra!==rb) return ra-rb;        // BUY before SELL within the symbol
       var ta=String(a&&a.ts||''), tb=String(b&&b.ts||'');
       return ta<tb?-1:ta>tb?1:0;        // then by time
     });
@@ -526,7 +540,7 @@ function renderTradeLog(tl, fid, windowOpen){
       + '</tbody></table></div></div>';
   }
   var rows = sortTradeLog(tl, open).map(function(t){
-    var act=t.action||''; var c = act==='BUY'?'var(--green)':act==='SELL'?'var(--red)':'var(--muted)';
+    var act=t.action||''; var c=act==='BUY'?'var(--blue)':act==='SELL'?((t.realized!=null&&Number(t.realized)<0)?'var(--red)':'var(--green)'):'var(--muted)';
     var realized = (t.realized!=null && act==='SELL')
       ? '<td class="num '+cls(t.realized)+'">'+fmt$0(t.realized)+'</td>' : '<td class="num">-</td>';
     return '<tr><td style="white-space:nowrap;color:var(--muted);font-size:12px">'+escapeHtml(fmtTradeTime(t.ts))+'</td>'

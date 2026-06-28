@@ -751,16 +751,24 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
             _member_traded_today = False
             if fund_name == "bot13":
                 _pstate   = prev_states.get(fund_name) or {}
+                # Diff REAL positions (the accounting positions), tracked separately so
+                # any display layer can't inject phantom rows. TODAY-ONLY log: reset if
+                # the carried-forward log is from a prior day (also clears stale rows).
                 _prev_pos = _pstate.get("positions") or []
                 _prev_log = _pstate.get("trade_log") or []
+                # TODAY-ONLY log: reset if carried-forward log is from a prior day
+                # (also clears stale/phantom rows from the old buggy logic).
+                _today = et_now().date().isoformat()
+                _log_is_today = bool(_prev_log) and str((_prev_log[-1] or {}).get("ts",""))[:10] == _today
+                if not _log_is_today:
+                    _prev_pos = []
+                    _prev_log = []
                 def _bs_count(log):
                     return sum(1 for e in (log or [])
                                if str(e.get("action", "")).upper() in ("BUY", "SELL"))
                 _prev_bs = _bs_count(_prev_log)
                 _trade_log = stamp_and_log(_prev_pos, positions, _prev_log, et_now().isoformat(timespec="seconds"))
                 _new_bs  = _bs_count(_trade_log)
-                # New buy/sell this run (drives intraday trade-alert emails), per member.
-                # A close-out also counts as activity for the close-out email.
                 _member_traded_today = (_new_bs > _prev_bs) or _member_closed_out
             else:
                 _trade_log = []

@@ -948,12 +948,13 @@ def main():
         for p in stored_positions:
             p["exit_reason"] = p.get("exit_reason") or "daily close-out (3:30pm ET)"
             p["exit_time"]   = now_close
+        # Accounting HOLD (flat now), but DISPLAY preserves today's real trade story.
         b13_decision  = "HOLD"
         b13_positions = []
         b13_picks     = (prev_b13_strategy or {}).get("picks", [])
-        b13_rationale = "HOLD -- daily close-out at 3:30pm ET. All positions flattened for the day."
+        b13_rationale = (prev_b13_strategy or {}).get("rationale", "")
         b13_log       = (prev_b13_strategy or {}).get("session_log", [])
-        b13_proj      = 0.0
+        b13_proj      = float((prev_b13_strategy or {}).get("projected_return", 0.0))
         print(f"  BOT13: close-out -- flattened {len(stored_positions)} position(s) at 3:30pm ET")
     elif same_day_trade:
         # Re-use existing positions -- only re-price, don't resize
@@ -1113,9 +1114,10 @@ def main():
                         "session_open_et": "9:30",
                         "session_close_et": "16:00",
                         "positions": display_positions}
+            _display_decision = "TRADE" if traded_today else b13_decision
             strategy = {
                 "day":              today_iso,
-                "decision":         b13_decision,
+                "decision":         _display_decision,
                 "rationale":        b13_rationale,
                 "picks":            b13_picks,
                 "stop_pct":         -1.5,
@@ -1263,9 +1265,25 @@ def main():
         # from the >2% share-drift rule, so we never run the ledger for them and we
         # clear any stale log they may already carry.
         if fid == "bot13":
-            _prev_pos = (fund.get("value") or {}).get("positions") or []
+            # CRITICAL: diff the REAL accounting positions, not display_positions
+            # (which re-show today's already-closed holdings and would create phantom
+            # BUY/SELL rows). Track real positions in a separate "_real_positions" key.
+            _prev_real = (fund.get("value") or {}).get("_real_positions")
+            if _prev_real is None:
+                _prev_real = (fund.get("value") or {}).get("positions") or []
+            _cur_real = enriched   # true positions held now ([] after close-out)
             _prev_log = (fund.get("value") or {}).get("trade_log") or []
-            value["trade_log"] = stamp_and_log(_prev_pos, value.get("positions") or [], _prev_log, et_now().isoformat(timespec="seconds"))
+            # Trade History is a TODAY-ONLY log. If the carried-forward log's newest
+            # entry is from a prior day (or it's empty), start fresh -- this both keeps
+            # the box to "today's trades" and clears any stale/phantom rows from the
+            # old buggy logic on the first run that sees them.
+            _today = et_now().date().isoformat()
+            _log_is_today = bool(_prev_log) and str((_prev_log[-1] or {}).get("ts",""))[:10] == _today
+            if not _log_is_today:
+                _prev_real = []   # no carryover positions to diff against on a fresh day
+                _prev_log  = []
+            value["trade_log"]       = stamp_and_log(_prev_real, _cur_real, _prev_log, et_now().isoformat(timespec="seconds"))
+            value["_real_positions"] = _cur_real
         else:
             value["trade_log"] = []
 

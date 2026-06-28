@@ -3,11 +3,31 @@
 **Keep this file honest and current.** Update it at the end of every work session.
 When Claude finishes a change, the LAST step is to update this file.
 
-Last updated: 2026-06-24 (FULL email rebuild built+verified locally, NOT YET PUSHED — DEPLOY-email-rebuild_2026-06-24.bat; also still pending: BOT13 page during/after-hours fix + prior Today's Strategy fix)
+Last updated: 2026-06-28 (BOT13 Today's-Strategy + Trade-History fixes built+verified, NOT YET PUSHED — DEPLOY-bot13-strategy-tradehistory_2026-06-28.bat)
 `refresh_lvl13.py`, `refresh_bitbot13.py` — written and verified locally, **NOT YET
 COMMITTED/PUSHED**) ·
 Status: **CODE FIXED AND COMPILE-VERIFIED ON ALL 3 PRODUCT SITES. Owner still needs to run
 the git commit/push step (see ".bat to run" below) before any live site picks this up.** ·
+
+---
+
+**2026-06-28 — BOT13 Today's Strategy + Trade History fixes. Built + verified locally, NOT YET PUSHED.**
+Deploy: DEPLOY-bot13-strategy-tradehistory_2026-06-28.bat. All 3 sites + member pages.
+- Edge Score: close-out branches no longer zero b13_proj/rationale; they preserve the morning
+  values. Strategy box decision shows TRADE (display) once traded_today; HOLD only on a true
+  no-trade day. Killed the "HOLD -- daily close-out ... flattened" message.
+- Trade History: ledger now diffs REAL accounting positions via a separate _real_positions key
+  (display-freeze positions were injecting phantom BUY/SELL rows). TODAY-ONLY log: resets each
+  new ET day (also clears old phantom rows on first run). Every traded asset = BUY + matching
+  SELL by EOD. Sort: chronological during day (9:30am first); after close, BUY->SELL pairs
+  ordered by earliest buy time. Colors: BUY blue; SELL green if profit, red if loss.
+- Members (refresh_portfolios.py): same real-position diff + daily reset.
+- RECOVERY note: refresh_lvl13.py + refresh_bitbot13.py were NUL-corrupted (623 NULs each,
+  OneDrive/checkout) -> restored from git + NUL-stripped + refixed via Python. wallstbots was
+  truncated earlier, restored + refixed. Deploy .bat has a NUL-byte gate now.
+- Audit doc: AUDIT_BOT13_STRATEGY_BOX_TRADED_VS_NOT_2026-06-28.md.
+- DEFERRED (next, separate): aistocks rename (refresh_lvl13.py -> refresh_aistocks.py);
+  email still-not-sending follow-up (PARKED).
 
 ---
 

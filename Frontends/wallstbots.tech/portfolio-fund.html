@@ -606,8 +606,17 @@ function sortTradeLog(tl, windowOpen){
   if(windowOpen){
     arr.sort(function(a,b){ var ta=String(a&&a.ts||''),tb=String(b&&b.ts||''); return ta<tb?-1:ta>tb?1:0; });
   } else {
+    // After hours: each symbol as a BUY->SELL pair; pairs ordered by earliest BUY time.
+    var firstBuy={};
+    arr.forEach(function(e){
+      var s=String(e&&e.symbol||''),t=String(e&&e.ts||'');
+      if(String(e&&e.action)==='BUY' && (!(s in firstBuy)||t<firstBuy[s])) firstBuy[s]=t;
+    });
+    var keyOf=function(e){ var s=String(e&&e.symbol||''); return (s in firstBuy)?firstBuy[s]:String(e&&e.ts||''); };
     var rank=function(act){ return act==='BUY'?0:act==='SELL'?2:1; };
     arr.sort(function(a,b){
+      var ka=keyOf(a),kb=keyOf(b);
+      if(ka!==kb) return ka<kb?-1:1;
       var sa=String(a&&a.symbol||''),sb=String(b&&b.symbol||'');
       if(sa!==sb) return sa<sb?-1:1;
       var ra=rank(a&&a.action),rb=rank(b&&b.action);
@@ -635,7 +644,7 @@ function renderTradeLog(){
     return;
   }
   tb.innerHTML = sortTradeLog(tl, open).map(function(t){
-    var act=t.action||''; var c=act==='BUY'?'var(--green)':act==='SELL'?'var(--red)':'var(--muted)';
+    var act=t.action||''; var c=act==='BUY'?'var(--blue)':act==='SELL'?((t.realized!=null&&Number(t.realized)<0)?'var(--red)':'var(--green)'):'var(--muted)';
     var realized=(t.realized!=null && act==='SELL')?'<td class="num '+cls(t.realized)+'">'+fmt$0(t.realized)+'</td>':'<td class="num">-</td>';
     return '<tr><td style="white-space:nowrap;color:var(--muted);font-size:12px">'+escHtml(fmtTradeTime(t.ts))+'</td>'
       + '<td><strong style="color:'+c+'">'+escHtml(act)+'</strong></td>'
