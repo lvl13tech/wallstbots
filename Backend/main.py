@@ -3342,23 +3342,33 @@ async def get_email_subscribers(
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-        # Email-CONFIRMATION gate via public.users.email_confirmed (NOT a join to the
-        # auth schema -- the backend DB role cannot read auth.users, which 500s the
-        # whole endpoint). email_confirmed defaults TRUE for existing rows (so current
-        # real members keep getting mail) and is set FALSE for NEW signups until they
-        # confirm (see /auth/signup-free). COALESCE handles rows created before the
-        # column existed. Admins/webmasters always included.
-        cursor.execute("""
-            SELECT u.id, u.email, u.full_name, u.role,
+        _base_cols = """u.id, u.email, u.full_name, u.role,
                    u.email_enabled, u.email_daily, u.email_bot13_alerts,
                    u.email_weekly, u.email_monthly,
-                   u.email_portfolio, u.email_wallstbots, u.email_bitbot13, u.email_lvl13
-            FROM users u
-            WHERE u.email_enabled = TRUE
-              AND (COALESCE(u.email_confirmed, TRUE) = TRUE OR u.role IN ('admin','webmaster'))
-            ORDER BY u.created_at
-        """)
-        users = cursor.fetchall()
+                   u.email_portfolio, u.email_wallstbots, u.email_bitbot13, u.email_lvl13"""
+        # Email-CONFIRMATION gate via public.users.email_confirmed (NEVER a join to the
+        # auth schema -- the backend role cannot read auth.users). RESILIENT: if the
+        # email_confirmed column doesn't exist yet (migration not run), fall back to the
+        # plain email_enabled query so this endpoint can never 500 over a missing column.
+        try:
+            cursor.execute(f"""
+                SELECT {_base_cols}
+                FROM users u
+                WHERE u.email_enabled = TRUE
+                  AND (COALESCE(u.email_confirmed, TRUE) = TRUE OR u.role IN ('admin','webmaster'))
+                ORDER BY u.created_at
+            """)
+            users = cursor.fetchall()
+        except Exception as _col_err:
+            conn.rollback()
+            print(f"[email-subscribers] email_confirmed gate unavailable ({_col_err}); falling back to email_enabled only")
+            cursor.execute(f"""
+                SELECT {_base_cols}
+                FROM users u
+                WHERE u.email_enabled = TRUE
+                ORDER BY u.created_at
+            """)
+            users = cursor.fetchall()
 
         subscribers = []
         for u in users:
