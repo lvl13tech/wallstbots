@@ -942,7 +942,12 @@ def main():
     elif close_out_due:
         # 3:30 PM ET close-out -- force-flatten every held position right now with
         # a genuine exit_time, so the trade log records a real same-day SELL.
-        now_close = et_now().isoformat(timespec="seconds")
+        # Stamp the SELL at the TRADING DAY's session close (16:00 ET), NOT the wall-clock
+        # time of whatever run executes this -- a dropped close-out cron firing later must
+        # not record a trade outside market hours.
+        _eh, _em = EQUITY_CFG["session_end"]
+        _trade_day = (prev_b13_strategy or {}).get("day") or today_iso
+        now_close = f"{_trade_day}T{_eh:02d}:{_em:02d}:00"
         for p in stored_positions:
             p["exit_reason"] = p.get("exit_reason") or "daily close-out (3:30pm ET)"
             p["exit_time"]   = now_close
@@ -1021,6 +1026,27 @@ def main():
         )
         print(f"  BOT13: {b13_decision} ({len(b13_picks)} picks)")
 
+    # -- GROUND-TRUTH GUARD: never let a no-edge re-eval erase a day that TRADED ----
+    # trade_log is authoritative: if BOT13 placed real BUY/SELL rows today, the Strategy
+    # box must reflect a trading day, not a fresh "not enough edge" HOLD from a late re-eval.
+    _log_now = (funds.get("bot13", {}).get("value", {}).get("trade_log") or [])
+    _traded_today_log = any(
+        str(e.get("ts",""))[:10] == today_iso
+        and str(e.get("action","")).upper() in ("BUY", "SELL")
+        for e in _log_now
+    )
+    if _traded_today_log and b13_decision == "HOLD" and (
+        "not enough edge" in (b13_rationale or "").lower()
+        or b13_proj <= EQUITY_CFG["proj_threshold"]
+    ):
+        _prev_proj = float((prev_b13_strategy or {}).get("projected_return", 0.0) or 0.0)
+        if _prev_proj > b13_proj:
+            b13_proj = _prev_proj
+        if not b13_picks:
+            b13_picks = (prev_b13_strategy or {}).get("picks", [])
+        b13_rationale = "Session complete -- BOT13 traded today and closed out by session end."
+        print("  BOT13: ground-truth guard -- restored TRADE-day story")
+
     # -- ORACLE decision (Monday only, otherwise keep existing positions) ------
     oracle_new_positions = None
     oracle_new_picks     = None
@@ -1095,8 +1121,15 @@ def main():
             # close here because HOLD carries prev_b13_total). traded_today lets the
             # frontend show "End of trading - now holding cash" vs
             # "Holding cash - no trades made today".
-            traded_today = ((prev_b13_strategy or {}).get("day") == today_iso
-                            and bool((prev_b13_strategy or {}).get("picks")))
+            _stored_log = (funds.get("bot13", {}).get("value", {}).get("trade_log") or [])
+            _traded_in_log = any(
+                str(e.get("ts",""))[:10] == today_iso
+                and str(e.get("action","")).upper() in ("BUY","SELL")
+                for e in _stored_log
+            )
+            traded_today = _traded_in_log or (
+                (prev_b13_strategy or {}).get("day") == today_iso and bool((prev_b13_strategy or {}).get("picks"))
+            )
             display_positions = enriched
             if not enriched and traded_today and stored_positions:
                 display_positions = [enrich_position(p, prices, prev_closes) for p in stored_positions]
@@ -1278,7 +1311,17 @@ def main():
             if not _log_is_today:
                 _prev_real = []   # no carryover positions to diff against on a fresh day
                 _prev_log  = []
-            value["trade_log"]       = stamp_and_log(_prev_real, _cur_real, _prev_log, et_now().isoformat(timespec="seconds"))
+            # Window-clamped timestamp: a SELL must never be stamped outside market hours.
+            # If this run executes after the session close (e.g. a dropped close-out cron
+            # firing later), clamp the log time to the session close (16:00) of the trading day.
+            _now_et = et_now()
+            _eh2, _em2 = EQUITY_CFG["session_end"]
+            if (_now_et.hour*60+_now_et.minute) >= (_eh2*60+_em2) or _now_et.hour < EQUITY_CFG["session_start"][0]:
+                _td = (prev_b13_strategy or {}).get("day") or today_iso
+                _log_ts = f"{_td}T{_eh2:02d}:{_em2:02d}:00"
+            else:
+                _log_ts = _now_et.isoformat(timespec="seconds")
+            value["trade_log"]       = stamp_and_log(_prev_real, _cur_real, _prev_log, _log_ts)
             value["_real_positions"] = _cur_real
         else:
             value["trade_log"] = []
