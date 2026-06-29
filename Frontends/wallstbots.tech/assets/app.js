@@ -742,6 +742,14 @@ let GY_ADMIN_CODE = '';   // set when an admin lifetime code is applied
 let GY_ADMIN_TIER = 'insider'; // tier granted by the admin code ('insider' or 'syndicate')
 
 function renderGetYours() {
+  // Load Cloudflare Turnstile script once (captcha on the free signup form).
+  if (!document.getElementById('cf-turnstile-script')) {
+    var _ts = document.createElement('script');
+    _ts.id = 'cf-turnstile-script';
+    _ts.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    _ts.async = true; _ts.defer = true;
+    document.head.appendChild(_ts);
+  }
   const urlRef = new URLSearchParams(location.search).get('ref')
               || new URLSearchParams(location.hash.split('?')[1] || '').get('ref') || '';
 
@@ -773,6 +781,7 @@ function renderGetYours() {
     + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:8px">'
     + '<input id="freePassword" type="password" placeholder="Create a password (8+ characters)" minlength="8" '
     + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:8px">'
+    + '<div class="cf-turnstile" data-sitekey="YOUR_TURNSTILE_SITE_KEY" data-theme="dark" style="margin-bottom:8px"></div>'
     + '<button onclick="gyFreeSignup()" style="width:100%;background:var(--surface2);color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:10px 0;font-weight:700;cursor:pointer;font-size:14px">Create Free Account →</button>'
     + '<div id="freeMsg" style="font-size:12px;margin-top:6px;min-height:16px"></div>'
     + '</div></div></div>'
@@ -878,7 +887,7 @@ async function gyFreeSignup() {
     const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/auth/signup-free', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, platform: 'wallstbots' })
+      body: JSON.stringify({ email, password, platform: 'wallstbots', turnstile_token: (window.turnstile ? turnstile.getResponse() : '') })
     });
     const data = await r.json().catch(() => ({}));
     if (r.ok && data.success) {

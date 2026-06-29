@@ -170,6 +170,7 @@ class SignUpRequest(BaseModel):
     email: EmailStr
     password: str
     full_name: Optional[str] = None
+    turnstile_token: Optional[str] = None  # Cloudflare Turnstile captcha token
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -247,6 +248,7 @@ class FreeSignupRequest(BaseModel):
     password: str
     full_name: Optional[str] = None
     platform: Optional[str] = None   # which site they signed up from (informational)
+    turnstile_token: Optional[str] = None  # Cloudflare Turnstile captcha token
 
 class SupportTicketCreate(BaseModel):
     email: str
@@ -347,6 +349,30 @@ def require_webmaster(current_user: dict = Depends(get_current_user_with_role)) 
     return current_user
 
 
+TURNSTILE_SECRET_KEY = os.getenv("TURNSTILE_SECRET_KEY", "")
+
+
+def verify_turnstile(token: str, remote_ip: str = None) -> bool:
+    """Verify a Cloudflare Turnstile captcha token. Returns True if valid.
+    GRACEFUL: if TURNSTILE_SECRET_KEY is not configured yet, returns True so
+    signups keep working until the key is added (then enforcement turns on)."""
+    if not TURNSTILE_SECRET_KEY:
+        return True  # captcha not configured yet -> do not block signups
+    if not token:
+        return False
+    try:
+        data = {"secret": TURNSTILE_SECRET_KEY, "response": token}
+        if remote_ip:
+            data["remoteip"] = remote_ip
+        r = requests.post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data=data, timeout=10,
+        )
+        return bool(r.status_code == 200 and r.json().get("success") is True)
+    except Exception:
+        return False
+
+
 def call_supabase_auth(method: str, endpoint: str, data: dict = None) -> dict:
     url = f"{SUPABASE_URL}/auth/v1{endpoint}"
     headers = {"apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json"}
@@ -372,6 +398,9 @@ async def signup(request: SignUpRequest):
     The DB trigger (users_generate_referral_code) auto-generates the referral code.
     After the user row is committed, we backfill the referral_codes table.
     """
+    # Captcha gate (defense in depth) -- graceful if TURNSTILE_SECRET_KEY unset.
+    if not verify_turnstile(getattr(request, "turnstile_token", None)):
+        raise HTTPException(status_code=400, detail="Captcha verification failed. Please try again.")
     try:
         auth_response = call_supabase_auth("POST", "/signup", {
             "email": request.email,
@@ -637,6 +666,10 @@ async def signup_free(request: FreeSignupRequest):
     same row's subscription_tier — they never sign up twice. Returns an access
     token so the user is logged in immediately. Mirrors signup-with-admin-code.
     """
+    # 0. Captcha gate -- block automated/bot signups (Cloudflare Turnstile).
+    if not verify_turnstile(getattr(request, "turnstile_token", None)):
+        raise HTTPException(status_code=400, detail="Captcha verification failed. Please try again.")
+
     # 1. Create the Supabase auth user (real email + password account)
     try:
         auth_response = call_supabase_auth("POST", "/signup", {
