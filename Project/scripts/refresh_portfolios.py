@@ -8,7 +8,7 @@ and pushes results to /internal/portfolio-bot-state/upsert.
 
 Called by each platform's refresh script after pushing global state.
 Reuses prices + hist_data already fetched -- no extra API calls needed
-when called inline from refresh_lvl13.py / refresh_wallstbots.py / refresh_bitbot13.py.
+when called inline from refresh_aistocks.py / refresh_wallstbots.py / refresh_bitbot13.py.
 
 Can also be run standalone:
     python Project/scripts/refresh_portfolios.py --platform lvl13
@@ -606,7 +606,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 # Daily close-out: BOT13 must be fully flat by 3:30 PM ET (equity) /
                 # 9 PM ET (crypto). If we're past that cutoff and the member's stored
                 # state still shows today's strategy as TRADE with open positions, the
-                # platform tracker (refresh_wallstbots.py / refresh_lvl13.py /
+                # platform tracker (refresh_wallstbots.py / refresh_aistocks.py /
                 # refresh_bitbot13.py) has already force-flattened for the day -- this
                 # member-side script must mirror that, instead of re-asking
                 # run_bot13_equity/run_bot13_crypto "what would you do right now" and

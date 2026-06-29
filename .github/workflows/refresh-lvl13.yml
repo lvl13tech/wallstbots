@@ -1,4 +1,4 @@
-name: Refresh aistocks.tech (AI/Quantum — script still named lvl13)
+name: Refresh aistocks.tech (AI/Quantum)
 
 on:
   schedule:
@@ -33,7 +33,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: pip-lvl13-${{ hashFiles('**/refresh_lvl13.py') }}
+          key: pip-aistocks-${{ hashFiles('**/refresh_aistocks.py') }}
           restore-keys: pip-lvl13-
 
       - name: Install dependencies
@@ -51,7 +51,7 @@ jobs:
       - name: Verify script exists and prepare data dir
         run: |
           echo "=== Script check ==="
-          ls -la Project/scripts/refresh_lvl13.py
+          ls -la Project/scripts/refresh_aistocks.py
           # The data folder is no longer committed to the repo (sites read the
           # backend API). Create it locally so the refresh script can write its
           # working JSON, which send_emails.py reads later in this run.
@@ -75,7 +75,7 @@ jobs:
           INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
         run: |
           echo "=== Running refresh script ==="
-          python Project/scripts/refresh_lvl13.py
+          python Project/scripts/refresh_aistocks.py
           echo "=== Script exit code: $? ==="
 
       # Heartbeat: aistocks reads its data from the backend API, so this workflow
@@ -107,7 +107,7 @@ jobs:
       # now only refreshes aistocks data; it sends no email.
 
       # Data flow note (post-migration): this workflow drives the AI/QUANTUM
-      # product site, aistocks.tech. refresh_lvl13.py pushes tracker data to the
+      # product site, aistocks.tech. refresh_aistocks.py pushes tracker data to the
       # backend API as platform "aistocks", and aistocks.tech reads it from the
       # API — there is no file deploy step. (The script keeps the lvl13 filename
       # for historical reasons; only the backend platform key is "aistocks".)

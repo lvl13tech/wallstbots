@@ -775,7 +775,7 @@ def main():
     secrets     = load_secrets()
     newsapi_key = secrets.get("newsapi_key") or os.environ.get("NEWSAPI_KEY", "")
 
-    print("[lvl13] loading state.json...")
+    print("[aistocks] loading state.json...")
     raw = None
     if STATE_FILE.exists():
         try:
@@ -828,16 +828,16 @@ def main():
     print(f"[wallstbots] fetching prices for {len(need_syms)} symbols...")
     prices, prev_closes = get_live_prices(sorted(need_syms))
     if not prices:
-        print("[lvl13] ERROR: zero prices from all attempts -- aborting to protect DB data.")
+        print("[aistocks] ERROR: zero prices from all attempts -- aborting to protect DB data.")
         sys.exit(1)
     elif len(prices) < len(need_syms) * 0.5:
-        print(f"[lvl13] WARNING: only {len(prices)}/{len(need_syms)} prices -- partial data, continuing with caution.")
+        print(f"[aistocks] WARNING: only {len(prices)}/{len(need_syms)} prices -- partial data, continuing with caution.")
 
     # -- Fetch historical data for strategy scoring ---------------------------
     hist_data = get_hist_data(list(need_syms))
 
     # -- BOT13 decision -------------------------------------------------------
-    print(f"[lvl13] running BOT13 decision (phase: {_engine_session_phase(EQUITY_CFG)})...")
+    print(f"[aistocks] running BOT13 decision (phase: {_engine_session_phase(EQUITY_CFG)})...")
     prev_b13_strategy = funds.get("bot13", {}).get("current_strategy")
     # Use the fund's current running total so gains compound day-over-day
     prev_b13_total = float(funds.get("bot13", {}).get("value", {}).get("total") or sc_global)
@@ -1356,14 +1356,14 @@ def main():
     push_to_api("signals", signals_data, secrets)
 
     # -- News ------------------------------------------------------------------
-    print("[lvl13] fetching news...")
+    print("[aistocks] fetching news...")
     news_items = fetch_news(newsapi_key)
     news_data = {
         "items":        news_items,
         "sectors":      sorted({it["sector"] for it in news_items}) if news_items else [],
         "generated_at": dt.datetime.utcnow().isoformat() + "Z",
     }
-    print(f"[lvl13] news -- {len(news_items)} articles")
+    print(f"[aistocks] news -- {len(news_items)} articles")
     push_to_api("news", news_data, secrets)
 
     # -- Reports (placeholder -- keeps API consistent) --------------------------
@@ -1371,13 +1371,13 @@ def main():
 
     # -- Portfolio performance snapshots ----------------------------------------
     # -- Member portfolio simulations ------------------------------------------
-    print("[lvl13] running member portfolio simulations...")
+    print("[aistocks] running member portfolio simulations...")
     refresh_portfolios.run("aistocks", prices, prev_closes, hist_data, secrets)
 
     # -- Portfolio snapshots ---------------------------------------------------
     trigger_portfolio_snapshots(secrets)
 
-    print("[lvl13] refresh complete.")
+    print("[aistocks] refresh complete.")
 
 
 if __name__ == "__main__":
