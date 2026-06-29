@@ -48,7 +48,7 @@ PLATFORM   = "bitbot13"
 DRY        = "--dry" in sys.argv
 
 START_CAP = 50000.0
-TODAY_ISO = "2026-06-22"
+TODAY_ISO = "2026-06-29"  # start fresh from the next crypto session (set at run time)
 BOTS      = ["bot13", "oracle", "wizard", "equalizer", "titan"]
 
 
