@@ -441,6 +441,21 @@ async def login(request: LoginRequest):
             "email": request.email,
             "password": request.password
         })
+        # Self-heal email_confirmed: a successful password login means the account is
+        # in good standing (unconfirmed users can't get a token on a confirm-required
+        # project), so mark them confirmed -> they resume receiving member emails.
+        try:
+            _uid = (auth_response.get("user") or {}).get("id")
+            if _uid:
+                _c = get_db_connection()
+                try:
+                    _cur = _c.cursor()
+                    _cur.execute("UPDATE users SET email_confirmed = TRUE WHERE id = %s", (_uid,))
+                    _c.commit(); _cur.close()
+                finally:
+                    return_db_connection(_c)
+        except Exception:
+            pass
         return {
             "success":       True,
             "access_token":  auth_response["access_token"],
@@ -512,6 +527,14 @@ async def startup_migration():
                     WHERE table_name='users' AND column_name='admin_code_used'
                 ) THEN
                     ALTER TABLE users ADD COLUMN admin_code_used BOOLEAN DEFAULT FALSE;
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name='users' AND column_name='email_confirmed'
+                ) THEN
+                    -- Default TRUE so existing real members keep receiving mail; new
+                    -- free signups set it FALSE until they confirm their email.
+                    ALTER TABLE users ADD COLUMN email_confirmed BOOLEAN DEFAULT TRUE;
                 END IF;
             END $$;
         """)
@@ -634,8 +657,8 @@ async def signup_free(request: FreeSignupRequest):
     try:
         cursor = conn.cursor(row_factory=dict_row)
         cursor.execute("""
-            INSERT INTO users (id, email, full_name, subscription_tier, tier_expires_at)
-            VALUES (%s, %s, %s, 'free', NULL)
+            INSERT INTO users (id, email, full_name, subscription_tier, tier_expires_at, email_confirmed)
+            VALUES (%s, %s, %s, 'free', NULL, FALSE)
             ON CONFLICT (id) DO UPDATE SET
                 email     = EXCLUDED.email,
                 full_name = EXCLUDED.full_name
@@ -3319,20 +3342,20 @@ async def get_email_subscribers(
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
-        # Email-CONFIRMATION gate: only send to users whose Supabase auth email is
-        # confirmed (email_confirmed_at IS NOT NULL). This blocks bot/spam signups on
-        # disposable domains -- they can never confirm, so they never receive mail,
-        # regardless of how the account was created. Admins/webmasters are always
-        # included (they may be seeded without a confirm step).
+        # Email-CONFIRMATION gate via public.users.email_confirmed (NOT a join to the
+        # auth schema -- the backend DB role cannot read auth.users, which 500s the
+        # whole endpoint). email_confirmed defaults TRUE for existing rows (so current
+        # real members keep getting mail) and is set FALSE for NEW signups until they
+        # confirm (see /auth/signup-free). COALESCE handles rows created before the
+        # column existed. Admins/webmasters always included.
         cursor.execute("""
             SELECT u.id, u.email, u.full_name, u.role,
                    u.email_enabled, u.email_daily, u.email_bot13_alerts,
                    u.email_weekly, u.email_monthly,
                    u.email_portfolio, u.email_wallstbots, u.email_bitbot13, u.email_lvl13
             FROM users u
-            LEFT JOIN auth.users au ON au.id = u.id
             WHERE u.email_enabled = TRUE
-              AND (au.email_confirmed_at IS NOT NULL OR u.role IN ('admin','webmaster'))
+              AND (COALESCE(u.email_confirmed, TRUE) = TRUE OR u.role IN ('admin','webmaster'))
             ORDER BY u.created_at
         """)
         users = cursor.fetchall()
