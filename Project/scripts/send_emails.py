@@ -131,10 +131,14 @@ def _load_platform_from_backend(platform: str) -> dict:
 
 def load_platform_data(platform: str) -> dict:
     """Load state.json + signals.json for a platform. Returns a normalised dict.
-    The AI/quantum section (key "lvl13") is read from the aistocks backend API,
-    since that data is no longer committed to disk after the migration."""
+    The AI/quantum section (key "lvl13") and bitbot13 are read from the backend API
+    (their authoritative source; the committed bitbot13 state.json can be stale or
+    corrupt and the live site reads the backend anyway). wallstbots still reads its
+    committed data file."""
     if platform == "lvl13":
         return _load_platform_from_backend(AISTOCKS_PLATFORM)
+    if platform == "bitbot13":
+        return _load_platform_from_backend("bitbot13")
     base = PLATFORM_DATA_PATHS[platform]
     try:
         state_raw   = json.loads((base / "state.json").read_text())
