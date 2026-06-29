@@ -3,25 +3,22 @@
 """
 remove_spam_users.py — find + hard-delete spam/bot signup accounts.
 
-Logs in as an admin (your account), looks up each target email via /admin/users,
-prints what it found, and (with --apply) calls DELETE /admin/users/{id} to remove
-the user + all their data + the Supabase auth row.
-
-Usage (from C:\\Claude\\Websites\\WallStBots):
-    set ADMIN_EMAIL=you@youremail.com
-    set ADMIN_PASSWORD=your_admin_password
-    python Project\\scripts\\remove_spam_users.py            (dry run - shows, deletes nothing)
-    python Project\\scripts\\remove_spam_users.py --apply    (actually delete)
-
-Backend URL comes from secrets.json (api_url) or BACKEND_URL env.
-Credentials are read from env only and never printed.
+Logs in as an admin (creds from ADMIN_EMAIL/ADMIN_PASSWORD env, set by the .bat
+prompt), looks up each target email via /admin/users, prints what it found, and
+(with --apply) calls DELETE /admin/users/{id} to remove the user + all data + the
+Supabase auth row. Dry run by default.
 """
-import os, sys, json, urllib.request, urllib.error
+import os
+import sys
+import json
+import urllib.parse
+import urllib.request
+import urllib.error
 from pathlib import Path
 
+print("=== remove_spam_users.py starting ===", flush=True)
 APPLY = "--apply" in sys.argv
 
-# The confirmed spam/bot signups to remove (disposable / unknown domains).
 TARGETS = [
     "yasuo11111@proton.me",
     "renavit147@fanchatu.com",
@@ -32,9 +29,12 @@ ROOT = Path(__file__).resolve().parents[2]
 sec = {}
 sp = ROOT / "Project" / "config" / "secrets.json"
 if sp.exists():
-    sec = json.loads(sp.read_text())
+    try:
+        sec = json.loads(sp.read_text())
+    except Exception as e:
+        print("WARNING: could not read secrets.json:", e)
 BACKEND = (sec.get("api_url") or os.environ.get("BACKEND_URL", "")).rstrip("/")
-EMAIL = os.environ.get("ADMIN_EMAIL", "")
+EMAIL = os.environ.get("ADMIN_EMAIL", "").strip()
 PW    = os.environ.get("ADMIN_PASSWORD", "")
 
 
@@ -49,46 +49,56 @@ def _req(method, path, token=None, body=None):
         r = urllib.request.urlopen(req, timeout=30)
         return r.status, json.loads(r.read().decode() or "{}")
     except urllib.error.HTTPError as e:
-        return e.code, {"error": e.read().decode()[:300]}
+        try:
+            return e.code, json.loads(e.read().decode() or "{}")
+        except Exception:
+            return e.code, {"error": "http error"}
+    except Exception as e:
+        return -1, {"error": repr(e)}
 
 
 def main():
     print("BACKEND:", BACKEND or "(MISSING)")
+    print("ADMIN_EMAIL:", EMAIL or "(MISSING)")
     if not BACKEND or not EMAIL or not PW:
-        print("Set ADMIN_EMAIL + ADMIN_PASSWORD env vars first (and ensure api_url in secrets.json).")
+        print("ERROR: need BACKEND (secrets.json api_url) + ADMIN_EMAIL + ADMIN_PASSWORD.")
         sys.exit(1)
 
     st, resp = _req("POST", "/auth/login", body={"email": EMAIL, "password": PW})
     if st != 200 or not resp.get("access_token"):
-        print("LOGIN FAILED:", st, resp); sys.exit(1)
+        print("LOGIN FAILED:", st, resp)
+        sys.exit(1)
     token = resp["access_token"]
     print("admin login OK\n")
 
     print("=== MODE:", "APPLY (will delete)" if APPLY else "DRY RUN (no changes)", "===\n")
     for email in TARGETS:
-        st, resp = _req("GET", f"/admin/users?search={urllib.parse.quote(email)}", token=token)
+        st, resp = _req("GET", "/admin/users?search=" + urllib.parse.quote(email), token=token)
         users = (resp or {}).get("users", []) if st == 200 else []
-        match = [u for u in users if (u.get("email","").lower() == email.lower())]
+        match = [u for u in users if u.get("email", "").lower() == email.lower()]
         if not match:
-            print(f"  {email}: not found (already gone?)")
+            print("  %s: not found (already gone?)" % email)
             continue
         u = match[0]
-        print(f"  {email}: id={u['id']} role={u['role']} created={u.get('created_at')} "
-              f"paid=${u.get('total_paid',0)} platforms={u.get('active_platforms',0)}")
+        print("  %s: id=%s role=%s created=%s paid=$%s platforms=%s" % (
+            email, u["id"], u["role"], u.get("created_at"),
+            u.get("total_paid", 0), u.get("active_platforms", 0)))
         if u.get("role") == "admin":
-            print("    -> SKIP: admin account, not deleting.")
+            print("    -> SKIP: admin account.")
             continue
         if float(u.get("total_paid", 0) or 0) > 0:
-            print("    -> CAUTION: this account has payments; skipping to be safe. Remove manually if intended.")
+            print("    -> CAUTION: has payments; skipping. Remove manually if intended.")
             continue
         if APPLY:
-            ds, dr = _req("DELETE", f"/admin/users/{u['id']}", token=token)
-            print(f"    -> DELETE -> HTTP {ds} {dr if ds!=200 else 'OK rows='+str(dr.get('rows_deleted')) + ' auth='+str(dr.get('auth_user_deleted'))}")
+            ds, dr = _req("DELETE", "/admin/users/" + str(u["id"]), token=token)
+            if ds == 200:
+                print("    -> DELETED ok. rows=%s auth=%s" % (dr.get("rows_deleted"), dr.get("auth_user_deleted")))
+            else:
+                print("    -> DELETE FAILED HTTP %s: %s" % (ds, dr))
         else:
-            print("    -> would delete (run with --apply)")
-    print("\nDone.", "" if APPLY else "(dry run — nothing changed)")
+            print("    -> would delete (choose APPLY to remove)")
+    print("\nDone." if APPLY else "\nDone (dry run -- nothing changed).")
 
 
 if __name__ == "__main__":
-    import urllib.parse
     main()
