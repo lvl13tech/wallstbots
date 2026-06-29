@@ -451,9 +451,14 @@ function fmtTradeTime(iso){
 function sortTradeLog(tl, windowOpen){
   var arr = (tl||[]).slice();
   if (windowOpen) {
+    // During the session: chronological by time. Within the SAME timestamp, a SELL
+    // comes before a BUY -- on a strategy rotation the bot closes its prior positions
+    // first (freeing capital), then opens the new ones, so closes must list first.
+    var _rk = function(act){ return act==='SELL'?0:act==='BUY'?1:2; };
     arr.sort(function(a,b){
       var ta=String(a&&a.ts||''), tb=String(b&&b.ts||'');
-      return ta<tb?-1:ta>tb?1:0;       // oldest first -> newest at bottom
+      if (ta!==tb) return ta<tb?-1:1;
+      return _rk(String(a&&a.action))-_rk(String(b&&b.action));
     });
   } else {
     // first BUY timestamp per symbol = the pair's sort key
@@ -487,7 +492,8 @@ function renderTradeLog(tl, fid, windowOpen){
   var open = windowOpen !== false;
   var sub  = open ? 'Every buy and sell is timestamped, in the order it happened.'
                   : 'Today\u2019s trades, grouped by symbol \u2014 buy then sell.';
-  var head = '<div class="panel"><h3>Trade History</h3>'
+  var _thDate = new Date().toLocaleDateString('en-US', {timeZone:'America/New_York', month:'short', day:'numeric', year:'numeric'});
+  var head = '<div class="panel"><h3>Trade History - '+_thDate+'</h3>'
     + '<div style="color:var(--muted);font-size:12px;margin:-4px 0 10px">'+sub+'</div>'
     + '<div class="tbl-wrap"><table>'
     + '<thead><tr><th>Time</th><th>Action</th><th>Symbol</th><th class="num">Shares</th><th class="num">Price</th><th class="num">Realized P&amp;L</th><th>Note</th></tr></thead>'
@@ -572,7 +578,7 @@ function renderFund(fid) {
     + '<div class="fund-value '+cls(v.day_pnl)+'">'+fmt$0(v.day_pnl)+'</div>'
     + '<div class="fund-pnl '+cls(v.day_pct)+'">'+fmtPct(v.day_pct)+' since yesterday</div></div></div>'
     + strategyHTML
-    + '<div class="panel"><h3>Holdings</h3>'
+    + '<div class="panel"><h3>Current Holdings</h3>'
     + '<div class="tbl-wrap"><table>'
     + '<thead><tr><th>Symbol</th><th class="num">Shares</th><th class="num">Entry</th>'
     + '<th class="num">Price</th><th class="num">Value</th><th class="num">Today</th>'
@@ -587,7 +593,7 @@ function renderStrategyPanel(fid, strat) {
   const period = fid==='bot13' ? 'Day of '+strat.day
                : fid==='oracle' ? 'Week of '+strat.week
                : 'Month of '+strat.month;
-  const label  = fid==='bot13' ? "TODAY'S STRATEGY"
+  const label  = fid==='bot13' ? "CURRENT SESSION'S STRATEGY"
                : fid==='oracle' ? "THIS WEEK'S STRATEGY"
                : "THIS MONTH'S STRATEGY";
   const projLabel = fid==='bot13' ? 'Projected Return'

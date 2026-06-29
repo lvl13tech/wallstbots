@@ -233,7 +233,7 @@
 
   <!-- Holdings table — identical to renderFund() -->
   <div class="panel" id="holdingsPanel">
-    <h3>Holdings</h3>
+    <h3>Current Holdings</h3>
     <div class="tbl-wrap"><table>
       <thead><tr>
         <th>Symbol</th><th class="num">Shares</th><th class="num">Entry</th>
@@ -246,7 +246,7 @@
 
   <!-- Trade History (transparency feature) -->
   <div class="panel" id="tradeLogPanel" style="display:none">
-    <h3>Trade History</h3>
+    <h3 id="tradeLogTitle">Trade History</h3>
     <div id="tradeLogSubtitle" style="color:var(--muted);font-size:12px;margin:-4px 0 10px">Every buy and sell is timestamped.</div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>Time</th><th>Action</th><th>Symbol</th><th class="num">Shares</th><th class="num">Price</th><th class="num">Realized P&amp;L</th><th>Note</th></tr></thead>
@@ -540,7 +540,7 @@ function renderStrategyPanel(fid, strat) {
   const period = fid==='bot13' ? 'Day of '+strat.day
                : fid==='oracle' ? 'Week of '+strat.week
                : 'Month of '+strat.month;
-  const label  = fid==='bot13' ? "TODAY'S STRATEGY"
+  const label  = fid==='bot13' ? "CURRENT SESSION'S STRATEGY"
                : fid==='oracle' ? "THIS WEEK'S STRATEGY"
                : "THIS MONTH'S STRATEGY";
   const projLabel = fid==='bot13' ? 'Projected Return'
@@ -604,7 +604,13 @@ function fmtTradeTime(iso){
 function sortTradeLog(tl, windowOpen){
   var arr=(tl||[]).slice();
   if(windowOpen){
-    arr.sort(function(a,b){ var ta=String(a&&a.ts||''),tb=String(b&&b.ts||''); return ta<tb?-1:ta>tb?1:0; });
+    // Same timestamp -> SELL before BUY (closes precede opens on a rotation tick).
+    var _rk=function(act){ return act==='SELL'?0:act==='BUY'?1:2; };
+    arr.sort(function(a,b){
+      var ta=String(a&&a.ts||''),tb=String(b&&b.ts||'');
+      if(ta!==tb) return ta<tb?-1:1;
+      return _rk(String(a&&a.action))-_rk(String(b&&b.action));
+    });
   } else {
     // After hours: each symbol as a BUY->SELL pair; pairs ordered by earliest BUY time.
     var firstBuy={};
@@ -631,6 +637,8 @@ function renderTradeLog(){
   var panel=document.getElementById('tradeLogPanel');
   var tb=document.getElementById('tradeLogTbody');
   var sub=document.getElementById('tradeLogSubtitle');
+  var _ttl=document.getElementById('tradeLogTitle');
+  if(_ttl){ var _d=new Date().toLocaleDateString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',year:'numeric'}); _ttl.textContent='Trade History - '+_d; }
   if(!panel||!tb) return;
   if(BOT_SLUG!=='bot13'){ panel.style.display='none'; return; }   // BOT13-only
   var open=!(fundState && fundState.window_open===false);
