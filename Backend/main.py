@@ -2591,6 +2591,74 @@ async def admin_update_user(
         return_db_connection(conn)
 
 
+@app.delete("/admin/users/{user_id}")
+async def admin_delete_user(
+    user_id: str,
+    admin: dict = Depends(require_admin)
+):
+    """HARD-DELETE a user and ALL their data (admin only). Used to remove spam/bot
+    signups. Deletes child rows across every user-linked table, then the users row,
+    then the Supabase auth user (service-role). Idempotent: missing rows are ignored.
+    A safety guard refuses to delete an admin account or the caller themselves."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        cursor.execute("SELECT id, email, role FROM users WHERE id = %s", (user_id,))
+        target = cursor.fetchone()
+        if not target:
+            raise HTTPException(status_code=404, detail="User not found")
+        if str(target["role"]) == "admin":
+            raise HTTPException(status_code=400, detail="Refusing to delete an admin account")
+        if str(admin.get("user_id")) == str(user_id):
+            raise HTTPException(status_code=400, detail="Refusing to delete your own account")
+
+        deleted = {}
+        # 1) bot-scoped child rows (resolve the user's bot ids first)
+        cursor.execute("SELECT id FROM bots WHERE user_id = %s", (user_id,))
+        bot_ids = [r["id"] for r in cursor.fetchall()]
+        if bot_ids:
+            for tbl in ("bot_holdings", "bot_fund_state", "bot_performance_snapshots",
+                        "bot_latest_performance", "portfolio_comments", "portfolio_shares"):
+                try:
+                    cursor.execute(f"DELETE FROM {tbl} WHERE bot_id = ANY(%s)", (bot_ids,))
+                    deleted[tbl] = cursor.rowcount
+                except Exception as _e:
+                    conn.rollback()  # table/col may not exist; keep going
+        # 2) user-scoped child rows
+        for tbl in ("bots", "subscriptions", "user_platform_subs", "user_portfolios",
+                    "user_stock_picks", "support_tickets", "referral_codes"):
+            col = "created_by_user_id" if tbl == "referral_codes" else "user_id"
+            try:
+                cursor.execute(f"DELETE FROM {tbl} WHERE {col} = %s", (user_id,))
+                deleted[tbl] = cursor.rowcount
+            except Exception:
+                conn.rollback()
+        # 3) the users row
+        cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
+        deleted["users"] = cursor.rowcount
+        conn.commit()
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+    # 4) Supabase auth user (service-role). Non-fatal if it 404s.
+    auth_deleted = False
+    try:
+        if SUPABASE_SERVICE_ROLE_KEY and SUPABASE_URL:
+            r = requests.delete(
+                f"{SUPABASE_URL}/auth/v1/admin/users/{user_id}",
+                headers={"apikey": SUPABASE_SERVICE_ROLE_KEY,
+                         "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}"},
+                timeout=20,
+            )
+            auth_deleted = r.status_code in (200, 204)
+    except Exception:
+        auth_deleted = False
+
+    return {"success": True, "user_id": user_id, "email": target["email"],
+            "rows_deleted": deleted, "auth_user_deleted": auth_deleted}
+
+
 @app.post("/admin/users/{user_id}/grant-access")
 async def admin_grant_platform_access(
     user_id: str,
@@ -3251,13 +3319,20 @@ async def get_email_subscribers(
     conn = get_db_connection()
     try:
         cursor = conn.cursor(row_factory=dict_row)
+        # Email-CONFIRMATION gate: only send to users whose Supabase auth email is
+        # confirmed (email_confirmed_at IS NOT NULL). This blocks bot/spam signups on
+        # disposable domains -- they can never confirm, so they never receive mail,
+        # regardless of how the account was created. Admins/webmasters are always
+        # included (they may be seeded without a confirm step).
         cursor.execute("""
             SELECT u.id, u.email, u.full_name, u.role,
                    u.email_enabled, u.email_daily, u.email_bot13_alerts,
                    u.email_weekly, u.email_monthly,
                    u.email_portfolio, u.email_wallstbots, u.email_bitbot13, u.email_lvl13
             FROM users u
+            LEFT JOIN auth.users au ON au.id = u.id
             WHERE u.email_enabled = TRUE
+              AND (au.email_confirmed_at IS NOT NULL OR u.role IN ('admin','webmaster'))
             ORDER BY u.created_at
         """)
         users = cursor.fetchall()
