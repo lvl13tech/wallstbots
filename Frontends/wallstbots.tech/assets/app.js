@@ -533,15 +533,21 @@ function renderFund(fid) {
   const holdingCash = v.holding_cash === true;
   const windowOpen = v.window_open !== false;
   const tradedToday = v.traded_today === true;
-  // Box E summary row: during hours -> "Holding cash"; after hours -> "End of trading
-  // - now holding cash" if it traded today, else "Holding cash - no trades made today".
-  const cashRow = windowOpen
-    ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
-    : (tradedToday
-        ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>'
-        : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash - no trades made today</td></tr>');
-  const positionRows = (v.positions || []).length
-    ? v.positions.map(p => {
+  // Current Holdings = strictly CURRENT.
+  //  - During the session: show held positions; if flat -> "Holding cash - no edge".
+  //  - After the session ends: NO assets. Trade History is the day's record. Show
+  //    "End of trading session - holding cash" if it traded today, else
+  //    "Holding cash - no edge".
+  function _cashRow(txt){
+    return '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">'+txt+'</td></tr>';
+  }
+  const noEdgeRow = _cashRow('Holding cash - no edge');
+  let positionRows;
+  if (!windowOpen) {
+    // Session over -> never list assets.
+    positionRows = tradedToday ? _cashRow('End of trading session - holding cash') : noEdgeRow;
+  } else if ((v.positions || []).length && !holdingCash) {
+    positionRows = v.positions.map(p => {
         const entry  = p.entry_price || p.entry || 0;
         const price  = p.price || entry;
         const shares = p.shares || 0;
@@ -559,8 +565,11 @@ function renderFund(fid) {
           + '<td class="num '+cls(dayPnl)+'">'+fmtPct(dayPct)+'</td>'
           + '<td class="num '+cls(pnl)+'">'+fmt$0(pnl)+'</td>'
           + '<td class="num '+cls(pnlPct)+'">'+fmtPct(pnlPct)+'</td></tr>';
-      }).join('') + (holdingCash ? cashRow : '')
-    : cashRow;
+      }).join('');
+  } else {
+    // Window open but flat (no edge yet).
+    positionRows = noEdgeRow;
+  }
 
   $('app').innerHTML =
     '<div class="fund-head" style="margin-bottom:14px">'

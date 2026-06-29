@@ -676,13 +676,23 @@ function renderPositions() {
   const holdingCash = (fundState && fundState.holding_cash === true);
   const windowOpen  = (!fundState || fundState.window_open !== false);
   const tradedToday = (fundState && fundState.traded_today === true);
-  // Box E summary row: during hours -> "Holding cash"; after hours -> "End of trading
-  // - now holding cash" if it traded today, else "Holding cash - no trades made today".
+  function _cashRowTxt(txt){
+    return '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">'+txt+'</td></tr>';
+  }
+  // Current Holdings = strictly CURRENT. During the session, flat -> "Holding cash -
+  // no edge". After the session ends, NEVER list assets (Trade History is the record):
+  // "End of trading session - holding cash" if it traded today, else "Holding cash - no edge".
   const cashRow = windowOpen
-    ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash</td></tr>'
-    : (tradedToday
-        ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">End of trading — now holding cash</td></tr>'
-        : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Holding cash - no trades made today</td></tr>');
+    ? _cashRowTxt('Holding cash - no edge')
+    : (tradedToday ? _cashRowTxt('End of trading session - holding cash')
+                   : _cashRowTxt('Holding cash - no edge'));
+
+  // After the session ends, BOT13 shows no assets -- only the cash message above.
+  // (Baselines equalizer/titan are buy-and-hold and keep showing positions.)
+  if (BOT_SLUG === 'bot13' && !windowOpen) {
+    tbody.innerHTML = cashRow;
+    return;
+  }
 
   // Hard guard: never show global positions without member holdings
   if (!holdingTickers.length) {
