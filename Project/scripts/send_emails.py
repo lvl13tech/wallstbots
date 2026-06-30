@@ -54,34 +54,45 @@ FORCE_SEND       = os.environ.get("FORCE_SEND", "").lower() in ("1", "true", "ye
 # file; later runs that day see the marker and skip. This replaces the old
 # fragile "HOUR==13 && MIN<45" gate that depended on a single cron tick.
 # (Intraday trade alerts are NOT date-gated -- they fire per new-activity run.)
-_MARKER_DIR = Path("Frontends/wallstbots.tech/data")
-MARKERS = {
-    "open":         _MARKER_DIR / ".email_open_sent",
-    "close-stock":  _MARKER_DIR / ".email_closestock_sent",
-    "close-crypto": _MARKER_DIR / ".email_closecrypto_sent",
-}
+# BACKEND-stored markers (race-proof). The old git-committed marker files lost the
+# every-15-min push race on bitbot13, so close-out emails re-fired every run. Now the
+# "sent today" flag lives in the DB (email_markers table) -- every run reads/writes the
+# same row reliably. Keyed per kind (kind is global across platforms here; the daily
+# emails are once-per-ET-day regardless of which workflow fires them).
+def _marker_key(kind: str) -> str:
+    return f"emailsent:{kind}"
 
 
 def _already_sent_today(kind: str) -> bool:
-    m = MARKERS.get(kind)
-    if not m:
+    """Ask the backend whether this kind was already sent for today's ET date.
+    FAIL-SAFE: if the backend is unreachable we return True (skip the send) so a
+    transient API hiccup can NEVER cause a flood -- the worst case is one missed
+    email, which is far better than dozens of duplicates."""
+    if not BACKEND_URL or not INTERNAL_API_KEY:
         return False
     try:
-        return m.read_text().strip() == _et_today().isoformat()
-    except Exception:
-        return False
+        r = requests.get(f"{BACKEND_URL}/internal/email-marker",
+                         params={"key": _marker_key(kind)},
+                         headers={"X-Internal-Key": INTERNAL_API_KEY}, timeout=15)
+        if r.status_code == 200:
+            return bool(r.json().get("sent_today"))
+        print(f"[send_emails] marker GET {kind} -> HTTP {r.status_code}; treating as SENT (no-flood guard)")
+        return True
+    except Exception as e:
+        print(f"[send_emails] marker GET {kind} failed ({e}); treating as SENT (no-flood guard)")
+        return True
 
 
 def _mark_sent_today(kind: str) -> None:
-    m = MARKERS.get(kind)
-    if not m:
+    if not BACKEND_URL or not INTERNAL_API_KEY:
         return
     try:
-        m.parent.mkdir(parents=True, exist_ok=True)
-        m.write_text(_et_today().isoformat())
-        print(f"[send_emails] marker written: {kind} = {_et_today().isoformat()}")
+        r = requests.post(f"{BACKEND_URL}/internal/email-marker",
+                          json={"key": _marker_key(kind)},
+                          headers={"X-Internal-Key": INTERNAL_API_KEY}, timeout=15)
+        print(f"[send_emails] marker SET {kind} -> HTTP {r.status_code}")
     except Exception as e:
-        print(f"[send_emails] WARNING: could not write {kind} marker: {e}")
+        print(f"[send_emails] WARNING: could not set {kind} marker: {e}")
 
 PLATFORM_DATA_PATHS = {
     "wallstbots": Path("Frontends/wallstbots.tech/data"),

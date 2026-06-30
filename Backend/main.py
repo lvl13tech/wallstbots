@@ -1714,6 +1714,71 @@ def verify_internal_key(x_internal_key: str = Header(...)):
         raise HTTPException(status_code=403, detail="Invalid internal key")
 
 
+# ----------------------------------------------------------------------------
+# EMAIL "SENT TODAY" MARKERS (backend-stored, race-proof)
+# ----------------------------------------------------------------------------
+# The old once-a-day markers were git-committed files; with the every-15-min
+# bitbot13 cron the marker commit kept losing the push race, so the marker never
+# persisted and close-out emails re-fired every run. Storing the marker in the DB
+# makes it reliable: every run reads/writes the same row regardless of git.
+# Key = "{kind}:{platform-or-global}", value = ET date string of last send.
+def _ensure_email_markers_table(cursor):
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS email_markers (
+            marker_key TEXT PRIMARY KEY,
+            sent_date  TEXT NOT NULL,
+            updated_at TIMESTAMPTZ DEFAULT NOW()
+        )
+    """)
+
+@app.get("/internal/email-marker")
+async def get_email_marker(key: str, _: None = Depends(verify_internal_key)):
+    """Return {sent_today: bool} -- True if `key` was marked for today's ET date."""
+    from zoneinfo import ZoneInfo
+    today = datetime.now(ZoneInfo("America/New_York")).date().isoformat()
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        _ensure_email_markers_table(cursor)
+        cursor.execute("SELECT sent_date FROM email_markers WHERE marker_key = %s", (key,))
+        row = cursor.fetchone()
+        conn.commit()
+        return {"sent_today": bool(row and row["sent_date"] == today), "date": today}
+    except Exception as e:
+        conn.rollback()
+        print(f"[email-marker GET] {e!r}")
+        return {"sent_today": False, "date": today}  # fail-open=False -> never block a send on error... but see POST
+    finally:
+        cursor.close(); return_db_connection(conn)
+
+@app.post("/internal/email-marker")
+async def set_email_marker(request: Request, _: None = Depends(verify_internal_key)):
+    """Mark `key` as sent for today's ET date (idempotent upsert)."""
+    from zoneinfo import ZoneInfo
+    body = await request.json()
+    key = body.get("key")
+    if not key:
+        raise HTTPException(status_code=400, detail="key required")
+    today = datetime.now(ZoneInfo("America/New_York")).date().isoformat()
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        _ensure_email_markers_table(cursor)
+        cursor.execute("""
+            INSERT INTO email_markers (marker_key, sent_date, updated_at)
+            VALUES (%s, %s, NOW())
+            ON CONFLICT (marker_key) DO UPDATE SET sent_date = EXCLUDED.sent_date, updated_at = NOW()
+        """, (key, today))
+        conn.commit()
+        return {"success": True, "key": key, "date": today}
+    except Exception as e:
+        conn.rollback()
+        print(f"[email-marker POST] {e!r}")
+        raise HTTPException(status_code=500, detail="Internal error.")
+    finally:
+        cursor.close(); return_db_connection(conn)
+
+
 @app.get("/internal/portfolios/active")
 async def get_active_portfolios(
     platform: str = "aistocks",
