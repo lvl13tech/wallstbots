@@ -1206,7 +1206,7 @@ def main():
     oracle_new_picks     = None
     oracle_new_rationale = None
     oracle_new_proj      = 0.0
-    if (is_monday or oracle_needs_seed) and hist_data:
+    if (is_monday or oracle_needs_seed) and hist_data and window_open:
         print(f"[bitbot13] {'Monday' if is_monday else 'first run'} -- running ORACLE recompute...")
         # Compounding: deploy the fund's CURRENT balance into new picks, not the
         # original starting capital -- so winnings are reinvested each rotation.
@@ -1224,7 +1224,7 @@ def main():
     wizard_new_picks     = None
     wizard_new_rationale = None
     wizard_new_proj      = 0.0
-    if (is_month_start or wizard_needs_seed) and hist_data:
+    if (is_month_start or wizard_needs_seed) and hist_data and window_open:
         print(f"[bitbot13] {'Month start' if is_month_start else 'first run'} ({today_iso}) -- running WIZARD recompute...")
         _wizard_capital = float((funds.get("wizard", {}).get("value", {}) or {}).get("total") or sc_global)
         wizard_new_positions, wizard_new_picks, wizard_new_rationale, wizard_new_proj = run_wizard_decision(
@@ -1415,7 +1415,7 @@ def main():
             # Equalizer + Titan -- mark-to-market; auto-seed on first run
             raw_pos = fund.get("value", {}).get("positions", [])
 
-            if not raw_pos and fid == "equalizer" and prices:
+            if not raw_pos and fid == "equalizer" and prices and window_open:
                 per_coin = sc / len(UNIVERSE)
                 for sym in UNIVERSE:
                     price = prev_closes.get(sym) or prices.get(sym, 0)
@@ -1429,7 +1429,7 @@ def main():
                         })
                 print(f"  EQUALIZER: seeded {len(raw_pos)} positions at ${per_coin:.0f}/coin")
 
-            elif not raw_pos and fid == "titan" and prices:
+            elif not raw_pos and fid == "titan" and prices and window_open:
                 top10    = fund.get("top10") or []
                 per_top  = float(fund.get("per_top_dollars") or 0)
                 per_rest = float(fund.get("per_rest_dollars") or 0)
