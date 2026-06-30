@@ -235,8 +235,15 @@ def enrich_position(pos, prices, prev_closes):
     if entry > 0 and price > 0:
         _ratio = price / entry
         if _ratio > 8.0 or _ratio < 0.125:
-            entry = price
+            # Bad entry: a garbage-low (or high) seed price means the SHARE count was
+            # inflated (shares = dollars / garbage_price). Re-base BOTH: entry -> live
+            # price (P&L starts at 0) AND shares /= ratio, which restores the position's
+            # correct dollar size (shares*price returns to the intended weight). Without
+            # the share fix the position still shows ~19x its weight in the Holdings box.
+            shares = shares / _ratio
+            entry  = price
             pos["entry_price"] = price
+            pos["shares"]      = shares
     cost_basis = shares * entry  # always recompute; stored cost_basis may be stale after inception reset
     prev       = prev_closes.get(sym, price)
     value      = shares * price
