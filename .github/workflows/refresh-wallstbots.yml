@@ -9,6 +9,11 @@ on:
     - cron: '0 20 * * 1-5'          #  4:00 PM ET (market close)
     - cron: '45 20 * * 1-5'         #  4:45 PM ET (end-of-day final snapshot)
   workflow_dispatch:
+    inputs:
+      force_send:
+        description: 'Force-send emails even if already sent today (bypasses once-a-day marker)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -97,8 +102,10 @@ jobs:
         run: |
           echo "=== Email dispatch: event=$EVENT_NAME ==="
           echo "=== Secrets: RESEND=$([ -n "$RESEND_API_KEY" ] && echo YES || echo MISSING) BACKEND=$([ -n "$BACKEND_URL" ] && echo YES || echo MISSING) APIKEY=$([ -n "$INTERNAL_API_KEY" ] && echo YES || echo MISSING) ==="
+          # Manual runs respect the once-a-day marker by DEFAULT. Only force-send when
+          # the run was started with force_send=true (explicit opt-in).
           FORCE=""
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then FORCE="--force"; fi
+          if [ "${{ github.event.inputs.force_send }}" = "true" ]; then FORCE="--force"; fi
           echo "--- open digest ---";       python Project/scripts/send_emails.py --kind open        $FORCE || true
           echo "--- stock close-out ---";   python Project/scripts/send_emails.py --kind close-stock $FORCE || true
           # Intraday alerts: opt-in only (email_intraday_alerts=True) + per-trade dedupe.

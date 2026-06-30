@@ -15,6 +15,11 @@ on:
     # One quiet off-hours reprice at 6am UTC (~1-2am ET) to keep data fresh overnight
     - cron: '0 6 * * *'
   workflow_dispatch:   # allow manual trigger from GitHub Actions UI if needed
+    inputs:
+      force_send:
+        description: 'Force-send emails even if already sent today (bypasses once-a-day marker)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write      # needed to push updated data files back to the repo
@@ -82,8 +87,10 @@ jobs:
           python -m pip install --quiet requests
           echo "=== Email dispatch: event=$EVENT_NAME ==="
           echo "=== Secrets: RESEND=$([ -n "$RESEND_API_KEY" ] && echo YES || echo MISSING) BACKEND=$([ -n "$BACKEND_URL" ] && echo YES || echo MISSING) APIKEY=$([ -n "$INTERNAL_API_KEY" ] && echo YES || echo MISSING) ==="
+          # Manual runs respect the once-a-day marker by DEFAULT. Only force-send when
+          # the run was started with force_send=true (explicit opt-in).
           FORCE=""
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then FORCE="--force"; fi
+          if [ "${{ github.event.inputs.force_send }}" = "true" ]; then FORCE="--force"; fi
           echo "--- weekend open digest ---";  python Project/scripts/send_emails.py --kind open --weekend-only $FORCE || true
           echo "--- crypto close-out ---";      python Project/scripts/send_emails.py --kind close-crypto       $FORCE || true
           # Intraday crypto alerts: opt-in only (email_intraday_alerts=True) + per-trade dedupe.
