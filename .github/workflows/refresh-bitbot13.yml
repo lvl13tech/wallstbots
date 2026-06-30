@@ -85,7 +85,6 @@ jobs:
           FORCE=""
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then FORCE="--force"; fi
           echo "--- weekend open digest ---";  python Project/scripts/send_emails.py --kind open --weekend-only $FORCE || true
-          echo "--- crypto trade alert ---";    python Project/scripts/send_emails.py --kind trade              $FORCE || true
           echo "--- crypto close-out ---";      python Project/scripts/send_emails.py --kind close-crypto       $FORCE || true
 
       - name: Commit email markers

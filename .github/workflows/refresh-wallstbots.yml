@@ -100,7 +100,6 @@ jobs:
           FORCE=""
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then FORCE="--force"; fi
           echo "--- open digest ---";       python Project/scripts/send_emails.py --kind open        $FORCE || true
-          echo "--- intraday trade alert ---"; python Project/scripts/send_emails.py --kind trade       $FORCE || true
           echo "--- stock close-out ---";   python Project/scripts/send_emails.py --kind close-stock $FORCE || true
 
       - name: Commit email markers
