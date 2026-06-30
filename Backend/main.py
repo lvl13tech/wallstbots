@@ -565,6 +565,14 @@ async def startup_migration():
                     -- free signups set it FALSE until they confirm their email.
                     ALTER TABLE users ADD COLUMN email_confirmed BOOLEAN DEFAULT TRUE;
                 END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name='users' AND column_name='email_intraday_alerts'
+                ) THEN
+                    -- Opt-in intraday buy/sell alerts. Default FALSE: members must
+                    -- explicitly turn this on; everyone else gets only daily emails.
+                    ALTER TABLE users ADD COLUMN email_intraday_alerts BOOLEAN DEFAULT FALSE;
+                END IF;
             END $$;
         """)
         conn.commit()
@@ -3275,6 +3283,7 @@ class EmailPrefsUpdate(BaseModel):
     email_wallstbots:   Optional[bool] = None   # Wall St. Bots section
     email_bitbot13:     Optional[bool] = None   # BitBot13 crypto section
     email_lvl13:        Optional[bool] = None   # Level XIII AI/quantum section
+    email_intraday_alerts: Optional[bool] = None  # opt-in intraday buy/sell alerts (default OFF)
 
 
 @app.get("/user/email-prefs")
@@ -3285,7 +3294,8 @@ async def get_email_prefs(current_user: dict = Depends(get_current_user)):
         cursor.execute("""
             SELECT email_enabled, email_daily, email_bot13_alerts,
                    email_weekly, email_monthly,
-                   email_portfolio, email_wallstbots, email_bitbot13, email_lvl13
+                   email_portfolio, email_wallstbots, email_bitbot13, email_lvl13,
+                   COALESCE(email_intraday_alerts, FALSE) AS email_intraday_alerts
             FROM users WHERE id = %s
         """, (current_user["user_id"],))
         row = cursor.fetchone()
@@ -3301,6 +3311,7 @@ async def get_email_prefs(current_user: dict = Depends(get_current_user)):
                 "email_wallstbots":   True,
                 "email_bitbot13":     True,
                 "email_lvl13":        True,
+                "email_intraday_alerts": False,
             }
         return {
             "email_enabled":      row["email_enabled"],
@@ -3312,6 +3323,7 @@ async def get_email_prefs(current_user: dict = Depends(get_current_user)):
             "email_wallstbots":   row["email_wallstbots"]  if row["email_wallstbots"]  is not None else True,
             "email_bitbot13":     row["email_bitbot13"]    if row["email_bitbot13"]    is not None else True,
             "email_lvl13":        row["email_lvl13"]       if row["email_lvl13"]       is not None else True,
+            "email_intraday_alerts": bool(row["email_intraday_alerts"]),
         }
     finally:
         cursor.close()
@@ -3333,6 +3345,7 @@ async def update_email_prefs(
     if body.email_wallstbots   is not None: fields.append("email_wallstbots = %s");   values.append(body.email_wallstbots)
     if body.email_bitbot13     is not None: fields.append("email_bitbot13 = %s");     values.append(body.email_bitbot13)
     if body.email_lvl13        is not None: fields.append("email_lvl13 = %s");        values.append(body.email_lvl13)
+    if body.email_intraday_alerts is not None: fields.append("email_intraday_alerts = %s"); values.append(body.email_intraday_alerts)
 
     if not fields:
         raise HTTPException(status_code=400, detail="No fields to update")
@@ -3381,7 +3394,8 @@ async def get_email_subscribers(
         _base_cols = """u.id, u.email, u.full_name, u.role,
                    u.email_enabled, u.email_daily, u.email_bot13_alerts,
                    u.email_weekly, u.email_monthly,
-                   u.email_portfolio, u.email_wallstbots, u.email_bitbot13, u.email_lvl13"""
+                   u.email_portfolio, u.email_wallstbots, u.email_bitbot13, u.email_lvl13,
+                   COALESCE(u.email_intraday_alerts, FALSE) AS email_intraday_alerts"""
         # Email-CONFIRMATION gate via public.users.email_confirmed (NEVER a join to the
         # auth schema -- the backend role cannot read auth.users). RESILIENT: if the
         # email_confirmed column doesn't exist yet (migration not run), fall back to the
@@ -3494,6 +3508,13 @@ async def get_email_subscribers(
                 "bot13_activity_wallstbots": bot13_activity.get("wallstbots", {}),
                 "bot13_activity_bitbot13":   bot13_activity.get("bitbot13", {}),
                 "bot13_activity_lvl13":      bot13_activity.get("lvl13") or bot13_activity.get("aistocks") or {},
+                # Opt-in intraday alerts (default OFF if column not yet migrated)
+                "email_intraday_alerts": bool(u["email_intraday_alerts"]) if u.get("email_intraday_alerts") is not None else False,
+                # Per-platform membership: True if the member has a bot/holdings on that platform.
+                "member_wallstbots": "wallstbots" in holdings_by_platform or "wallstbots" in bot13_activity,
+                "member_bitbot13":   "bitbot13"   in holdings_by_platform or "bitbot13"   in bot13_activity,
+                "member_aistocks":   ("aistocks" in holdings_by_platform or "lvl13" in holdings_by_platform
+                                      or "aistocks" in bot13_activity or "lvl13" in bot13_activity),
             })
 
         return {"subscribers": subscribers, "count": len(subscribers)}

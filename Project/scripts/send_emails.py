@@ -249,6 +249,47 @@ def _site_closed_out(platform_data, platforms) -> bool:
     return False
 
 
+import hashlib
+
+_INTRADAY_DIR = Path("Frontends/wallstbots.tech/data")
+
+def _trade_count(sub, platforms) -> int:
+    """Total BOT13 trade-log rows for this member across the given platforms today."""
+    n = 0
+    for plat in platforms:
+        act = sub.get(f"bot13_activity_{plat}") or {}
+        n += len(act.get("trade_log") or [])
+    return n
+
+def _has_new_trade_since_last_alert(sub, platforms) -> bool:
+    """True (and records the new count) only if the member's trade count today grew
+    since their last intraday alert. One alert per NEW trade, not per 15-min run.
+    Marker file is per-email per-ET-day; resets naturally each day."""
+    email = (sub.get("email") or "").lower()
+    if not email:
+        return False
+    h = hashlib.sha1(email.encode()).hexdigest()[:16]
+    marker = _INTRADAY_DIR / f".intraday_{h}"
+    today = _et_today().isoformat()
+    now_count = _trade_count(sub, platforms)
+    prev_count = 0
+    try:
+        raw = marker.read_text().strip().split(":")
+        if len(raw) == 2 and raw[0] == today:
+            prev_count = int(raw[1])
+    except Exception:
+        prev_count = 0
+    if now_count > prev_count:
+        if not FORCE_SEND:  # don't advance marker on forced test sends
+            try:
+                marker.parent.mkdir(parents=True, exist_ok=True)
+                marker.write_text(f"{today}:{now_count}")
+            except Exception as e:
+                print(f"[send_emails] WARNING: intraday marker write failed: {e}")
+        return True
+    return False
+
+
 def _member_has_activity(sub, platforms, want_closeout=False) -> bool:
     """True if this member's BOT13 traded (or closed out) on any of `platforms`."""
     for plat in platforms:
@@ -260,6 +301,20 @@ def _member_has_activity(sub, platforms, want_closeout=False) -> bool:
             if act.get("traded_today"):
                 return True
     return False
+
+def _is_member_of(sub, group) -> bool:
+    """group: 'stock' (wallstbots or aistocks) or 'crypto' (bitbot13).
+    A member is 'on' a platform if the backend flagged membership there. Falls back
+    to holdings/activity if the explicit flags aren't present (older backend)."""
+    if group == "crypto":
+        if sub.get("member_bitbot13") is not None:
+            return bool(sub.get("member_bitbot13"))
+        return bool(sub.get("holdings_bitbot13")) or bool(sub.get("bot13_activity_bitbot13"))
+    # stock = wallstbots OR aistocks(lvl13)
+    if sub.get("member_wallstbots") is not None or sub.get("member_aistocks") is not None:
+        return bool(sub.get("member_wallstbots")) or bool(sub.get("member_aistocks"))
+    return (bool(sub.get("holdings_wallstbots")) or bool(sub.get("holdings_lvl13"))
+            or bool(sub.get("bot13_activity_wallstbots")) or bool(sub.get("bot13_activity_lvl13")))
 
 
 def run(kind: str = "open", is_weekly: bool = False, is_monthly: bool = False,
@@ -282,9 +337,13 @@ def run(kind: str = "open", is_weekly: bool = False, is_monthly: bool = False,
         if _already_sent_today("open") and not FORCE_SEND:
             print("[send_emails] open email already sent today — skipping.")
             return
-        recipients = [s for s in subscribers if s.get("email_daily", True)]
+        if weekend:
+            recipients = [s for s in subscribers if s.get("email_daily", True) and _is_member_of(s, "crypto")]
+        else:
+            recipients = [s for s in subscribers if s.get("email_daily", True)
+                          and (_is_member_of(s, "stock") or _is_member_of(s, "crypto"))]
         if not recipients:
-            print("[send_emails] open: no daily recipients."); return
+            print("[send_emails] open: no daily recipients for this day type."); return
         label   = today.strftime('%b %d')
         subject = (f"Weekend Crypto Signals — {label}" if weekend
                    else f"Your Daily Trading Signals — {label}")
@@ -302,11 +361,19 @@ def run(kind: str = "open", is_weekly: bool = False, is_monthly: bool = False,
     # ---- INTRADAY trade alert (C) -- not date-gated, per new activity --------
     if kind == "trade":
         platforms = ["bitbot13"] if weekend else ["wallstbots", "lvl13", "bitbot13"]
-        recipients = [s for s in subscribers
-                      if s.get("email_bot13_alerts", True)
-                      and _member_has_activity(s, platforms, want_closeout=False)]
+        # OPT-IN ONLY: members must have email_intraday_alerts=True (default OFF).
+        # Dedupe per NEW trade: only notify if the member's trade count grew since the
+        # last alert (marker stored per-email under data/.intraday_<emailhash>).
+        recipients = []
+        for s in subscribers:
+            if not s.get("email_intraday_alerts", False):
+                continue
+            if not _member_has_activity(s, platforms, want_closeout=False):
+                continue
+            if _has_new_trade_since_last_alert(s, platforms):
+                recipients.append(s)
         if not recipients:
-            print("[send_emails] trade: no members with new BOT13 activity this run — skipping.")
+            print("[send_emails] trade: no opted-in members with a NEW trade this run — skipping.")
             return
         subject = f"BOT13 Trade Alert — {today.strftime('%b %d')}"
         result = send_batch(
@@ -328,7 +395,9 @@ def run(kind: str = "open", is_weekly: bool = False, is_monthly: bool = False,
         if not _site_closed_out(platform_data, platforms) and not FORCE_SEND:
             print("[send_emails] close-stock: stocks not closed out yet — skipping.")
             return
-        recipients = [s for s in subscribers if s.get("email_daily", True)]
+        recipients = [s for s in subscribers if s.get("email_daily", True) and _is_member_of(s, "stock")]
+        if not recipients:
+            print("[send_emails] close-stock: no stock members — skipping."); return
         result = send_batch(
             recipients, f"Markets Closed — BOT13 Stock Positions Flat — {today.strftime('%b %d')}",
             lambda r: build_closeout_email(r, platform_data, platforms, "stock"),
@@ -347,7 +416,9 @@ def run(kind: str = "open", is_weekly: bool = False, is_monthly: bool = False,
         if not _site_closed_out(platform_data, platforms) and not FORCE_SEND:
             print("[send_emails] close-crypto: crypto not closed out yet — skipping.")
             return
-        recipients = [s for s in subscribers if s.get("email_daily", True)]
+        recipients = [s for s in subscribers if s.get("email_daily", True) and _is_member_of(s, "crypto")]
+        if not recipients:
+            print("[send_emails] close-crypto: no crypto members — skipping."); return
         result = send_batch(
             recipients, f"BitBot13 Session Closed — Positions Flat — {today.strftime('%b %d')}",
             lambda r: build_closeout_email(r, platform_data, platforms, "crypto"),

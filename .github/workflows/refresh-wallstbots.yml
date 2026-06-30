@@ -101,6 +101,8 @@ jobs:
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then FORCE="--force"; fi
           echo "--- open digest ---";       python Project/scripts/send_emails.py --kind open        $FORCE || true
           echo "--- stock close-out ---";   python Project/scripts/send_emails.py --kind close-stock $FORCE || true
+          # Intraday alerts: opt-in only (email_intraday_alerts=True) + per-trade dedupe.
+          echo "--- intraday (opt-in) ---"; python Project/scripts/send_emails.py --kind trade       $FORCE || true
 
       - name: Commit email markers
         # The per-kind once-a-day markers written by send_emails.py must persist
@@ -108,6 +110,6 @@ jobs:
         run: |
           git config user.name  "WallStBots Bot"
           git config user.email "bot@wallstbots.tech"
-          git add Frontends/wallstbots.tech/data/.email_*_sent 2>/dev/null || true
+          git add Frontends/wallstbots.tech/data/.email_*_sent Frontends/wallstbots.tech/data/.intraday_* 2>/dev/null || true
           git diff --staged --quiet || git commit -m "auto: email markers [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push || true

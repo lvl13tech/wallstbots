@@ -1297,6 +1297,16 @@
       </div>
       <div class="email-toggle-row">
         <div>
+          <div class="email-toggle-label">Intraday Buy/Sell Alerts</div>
+          <div class="email-toggle-sub">Off by default — get an email each time Bot13 buys or sells during the day</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="epIntraday">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="email-toggle-row">
+        <div>
           <div class="email-toggle-label">Weekly Picks</div>
           <div class="email-toggle-sub">Oracle's picks every Monday</div>
         </div>
@@ -2404,6 +2414,7 @@
       document.getElementById("epEnabled").checked  = d.email_enabled       !== false;
       document.getElementById("epDaily").checked    = d.email_daily         !== false;
       document.getElementById("epBot13").checked    = d.email_bot13_alerts  !== false;
+      document.getElementById("epIntraday").checked = d.email_intraday_alerts === true;
       document.getElementById("epWeekly").checked         = d.email_weekly        !== false;
       document.getElementById("epMonthly").checked        = d.email_monthly       !== false;
       document.getElementById("epPortfolio").checked      = d.email_portfolio     !== false;
@@ -2412,6 +2423,42 @@
       document.getElementById("epSiteAistocks").checked      = d.email_aistocks         !== false;
       toggleEmailMaster();
     } catch(e) { /* silently ignore */ }
+  }
+  function toggleEmailMaster() {
+    const on = document.getElementById("epEnabled").checked;
+    const sub = document.getElementById("emailSubToggles");
+    if (sub) sub.classList.toggle("disabled", !on);
+  }
+  async function saveEmailPrefs() {
+    const btn = document.querySelector(".email-save-btn");
+    const orig = btn ? btn.textContent : "";
+    if (btn) { btn.textContent = "Saving…"; btn.disabled = true; }
+    try {
+      const token = auth.getToken ? auth.getToken() : (auth._token || localStorage.getItem("auth_token") || "");
+      const body = {
+        email_enabled:      document.getElementById("epEnabled").checked,
+        email_daily:        document.getElementById("epDaily").checked,
+        email_bot13_alerts: document.getElementById("epBot13").checked,
+        email_intraday_alerts: document.getElementById("epIntraday").checked,
+        email_weekly:       document.getElementById("epWeekly").checked,
+        email_monthly:      document.getElementById("epMonthly").checked,
+        email_portfolio:    document.getElementById("epPortfolio").checked,
+        email_wallstbots:   document.getElementById("epSiteWallstbots").checked,
+        email_bitbot13:     document.getElementById("epSiteBitbot13").checked,
+        email_aistocks:     document.getElementById("epSiteAistocks").checked,
+      };
+      const resp = await fetch(BACKEND_URL + "/user/email-prefs", {
+        method: "PUT",
+        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!resp.ok) throw new Error(await resp.text());
+      showToast("✓ Email preferences saved", "success");
+    } catch(e) {
+      showToast("Error saving preferences: " + e.message, "error");
+    } finally {
+      if (btn) { btn.textContent = orig; btn.disabled = false; }
+    }
   }
   document.addEventListener("DOMContentLoaded", () => { init(); loadEmailPrefs(); });
 </script>

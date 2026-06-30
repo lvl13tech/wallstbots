@@ -1169,6 +1169,16 @@
       </div>
       <div class="email-toggle-row">
         <div>
+          <div class="email-toggle-label">Intraday Buy/Sell Alerts</div>
+          <div class="email-toggle-sub">Off by default — get an email each time Bot13 buys or sells during the day</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="epIntraday">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="email-toggle-row">
+        <div>
           <div class="email-toggle-label">Weekly Picks</div>
           <div class="email-toggle-sub">Oracle's picks every Monday</div>
         </div>
@@ -1887,6 +1897,7 @@
       document.getElementById("epEnabled").checked        = d.email_enabled       !== false;
       document.getElementById("epDaily").checked          = d.email_daily         !== false;
       document.getElementById("epBot13").checked          = d.email_bot13_alerts  !== false;
+      document.getElementById("epIntraday").checked       = d.email_intraday_alerts === true;
       document.getElementById("epWeekly").checked         = d.email_weekly        !== false;
       document.getElementById("epMonthly").checked        = d.email_monthly       !== false;
       document.getElementById("epPortfolio").checked      = d.email_portfolio     !== false;
@@ -1910,6 +1921,7 @@
         email_enabled:      document.getElementById("epEnabled").checked,
         email_daily:        document.getElementById("epDaily").checked,
         email_bot13_alerts: document.getElementById("epBot13").checked,
+        email_intraday_alerts: document.getElementById("epIntraday").checked,
         email_weekly:       document.getElementById("epWeekly").checked,
         email_monthly:      document.getElementById("epMonthly").checked,
         email_portfolio:    document.getElementById("epPortfolio").checked,
