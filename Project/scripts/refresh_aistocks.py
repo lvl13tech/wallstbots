@@ -968,14 +968,58 @@ def main():
         b13_proj      = float((prev_b13_strategy or {}).get("projected_return", 0.0))
         print(f"  BOT13: close-out -- flattened {len(stored_positions)} position(s) at 3:30pm ET")
     elif same_day_trade:
-        # Re-use existing positions -- only re-price, don't resize
-        b13_positions = stored_positions
-        b13_decision  = "TRADE"
-        b13_picks     = (prev_b13_strategy or {}).get("picks", [])
-        b13_rationale = (prev_b13_strategy or {}).get("rationale", "")
-        b13_log       = (prev_b13_strategy or {}).get("session_log", [])
-        b13_proj      = float((prev_b13_strategy or {}).get("projected_return", 0.0))
-        print(f"  BOT13: same-day re-price ({len(b13_positions)} existing positions)")
+        # INTRADAY ROTATION ("trade to win"): re-score the whole universe every run.
+        # The scorer keeps only qualified names and drops anything whose edge died, so
+        # adopting its fresh top set (a) sells a broken thesis to cash and (b) rotates
+        # toward the best names. To avoid churn, only SWAP a held name for a fresh
+        # candidate when the candidate's score beats the weakest held by SWITCH_MARGIN_PCT.
+        # Held names that fall out of the qualified set entirely are always dropped.
+        SWITCH_MARGIN_PCT = 18.0
+        _fresh = run_bot13_equity(
+            EQUITY_CFG, UNIVERSE, prices, prev_closes, hist_data,
+            b13_day_open, today_iso, prev_b13_strategy
+        )
+        _f_decision, _f_positions, _f_picks, _f_rationale, _f_log, _f_proj = _fresh
+        _held_syms  = {p.get("symbol") for p in stored_positions if p.get("symbol")}
+        _fresh_syms = {p.get("symbol") for p in (_f_positions or []) if p.get("symbol")}
+
+        if _f_decision != "TRADE" or not _f_positions:
+            b13_decision  = "HOLD"
+            b13_positions = []
+            b13_picks     = []
+            b13_rationale = (_f_rationale or "No stock currently clears the edge filters -- "
+                             "rotated out of all positions to cash.")
+            b13_log       = _f_log or (prev_b13_strategy or {}).get("session_log", [])
+            b13_proj      = 0.0
+            print("  BOT13: intraday rotation -> all positions' edge died, moved to cash")
+        else:
+            _score = {pk.get("symbol"): float(pk.get("score") or 0) for pk in (_f_picks or [])}
+            _held_score = {p.get("symbol"): float(p.get("score") or 0) for p in stored_positions}
+            _weakest_held = min(_held_score.values()) if _held_score else 0.0
+            _keep    = _held_syms & _fresh_syms
+            _dropped = _held_syms - _fresh_syms
+            _added   = set()
+            for sym in (_fresh_syms - _held_syms):
+                cand = _score.get(sym, 0.0)
+                if _weakest_held <= 0 or cand >= _weakest_held * (1 + SWITCH_MARGIN_PCT/100.0):
+                    _added.add(sym)
+            if not _dropped and not _added:
+                b13_positions = stored_positions
+                b13_decision  = "TRADE"
+                b13_picks     = (prev_b13_strategy or {}).get("picks", [])
+                b13_rationale = (prev_b13_strategy or {}).get("rationale", "")
+                b13_log       = (prev_b13_strategy or {}).get("session_log", [])
+                b13_proj      = float((prev_b13_strategy or {}).get("projected_return", 0.0))
+                print(f"  BOT13: same-day hold ({len(b13_positions)} positions, no better edge)")
+            else:
+                _target = _keep | _added
+                b13_positions = [p for p in (_f_positions or []) if p.get("symbol") in _target]
+                b13_decision  = "TRADE"
+                b13_picks     = [pk for pk in (_f_picks or []) if pk.get("symbol") in _target]
+                b13_rationale = _f_rationale or (prev_b13_strategy or {}).get("rationale", "")
+                b13_log       = _f_log or (prev_b13_strategy or {}).get("session_log", [])
+                b13_proj      = float(_f_proj or 0.0)
+                print(f"  BOT13: intraday rotation -> kept {len(_keep)}, added {len(_added)}, dropped {len(_dropped)}")
     elif not _engine_window_open(EQUITY_CFG):
         # Market closed -- don't enter new positions after hours.
         # If today already had a completed TRADE, preserve its picks/log so the
@@ -1063,8 +1107,9 @@ def main():
     oracle_past_inception = funds.get("oracle", {}).get("inception", today_iso) < today_iso
     if (is_monday or oracle_needs_seed) and hist_data and oracle_past_inception:
         print(f"[wallstbots] {'Monday' if is_monday else 'first run'} -- running ORACLE recompute...")
+        _oracle_capital = float((funds.get("oracle", {}).get("value", {}) or {}).get("total") or sc_global)
         oracle_new_positions, oracle_new_picks, oracle_new_rationale, oracle_new_proj = run_oracle_decision(
-            prices, prev_closes, hist_data, sc_global, week_str
+            prices, prev_closes, hist_data, _oracle_capital, week_str
         )
         if oracle_new_picks:
             print(f"  ORACLE: {len(oracle_new_picks)} new picks")
@@ -1079,8 +1124,9 @@ def main():
     wizard_past_inception = funds.get("wizard", {}).get("inception", today_iso) < today_iso
     if (is_month_start or wizard_needs_seed) and hist_data and wizard_past_inception:
         print(f"[wallstbots] {'Month start' if is_month_start else 'first run'} ({today_iso}) -- running WIZARD recompute...")
+        _wizard_capital = float((funds.get("wizard", {}).get("value", {}) or {}).get("total") or sc_global)
         wizard_new_positions, wizard_new_picks, wizard_new_rationale, wizard_new_proj = run_wizard_decision(
-            prices, prev_closes, hist_data, sc_global, month_str
+            prices, prev_closes, hist_data, _wizard_capital, month_str
         )
         if wizard_new_picks:
             print(f"  WIZARD: {len(wizard_new_picks)} new picks")
@@ -1191,9 +1237,13 @@ def main():
                            if prev_closes.get(p["symbol"], 0) > 0 else p for p in raw_pos]
             enriched = [enrich_position(p, prices, prev_closes) for p in raw_pos]
             pos_val  = sum(p["value"]   for p in enriched)
-            pnl      = sum(p["pnl"]     for p in enriched)   # always matches table sum
-            total    = sc + pnl                               # true economic value
-            cash     = max(0.0, total - pos_val)              # undeployed capital, never negative
+            # CUMULATIVE / COMPOUNDING (mark-to-market on full balance): entire balance is
+            # deployed into picks so total = market value of positions; pnl vs original sc
+            # so it compounds across rotations and NEVER resets to sc.
+            _prev_total = float((fund.get("value", {}) or {}).get("total") or sc)
+            total    = pos_val if enriched else _prev_total
+            pnl      = total - sc
+            cash     = max(0.0, total - pos_val)
             pnl_pct  = (pnl / sc * 100) if sc else 0
             day_pnl  = sum(p["day_pnl"] for p in enriched)
             day_pct  = (day_pnl / (total - day_pnl)) * 100 if (total - day_pnl) else 0
@@ -1237,9 +1287,11 @@ def main():
                     ep["stop_triggered"] = True
                 enriched.append(ep)
             pos_val  = sum(p["value"]   for p in enriched)
-            pnl      = sum(p["pnl"]     for p in enriched)   # always matches table sum
-            total    = sc + pnl                               # true economic value
-            cash     = max(0.0, total - pos_val)              # undeployed capital, never negative
+            # CUMULATIVE / COMPOUNDING (mark-to-market on full balance) -- see oracle note.
+            _prev_total = float((fund.get("value", {}) or {}).get("total") or sc)
+            total    = pos_val if enriched else _prev_total
+            pnl      = total - sc
+            cash     = max(0.0, total - pos_val)
             pnl_pct  = (pnl / sc * 100) if sc else 0
             day_pnl  = sum(p["day_pnl"] for p in enriched)
             day_pct  = (day_pnl / (total - day_pnl)) * 100 if (total - day_pnl) else 0
@@ -1335,6 +1387,31 @@ def main():
             value["_real_positions"] = _cur_real
         else:
             value["trade_log"] = []
+
+        # -- DATA-INTEGRITY RECONCILIATION (loud WARN; never silently pass bad math) --
+        # The platform is a multi-year race; a silent accounting drift corrupts the
+        # standings. Re-derive the key relationships and warn if any disagree beyond a
+        # small epsilon. These are non-fatal (we still write) but surface in the
+        # Actions log so bad data is caught immediately, and audit_integrity.py asserts
+        # the same checks against the live API.
+        try:
+            _v = value
+            _sc = float(sc or 0)
+            _tot = float(_v.get("total") or 0)
+            _pv  = float(_v.get("pos_val") or 0)
+            _csh = float(_v.get("cash") or 0)
+            _pp  = float(_v.get("pnl_pct") or 0)
+            _eps = max(1.0, _tot * 0.01)  # $1 or 1% tolerance
+            if abs(_tot - (_pv + _csh)) > _eps:
+                print(f"  [INTEGRITY WARN] {fid}: total {_tot:.2f} != pos_val {_pv:.2f} + cash {_csh:.2f}")
+            if _sc > 0:
+                _calc_pp = (_tot - _sc) / _sc * 100
+                if abs(_calc_pp - _pp) > 0.5:
+                    print(f"  [INTEGRITY WARN] {fid}: pnl_pct {_pp:.2f} != calc {_calc_pp:.2f} (total {_tot:.2f} vs sc {_sc:.2f})")
+            if _tot <= 0:
+                print(f"  [INTEGRITY WARN] {fid}: total is {_tot:.2f} (<=0) -- should never happen in a live race")
+        except Exception as _ig_err:
+            print(f"  [INTEGRITY WARN] {fid}: reconciliation check error: {_ig_err}")
 
         funds_out[fid] = {
             "id":               fid,
