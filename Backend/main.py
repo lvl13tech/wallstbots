@@ -1750,8 +1750,10 @@ async def refresh_portfolio_fund_snapshots(
     Logic: reads total_value and gain_loss directly from bot_fund_state
     (the authoritative simulation source) rather than recalculating independently.
     This keeps the dashboard card and portfolio-fund page in perfect sync.
-    Uses the EQUALIZER fund as the canonical portfolio value since it tracks
-    all holdings equally and is the most stable reference.
+    Uses the BOT13 fund as the portfolio value — this snapshot feeds the member
+    BOT13 Track Record + chart, which must reflect BOT13's OWN behavior (flat/cash
+    on no-edge days, moving only when BOT13 actually holds positions). Equalizer is
+    a separate always-invested fund and must NOT feed BOT13's record.
     """
     body = await request.json()
     platform = body.get("platform", "wallstbots")
@@ -1762,9 +1764,10 @@ async def refresh_portfolio_fund_snapshots(
     try:
         cursor = conn.cursor(row_factory=dict_row)
 
-        # Pull the latest bot_fund_state for the equalizer fund per portfolio.
-        # Equalizer is the canonical reference — equal weight, never rebalances,
-        # always has positions. Its total_value IS the portfolio value.
+        # Pull the latest bot_fund_state for the BOT13 fund per portfolio.
+        # BOT13 is the fund this snapshot represents: it holds cash on no-edge days
+        # (flat = a cash day, never a loss) and only moves when it actually trades.
+        # This is what the member BOT13 Track Record + chart must show.
         cursor.execute("""
             SELECT
                 bfs.bot_id,
@@ -1775,7 +1778,7 @@ async def refresh_portfolio_fund_snapshots(
                 bfs.snapshot_date
             FROM bot_fund_state bfs
             JOIN bots b ON b.id = bfs.bot_id
-            WHERE bfs.fund_name = 'equalizer'
+            WHERE bfs.fund_name = 'bot13'
               AND b.status != 'deleted'
               AND (b.platform = %s OR %s = 'all')
         """, (platform, platform))
