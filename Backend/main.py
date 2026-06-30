@@ -163,6 +163,47 @@ app.add_middleware(
 security = HTTPBearer()
 
 # ============================================================================
+# RATE LIMITING (zero-dependency, in-memory, per-IP sliding window)
+# ----------------------------------------------------------------------------
+# The frontend calls this API directly (Cloud Run), bypassing Cloudflare, so
+# rate limiting lives here. Protects abuse-prone public endpoints (login,
+# password-reset, support-ticket, signup) from brute force / spam. In-memory is
+# fine for our scale; resets on instance restart (acceptable for abuse control).
+# ============================================================================
+import time as _time
+from collections import defaultdict as _defaultdict
+_RL_HITS: dict = _defaultdict(list)  # key -> [timestamps]
+
+def _client_ip(request: "Request") -> str:
+    # Honor common proxy headers (Cloud Run sets X-Forwarded-For), else peer.
+    xff = request.headers.get("x-forwarded-for") if request else None
+    if xff:
+        return xff.split(",")[0].strip()
+    return (request.client.host if (request and request.client) else "unknown")
+
+def rate_limit(request: "Request", bucket: str, max_hits: int, window_secs: int):
+    """Raise HTTP 429 if this IP exceeded max_hits in the rolling window."""
+    ip  = _client_ip(request)
+    key = f"{bucket}:{ip}"
+    now = _time.time()
+    hits = _RL_HITS[key]
+    # drop timestamps outside the window
+    cutoff = now - window_secs
+    while hits and hits[0] < cutoff:
+        hits.pop(0)
+    if len(hits) >= max_hits:
+        retry = int(window_secs - (now - hits[0])) + 1
+        raise HTTPException(status_code=429,
+                            detail="Too many attempts. Please wait a moment and try again.",
+                            headers={"Retry-After": str(max(1, retry))})
+    hits.append(now)
+    # opportunistic cleanup so the dict can't grow unbounded
+    if len(_RL_HITS) > 10000:
+        for k in [k for k, v in list(_RL_HITS.items()) if not v or v[-1] < cutoff]:
+            _RL_HITS.pop(k, None)
+
+
+# ============================================================================
 # MODELS
 # ============================================================================
 
@@ -391,7 +432,8 @@ def call_supabase_auth(method: str, endpoint: str, data: dict = None) -> dict:
 # ============================================================================
 
 @app.post("/auth/signup")
-async def signup(request: SignUpRequest):
+async def signup(request: SignUpRequest, http_request: Request):
+    rate_limit(http_request, "signup", 6, 600)  # 6 / 10 min / IP (captcha is primary)
     """
     Sign up a new user.
     Creates auth user in Supabase Auth and a row in public.users.
@@ -460,11 +502,13 @@ async def signup(request: SignUpRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        print(f"[error] unhandled 400: {e!r}")
+        raise HTTPException(status_code=400, detail="Request could not be completed.")
 
 
 @app.post("/auth/login")
-async def login(request: LoginRequest):
+async def login(request: LoginRequest, http_request: Request):
+    rate_limit(http_request, "login", 8, 300)  # 8 / 5 min / IP
     try:
         auth_response = call_supabase_auth("POST", "/token?grant_type=password", {
             "email": request.email,
@@ -1538,7 +1582,8 @@ async def stripe_webhook(request: Request):
     except _stripe.error.SignatureVerificationError:
         raise HTTPException(status_code=400, detail="Invalid Stripe signature")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        print(f"[error] stripe webhook: {e!r}")
+        raise HTTPException(status_code=400, detail="Webhook processing error.")
 
     event_type = event["type"]
     data       = event["data"]["object"]
@@ -1823,7 +1868,8 @@ async def refresh_portfolio_fund_snapshots(
         }
     except Exception as e:
         conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"[error] internal 500: {e!r}")
+        raise HTTPException(status_code=500, detail="Internal error.")
     finally:
         if cursor:
             cursor.close()
@@ -1874,7 +1920,8 @@ async def wipe_portfolio_fund_snapshots(
         }
     except Exception as e:
         conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"[error] internal 500: {e!r}")
+        raise HTTPException(status_code=500, detail="Internal error.")
     finally:
         if cursor:
             cursor.close()
@@ -1983,7 +2030,8 @@ async def upsert_portfolio_bot_state(
         return {"success": True, "upserted": upserted, "date": today_str}
     except Exception as e:
         conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"[error] internal 500: {e!r}")
+        raise HTTPException(status_code=500, detail="Internal error.")
     finally:
         cursor.close()
         return_db_connection(conn)
@@ -2424,7 +2472,8 @@ class PasswordResetRequest(BaseModel):
 
 
 @app.post("/auth/password-reset")
-async def request_password_reset(body: PasswordResetRequest):
+async def request_password_reset(body: PasswordResetRequest, http_request: Request):
+    rate_limit(http_request, "pwreset", 5, 900)  # 5 / 15 min / IP
     """
     Trigger a Supabase password reset email for the given address.
     Proxies to Supabase Auth /auth/v1/recover using the anon key.
@@ -3220,7 +3269,8 @@ async def webmaster_system_status(_wm: dict = Depends(require_webmaster)):
             conn.rollback()
         except Exception:
             pass
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"[error] internal 500: {e!r}")
+        raise HTTPException(status_code=500, detail="Internal error.")
     finally:
         if cursor:
             try:
@@ -3662,7 +3712,8 @@ def _ticket_support_email(ticket_number: str, email: str, name: str, issue: str,
 
 
 @app.post("/support/ticket")
-async def create_support_ticket(payload: SupportTicketCreate):
+async def create_support_ticket(payload: SupportTicketCreate, http_request: Request):
+    rate_limit(http_request, "support", 5, 600)  # 5 / 10 min / IP
     """
     Open a support ticket from the chatbot widget.
     Stores ticket in Supabase, emails user confirmation, emails support inbox.
