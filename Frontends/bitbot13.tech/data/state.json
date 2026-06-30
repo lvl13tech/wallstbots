@@ -1,29 +1,114 @@
 {
   "data": {
+    "starting_capital": 50000.0,
+    "last_refresh": "2026-06-30T06:01:14",
+    "snapshots": [
+      {
+        "date": "2026-06-30",
+        "bot13": 50000.0,
+        "oracle": 50000.0,
+        "wizard": 50000.0,
+        "equalizer": 50000.0,
+        "titan": 50000.0
+      }
+    ],
     "funds": {
       "bot13": {
         "id": "bot13",
-        "icon": "13",
         "name": "BOT13",
         "color": "#ec4899",
-        "top10": null,
-        "value": {
-          "pnl": 0.0,
-          "cash": 50000.0,
-          "total": 50000.0,
-          "day_pct": 0.0,
-          "day_pnl": 0.0,
-          "pnl_pct": 0.0,
-          "pos_val": 0.0,
-          "day_open": 50000.0,
-          "positions": [],
-          "window_open": false,
-          "holding_cash": true,
-          "trade_log": []
-        },
+        "icon": "13",
         "tagline": "Daily intraday bot. Buys at open, sells before close. Skips the session if no edge.",
         "inception": "2026-06-02",
+        "starting_capital": 50000.0,
+        "value": {
+          "total": 50000.0,
+          "cash": 50000.0,
+          "pos_val": 0.0,
+          "pnl": 0.0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0.0,
+          "day_pct": 0.0,
+          "day_open": 50000.0,
+          "holding_cash": true,
+          "window_open": false,
+          "traded_today": false,
+          "session_open_et": "9:00",
+          "session_close_et": "21:00",
+          "positions": [],
+          "trade_log": [],
+          "_real_positions": []
+        },
+        "current_strategy": {
+          "day": "2026-06-30",
+          "decision": "HOLD",
+          "rationale": "Full reset -- starting fresh.",
+          "picks": [],
+          "session_log": [],
+          "stop_pct": -1.5,
+          "target_pct": 3.0,
+          "window_open": false,
+          "last_updated": "2026-06-30T06:01:14",
+          "projected_return": 0.0,
+          "traded_today": false
+        },
+        "top10": null,
         "per_top_dollars": null,
+        "per_rest_dollars": null
+      },
+      "oracle": {
+        "id": "oracle",
+        "name": "ORACLE",
+        "color": "#a855f7",
+        "icon": "OR",
+        "tagline": "Weekly bot. Trades every Monday. All-in on the week's best bets.",
+        "inception": "2026-06-02",
+        "starting_capital": 50000.0,
+        "value": {
+          "total": 50000.0,
+          "cash": 50000.0,
+          "pos_val": 0,
+          "pnl": 0.0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0,
+          "day_pct": 0.0,
+          "holding_cash": false,
+          "positions": [],
+          "trade_log": []
+        },
+        "current_strategy": {
+          "day": "2026-06-30",
+          "week": "(2026, 27)",
+          "month": "2026-06-30",
+          "picks": [],
+          "decision": "HOLD",
+          "rationale": "Full reset -- starting fresh.",
+          "session_log": [],
+          "projected_return": 0.0
+        },
+        "top10": null,
+        "per_top_dollars": null,
+        "per_rest_dollars": null
+      },
+      "wizard": {
+        "id": "wizard",
+        "name": "WIZARD",
+        "color": "#10b981",
+        "icon": "WZ",
+        "tagline": "Monthly hold bot. Buys the 1st of month, sells the last. Slow and patient.",
+        "inception": "2026-06-02",
+        "starting_capital": 50000.0,
+        "value": {
+          "total": 50000.0,
+          "cash": 50000.0,
+          "pos_val": 0,
+          "pnl": 0.0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0,
+          "day_pct": 0.0,
+          "positions": [],
+          "trade_log": []
+        },
         "current_strategy": {
           "day": "2026-06-30",
           "week": "2026-06-30",
@@ -34,14 +119,72 @@
           "session_log": [],
           "projected_return": 0.0
         },
-        "per_rest_dollars": null,
-        "starting_capital": 50000.0
+        "top10": null,
+        "per_top_dollars": null,
+        "per_rest_dollars": null
+      },
+      "equalizer": {
+        "id": "equalizer",
+        "name": "EQUALIZER",
+        "color": "#00d4ff",
+        "icon": "EQ",
+        "tagline": "Equal weight. No favorites. $1,000 in every coin.",
+        "inception": "2026-06-02",
+        "starting_capital": 50000.0,
+        "value": {
+          "total": 50000.0,
+          "cash": 50000.0,
+          "pos_val": 0,
+          "pnl": 0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0,
+          "day_pct": 0.0,
+          "positions": [],
+          "trade_log": []
+        },
+        "current_strategy": {
+          "day": "2026-06-30",
+          "week": "2026-06-30",
+          "month": "2026-06-30",
+          "picks": [],
+          "decision": "HOLD",
+          "rationale": "Full reset -- starting fresh.",
+          "session_log": [],
+          "projected_return": 0.0
+        },
+        "top10": null,
+        "per_top_dollars": null,
+        "per_rest_dollars": null
       },
       "titan": {
         "id": "titan",
-        "icon": "TT",
         "name": "TITAN",
         "color": "#ff8c00",
+        "icon": "TT",
+        "tagline": "Half on the heavyweights. Half on the rest. Concentration meets coverage.",
+        "inception": "2026-06-02",
+        "starting_capital": 50000.0,
+        "value": {
+          "total": 50000.0,
+          "cash": 50000.0,
+          "pos_val": 0,
+          "pnl": 0,
+          "pnl_pct": 0.0,
+          "day_pnl": 0,
+          "day_pct": 0.0,
+          "positions": [],
+          "trade_log": []
+        },
+        "current_strategy": {
+          "day": "2026-06-30",
+          "week": "2026-06-30",
+          "month": "2026-06-30",
+          "picks": [],
+          "decision": "HOLD",
+          "rationale": "Full reset -- starting fresh.",
+          "session_log": [],
+          "projected_return": 0.0
+        },
         "top10": [
           "BTC",
           "ETH",
@@ -54,222 +197,75 @@
           "DOGE",
           "TRX"
         ],
-        "value": {
-          "pnl": 0.0,
-          "cash": 50000.0,
-          "total": 50000.0,
-          "day_pct": 0.0,
-          "day_pnl": 0.0,
-          "pnl_pct": 0.0,
-          "pos_val": 0.0,
-          "day_open": 50000.0,
-          "positions": [],
-          "window_open": false,
-          "holding_cash": true,
-          "trade_log": []
-        },
-        "tagline": "Half on the heavyweights. Half on the rest. Concentration meets coverage.",
-        "inception": "2026-06-02",
         "per_top_dollars": 2500.0,
-        "current_strategy": {
-          "day": "2026-06-30",
-          "week": "2026-06-30",
-          "month": "2026-06-30",
-          "picks": [],
-          "decision": "HOLD",
-          "rationale": "Full reset -- starting fresh.",
-          "session_log": [],
-          "projected_return": 0.0
-        },
-        "per_rest_dollars": 625.0,
-        "starting_capital": 50000.0
-      },
-      "oracle": {
-        "id": "oracle",
-        "icon": "OR",
-        "name": "ORACLE",
-        "color": "#a855f7",
-        "top10": null,
-        "value": {
-          "pnl": 0.0,
-          "cash": 50000.0,
-          "total": 50000.0,
-          "day_pct": 0.0,
-          "day_pnl": 0.0,
-          "pnl_pct": 0.0,
-          "pos_val": 0.0,
-          "day_open": 50000.0,
-          "positions": [],
-          "window_open": false,
-          "holding_cash": true,
-          "trade_log": []
-        },
-        "tagline": "Weekly bot. Trades every Monday. All-in on the week's best bets.",
-        "inception": "2026-06-02",
-        "per_top_dollars": null,
-        "current_strategy": {
-          "day": "2026-06-30",
-          "week": "2026-06-30",
-          "month": "2026-06-30",
-          "picks": [],
-          "decision": "HOLD",
-          "rationale": "Full reset -- starting fresh.",
-          "session_log": [],
-          "projected_return": 0.0
-        },
-        "per_rest_dollars": null,
-        "starting_capital": 50000.0
-      },
-      "wizard": {
-        "id": "wizard",
-        "icon": "WZ",
-        "name": "WIZARD",
-        "color": "#10b981",
-        "top10": null,
-        "value": {
-          "pnl": 0.0,
-          "cash": 50000.0,
-          "total": 50000.0,
-          "day_pct": 0.0,
-          "day_pnl": 0.0,
-          "pnl_pct": 0.0,
-          "pos_val": 0.0,
-          "day_open": 50000.0,
-          "positions": [],
-          "window_open": false,
-          "holding_cash": true,
-          "trade_log": []
-        },
-        "tagline": "Monthly hold bot. Buys the 1st of month, sells the last. Slow and patient.",
-        "inception": "2026-06-02",
-        "per_top_dollars": null,
-        "current_strategy": {
-          "day": "2026-06-30",
-          "week": "2026-06-30",
-          "month": "2026-06-30",
-          "picks": [],
-          "decision": "HOLD",
-          "rationale": "Full reset -- starting fresh.",
-          "session_log": [],
-          "projected_return": 0.0
-        },
-        "per_rest_dollars": null,
-        "starting_capital": 50000.0
-      },
-      "equalizer": {
-        "id": "equalizer",
-        "icon": "EQ",
-        "name": "EQUALIZER",
-        "color": "#00d4ff",
-        "top10": null,
-        "value": {
-          "pnl": 0.0,
-          "cash": 50000.0,
-          "total": 50000.0,
-          "day_pct": 0.0,
-          "day_pnl": 0.0,
-          "pnl_pct": 0.0,
-          "pos_val": 0.0,
-          "day_open": 50000.0,
-          "positions": [],
-          "window_open": false,
-          "holding_cash": true,
-          "trade_log": []
-        },
-        "tagline": "Equal weight. No favorites. $1,000 in every coin.",
-        "inception": "2026-06-02",
-        "per_top_dollars": null,
-        "current_strategy": {
-          "day": "2026-06-30",
-          "week": "2026-06-30",
-          "month": "2026-06-30",
-          "picks": [],
-          "decision": "HOLD",
-          "rationale": "Full reset -- starting fresh.",
-          "session_log": [],
-          "projected_return": 0.0
-        },
-        "per_rest_dollars": null,
-        "starting_capital": 50000.0
+        "per_rest_dollars": 625.0
       }
     },
-    "snapshots": [
-      {
-        "date": "2026-06-30",
-        "bot13": 50000.0,
-        "oracle": 50000.0,
-        "wizard": 50000.0,
-        "equalizer": 50000.0,
-        "titan": 50000.0
-      }
-    ],
-    "last_refresh": "2026-06-30T04:13:06",
     "leaderboards": {
-      "all": [
-        {
-          "fund": "bot13",
-          "all_pct": 0.0,
-          "all_pnl": 0.0,
-          "overall_grade": "C"
-        },
-        {
-          "fund": "oracle",
-          "all_pct": 0.0,
-          "all_pnl": 0.0,
-          "overall_grade": "C"
-        },
-        {
-          "fund": "wizard",
-          "all_pct": 0.0,
-          "all_pnl": 0.0,
-          "overall_grade": "C"
-        },
-        {
-          "fund": "titan",
-          "all_pct": 0.0,
-          "all_pnl": 0.0,
-          "overall_grade": "C"
-        },
-        {
-          "fund": "equalizer",
-          "all_pct": 0.0,
-          "all_pnl": 0.0,
-          "overall_grade": "C"
-        }
-      ],
       "week": [
         {
           "fund": "bot13",
-          "week_pct": 0.0,
           "week_pnl": 0.0,
+          "week_pct": 0.0,
           "week_grade": "C"
         },
         {
           "fund": "oracle",
-          "week_pct": 0.0,
           "week_pnl": 0.0,
+          "week_pct": 0.0,
           "week_grade": "C"
         },
         {
           "fund": "wizard",
-          "week_pct": 0.0,
           "week_pnl": 0.0,
-          "week_grade": "C"
-        },
-        {
-          "fund": "titan",
           "week_pct": 0.0,
-          "week_pnl": 0.0,
           "week_grade": "C"
         },
         {
           "fund": "equalizer",
-          "week_pct": 0.0,
           "week_pnl": 0.0,
+          "week_pct": 0.0,
+          "week_grade": "C"
+        },
+        {
+          "fund": "titan",
+          "week_pnl": 0.0,
+          "week_pct": 0.0,
           "week_grade": "C"
         }
+      ],
+      "all": [
+        {
+          "fund": "bot13",
+          "all_pnl": 0.0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
+        },
+        {
+          "fund": "oracle",
+          "all_pnl": 0.0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
+        },
+        {
+          "fund": "wizard",
+          "all_pnl": 0.0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
+        },
+        {
+          "fund": "equalizer",
+          "all_pnl": 0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
+        },
+        {
+          "fund": "titan",
+          "all_pnl": 0,
+          "all_pct": 0.0,
+          "overall_grade": "C"
+        }
       ]
-    },
-    "starting_capital": 50000.0
+    }
   }
 }
