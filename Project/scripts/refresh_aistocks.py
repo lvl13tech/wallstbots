@@ -239,8 +239,19 @@ def enrich_position(pos, prices, prev_closes):
     sym        = pos["symbol"]
     shares     = float(pos.get("shares") or 0)
     entry      = float(pos.get("entry_price") or pos.get("entry") or 0)
-    cost_basis = shares * entry  # always recompute; stored cost_basis may be stale after inception reset
     price      = prices.get(sym, entry)
+    # -- BAD-ENTRY SANITY GUARD ------------------------------------------------
+    # A garbage feed price at SEED time (e.g. JUP read at 0.000012 vs real 0.00023)
+    # gets locked in as entry_price, then marks up ~19x every refresh and inflates
+    # the whole fund. No position legitimately gains/loses >8x vs its entry while
+    # held. If it does, the ENTRY is bad data -> re-base entry to the live price so
+    # P&L starts clean at 0 instead of a phantom multiple. Protects ALL funds.
+    if entry > 0 and price > 0:
+        _ratio = price / entry
+        if _ratio > 8.0 or _ratio < 0.125:
+            entry = price
+            pos["entry_price"] = price
+    cost_basis = shares * entry  # always recompute; stored cost_basis may be stale after inception reset
     prev       = prev_closes.get(sym, price)
     value      = shares * price
     pnl        = value - cost_basis
