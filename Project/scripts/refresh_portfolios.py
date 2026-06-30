@@ -524,9 +524,10 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
         for fid, fdata in data.get("funds", {}).items():
             v = fdata.get("value", {})
             tracker_funds[fid] = {
-                "total":   float(v.get("total")   or 0),
-                "day_pct": float(v.get("day_pct") or 0),
-                "day_pnl": float(v.get("day_pnl") or 0),
+                "total":     float(v.get("total")   or 0),
+                "day_pct":   float(v.get("day_pct") or 0),
+                "day_pnl":   float(v.get("day_pnl") or 0),
+                "trade_log": v.get("trade_log") or [],
             }
         print(f"  [portfolios] tracker loaded: sc={platform_sc}, funds={list(tracker_funds.keys())}")
     except Exception as e:
@@ -750,26 +751,29 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
             # so we only run the ledger for bot13 and clear any stale log otherwise.
             _member_traded_today = False
             if fund_name == "bot13":
-                _pstate   = prev_states.get(fund_name) or {}
-                # Diff REAL positions (the accounting positions), tracked separately so
-                # any display layer can't inject phantom rows. TODAY-ONLY log: reset if
-                # the carried-forward log is from a prior day (also clears stale rows).
-                _prev_pos = _pstate.get("positions") or []
-                _prev_log = _pstate.get("trade_log") or []
-                # TODAY-ONLY log: reset if carried-forward log is from a prior day
-                # (also clears stale/phantom rows from the old buggy logic).
-                _today = et_now().date().isoformat()
-                _log_is_today = bool(_prev_log) and str((_prev_log[-1] or {}).get("ts",""))[:10] == _today
-                if not _log_is_today:
-                    _prev_pos = []
-                    _prev_log = []
-                def _bs_count(log):
-                    return sum(1 for e in (log or [])
-                               if str(e.get("action", "")).upper() in ("BUY", "SELL"))
-                _prev_bs = _bs_count(_prev_log)
-                _trade_log = stamp_and_log(_prev_pos, positions, _prev_log, et_now().isoformat(timespec="seconds"))
-                _new_bs  = _bs_count(_trade_log)
-                _member_traded_today = (_new_bs > _prev_bs) or _member_closed_out
+                # DERIVE the member trade history from the tracker's AUTHORITATIVE bot13
+                # trade_log (same buys, sells, rotations, and close-outs the main site
+                # shows), scaled to this member's balance. This guarantees member and
+                # main pages always agree -- the old independent re-diff dropped the
+                # close-out SELLs (BUYs showed, SELLs didn't). Scale shares & realized by
+                # the member ratio (member_value / tracker total); price/action/ts/symbol
+                # are identical. TODAY-ONLY: keep only rows stamped today.
+                _tracker_log = (tracker_funds.get("bot13") or {}).get("trade_log") or []
+                _tf_total    = float((tracker_funds.get("bot13") or {}).get("total") or 0)
+                _ratio       = (member_value / _tf_total) if _tf_total > 0 else 0.0
+                _today       = et_now().date().isoformat()
+                _trade_log   = []
+                for e in _tracker_log:
+                    if str(e.get("ts", ""))[:10] != _today:
+                        continue  # today-only log
+                    row = dict(e)
+                    if e.get("shares") is not None:
+                        row["shares"] = round(float(e["shares"]) * _ratio, 6)
+                    if e.get("realized") is not None:
+                        row["realized"] = round(float(e["realized"]) * _ratio, 2)
+                    _trade_log.append(row)
+                _has_sell = any(str(r.get("action","")).upper() == "SELL" for r in _trade_log)
+                _member_traded_today = bool(_trade_log) or _member_closed_out
             else:
                 _trade_log = []
 
