@@ -2,16 +2,6 @@
   "data": {
     "recommendations": [
       {
-        "symbol": "HON",
-        "action": "STRONG SELL",
-        "confidence": 1.0,
-        "reason": "Down -50.95% -- sharp decline, avoid.",
-        "price": 227.8,
-        "upside_pct": -50.95,
-        "sector": "INDUSTRIALS",
-        "date": "2026-06-29"
-      },
-      {
         "symbol": "ALAB",
         "action": "STRONG BUY",
         "confidence": 1.0,
@@ -209,6 +199,16 @@
         "price": 14.32,
         "upside_pct": 2.21,
         "sector": "HEALTH CARE",
+        "date": "2026-06-29"
+      },
+      {
+        "symbol": "HON",
+        "action": "SELL",
+        "confidence": 0.38,
+        "reason": "Down -1.90% -- negative momentum.",
+        "price": 227.8,
+        "upside_pct": -1.9,
+        "sector": "INDUSTRIALS",
         "date": "2026-06-29"
       },
       {
@@ -556,9 +556,9 @@
       "STRONG BUY": 9,
       "BUY": 10,
       "HOLD": 24,
-      "SELL": 9,
-      "STRONG SELL": 3
+      "SELL": 10,
+      "STRONG SELL": 2
     },
-    "generated_at": "2026-06-29T23:49:39"
+    "generated_at": "2026-06-30T03:39:36"
   }
 }

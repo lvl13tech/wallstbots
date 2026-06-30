@@ -1,7 +1,7 @@
 {
   "data": {
     "starting_capital": 55000.0,
-    "last_refresh": "2026-06-29T23:49:34",
+    "last_refresh": "2026-06-30T03:39:30",
     "snapshots": [
       {
         "date": "2026-06-02",
@@ -435,73 +435,73 @@
           "pos_val": 55000.0,
           "pnl": 0.0,
           "pnl_pct": 0.0,
-          "day_pnl": 3126.71,
-          "day_pct": 6.03,
+          "day_pnl": 3120.68,
+          "day_pct": 6.02,
           "holding_cash": false,
           "positions": [
             {
               "symbol": "ALAB",
-              "shares": 39.597285,
+              "shares": 39.519911,
               "entry_price": 455.96,
               "current_price": 455.96,
-              "cost_basis": 18054.78,
+              "cost_basis": 18019.5,
               "price": 455.96,
-              "value": 18054.78,
+              "value": 18019.5,
               "pnl": 0.0,
               "pnl_pct": 0.0,
-              "day_pnl": 2542.94,
+              "day_pnl": 2537.97,
               "day_pct": 16.39
             },
             {
               "symbol": "AFRM",
-              "shares": 122.389018,
+              "shares": 122.151262,
               "entry_price": 81.79,
               "current_price": 81.79,
-              "cost_basis": 10010.2,
+              "cost_basis": 9990.75,
               "price": 81.79,
-              "value": 10010.2,
+              "value": 9990.75,
               "pnl": 0.0,
               "pnl_pct": 0.0,
-              "day_pnl": 281.49,
+              "day_pnl": 280.95,
               "day_pct": 2.89
             },
             {
               "symbol": "LLY",
-              "shares": 7.453217,
+              "shares": 7.438747,
               "entry_price": 1229.9301,
               "current_price": 1229.9301,
-              "cost_basis": 9166.94,
+              "cost_basis": 9149.14,
               "price": 1229.9301,
-              "value": 9166.94,
+              "value": 9149.14,
               "pnl": 0.0,
               "pnl_pct": 0.0,
-              "day_pnl": 162.56,
+              "day_pnl": 162.24,
               "day_pct": 1.81
             },
             {
               "symbol": "JNJ",
-              "shares": 34.766062,
+              "shares": 34.698112,
               "entry_price": 258.51,
               "current_price": 258.51,
-              "cost_basis": 8987.37,
+              "cost_basis": 8969.81,
               "price": 258.51,
-              "value": 8987.37,
+              "value": 8969.81,
               "pnl": 0.0,
               "pnl_pct": 0.0,
-              "day_pnl": 133.85,
+              "day_pnl": 133.59,
               "day_pct": 1.51
             },
             {
               "symbol": "SHW",
-              "shares": 25.503088,
+              "shares": 25.764745,
               "entry_price": 344.3,
               "current_price": 344.3,
-              "cost_basis": 8780.71,
+              "cost_basis": 8870.8,
               "price": 344.3,
-              "value": 8780.71,
+              "value": 8870.8,
               "pnl": 0.0,
               "pnl_pct": 0.0,
-              "day_pnl": 5.87,
+              "day_pnl": 5.93,
               "day_pct": 0.07
             }
           ],
@@ -510,40 +510,40 @@
         "current_strategy": {
           "week": "2026-06-29",
           "decision": "TRADE",
-          "rationale": "Projected week return: +11.63%. Top 5 names by composite momentum. Score-weighted (not equal weight). Sector cap enforced (max 2 per sector). Quality gate: 20d momentum positive required.",
+          "rationale": "Projected week return: +11.62%. Top 5 names by composite momentum. Score-weighted (not equal weight). Sector cap enforced (max 2 per sector). Quality gate: 20d momentum positive required.",
           "picks": [
             {
               "symbol": "ALAB",
-              "weight": 0.3283,
+              "weight": 0.3276,
               "score": 20.1,
               "rationale": "ALAB: 5d +14.8% | 20d +42.4% | RSI 70 | Vol x0.87. Allocated 33%."
             },
             {
               "symbol": "AFRM",
-              "weight": 0.182,
+              "weight": 0.1817,
               "score": 11.1,
               "rationale": "AFRM: 5d +13.9% | 20d +12.2% | RSI 73 | Vol x1.07. Allocated 18%."
             },
             {
               "symbol": "LLY",
-              "weight": 0.1667,
+              "weight": 0.1663,
               "score": 10.2,
               "rationale": "LLY: 5d +11.1% | 20d +13.7% | RSI 69 | Vol x1.17. Allocated 17%."
             },
             {
               "symbol": "JNJ",
-              "weight": 0.1634,
+              "weight": 0.1631,
               "score": 10.0,
               "rationale": "JNJ: 5d +8.1% | 20d +15.7% | RSI 73 | Vol x1.22. Allocated 16%."
             },
             {
               "symbol": "SHW",
-              "weight": 0.1596,
-              "score": 9.8,
-              "rationale": "SHW: 5d +6.6% | 20d +16.8% | RSI 73 | Vol x1.22. Allocated 16%."
+              "weight": 0.1613,
+              "score": 9.9,
+              "rationale": "SHW: 5d +6.6% | 20d +16.8% | RSI 73 | Vol x1.34. Allocated 16%."
             }
           ],
-          "projected_return": 11.63
+          "projected_return": 11.62
         },
         "top10": null,
         "per_top_dollars": null,
@@ -754,8 +754,8 @@
           "pos_val": 54829.39,
           "pnl": -170.61,
           "pnl_pct": -0.31,
-          "day_pnl": -514.82,
-          "day_pct": -0.93,
+          "day_pnl": 466.88,
+          "day_pct": 0.86,
           "positions": [
             {
               "symbol": "XOM",
@@ -923,8 +923,8 @@
               "value": 963.05,
               "pnl": -36.95,
               "pnl_pct": -3.69,
-              "day_pnl": -1000.34,
-              "day_pct": -50.95
+              "day_pnl": -18.64,
+              "day_pct": -1.9
             },
             {
               "symbol": "GE",
@@ -1496,8 +1496,8 @@
           "pos_val": 53924.78,
           "pnl": -1075.17,
           "pnl_pct": -1.95,
-          "day_pnl": -95.93,
-          "day_pct": -0.18,
+          "day_pnl": 504.0,
+          "day_pct": 0.94,
           "positions": [
             {
               "symbol": "NVDA",
@@ -1795,8 +1795,8 @@
               "value": 588.53,
               "pnl": -22.58,
               "pnl_pct": -3.69,
-              "day_pnl": -611.32,
-              "day_pct": -50.95
+              "day_pnl": -11.39,
+              "day_pct": -1.9
             },
             {
               "symbol": "GE",
