@@ -311,7 +311,7 @@ function renderHome() {
     + '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--blue);margin-bottom:12px;text-transform:uppercase">Our<br>AI &amp; Quantum<br>Bots</div>'
     + '<a href="https://aistocks.tech" target="_blank" rel="noopener">'
     + '<img src="assets/logo-aistocks.png" alt="aistocks.tech" style="width:100%;max-width:260px;height:auto;display:block;margin-bottom:14px;border-radius:8px"></a>'
-    + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 14px;flex:1">The same 5 bots racing on 43 hand-picked AI &amp; Quantum stocks. Daily signals, live leaderboards, and weekly performance reports.</p>'
+    + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 14px;flex:1">The same 5 bots racing on 50 hand-picked AI &amp; Quantum stocks. Daily signals, live leaderboards, and weekly performance reports.</p>'
     + '<a class="btn btn-secondary" href="https://aistocks.tech" target="_blank" rel="noopener" style="font-size:12px;margin-top:auto">Visit aistocks.tech →</a>'
     + '</div>'
 
