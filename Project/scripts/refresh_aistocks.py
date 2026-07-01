@@ -142,7 +142,33 @@ def sector_weight(picks_list, sector_map):
 
 
 # -- Live prices -----------------------------------------------------------------
-def get_live_prices(symbols):
+# -- ROOT-CAUSE PRICE VALIDATION -----------------------------------------------
+# The ONLY thing that ever corrupted a fund was a bad price accepted at ingestion
+# (previously validated only as ">0"). This gate compares each incoming price to the
+# symbol's last known good price and rejects an impossible one-refresh jump, reusing the
+# last good value instead. One clean gate protects every symbol, every fund, every
+# member portfolio -- so no downstream cleanup is ever needed. Self-heals when feed recovers.
+MAX_UP_FACTOR   = 1.60   # >60% up in one refresh vs last known = bad data
+MAX_DOWN_FACTOR = 0.40   # below 40% of last known = bad data
+
+def _validate_price(sym, new_price, last_known):
+    try:
+        new_price = float(new_price)
+    except Exception:
+        return 0.0
+    if new_price <= 0:
+        return 0.0
+    lk = (last_known or {}).get(sym)
+    if lk and lk > 0:
+        ratio = new_price / lk
+        if ratio > MAX_UP_FACTOR or ratio < MAX_DOWN_FACTOR:
+            print(f"  [price-guard] {sym}: rejected {new_price:g} ({ratio:.1f}x last known "
+                  f"{lk:g}) -- reusing last known price (bad-feed protection)")
+            return lk
+    return new_price
+
+
+def get_live_prices(symbols, last_known=None):
     """Fetch live price + previous close via yfinance. Returns (prices, prev_closes)."""
     if yf is None:
         print("  [ERROR] yfinance not installed.")
@@ -175,6 +201,7 @@ def get_live_prices(symbols):
                         if len(closes) >= 1:
                             p  = float(closes.iloc[-1])
                             pc = float(closes.iloc[-2]) if len(closes) >= 2 else p
+                            p  = _validate_price(state_sym, p, last_known)
                             if p > 0:
                                 prices[state_sym]      = round(p, 4)
                                 prev_closes[state_sym] = round(pc, 4)
@@ -844,7 +871,19 @@ def main():
                 need_syms.add(s)
 
     print(f"[wallstbots] fetching prices for {len(need_syms)} symbols...")
-    prices, prev_closes = get_live_prices(sorted(need_syms))
+    # ROOT-CAUSE PRICE VALIDATION: last-known-good map from prior positions (see get_live_prices).
+    _last_known = {}
+    for _fid, _fund in funds.items():
+        for _pos in (_fund.get("value", {}) or {}).get("positions", []) or []:
+            _sym = _pos.get("symbol")
+            _lp  = _pos.get("current_price") or _pos.get("price") or _pos.get("entry_price")
+            try:
+                _lp = float(_lp)
+            except Exception:
+                _lp = None
+            if _sym and _lp and _lp > 0 and _sym not in _last_known:
+                _last_known[_sym] = _lp
+    prices, prev_closes = get_live_prices(sorted(need_syms), last_known=_last_known)
     if not prices:
         print("[aistocks] ERROR: zero prices from all attempts -- aborting to protect DB data.")
         sys.exit(1)

@@ -152,7 +152,35 @@ def load_secrets():
 # grade() and grade_overall() imported from bot13_engine
 
 # -- Live prices ----------------------------------------------------------------
-def get_live_prices(state_symbols):
+# -- ROOT-CAUSE PRICE VALIDATION -----------------------------------------------
+# The ONLY thing that ever corrupted a fund was a bad price accepted at ingestion
+# (previously validated only as ">0"). This gate compares each incoming price to the
+# coin's last known good price and rejects an impossible one-refresh jump, reusing the
+# last good value instead. One clean gate protects every coin, every fund, every member
+# portfolio -- so no downstream cleanup is ever needed. Self-heals when the feed recovers.
+MAX_UP_FACTOR   = 1.60   # >60% up in one refresh vs last known = bad data
+MAX_DOWN_FACTOR = 0.40   # >60% down (i.e. below 40% of last known) = bad data
+
+def _validate_price(sym, new_price, last_known):
+    """Return a trustworthy price. If new_price is an implausible jump vs the coin's
+    last known good price, reject it and reuse the last known value (logged)."""
+    try:
+        new_price = float(new_price)
+    except Exception:
+        return 0.0
+    if new_price <= 0:
+        return 0.0
+    lk = (last_known or {}).get(sym)
+    if lk and lk > 0:
+        ratio = new_price / lk
+        if ratio > MAX_UP_FACTOR or ratio < MAX_DOWN_FACTOR:
+            print(f"  [price-guard] {sym}: rejected {new_price:g} ({ratio:.1f}x last known "
+                  f"{lk:g}) -- reusing last known price (bad-feed protection)")
+            return lk
+    return new_price
+
+
+def get_live_prices(state_symbols, last_known=None):
     """
     Fetch live price + previous close for each coin via yfinance.
     state_symbols: list of symbols as they appear in state.json (e.g. ["BTC","ETH",...])
@@ -189,6 +217,7 @@ def get_live_prices(state_symbols):
                         if len(closes) >= 1:
                             p  = float(closes.iloc[-1])
                             pc = float(closes.iloc[-2]) if len(closes) >= 2 else p
+                            p  = _validate_price(state_sym, p, last_known)
                             if p > 0:
                                 prices[state_sym]      = p
                                 prev_closes[state_sym] = pc
@@ -203,6 +232,8 @@ def get_live_prices(state_symbols):
             print(f"  [yfinance] attempt {attempt+1} download error: {e}")
 
     # For any coins that yfinance missed, try CoinGecko (no auth needed, free tier)
+    global _CG_LAST_KNOWN
+    _CG_LAST_KNOWN = last_known or {}
     missing = [s for s in state_symbols if s not in prices]
     if missing and _requests is not None:
         print(f"  [coingecko] falling back for {len(missing)} missing coins...")
@@ -212,6 +243,7 @@ def get_live_prices(state_symbols):
     return prices, prev_closes
 
 
+_CG_LAST_KNOWN = {}
 def _fetch_coingecko(symbols, prices, prev_closes):
     """
     CoinGecko /simple/price fallback (no API key required for free tier).
@@ -254,8 +286,10 @@ def _fetch_coingecko(symbols, prices, prev_closes):
                     p   = float(vals["usd"])
                     chg = float(vals.get("usd_24h_change") or 0) / 100
                     pc  = p / (1 + chg) if (1 + chg) != 0 else p
-                    prices[sym]      = p
-                    prev_closes[sym] = pc
+                    p   = _validate_price(sym, p, _CG_LAST_KNOWN)
+                    if p > 0:
+                        prices[sym]      = p
+                        prev_closes[sym] = pc
             print(f"  [coingecko] filled {len([s for s in symbols if s in prices])} coins")
         else:
             print(f"  [coingecko] HTTP {r.status_code}")
@@ -907,8 +941,25 @@ def main():
             if s:
                 need_syms.add(s)
 
+    # ROOT-CAUSE PRICE VALIDATION: build a "last known good price" map from the prior
+    # refresh's stored positions so get_live_prices can reject an implausible jump (a
+    # garbage feed value like JUP $0.000012 vs real $0.00023) BEFORE it ever enters the
+    # system. Bad data never becomes a stored price -> no bad entries, no inflated shares,
+    # no distorted funds. Works for all coins because it's price-vs-history, not per-symbol.
+    _last_known = {}
+    for _fid, _fund in funds.items():
+        for _pos in (_fund.get("value", {}) or {}).get("positions", []) or []:
+            _sym = _pos.get("symbol")
+            _lp  = _pos.get("current_price") or _pos.get("price") or _pos.get("entry_price")
+            try:
+                _lp = float(_lp)
+            except Exception:
+                _lp = None
+            if _sym and _lp and _lp > 0 and _sym not in _last_known:
+                _last_known[_sym] = _lp
+
     print(f"[bitbot13] fetching prices for {len(need_syms)} symbols...")
-    prices, prev_closes = get_live_prices(sorted(need_syms))
+    prices, prev_closes = get_live_prices(sorted(need_syms), last_known=_last_known)
 
     # If yfinance returned nothing, try CoinGecko directly as full fallback
     if not prices:
