@@ -287,6 +287,11 @@ for platform, usize in PLATFORMS.items():
             if val is not None: pos_val_sum += val
         if invested and not display_freeze and PV is not None and positions:
             rc.note("pos_val = sum(row values)", round(pos_val_sum,2), approx(PV, pos_val_sum, max(1.0, abs(PV)*0.02)), f"(pos_val={PV})")
+            # Holdings TODAY column must sum to the fund's Today's Change box (a position
+            # bought today shows day == its pnl, not a full-day move it never took).
+            _pos_day = sum((fnum(p.get("day_pnl")) or 0) for p in positions)
+            if DPN is not None and not approx(_pos_day, DPN, max(2.0, abs(T or 0)*0.0015)):
+                rc.note("Holdings TODAY sums to Today's Change", round(_pos_day,2), False, f"(sum {round(_pos_day,2)} vs box {DPN})")
 
         # ---------- STRATEGY box ----------
         strat = f.get("current_strategy") or {}

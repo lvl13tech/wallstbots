@@ -786,6 +786,18 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
             else:
                 _trade_log = []
 
+            # Reconcile member Holdings TODAY with the fund's Today's Change (PARITY with the
+            # public engines refresh_wallstbots/aistocks/bitbot13.py): if this buy-and-hold fund
+            # deployed fresh capital today, its positions were NOT held at yesterday's close, so
+            # each position's day change is measured from entry (== its pnl). Otherwise Holdings
+            # shows a full-day move the fund never took. bot13 is intraday -- handled separately.
+            if fund_name != "bot13" and positions and member_day_open:
+                _m_held = sum(float(_p.get("shares") or 0) * prev_closes.get(_p["symbol"], _p.get("price") or 0) for _p in positions)
+                if abs(_m_held - member_day_open) > max(1.0, member_day_open * 0.001):
+                    for _p in positions:
+                        if _p.get("pnl") is not None:
+                            _p["day_pnl"] = _p["pnl"]; _p["day_pct"] = _p.get("pnl_pct", 0)
+
             results.append({
                 "bot_id":        bot_id,
                 "fund_name":     fund_name,

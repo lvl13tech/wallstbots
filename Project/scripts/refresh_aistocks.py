@@ -1319,6 +1319,16 @@ def main():
             day_pnl  = total - _oracle_day_open
             day_pct  = (day_pnl / _oracle_day_open * 100) if _oracle_day_open else 0
 
+            # Reconcile Holdings TODAY with the fund's Today's Change box. If the fund
+            # deployed fresh capital today (these positions were NOT held at yesterday's
+            # close), each position's day change is measured from ENTRY (== its pnl) so
+            # Holdings never shows a full-day move the fund never took. Detected by comparing
+            # the positions' value-at-yesterday's-close to day_open (survives intraday reruns).
+            _held_val = sum(p["shares"] * prev_closes.get(p["symbol"], p["price"]) for p in enriched)
+            if enriched and _oracle_day_open and abs(_held_val - _oracle_day_open) > max(1.0, _oracle_day_open * 0.001):
+                for _p in enriched:
+                    _p["day_pnl"] = _p["pnl"]; _p["day_pct"] = _p["pnl_pct"]
+
             # holding_cash for oracle: true on weekends (no active management until Monday)
             oracle_holding_cash = et_now().weekday() >= 5  # Sat=5, Sun=6
             # Oracle NEVER decides to sit out -- if it holds positions the decision is TRADE.
@@ -1376,6 +1386,16 @@ def main():
             _wiz_day_open = float(_prior_snaps[-1].get(fid)) if _prior_snaps else sc
             day_pnl  = total - _wiz_day_open
             day_pct  = (day_pnl / _wiz_day_open * 100) if _wiz_day_open else 0
+
+            # Reconcile Holdings TODAY with the fund's Today's Change box. If the fund
+            # deployed fresh capital today (these positions were NOT held at yesterday's
+            # close), each position's day change is measured from ENTRY (== its pnl) so
+            # Holdings never shows a full-day move the fund never took. Detected by comparing
+            # the positions' value-at-yesterday's-close to day_open (survives intraday reruns).
+            _held_val = sum(p["shares"] * prev_closes.get(p["symbol"], p["price"]) for p in enriched)
+            if enriched and _wiz_day_open and abs(_held_val - _wiz_day_open) > max(1.0, _wiz_day_open * 0.001):
+                for _p in enriched:
+                    _p["day_pnl"] = _p["pnl"]; _p["day_pct"] = _p["pnl_pct"]
             # Wizard NEVER decides to sit out -- if it holds positions the decision is TRADE.
             if enriched:
                 strategy = {**(strategy or {}), "decision": "TRADE"}
@@ -1436,6 +1456,16 @@ def main():
             _eq_day_open = float(_prior_snaps[-1].get(fid)) if _prior_snaps else sc
             day_pnl  = total - _eq_day_open
             day_pct  = (day_pnl / _eq_day_open * 100) if _eq_day_open else 0
+
+            # Reconcile Holdings TODAY with the fund's Today's Change box. If the fund
+            # deployed fresh capital today (these positions were NOT held at yesterday's
+            # close), each position's day change is measured from ENTRY (== its pnl) so
+            # Holdings never shows a full-day move the fund never took. Detected by comparing
+            # the positions' value-at-yesterday's-close to day_open (survives intraday reruns).
+            _held_val = sum(p["shares"] * prev_closes.get(p["symbol"], p["price"]) for p in enriched)
+            if enriched and _eq_day_open and abs(_held_val - _eq_day_open) > max(1.0, _eq_day_open * 0.001):
+                for _p in enriched:
+                    _p["day_pnl"] = _p["pnl"]; _p["day_pct"] = _p["pnl_pct"]
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
                         "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2),
