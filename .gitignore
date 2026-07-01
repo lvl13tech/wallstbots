@@ -53,3 +53,10 @@ commit-push-log.txt
 Wall St Bots_accounts.txt
 /env
 /The
+
+# ── Auto-generated tracker data (backend is source of truth; DO NOT commit) ──
+# These are regenerated every refresh and committing them caused constant 15-min
+# push-race merge conflicts. Engines read them from disk if present but fall back
+# to the live backend API, so not committing them is safe. (2026-06-30)
+Frontends/*/data/state.json
+Frontends/*/data/signals.json
