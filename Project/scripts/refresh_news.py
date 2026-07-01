@@ -1,162 +1,178 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-refresh_news.py
-Pulls AI/Quantum + sector-tagged headlines from NewsAPI.org,
-dedupes, sorts, and writes to public_html/data/news.json.
+refresh_news.py -- per-platform financial news, scoped to each site's assets.
 
-Run nightly (or every few hours) on the GCP VM, or locally on a schedule.
-The site reads news.json — your API key never reaches the browser.
+Pulls headlines from NewsAPI.org relevant to the ASSETS TRADED ON EACH PLATFORM,
+dedupes, tags each story with the universe tickers it mentions, and pushes the feed
+to the backend per platform (which the public page + member pages read).
 
-NewsAPI free dev tier: 100 requests/day. We use ~6 per run.
+  public page -> shows the platform's asset-relevant feed (scoped by the queries below)
+  member page -> filters that feed down to the member's own holdings (frontend already
+                 does this via each story's tickers[] / title match)
+
+Security: the NewsAPI key lives only server-side (secrets.json / GitHub secret) and never
+reaches the browser -- sites read the pre-fetched backend feed.
+
+Usage:
+  python Project/scripts/refresh_news.py --platform {wallstbots,aistocks,bitbot13}
+Config from secrets.json OR env (NEWSAPI_KEY, BACKEND_URL, INTERNAL_API_KEY).
+NewsAPI free tier = 100 req/day; each platform run uses ~5.
 """
-import json
-import os
-import sys
+import json, os, re, sys
 import datetime as dt
 from pathlib import Path
 
 try:
     import requests
 except ImportError:
-    print("Missing requests. Install with: pip install requests")
-    sys.exit(1)
+    print("Missing requests. pip install requests"); sys.exit(1)
 
-# Alias so push_to_api can use it without a separate import block
-_requests = requests
+ROOT    = Path(__file__).resolve().parents[2]
+SECRETS = ROOT / "Project" / "config" / "secrets.json"
 
-ROOT = Path(__file__).resolve().parents[1]
-SECRETS_PATH = ROOT / "config" / "secrets.json"
-OUT_PATH = ROOT / "public_html" / "data" / "news.json"
+def _cfg(key_secret, key_env, default=""):
+    try:
+        s = json.loads(SECRETS.read_text()) if SECRETS.exists() else {}
+    except Exception:
+        s = {}
+    return s.get(key_secret) or os.environ.get(key_env, default)
 
-# Sector → NewsAPI search query
-SECTOR_QUERIES = {
-    "AI & Quantum": '("artificial intelligence" OR "quantum computing" OR "AI chip" OR "qubit" OR Nvidia OR Anthropic OR OpenAI OR IonQ OR Quantinuum OR Rigetti OR Palantir OR "C3.ai" OR Arista OR "Super Micro" OR AMD OR "Applied Digital") AND (stock OR shares OR earnings OR revenue OR CEO OR "market cap" OR investor OR trading OR "Wall Street")',
-    "Biotech":      '(biotech OR mRNA OR CRISPR OR "gene therapy" OR "FDA approval" OR clinical OR Moderna OR BioNTech OR Vertex OR Regeneron OR Illumina) AND (stock OR earnings OR FDA OR trial OR shares)',
-    "Energy":       '(oil OR LNG OR renewables OR solar OR "energy storage" OR Aramco OR Exxon OR Chevron OR "First Solar" OR "NextEra") AND (stock OR earnings OR price OR production OR investor)',
-    "Defense":      '(defense OR Lockheed OR Raytheon OR "Northrop Grumman" OR BAE OR hypersonic OR "missile defense" OR "General Dynamics" OR "L3Harris") AND (stock OR contract OR earnings OR Pentagon)',
-    "Finance":      '(JPMorgan OR Goldman OR "Bank of America" OR Visa OR Mastercard OR "Federal Reserve" OR "interest rate" OR earnings OR "S&P 500") AND (stock OR market OR earnings OR investor)',
+NEWSAPI_KEY  = _cfg("newsapi_key",      "NEWSAPI_KEY")
+BACKEND_URL  = (_cfg("api_url",         "BACKEND_URL")).rstrip("/")
+INTERNAL_KEY = _cfg("internal_api_key", "INTERNAL_API_KEY")
+
+UNIVERSES = {
+    "wallstbots": ['XOM','CVX','COP','FANG','OKLO','LIN','SHW','FCX','APD','ALB','CAT','RTX',
+        'HON','GE','SPCX','AMZN','TSLA','HD','IBTA','BIRK','WMT','PG','COST','CART','KR','LLY',
+        'JNJ','UNH','GRAL','SMMT','BRK.B','JPM','V','SOFI','AFRM','NVDA','AAPL','MSFT','ARM',
+        'ALAB','RBRK','GOOGL','META','NFLX','RDDT','SPOT','NEE','SO','DUK','VST','PLD','WELL',
+        'AMT','LINE','EQIX'],
+    "aistocks": ['NVDA','AMD','INTC','ARM','ALAB','MRVL','AVGO','QCOM','SMCI','CRDO','MU','NVTS',
+        'MSFT','GOOGL','META','AMZN','ORCL','CRM','NOW','SNOW','DDOG','NET','ZS','OKTA','PATH',
+        'PLTR','AI','BBAI','SOUN','UPST','RBRK','PANW','ANET','PSTG','TSLA','ISRG','RXRX','GRAL',
+        'SMMT','IONQ','RGTI','QBTS','QUBT','ARQQ','IBM','XNDU','INFQ','HQ','CBRS','SPCX'],
+    "bitbot13": ['BTC','ETH','BNB','SOL','XRP','ADA','TON','AVAX','DOGE','TRX','LINK','DOT','SHIB',
+        'BCH','NEAR','UNI','LTC','APT','SUI','ATOM','ICP','FIL','ARB','AAVE','OP','ETC','VET','INJ',
+        'ALGO','XLM','HBAR','MKR','JUP','RENDER','FET','ONDO','WIF','RUNE','QNT','KAS','THETA','WLD',
+        'SEI','EGLD','CRV','MANTA','PEPE','FLOKI','PENDLE','NOT'],
 }
 
-# Domains to exclude — NewsAPI free tier ignores excludeDomains param,
-# so we filter post-fetch by URL and source name.
-EXCLUDE_DOMAINS_LIST = [
-    "pypi.org", "github.com", "stackoverflow.com", "reddit.com",
-    "medium.com", "dev.to", "hackernews.com", "npmjs.com",
-    "ycombinator.com", "news.ycombinator.com", "lobste.rs",
-]
+TAG_STOPLIST = {"AI","ALL","ON","IT","SO","V","GE","HD","HQ","NET","NOW","ARM","CART","KR",
+                "TON","SUI","SEI","NOT","WIF","OP","UNI","VET","ICP","AMT","PLD","LINE","INJ"}
 
-def _is_excluded(article: dict) -> bool:
-    """Return True if this article should be filtered out."""
-    url = (article.get("url") or "").lower()
-    source = (article.get("source") or {}).get("name", "").lower()
-    for domain in EXCLUDE_DOMAINS_LIST:
-        if domain in url or domain.split(".")[0] in source:
-            return True
-    return False
+PLATFORM_QUERIES = {
+    "wallstbots": {
+        "Energy":      '(Exxon OR Chevron OR ConocoPhillips OR "oil price" OR LNG OR "natural gas" OR OKLO OR "nuclear power") AND (stock OR earnings OR shares OR investor)',
+        "Materials":   '(Linde OR "Sherwin-Williams" OR Freeport OR Albemarle OR lithium OR copper OR "industrial metals") AND (stock OR earnings OR price OR shares)',
+        "Industrials": '(Caterpillar OR Raytheon OR Honeywell OR "General Electric" OR defense OR aerospace OR industrials) AND (stock OR earnings OR contract OR shares)',
+        "Consumer":    '(Amazon OR Tesla OR Walmart OR Costco OR "Home Depot" OR "Procter Gamble" OR retail OR consumer) AND (stock OR earnings OR sales OR shares)',
+        "Healthcare":  '("Eli Lilly" OR "Johnson Johnson" OR UnitedHealth OR biotech OR "drug approval" OR healthcare) AND (stock OR earnings OR FDA OR shares)',
+        "Financials":  '(JPMorgan OR Visa OR "Berkshire Hathaway" OR SoFi OR "Federal Reserve" OR "interest rate" OR "S&P 500") AND (stock OR market OR earnings OR investor)',
+        "Big Tech":    '(Nvidia OR Apple OR Microsoft OR Alphabet OR Google OR Meta OR Netflix OR ARM) AND (stock OR earnings OR shares OR AI)',
+    },
+    "aistocks": {
+        "AI Chips":    '(Nvidia OR AMD OR Broadcom OR Marvell OR "Super Micro" OR Micron OR "AI chip" OR "data center" OR GPU) AND (stock OR earnings OR shares OR revenue)',
+        "AI Software": '(Palantir OR "C3.ai" OR Snowflake OR Datadog OR CrowdStrike OR "Palo Alto" OR "artificial intelligence" OR "AI software") AND (stock OR earnings OR shares)',
+        "Quantum":     '("quantum computing" OR IonQ OR Rigetti OR "D-Wave" OR Quantinuum OR qubit OR "quantum processor") AND (stock OR shares OR investor OR breakthrough)',
+        "Cloud Data":  '(Microsoft OR Alphabet OR Amazon OR Oracle OR Salesforce OR ServiceNow OR "cloud computing" OR hyperscaler) AND (stock OR earnings OR AI OR shares)',
+        "AI Movers":   '("AI stock" OR "artificial intelligence" OR OpenAI OR Anthropic OR "AI bubble" OR "AI trade") AND (stock OR shares OR "Wall Street" OR investor)',
+    },
+    "bitbot13": {
+        "Bitcoin ETH": '(bitcoin OR ethereum OR "BTC price" OR "ETH price" OR "crypto rally" OR "crypto selloff") AND (price OR trading OR market OR investor)',
+        "Altcoins":    '(Solana OR Cardano OR XRP OR Avalanche OR Chainlink OR Polkadot OR altcoin OR "layer 2") AND (price OR crypto OR rally OR trading)',
+        "Regulation":  '("crypto regulation" OR SEC OR "spot ETF" OR stablecoin OR "digital assets" OR CFTC) AND (crypto OR bitcoin OR ruling OR approval)',
+        "DeFi Memes":  '(DeFi OR "decentralized finance" OR Uniswap OR Aave OR Dogecoin OR "meme coin" OR PEPE OR Shiba) AND (crypto OR price OR token OR trading)',
+        "Crypto Wire": '("crypto market" OR "digital currency" OR blockchain OR "on-chain") AND (price OR bitcoin OR ethereum OR trading)',
+    },
+}
 
-def load_secrets():
-    if not SECRETS_PATH.exists():
-        print(f"Missing {SECRETS_PATH}. Copy secrets.example.json and fill in keys.")
-        sys.exit(1)
-    return json.loads(SECRETS_PATH.read_text())
+EXCLUDE = ["pypi.org","github.com","stackoverflow.com","reddit.com","medium.com","dev.to",
+           "npmjs.com","ycombinator.com","lobste.rs"]
 
-def fetch_sector(api_key, sector, query, page_size=8):
-    """Fetch top recent headlines matching the sector query."""
-    url = "https://newsapi.org/v2/everything"
-    # Last 3 days only, English, sorted by recency
-    from_date = (dt.datetime.utcnow() - dt.timedelta(days=3)).strftime("%Y-%m-%d")
-    params = {
-        "q": query, "from": from_date, "language": "en",
-        "sortBy": "publishedAt", "pageSize": page_size, "apiKey": api_key,
-    }
+def _excluded(a):
+    url = (a.get("url") or "").lower()
+    src = ((a.get("source") or {}).get("name") or "").lower()
+    return any(d in url or d.split(".")[0] in src for d in EXCLUDE)
+
+def _tag_tickers(text, universe):
+    up = (text or "").upper()
+    hits = []
+    for t in universe:
+        if t in TAG_STOPLIST:
+            continue
+        if re.search(r'(?<![A-Z0-9])' + re.escape(t) + r'(?![A-Z0-9])', up):
+            hits.append(t)
+    return hits
+
+def fetch(query, page_size=8):
+    frm = (dt.datetime.utcnow() - dt.timedelta(days=3)).strftime("%Y-%m-%d")
     try:
-        r = requests.get(url, params=params, timeout=15)
+        r = requests.get("https://newsapi.org/v2/everything",
+            params={"q": query, "from": frm, "language": "en",
+                    "sortBy": "publishedAt", "pageSize": page_size, "apiKey": NEWSAPI_KEY},
+            timeout=15)
         if r.status_code == 200:
-            data = r.json()
-            articles = [a for a in data.get("articles", []) if a.get("title") and not _is_excluded(a)]
-            return [{
-                "title":        a.get("title", "").split(" - ")[0],
-                "source":       (a.get("source") or {}).get("name", ""),
-                "sector":       sector,
-                "published_at": a.get("publishedAt"),
-                "url":          a.get("url", "#"),
-            } for a in articles]
-        else:
-            print(f"  [{sector}] HTTP {r.status_code}: {r.text[:200]}")
+            return [a for a in r.json().get("articles", []) if a.get("title") and not _excluded(a)]
+        print("  HTTP %s: %s" % (r.status_code, r.text[:160]))
     except Exception as e:
-        print(f"  [{sector}] error: {e}")
+        print("  fetch error: %s" % e)
     return []
 
-def dedupe(items):
-    seen = set()
-    out = []
-    for it in items:
-        key = (it["title"] or "")[:80].lower()
-        if key in seen: continue
-        seen.add(key)
-        out.append(it)
-    return out
+def run(platform):
+    if platform not in PLATFORM_QUERIES:
+        print("ERROR: unknown platform '%s'" % platform); sys.exit(1)
+    if not NEWSAPI_KEY:
+        print("ERROR: no NewsAPI key (secrets.json newsapi_key / env NEWSAPI_KEY)"); sys.exit(1)
+    universe = UNIVERSES[platform]
+    print("[news] platform=%s -- %d query sets" % (platform, len(PLATFORM_QUERIES[platform])))
 
-def main():
-    secrets = load_secrets()
-    api_key = secrets.get("newsapi_key", "")
-    if not api_key or "PASTE" in api_key:
-        print("NewsAPI key missing in config/secrets.json")
-        sys.exit(1)
+    items = []
+    for label, q in PLATFORM_QUERIES[platform].items():
+        arts = fetch(q, page_size=8)
+        print("  %-12s -> %d" % (label, len(arts)))
+        for a in arts:
+            title = a.get("title", "").split(" - ")[0]
+            desc  = a.get("description", "") or ""
+            items.append({
+                "title":        title,
+                "source":       (a.get("source") or {}).get("name", ""),
+                "sector":       label,
+                "published_at": a.get("publishedAt"),
+                "url":          a.get("url", "#"),
+                "tickers":      _tag_tickers(title + " " + desc, universe),
+            })
 
-    all_items = []
-    print(f"[news] fetching {len(SECTOR_QUERIES)} sectors...")
-    for sector, q in SECTOR_QUERIES.items():
-        items = fetch_sector(api_key, sector, q, page_size=8)
-        print(f"  {sector:14s} → {len(items)} headlines")
-        all_items.extend(items)
-
-    # Dedupe + sort by recency (newest first), cap at 30
-    all_items = dedupe(all_items)
-    all_items.sort(key=lambda x: x.get("published_at", ""), reverse=True)
-    all_items = all_items[:30]
+    seen, out = set(), []
+    for it in sorted(items, key=lambda x: x.get("published_at", ""), reverse=True):
+        k = (it["title"] or "")[:80].lower()
+        if k in seen:
+            continue
+        seen.add(k); out.append(it)
+    out = out[:30]
 
     payload = {
         "generated_at": dt.datetime.utcnow().isoformat() + "Z",
-        "sectors":      list(SECTOR_QUERIES.keys()),
-        "items":        all_items,
+        "sectors":      list(PLATFORM_QUERIES[platform].keys()),
+        "items":        out,
     }
-    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUT_PATH.write_text(json.dumps(payload, indent=2))
-    print(f"[news] wrote {len(all_items)} headlines → {OUT_PATH}")
+    tagged = sum(1 for i in out if i["tickers"])
+    print("[news] %s: %d headlines (%d ticker-tagged)" % (platform, len(out), tagged))
 
-    # -- Push to Supabase via Cloud Run API (dual-write; HostGator file already written) --
-    push_to_api(secrets, "news", payload)
-
-
-def push_to_api(secrets, data_type, payload):
-    """
-    Push a tracker JSON payload to Cloud Run so it lands in Supabase.
-    Silent on failure — HostGator file write already succeeded.
-    """
-    api_url = secrets.get("api_url", "")
-    api_key  = secrets.get("internal_api_key", "")
-    platform = secrets.get("platform", "lvl13")
-
-    if not api_url or not api_key:
-        print(f"  [push] api_url/internal_api_key not in secrets.json — skipping push for {data_type}")
-        return
-
-    endpoint = f"{api_url.rstrip('/')}/internal/tracker/push"
+    if not BACKEND_URL or not INTERNAL_KEY:
+        print("  [push] BACKEND_URL/INTERNAL_API_KEY missing -- not pushed"); return
     try:
-        r = _requests.post(
-            endpoint,
-            json={"data_type": data_type, "platform": platform, "data": payload},
-            headers={"X-Internal-Key": api_key},
-            timeout=15,
-        )
-        if r.status_code == 200:
-            print(f"  [push] ✓ {data_type} → Supabase (pushed_at={r.json().get('pushed_at','')})")
-        else:
-            print(f"  [push] ✗ {data_type} HTTP {r.status_code}: {r.text[:200]}")
+        r = requests.post(BACKEND_URL + "/internal/tracker/push",
+            json={"data_type": "news", "platform": platform, "data": payload},
+            headers={"X-Internal-Key": INTERNAL_KEY}, timeout=20)
+        print("  [push] %s news -> HTTP %s" % (platform, r.status_code))
+        if r.status_code != 200:
+            print("    %s" % r.text[:200])
     except Exception as e:
-        print(f"  [push] ✗ {data_type} error: {e}")
-
+        print("  [push] error: %s" % e)
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--platform", required=True, choices=["wallstbots","aistocks","bitbot13"])
+    run(ap.parse_args().platform)

@@ -791,7 +791,7 @@ function renderNews() {
   const cards = filtered.slice(0,6).map(it => {
     const cat = sectorClass(it.sector);
     const url = it.url && it.url !== '#' ? it.url : null;
-    return '<a class="news-card cat-' + cat + '" href="' + escHtml(url||'javascript:void(0)') + '"' + (url?' target="_blank" rel="noopener noreferrer"':'') + '><div class="news-title">' + escHtml(it.title||'') + '</div><div class="news-meta">' + escHtml(it.source||it.sector||'Source') + ' · ' + relTime(it.published_at) + '</div></a>';
+    return '<a class="news-card cat-' + cat + '" href="' + escHtml(url||'javascript:void(0)') + '"' + (url?' target="_blank" rel="noopener noreferrer"':'') + '><div class="news-title">' + escHtml(it.title||'') + '</div><div class="news-meta">' + escHtml(it.source||it.sector||'Source') + '</div></a>';
   }).join('');
   document.getElementById('newsGrid').innerHTML = cards || '<p style="color:var(--muted);font-size:0.9rem">No headlines yet for your stocks.</p>';
 }

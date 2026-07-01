@@ -165,7 +165,7 @@ function newsCard(it) {
   const href = url || 'javascript:void(0)';
   return '<a class="news-card cat-'+cat+'" href="'+escapeHtml(href)+'"'+open+'>'
     + '<div class="news-title">'+escapeHtml(it.title||'')+'</div>'
-    + '<div class="news-meta">'+escapeHtml(it.source||it.sector||'Source')+' · '+relTime(it.published_at)+'</div></a>';
+    + '<div class="news-meta">'+escapeHtml(it.source||it.sector||'Source')+'</div></a>';
 }
 
 // ============ PAGE: HOMEPAGE ============

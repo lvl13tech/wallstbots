@@ -1,0 +1,41 @@
+name: Refresh News (all platforms)
+
+# Per-platform financial news, scoped to each site's traded assets. Pushed to the
+# backend, which the public pages + member pages read. NewsAPI free tier = 100 req/day;
+# each run = 3 platforms x ~5 queries = ~15 requests. Every 3 hours = 8 runs/day = ~120...
+# so we run every 4 hours (6 runs/day = ~90 req/day) to stay safely under the cap.
+on:
+  schedule:
+    - cron: '0 */4 * * *'   # every 4 hours (UTC) -> ~90 NewsAPI requests/day, under the 100 cap
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: python -m pip install --quiet requests
+
+      - name: Fetch + push news for all 3 platforms
+        env:
+          NEWSAPI_KEY:      ${{ secrets.NEWSAPI_KEY }}
+          BACKEND_URL:      ${{ secrets.BACKEND_URL }}
+          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+        run: |
+          echo "=== secrets: NEWSAPI=$([ -n "$NEWSAPI_KEY" ] && echo YES || echo MISSING) BACKEND=$([ -n "$BACKEND_URL" ] && echo YES || echo MISSING) KEY=$([ -n "$INTERNAL_API_KEY" ] && echo YES || echo MISSING) ==="
+          for P in wallstbots aistocks bitbot13; do
+            echo "--- $P ---"
+            python Project/scripts/refresh_news.py --platform $P || true
+          done
