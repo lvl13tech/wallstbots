@@ -1298,8 +1298,14 @@ def main():
             # Today's Change = total - today's OPENING total (consistent with Total P&L;
             # on day 1 day_open == sc so day_pnl == pnl). day_open carries within a day,
             # resets to the prior close on a new day.
-            _ovp = fund.get("value", {}) or {}
-            _oracle_day_open = float(_ovp.get("day_open") or 0) if _ovp.get("day_open_date") == today_iso else float(_ovp.get("total") or sc)
+            # Today's Change = total - YESTERDAY'S close (prior-day snapshot). On day 1 the
+            # only prior snapshot is the reset baseline (== sc) so day_open == sc and
+            # day_pnl == pnl exactly (owner's one-day rule). Sourcing day_open from the
+            # snapshot -- not the live mid-day total -- is what keeps Today's Change correct.
+            _prior_snaps = sorted([s for s in (snapshots or [])
+                                   if s.get("date","") < today_iso and s.get(fid) is not None],
+                                  key=lambda s: s.get("date",""))
+            _oracle_day_open = float(_prior_snaps[-1].get(fid)) if _prior_snaps else sc
             day_pnl  = total - _oracle_day_open
             day_pct  = (day_pnl / _oracle_day_open * 100) if _oracle_day_open else 0
 
@@ -1353,8 +1359,11 @@ def main():
             cash     = max(0.0, total - pos_val)
             pnl_pct  = (pnl / sc * 100) if sc else 0
             # Today's Change = total - today's OPENING total (consistent with Total P&L).
-            _wvp = fund.get("value", {}) or {}
-            _wiz_day_open = float(_wvp.get("day_open") or 0) if _wvp.get("day_open_date") == today_iso else float(_wvp.get("total") or sc)
+            # Today's Change = total - YESTERDAY'S close (prior-day snapshot) -- see oracle note.
+            _prior_snaps = sorted([s for s in (snapshots or [])
+                                   if s.get("date","") < today_iso and s.get(fid) is not None],
+                                  key=lambda s: s.get("date",""))
+            _wiz_day_open = float(_prior_snaps[-1].get(fid)) if _prior_snaps else sc
             day_pnl  = total - _wiz_day_open
             day_pct  = (day_pnl / _wiz_day_open * 100) if _wiz_day_open else 0
             # Wizard NEVER decides to sit out -- if it holds positions the decision is TRADE.
@@ -1409,11 +1418,18 @@ def main():
             total    = sc + pnl                               # true economic value
             cash     = max(0.0, total - pos_val)              # undeployed capital, never negative
             pnl_pct  = (pnl / sc * 100) if sc else 0
-            day_pnl  = sum(p["day_pnl"] for p in enriched)
-            day_pct  = (day_pnl / (total - day_pnl)) * 100 if (total - day_pnl) else 0
+            # Today's Change = total - YESTERDAY'S close (prior-day snapshot), same rule as
+            # oracle/wizard so day_pnl == pnl on day 1 and reconciles with Total P&L.
+            _prior_snaps = sorted([s for s in (snapshots or [])
+                                   if s.get("date","") < today_iso and s.get(fid) is not None],
+                                  key=lambda s: s.get("date",""))
+            _eq_day_open = float(_prior_snaps[-1].get(fid)) if _prior_snaps else sc
+            day_pnl  = total - _eq_day_open
+            day_pct  = (day_pnl / _eq_day_open * 100) if _eq_day_open else 0
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
-                        "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2), "positions": enriched}
+                        "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2),
+                        "day_open": round(_eq_day_open,2), "positions": enriched}
             strategy = {**(fund.get("current_strategy") or {}), "month": month_str}
 
         # --- Transparency ledger: stamp entry_time on opens + append BUY/SELL log ---

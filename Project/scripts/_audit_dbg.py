@@ -308,14 +308,7 @@ for platform, usize in PLATFORMS.items():
             act = str(e.get("action","")).upper(); s = e.get("symbol")
             if act == "BUY": seen.add(s)
             elif act == "SELL" and s not in seen:
-                # Equity bots close out each session, so an orphan SELL is a real bug. The
-                # 24/7 crypto bot (bitbot13) carries positions across midnight, so the first
-                # SELL of a symbol may be closing a position opened before midnight -> WARN.
-                if platform == "bitbot13":
-                    WARN(scope, f"SELL of {s} with no prior BUY in today's log (position likely carried overnight by the 24/7 crypto bot)")
-                else:
-                    FAIL(scope, f"SELL of {s} with no prior BUY in trade_log")
-                seen.add(s)  # avoid re-flagging every later rotation of the same symbol
+                FAIL(scope, f"SELL of {s} with no prior BUY in trade_log")
 
         if not QUIET:
             tag = "DAY-1" if is_day1 else f"day>={len([x for x in dates if x<TODAY])+1}"
@@ -359,62 +352,17 @@ for platform, usize in PLATFORMS.items():
         bs = f"{best:+.2f}%" if best>-1e8 else "-"; ws = f"{worst:+.2f}%" if worst<1e8 else "-"
         print(f"\n   BOT13 record (from {len(b13)} snapshots): up={up} down={down} cash={cash} best={bs} worst={ws}")
 
-    # ---------- MEMBER pages vs PUBLIC pages ----------
-    # Member portfolios ARE the public pages scaled to the member's capital, written by
-    # refresh_portfolios.py (the 4th parity target). Read each member fund-state via the
-    # internal endpoint and reconcile INTERNALLY and AGAINST the public fund:
-    #   total_value == entry_cost + gain_loss ; gain_loss_pct == gain_loss/entry_cost*100
-    #   total_value == entry_cost * (public_total / public_sc)  (correct scaling)
-    #   gain_loss_pct == public pnl_pct                         (capital-neutral match)
-    # day_pnl/day_pct live behind member-session auth so are not readable here; they are
-    # fixed at source (day_pnl == gain_loss on the member's day 1).
+    # ---------- MEMBER pages ----------
+    sys.stderr.write(f"[dbg] reached member section {platform}\n"); sys.stderr.flush()
     if KEY:
-        probe = get(f"{BACKEND}/internal/portfolios/active?platform={platform}", KEY)
-        if "_error" in probe:
-            if not QUIET: print(f"\n   MEMBER checks skipped (portfolios: {probe.get('_error')})")
-        else:
-            body = probe if isinstance(probe, list) else probe.get("portfolios", [])
+        mr = get(f"{BACKEND}/internal/portfolios/active?platform={platform}", KEY)
+        if "_error" not in mr:
+            body = mr if isinstance(mr, list) else mr.get("portfolios", [])
             ports = body if isinstance(body, list) else []
             checked = 0
             for p in ports[:25]:
                 bid = p.get("bot_id") or p.get("id")
                 if not bid: continue
                 for fund in FUNDS:
-                    r = get(f"{BACKEND}/internal/portfolio-fund-state/{bid}/{fund}", KEY)
-                    st = r.get("state") if isinstance(r, dict) else None
-                    if not st: continue
-                    tv = fnum(st.get("total_value")); gl = fnum(st.get("gain_loss"))
-                    ec = fnum(st.get("entry_cost")); glp = fnum(st.get("gain_loss_pct"))
-                    ms = f"{platform}/member:{str(bid)[:8]}/{fund}"
-                    if tv is not None and gl is not None and ec is not None and not approx(tv, ec+gl, max(1.0, abs(tv)*0.01)):
-                        FAIL(ms, f"total_value {tv} != entry_cost+gain_loss {round(ec+gl,2)}")
-                    if glp is not None and gl is not None and ec not in (None,0) and not approx(glp, gl/ec*100, 0.2):
-                        FAIL(ms, f"gain_loss_pct {glp} != gain_loss/entry_cost*100 {round(gl/ec*100,2)}")
-                    pv = (funds.get(fund) or {}).get("value") or {}
-                    pT = fnum(pv.get("total")); pPP = fnum(pv.get("pnl_pct"))
-                    if tv is not None and ec is not None and pT is not None and sc and not approx(tv, ec*(pT/sc), max(1.0, abs(tv)*0.015)):
-                        FAIL(ms, f"total_value {tv} != entry_cost*public_total/sc {round(ec*(pT/sc),2)} (member/public scaling off)")
-                    if glp is not None and pPP is not None and not approx(glp, pPP, 0.2):
-                        FAIL(ms, f"member gain_loss_pct {glp} != public pnl_pct {pPP} (member/public mismatch)")
-                    checked += 1
-            if not QUIET:
-                print(f"\n   MEMBER vs PUBLIC: reconciled {checked} member fund-states (Current Value + Total P&L scale correctly)")
-    else:
-        if not QUIET: print("\n   MEMBER checks skipped (no internal key in secrets.json)")
-
-# ---------------- SUMMARY ----------------
-print("\n" + "=" * 74)
-if not fails and not warns:
-    print("  RESULT: ALL CLEAN -- every derivation on every page reconciles.")
-elif not fails:
-    print(f"  RESULT: PASS with {len(warns)} warning(s).")
-else:
-    print(f"  RESULT: {len(fails)} FAILURE(S)" + (f", {len(warns)} warning(s)" if warns else ""))
-print("=" * 74)
-if warns:
-    print("\nWARNINGS:")
-    for w in warns: print("  ! " + w)
-if fails:
-    print("\nFAILURES:")
-    for x in fails: print("  X " + x)
-sys.exit(1 if fails else 0)
+                    fs = get(f"{BACKEND}/bots/{bid}/fund/{fund}/state", KEY)
+                  

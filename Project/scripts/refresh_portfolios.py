@@ -493,8 +493,9 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
         member_value  = entry_cost × (platform_fund_total / platform_starting_capital)
         gain_loss     = member_value - entry_cost
         gain_loss_pct = gain_loss / entry_cost × 100
-        day_pct       = platform day_pct (capital-neutral -- same % regardless of member size)
-        day_pnl       = member_value × (day_pct / 100)
+        member_day_open = original_cost × (platform_day_open / platform_starting_capital)
+        day_pnl       = member_value - member_day_open   (== gain_loss on the member's day 1)
+        day_pct       = day_pnl / member_day_open × 100   (capital-neutral == platform day_pct)
 
     BOT13/Oracle/Wizard engines still run for strategy/picks/rationale display.
     Equalizer/Titan reuse stored inception positions for holdings table.
@@ -525,6 +526,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
             v = fdata.get("value", {})
             tracker_funds[fid] = {
                 "total":     float(v.get("total")   or 0),
+                "day_open":  float(v.get("day_open") or v.get("total") or 0),
                 "day_pct":   float(v.get("day_pct") or 0),
                 "day_pnl":   float(v.get("day_pnl") or 0),
                 "trade_log": v.get("trade_log") or [],
@@ -581,8 +583,15 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
             member_value = round(original_cost * ratio, 2)
             gain_loss    = round(member_value - original_cost, 2)
             gain_loss_pct= round(gain_loss / original_cost * 100, 4)
-            day_pct      = tf["day_pct"]   # percentage is capital-neutral
-            day_pnl      = round(member_value * (day_pct / 100), 2)
+            # Today's Change scaled the SAME way as member_value -- mirrors the public
+            # engine (day_pnl = total - day_open). On the member's FIRST day the platform
+            # day_open == platform_sc, so member_day_open == original_cost and day_pnl ==
+            # gain_loss EXACTLY (the one-day rule: Today's Change == Total P&L on day 1).
+            # day_pct is capital-neutral (== platform day_pct). Must stay in lockstep with
+            # the public engines -- see refresh_wallstbots/aistocks/bitbot13.py.
+            member_day_open = round(original_cost * (tf["day_open"] / platform_sc), 2) if platform_sc else original_cost
+            day_pnl         = round(member_value - member_day_open, 2)
+            day_pct         = round(day_pnl / member_day_open * 100, 4) if member_day_open else 0.0
 
             # -- Strategy / positions (for display only -- not used for dollar values) --
             positions = []
