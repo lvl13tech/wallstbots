@@ -35,6 +35,13 @@ ROOT     = Path(__file__).resolve().parents[2]
 SECRETS  = ROOT / "Project" / "config" / "secrets.json"
 BACKEND  = "https://wallstbots-backend-868128114349.us-east1.run.app"
 DRY      = "--dry" in sys.argv
+# SAFETY: target a single platform with --platform <name>; reset ALL only with --all.
+# This prevents accidentally wiping every site when you meant to fix just one.
+_TARGET = None
+for _i, _a in enumerate(sys.argv):
+    if _a == "--platform" and _i + 1 < len(sys.argv):
+        _TARGET = sys.argv[_i + 1].strip().lower()
+_ALL = "--all" in sys.argv
 TODAY    = datetime.now(ZoneInfo("America/New_York")).date().isoformat()
 BOTS     = ["bot13", "oracle", "wizard", "equalizer", "titan"]
 
@@ -106,11 +113,20 @@ def main():
     if not key:
         print("ERROR: no internal key"); sys.exit(1)
     headers = {"x-internal-key": key}
+    if _TARGET and _TARGET not in PLATFORMS:
+        print(f"ERROR: unknown --platform '{_TARGET}'. Valid: {list(PLATFORMS)}"); sys.exit(1)
+    if not _TARGET and not _ALL:
+        print("REFUSING to reset: pass --platform <name> for one site, or --all for every site.")
+        print(f"  e.g. python {Path(__file__).name} --platform bitbot13")
+        print(f"       python {Path(__file__).name} --all")
+        sys.exit(1)
+    targets = {_TARGET: PLATFORMS[_TARGET]} if _TARGET else PLATFORMS
+    scope = _TARGET if _TARGET else "ALL 3 PLATFORMS"
     print("=" * 70)
-    print(f"FINAL FULL RESET -- ALL 3 PLATFORMS -- {TODAY}{'  [DRY RUN]' if DRY else ''}")
+    print(f"FULL RESET -- {scope} -- {TODAY}{'  [DRY RUN]' if DRY else ''}")
     print("=" * 70)
 
-    for platform, (usize, disk_path) in PLATFORMS.items():
+    for platform, (usize, disk_path) in targets.items():
         start_cap = float(usize * 1000)
         print(f"\n### {platform}  (universe {usize} -> ${start_cap:,.0f}) ###")
 
