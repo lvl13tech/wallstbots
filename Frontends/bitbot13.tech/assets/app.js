@@ -13,6 +13,8 @@ let PICKED_TICKERS = [];
 const fmt$  = n => { const v = n||0; return (v<0?'-$':'$') + Math.abs(v).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); };
 const fmt$0 = n => { const v = Math.round(n||0); return (v<0?'-$':'$') + Math.abs(v).toLocaleString(); };
 const fmtPct = n => (n>=0?'+':'') + (n||0).toFixed(2) + '%';
+function fmtCrypto(n){var x=Number(n)||0;if(x===0)return '0';var a=Math.abs(x);return a>=1?x.toFixed(2):a>=0.01?x.toFixed(4):a>=0.0001?x.toFixed(6):x.toFixed(8);}
+
 const cls   = n => n>=0 ? 'pos' : 'neg';
 const $     = id => document.getElementById(id);
 
@@ -510,7 +512,7 @@ function renderTradeLog(tl, fid, windowOpen){
       + '<td><strong style="color:'+c+'">'+escapeHtml(act)+'</strong></td>'
       + '<td><strong>'+escapeHtml(t.symbol||'')+'</strong></td>'
       + '<td class="num">'+(t.shares!=null?Number(t.shares).toFixed(4):'-')+'</td>'
-      + '<td class="num">$'+(t.price!=null?Number(t.price).toFixed(2):'-')+'</td>'
+      + '<td class="num">$'+(t.price!=null?fmtCrypto(t.price):'-')+'</td>'
       + realized
       + '<td style="color:var(--muted);font-size:12px">'+escapeHtml(t.reason||'')+'</td></tr>';
   }).join('');
@@ -558,8 +560,8 @@ function renderFund(fid) {
         const dayPct = p.day_pct != null ? p.day_pct : 0;
         return '<tr><td><strong>'+p.symbol+'</strong></td>'
           + '<td class="num">'+shares.toFixed(2)+'</td>'
-          + '<td class="num">$'+entry.toFixed(2)+'</td>'
-          + '<td class="num">$'+price.toFixed(2)+'</td>'
+          + '<td class="num">$'+fmtCrypto(entry)+'</td>'
+          + '<td class="num">$'+fmtCrypto(price)+'</td>'
           + '<td class="num">'+fmt$0(value)+'</td>'
           + '<td class="num '+cls(dayPnl)+'">'+fmtPct(dayPct)+'</td>'
           + '<td class="num '+cls(pnl)+'">'+fmt$0(pnl)+'</td>'
@@ -669,8 +671,8 @@ function renderSignals() {
     const slug = (r.action || 'NA').toLowerCase().replace(/ /g,'-');
     return '<tr><td><strong>'+r.symbol+'</strong></td>'
       + '<td><span class="signal signal-'+slug+'">'+r.action+'</span></td>'
-      + '<td class="num">'+(r.price ? '$'+r.price.toFixed(2) : '—')+'</td>'
-      + '<td class="num">'+(r.target ? '$'+r.target.toFixed(2) : '—')+'</td>'
+      + '<td class="num">'+(r.price ? '$'+fmtCrypto(r.price) : '—')+'</td>'
+      + '<td class="num">'+(r.target ? '$'+fmtCrypto(r.target) : '—')+'</td>'
       + '<td class="num '+(r.upside_pct>=0?'pos':'neg')+'">'+(r.upside_pct!=null?fmtPct(r.upside_pct):'—')+'</td>'
       + '<td class="num">'+(r.score!=null?(r.score>=0?'+':'')+r.score.toFixed(1):'—')+'</td>'
       + '<td>'+(r.confidence||'—')+'</td><td>'+(r.risk||'—')+'</td>'

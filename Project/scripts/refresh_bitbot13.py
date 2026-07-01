@@ -1428,15 +1428,24 @@ def main():
             pnl      = total - sc
             cash     = max(0.0, total - pos_val)
             pnl_pct  = (pnl / sc * 100) if sc else 0
-            day_pnl  = sum(p["day_pnl"] for p in enriched)
-            day_pct  = (day_pnl / (total - day_pnl)) * 100 if (total - day_pnl) else 0
+            # Today's Change = total - today's OPENING total (consistent with Total P&L;
+            # on day 1 day_open == sc so day_pnl == pnl). day_open carries within a day,
+            # resets to the prior close on a new day.
+            _ovp = fund.get("value", {}) or {}
+            _oracle_day_open = float(_ovp.get("day_open") or 0) if _ovp.get("day_open_date") == today_iso else float(_ovp.get("total") or sc)
+            day_pnl  = total - _oracle_day_open
+            day_pct  = (day_pnl / _oracle_day_open * 100) if _oracle_day_open else 0
 
             # holding_cash for oracle: true on weekends (no active management until Monday)
             oracle_holding_cash = et_now().weekday() >= 5  # Sat=5, Sun=6
+            # Oracle NEVER decides to sit out -- if it holds positions the decision is TRADE.
+            if enriched:
+                strategy = {**(strategy or {}), "decision": "TRADE"}
 
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
                         "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2),
+                        "day_open": round(_oracle_day_open,2), "day_open_date": today_iso,
                         "holding_cash": oracle_holding_cash, "positions": enriched}
 
         elif fid == "wizard":
@@ -1473,12 +1482,18 @@ def main():
             pnl      = total - sc
             cash     = max(0.0, total - pos_val)
             pnl_pct  = (pnl / sc * 100) if sc else 0
-            day_pnl  = sum(p["day_pnl"] for p in enriched)
-            day_pct  = (day_pnl / (total - day_pnl)) * 100 if (total - day_pnl) else 0
+            # Today's Change = total - today's OPENING total (consistent with Total P&L).
+            _wvp = fund.get("value", {}) or {}
+            _wiz_day_open = float(_wvp.get("day_open") or 0) if _wvp.get("day_open_date") == today_iso else float(_wvp.get("total") or sc)
+            day_pnl  = total - _wiz_day_open
+            day_pct  = (day_pnl / _wiz_day_open * 100) if _wiz_day_open else 0
+            # Wizard NEVER decides to sit out -- if it holds positions the decision is TRADE.
+            if enriched:
+                strategy = {**(strategy or {}), "decision": "TRADE"}
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
-                        "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2), "positions": enriched}
-            strategy = fund.get("current_strategy")
+                        "day_pnl": round(day_pnl,2), "day_pct": round(day_pct,2),
+                        "day_open": round(_wiz_day_open,2), "day_open_date": today_iso, "positions": enriched}
 
         else:
             # Equalizer + Titan -- mark-to-market; auto-seed on first run

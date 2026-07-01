@@ -363,6 +363,8 @@ const FUND_META = {
 const fmt$  = n => { const v=n||0; return (v<0?'-$':'$')+Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); };
 const fmt$0 = n => { const v=Math.round(n||0); return (v<0?'-$':'$')+Math.abs(v).toLocaleString(); };
 const fmtPct = n => (n>=0?'+':'')+(n||0).toFixed(2)+'%';
+function fmtCrypto(n){var x=Number(n)||0;if(x===0)return '0';var a=Math.abs(x);return a>=1?x.toFixed(2):a>=0.01?x.toFixed(4):a>=0.0001?x.toFixed(6):x.toFixed(8);}
+
 const cls    = n => n >= 0 ? 'pos' : 'neg';
 function escHtml(s) { return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function relTime(iso) {
@@ -655,7 +657,7 @@ function renderTradeLog(){
       + '<td><strong style="color:'+c+'">'+escHtml(act)+'</strong></td>'
       + '<td><strong>'+escHtml(t.symbol||'')+'</strong></td>'
       + '<td class="num">'+(t.shares!=null?Number(t.shares).toFixed(4):'-')+'</td>'
-      + '<td class="num">$'+(t.price!=null?Number(t.price).toFixed(2):'-')+'</td>'
+      + '<td class="num">$'+(t.price!=null?fmtCrypto(t.price):'-')+'</td>'
       + realized
       + '<td style="color:var(--muted);font-size:12px">'+escHtml(t.reason||'')+'</td></tr>';
   }).join('');
@@ -713,8 +715,8 @@ function renderPositions() {
         const dayPnl = value * dayPct / 100;
         return '<tr><td><strong>'+escHtml(h.symbol||'—')+'</strong></td>'
           + '<td class="num">'+shares.toFixed(2)+'</td>'
-          + '<td class="num">$'+(entry||0).toFixed(2)+'</td>'
-          + '<td class="num">$'+(price||0).toFixed(2)+'</td>'
+          + '<td class="num">$'+fmtCrypto(entry)+'</td>'
+          + '<td class="num">$'+fmtCrypto(price)+'</td>'
           + '<td class="num">'+fmt$0(value)+'</td>'
           + '<td class="num '+cls(dayPnl)+'">'+fmtPct(dayPct)+'</td>'
           + '<td class="num '+cls(pnl)+'">'+fmt$0(pnl)+'</td>'
