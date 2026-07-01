@@ -1,12 +1,14 @@
 name: Refresh News (all platforms)
 
 # Per-platform financial news, scoped to each site's traded assets. Pushed to the
-# backend, which the public pages + member pages read. NewsAPI free tier = 100 req/day;
-# each run = 3 platforms x ~5 queries = ~15 requests. Every 3 hours = 8 runs/day = ~120...
-# so we run every 4 hours (6 runs/day = ~90 req/day) to stay safely under the cap.
+# backend, which the public pages + member pages read.
+# NewsAPI free (Developer) tier caps: 100 requests / 24h AND 50 requests / 12h.
+# A full run = 7 (wallstbots) + 5 (aistocks) + 5 (bitbot13) = 17 requests.
+# Every 4h (6 runs) = 102/day + 51/12h -> OVER BOTH caps -> 429 -> 0 news (the bug).
+# Every 8h (3 runs) = 51/day + <=34/12h -> safely under both, full topic coverage kept.
 on:
   schedule:
-    - cron: '0 */4 * * *'   # every 4 hours (UTC) -> ~90 NewsAPI requests/day, under the 100 cap
+    - cron: '0 */8 * * *'   # every 8 hours (UTC): 3 runs/day = 51 req/day, <=34 per 12h (under 100/day & 50/12h)
   workflow_dispatch:
 
 permissions:
