@@ -387,20 +387,34 @@ def _append_log(prev_strategy, today_iso, new_entry):
 # |        Profit target: +3.0%. ATR filter tightens entry on volatile days.      |
 # +==============================================================================+
 
-def resolve_edge_score(prev_strategy, fresh_proj, today_iso):
+def resolve_edge_score(prev_strategy, fresh_proj, picks, today_iso, session_ended):
     """
     Projected Edge Score = the number BOT13 computed WHEN IT DECIDED (trade if it exceeds the
-    1.74% threshold, else hold cash). It is a DECISION-TIME snapshot and must NEVER be
-    recomputed from live prices on later refreshes -- doing so makes it drift until it equals
-    Today's Change (the bug). Once a decision is recorded for today, FREEZE that number for the
-    rest of the day; a new day computes a fresh one. Used by all 3 site engines + the member
-    script so public and member always show the identical edge score.
+    1.74% threshold, else hold cash). NOT the live day return. We record ONE score per genuine
+    DECISION -- the day's open call, or an intraday rotation into a DIFFERENT set of names --
+    never once per refresh, so it can never drift into Today's Change. During the session we show
+    the latest decision's score; after the session ends we show the AVERAGE of the day's decision
+    scores. Used by all 3 site engines + the member script so public and member stay identical.
+
+    Returns (display_score, proj_samples, proj_last_set). Persist proj_samples + proj_last_set on
+    the strategy dict so the day's decisions survive across refreshes.
     """
-    prev = prev_strategy or {}
-    prev_proj = prev.get("projected_return")
-    if prev.get("day") == today_iso and prev_proj is not None:
-        return round(float(prev_proj), 2)          # frozen: the day's decision number
-    return round(float(fresh_proj or 0.0), 2)      # first decision of a new day
+    prev    = prev_strategy or {}
+    fresh   = round(float(fresh_proj or 0.0), 2)
+    samples = [float(x) for x in (prev.get("proj_samples") or [])]
+    last_set = list(prev.get("proj_last_set") or [])
+    cur_set = sorted([p.get("symbol") for p in (picks or []) if p.get("symbol")])
+
+    if prev.get("day") != today_iso:
+        samples, last_set = [fresh], cur_set              # first decision of a new day
+    elif cur_set and cur_set != sorted(last_set):
+        samples, last_set = samples + [fresh], cur_set    # genuine rotation into new names
+    # else: same names (or none) -> no new decision -> keep the day's samples (no drift)
+
+    if not samples:
+        samples = [fresh]
+    display = round(sum(samples) / len(samples), 2) if session_ended else round(samples[-1], 2)
+    return display, [round(x, 2) for x in samples], last_set
 
 
 def run_bot13_equity(

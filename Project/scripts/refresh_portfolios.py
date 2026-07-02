@@ -657,10 +657,11 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                         cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
                     )
                 positions = b13_pos if b13_dec == "TRADE" and b13_pos else []
-                b13_proj = resolve_edge_score(prev_b13_strategy, b13_proj, today_iso)  # FREEZE decision-time edge score (parity w/ engines)
+                b13_proj, _b13_samps, _b13_lastset = resolve_edge_score(prev_b13_strategy, b13_proj, b13_picks, today_iso, session_ended)  # FREEZE decision-time edge score (parity w/ engines)
                 strategy  = {
                     "decision": b13_dec, "picks": b13_picks, "rationale": b13_rat,
                     "projected_return": b13_proj, "day": today_iso,
+                    "proj_samples": _b13_samps, "proj_last_set": _b13_lastset,
                     "session_ended": session_ended,
                 }
                 # BOT13 always sells before close -- after session ends it is in cash

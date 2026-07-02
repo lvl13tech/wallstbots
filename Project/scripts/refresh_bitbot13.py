@@ -1381,7 +1381,7 @@ def main():
                         "session_open_et": f"{TRADING_WINDOW_START}:00",
                         "session_close_et": f"{TRADING_WINDOW_END}:00",
                         "positions": display_positions}
-            b13_proj = resolve_edge_score(b13_prev_strategy, b13_proj, today_iso)  # FREEZE decision-time edge score for the day (never becomes Today's Change)
+            b13_proj, _b13_samps, _b13_lastset = resolve_edge_score(b13_prev_strategy, b13_proj, b13_picks, today_iso, not window_open)  # FREEZE decision-time edge score for the day (never becomes Today's Change)
             _display_decision = "TRADE" if traded_today else b13_decision
             strategy = {
                 "day":              today_iso,
@@ -1394,6 +1394,7 @@ def main():
                 "window_open":      window_open,
                 "last_updated":     now_iso,
                 "projected_return": round(b13_proj, 2),
+                "proj_samples": _b13_samps, "proj_last_set": _b13_lastset,
                 "traded_today":     traded_today,
             }
 

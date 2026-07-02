@@ -1250,7 +1250,7 @@ def main():
                         "session_open_et": "9:30",
                         "session_close_et": "16:00",
                         "positions": display_positions}
-            b13_proj = resolve_edge_score(prev_b13_strategy, b13_proj, today_iso)  # FREEZE decision-time edge score for the day (never becomes Today's Change)
+            b13_proj, _b13_samps, _b13_lastset = resolve_edge_score(prev_b13_strategy, b13_proj, b13_picks, today_iso, not window_open)  # FREEZE decision-time edge score for the day (never becomes Today's Change)
             _display_decision = "TRADE" if traded_today else b13_decision
             strategy = {
                 "day":              today_iso,
@@ -1261,6 +1261,7 @@ def main():
                 "target_pct":       3.0,
                 "session_log":      b13_log,
                 "projected_return": round(b13_proj, 2),
+                "proj_samples": _b13_samps, "proj_last_set": _b13_lastset,
                 "traded_today":     traded_today,
             }
 
