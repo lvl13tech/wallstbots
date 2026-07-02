@@ -618,6 +618,59 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+- **2026-07-02 (Holdings ALWAYS sum to the Total P&L box — oracle/wizard Total P&L = sum of
+  current holdings vs their REAL cost basis; all 3 engines + member + frontends, parity).
+  Built + verified, NOT YET PUSHED.** Deploy: `DEPLOY-holdings-sum-to-total-pnl_2026-07-02.bat`.
+  - Owner's model (final): Oracle buys once/week, Wizard once/month, then HOLD. Each period they
+    redeploy the carried-forward balance (last period's ending value, NOT $50k). Entry = the real
+    price the holding was bought at; Price = current; Total P&L = value − real cost. Fund Total P&L
+    box = SUM of current holdings, measured vs their cost basis (this period's deploy), so Holdings
+    ALWAYS sum to the box. Compounding shows in Current Value carrying forward.
+  - Engine (oracle/wizard, 3 sites): `pnl = pos_val − Σ(real cost_basis)`, `pnl_pct = pnl/Σcost`.
+    Equalizer/Titan already summed (Σcost==sc); bot13 unchanged (intraday/cash). Also removed the
+    inception entry_price rebase (keeps real day-1 entries correct).
+  - Frontend (app.js + portfolio-fund.html, 3 sites): header shows "Cost basis" (= Current − Total
+    P&L) so the three boxes reconcile; dropped stale "since inception / all-time" labels. Holdings
+    table columns already match: Units, Entry, Price, Value, Today%, Total$, Total%.
+  - Member (refresh_portfolios.py): Total P&L measured vs cost basis (cost = tracker total − pnl,
+    scaled), entry_cost = member cost, so member Holdings sum to member Total P&L; gain_loss_pct ==
+    public pnl_pct preserved.
+  - audit_integrity.py: model-aware — for hold funds pnl = pos_val − Σcost and Holdings P&L MUST sum
+    to the Total P&L box (proven to FAIL a mismatch). NOTE: reverted the earlier "pin cost basis to
+    sc" approach (it faked entry prices — owner wants REAL entry prices).
+  - KNOWN-GOOD after push+refresh: every fund page reconciles (Holdings → Total P&L) at real prices.
+    Until pushed: engines apply next refresh (bitbot13 ~15min; equity oracle/wizard next market open
+    — they already reconcile since Σcost≈sc). Audit will flag bitbot13 oracle/wizard only in the gap
+    between deploy and the next crypto refresh. No reset (owner declined).
+  - Editing note: Edit tool injected NUL bytes into audit_integrity.py (stripped + recompiled);
+    prefer bash heredoc/python for big files.
+
+  (Superseded earlier same-day entry: "pin oracle/wizard cost basis to starting capital" via
+  DEPLOY-seedday-costbasis-recon — that scaled entry prices and was reverted per owner.)
+  - Owner report: bitbot13 Wizard showed Total P&L ~$0 but the Holdings P&L rows summed to
+    ~-$5.77. Diagnosis: NOT a bug — the compounding funds redeploy the full balance at each
+    rebalance (Wizard monthly, Oracle weekly), which reset each holding's cost basis and hid the
+    accumulated gain as invisible "locked realized." Holdings measured gain since last rebalance;
+    Total P&L measured since inception; they differed by that locked amount.
+  - Owner's model: one account that compounds forever, cost basis = original capital, every page
+    number matches the live mark, NO extra "banked" line. Implemented `_pin_cost_basis_to_sc()`
+    in all 3 engines: after each refresh, oracle+wizard holdings' TOTAL cost basis is pinned to the
+    fund's ORIGINAL starting capital (Σcost==sc). Fund still compounds via shares; only cost basis
+    is measured vs original capital, so Holdings P&L ALWAYS sums to Total P&L (total−sc). Self-heals
+    live data on next refresh. equalizer/titan already reconciled (untouched). Member parity:
+    `_pin_member_cost_basis()` in refresh_portfolios oracle/wizard.
+  - Also removed the inception-day entry_price rebase (broke day-1 cost basis) in all 3 engines.
+  - audit_integrity.py: NEW aggregate reconciliation — no-negative-cash, SEED-DAY Σcost+cash==sc,
+    holdings-P&L-sums-to-Total; locked realized surfaced as INFO. Proven to FAIL a corrupted seed
+    and PASS legit compounding. Daily 11am scheduled audit set up.
+  - Proven on live bitbot13: oracle holdings 70.54→18.15 (==fund 18.16), wizard 17.79→−0.03
+    (==fund −0.02), Σcost→50000. Live audit PASSES (7 cosmetic crypto-rounding warns, 0 fails).
+  - KNOWN-GOOD after push+next refresh: all 5 funds × 3 sites reconcile holdings→Total at live
+    price. UNTESTED until pushed: the engines apply on the next refresh (bitbot13 ~15min; equity at
+    next market open — equity already reconciled). No reset (owner declined).
+  - Side note: when a fund is up big, per-position Entry shows the effective cost-since-inception
+    (below live price) — matches the "one compounding account" model.
+
 - **2026-06-23 (Webmaster referral/admin-code selector — all 3 product sites, parity
   verified).** Owner's request: webmaster account could only send the personal 50%-off
   referral code; needed to also send the two admin comp codes (`admin13` = Insider free-

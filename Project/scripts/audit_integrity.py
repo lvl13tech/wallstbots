@@ -193,6 +193,10 @@ for platform, usize in PLATFORMS.items():
         positions = v.get("positions") or []
         live_totals[fund] = T
         rc = Recon(scope)
+        # Holdings roll-ups (real entries): sum of cost basis and sum of holdings P&L.
+        HOLD_FUNDS = ("oracle", "wizard", "equalizer", "titan")
+        sum_cost = round(sum((fnum(p.get("cost_basis")) or 0) for p in positions), 2)
+        sum_ppnl = round(sum((fnum(p.get("pnl"))        or 0) for p in positions), 2)
 
         # ---------- FUND-LEVEL derivations ----------
         rc.note("total present & > 0", T, T is not None and T > 0)
@@ -212,9 +216,17 @@ for platform, usize in PLATFORMS.items():
             else:
                 rc.check("total = cash + pos_val", T, exp_cp, teq(T))
         if PN is not None:
-            rc.check("pnl = total - sc", PN, (T - sc) if T is not None else None, teq(PN))
+            if fund in HOLD_FUNDS and positions:
+                # Total P&L = sum of current holdings (value - real cost), measured vs the
+                # holdings' cost basis (carried-forward amount deployed this period), NOT sc.
+                rc.check("pnl = pos_val - sum(cost)", PN, round(PV - sum_cost, 2) if PV is not None else None, teq(PN))
+            else:
+                rc.check("pnl = total - sc", PN, (T - sc) if T is not None else None, teq(PN))
         if PP is not None and T is not None:
-            rc.check("pnl_pct = pnl/sc*100", PP, (T - sc)/sc*100, TPCT, "%")
+            if fund in HOLD_FUNDS and positions and sum_cost:
+                rc.check("pnl_pct = pnl/cost*100", PP, (PN / sum_cost * 100) if PN is not None else None, TPCT, "%")
+            else:
+                rc.check("pnl_pct = pnl/sc*100", PP, (T - sc)/sc*100, TPCT, "%")
 
         # day_open must equal prior-day snapshot close (or sc on day 1)
         exp_open = prior_close.get(fund, sc)
@@ -293,6 +305,20 @@ for platform, usize in PLATFORMS.items():
             if DPN is not None and not approx(_pos_day, DPN, max(2.0, abs(T or 0)*0.0015)):
                 rc.note("Holdings TODAY sums to Today's Change", round(_pos_day,2), False, f"(sum {round(_pos_day,2)} vs box {DPN})")
 
+        # ---------- FUND-LEVEL P&L RECONCILIATION (holdings must sum to Total P&L) ----------
+        # Owner's model (2026-07-02): oracle/wizard/equalizer/titan buy once per period and
+        # HOLD, so Total P&L = SUM of the current holdings (each = value - real cost). The
+        # Holdings P&L column MUST therefore sum to the fund's Total P&L box exactly. bot13
+        # rotates intraday and BANKS realized gains into cash/total, so it is exempt.
+        if positions and CH is not None:
+            # UNIVERSAL: a fund can never deploy more capital than it holds -> no negative cash
+            if CH < -0.5:
+                FAIL(scope, f"negative cash {CH} -> fund deployed more than its capital (overcommit/churn)")
+            if fund in HOLD_FUNDS and not display_freeze and PN is not None:
+                if not approx(sum_ppnl, PN, max(0.5, abs(PN) * 0.01)):
+                    FAIL(scope, f"Holdings P&L {sum_ppnl} != Total P&L box {PN} "
+                                f"(holdings must sum to the Total P&L box)")
+
         # ---------- STRATEGY box ----------
         # Projected Edge Score is a frozen decision-time number, NOT the live day return.
         # If it equals day_pct the drift bug is back (edge score = Today's Change).
@@ -302,8 +328,15 @@ for platform, usize in PLATFORMS.items():
             WARN(scope, f"Projected Edge Score {_pr} == Today's Change {DP} (should be the frozen decision-time score, not the live day return)")
         strat = f.get("current_strategy") or {}
         dec = str(strat.get("decision", "")).upper()
+        # oracle/wizard never HOLD mid-life -- BUT right after a reset they legitimately sit
+        # in cash at the clean baseline until their next session open. Don't flag that.
+        _fresh_baseline = (PV is not None and abs(PV) < 0.5 and PN is not None and abs(PN) < 1.0
+                           and T is not None and approx(T, sc, 1.0))
         if fund in ALWAYS_DEPLOY and dec == "HOLD":
-            FAIL(scope, f"strategy decision=HOLD but {fund} always deploys (should be TRADE/deployed)")
+            if _fresh_baseline:
+                WARN(scope, f"{fund} at fresh reset baseline (HOLD/cash) -- will deploy at next session open")
+            else:
+                FAIL(scope, f"strategy decision=HOLD but {fund} always deploys (should be TRADE/deployed)")
         if fund == "bot13" and dec == "HOLD" and PV is not None and PV > 0.5:
             FAIL(scope, f"bot13 strategy=HOLD but pos_val={PV} (holdings shown on a HOLD)")
 

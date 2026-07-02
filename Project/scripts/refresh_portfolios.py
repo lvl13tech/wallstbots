@@ -527,6 +527,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
             v = fdata.get("value", {})
             tracker_funds[fid] = {
                 "total":     float(v.get("total")   or 0),
+                "pnl":       float(v.get("pnl")     or 0),
                 "day_open":  float(v.get("day_open") or v.get("total") or 0),
                 "day_pct":   float(v.get("day_pct") or 0),
                 "day_pnl":   float(v.get("day_pnl") or 0),
@@ -582,8 +583,15 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
             # Core scaling formula
             ratio        = tf["total"] / platform_sc
             member_value = round(original_cost * ratio, 2)
-            gain_loss    = round(member_value - original_cost, 2)
-            gain_loss_pct= round(gain_loss / original_cost * 100, 4)
+            # Total P&L mirrors the public engine: measured vs the fund's CURRENT cost basis
+            # (total - pnl), NOT the original capital. Hold-since-inception funds (equalizer/
+            # titan/bot13) have cost basis == platform_sc, so this equals member_value -
+            # original_cost as before; for oracle/wizard it is the carried-forward amount
+            # deployed this period, so the member's Holdings P&L sums to the member's Total P&L.
+            _tf_cost     = tf["total"] - tf.get("pnl", 0.0)
+            member_cost  = round(original_cost * (_tf_cost / platform_sc), 2) if platform_sc else round(original_cost, 2)
+            gain_loss    = round(member_value - member_cost, 2)
+            gain_loss_pct= round(gain_loss / member_cost * 100, 4) if member_cost else 0.0
             # Today's Change scaled the SAME way as member_value -- mirrors the public
             # engine (day_pnl = total - day_open). On the member's FIRST day the platform
             # day_open == platform_sc, so member_day_open == original_cost and day_pnl ==
@@ -808,7 +816,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 "trade_log":     _trade_log,
                 "strategy":      strategy,
                 "total_value":   member_value,
-                "entry_cost":    round(original_cost, 2),
+                "entry_cost":    round(member_cost, 2),
                 "gain_loss":     gain_loss,
                 "gain_loss_pct": gain_loss_pct,
                 "day_pnl":       day_pnl,

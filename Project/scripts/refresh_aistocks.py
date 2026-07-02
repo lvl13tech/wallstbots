@@ -1314,9 +1314,12 @@ def main():
 
             raw_pos  = fund.get("value", {}).get("positions", [])
             # On inception day, reset entry prices to prev_close so pnl starts at 0
-            if fund.get("inception") == today_iso:
-                raw_pos = [{**p, "entry_price": prev_closes.get(p["symbol"], p.get("entry_price", 0))}
-                           if prev_closes.get(p["symbol"], 0) > 0 else p for p in raw_pos]
+            # NOTE (2026-07-02): NO inception-day entry_price rebase. The seed functions already
+            # set entry_price = the price the shares were bought at, so cost_basis (= shares*entry)
+            # equals the capital deployed and Sum(position P&L) == fund P&L. Rebasing entry_price to
+            # prev_close here left shares/cost_basis untouched, so enrich_position recomputed
+            # cost_basis = shares*prev_close != deployed capital -> positions no longer summed to the
+            # fund's Total P&L on seed day. Do not re-add this block.
             enriched = [enrich_position(p, prices, prev_closes) for p in raw_pos]
             pos_val  = sum(p["value"]   for p in enriched)
             # CUMULATIVE / COMPOUNDING (mark-to-market on full balance): entire balance is
@@ -1324,9 +1327,17 @@ def main():
             # so it compounds across rotations and NEVER resets to sc.
             _prev_total = float((fund.get("value", {}) or {}).get("total") or sc)
             total    = pos_val if enriched else _prev_total
-            pnl      = total - sc
+            # Total P&L = SUM OF CURRENT HOLDINGS (owner's model 2026-07-02): oracle/wizard buy
+            # once per week/month and HOLD, deploying the carried-forward balance (last period's
+            # ending value), so the current holdings' cost basis is what was paid THIS period --
+            # NOT the original sc. pnl = current value - that real cost, so the Holdings P&L
+            # column ALWAYS sums to this box at real entry prices. Compounding still shows in
+            # Current Value (total) carrying forward. Falls back to total-sc only when flat (no
+            # positions, e.g. weekend cash) so the box is never blank.
+            _cost    = sum(p.get("cost_basis") or 0 for p in enriched)
+            pnl      = round(pos_val - _cost, 2) if enriched else round(total - sc, 2)
             cash     = max(0.0, total - pos_val)
-            pnl_pct  = (pnl / sc * 100) if sc else 0
+            pnl_pct  = (pnl / _cost * 100) if _cost else 0
             # Today's Change = total - today's OPENING total (consistent with Total P&L;
             # on day 1 day_open == sc so day_pnl == pnl). day_open carries within a day,
             # resets to the prior close on a new day.
@@ -1383,9 +1394,12 @@ def main():
 
             raw_pos  = fund.get("value", {}).get("positions", [])
             # On inception day, reset entry prices to prev_close so pnl starts at 0
-            if fund.get("inception") == today_iso:
-                raw_pos = [{**p, "entry_price": prev_closes.get(p["symbol"], p.get("entry_price", 0))}
-                           if prev_closes.get(p["symbol"], 0) > 0 else p for p in raw_pos]
+            # NOTE (2026-07-02): NO inception-day entry_price rebase. The seed functions already
+            # set entry_price = the price the shares were bought at, so cost_basis (= shares*entry)
+            # equals the capital deployed and Sum(position P&L) == fund P&L. Rebasing entry_price to
+            # prev_close here left shares/cost_basis untouched, so enrich_position recomputed
+            # cost_basis = shares*prev_close != deployed capital -> positions no longer summed to the
+            # fund's Total P&L on seed day. Do not re-add this block.
             enriched = []
             for p in raw_pos:
                 ep = enrich_position(p, prices, prev_closes)
@@ -1397,9 +1411,17 @@ def main():
             # CUMULATIVE / COMPOUNDING (mark-to-market on full balance) -- see oracle note.
             _prev_total = float((fund.get("value", {}) or {}).get("total") or sc)
             total    = pos_val if enriched else _prev_total
-            pnl      = total - sc
+            # Total P&L = SUM OF CURRENT HOLDINGS (owner's model 2026-07-02): oracle/wizard buy
+            # once per week/month and HOLD, deploying the carried-forward balance (last period's
+            # ending value), so the current holdings' cost basis is what was paid THIS period --
+            # NOT the original sc. pnl = current value - that real cost, so the Holdings P&L
+            # column ALWAYS sums to this box at real entry prices. Compounding still shows in
+            # Current Value (total) carrying forward. Falls back to total-sc only when flat (no
+            # positions, e.g. weekend cash) so the box is never blank.
+            _cost    = sum(p.get("cost_basis") or 0 for p in enriched)
+            pnl      = round(pos_val - _cost, 2) if enriched else round(total - sc, 2)
             cash     = max(0.0, total - pos_val)
-            pnl_pct  = (pnl / sc * 100) if sc else 0
+            pnl_pct  = (pnl / _cost * 100) if _cost else 0
             # Today's Change = total - today's OPENING total (consistent with Total P&L).
             # Today's Change = total - YESTERDAY'S close (prior-day snapshot) -- see oracle note.
             _prior_snaps = sorted([s for s in (snapshots or [])
@@ -1461,9 +1483,12 @@ def main():
                 print(f"  TITAN: seeded {len(raw_pos)} positions (top10 ${per_top:.0f} / rest ${per_rest:.0f})")
 
             # On inception day, reset entry prices to prev_close so pnl starts at 0
-            if fund.get("inception") == today_iso:
-                raw_pos = [{**p, "entry_price": prev_closes.get(p["symbol"], p.get("entry_price", 0))}
-                           if prev_closes.get(p["symbol"], 0) > 0 else p for p in raw_pos]
+            # NOTE (2026-07-02): NO inception-day entry_price rebase. The seed functions already
+            # set entry_price = the price the shares were bought at, so cost_basis (= shares*entry)
+            # equals the capital deployed and Sum(position P&L) == fund P&L. Rebasing entry_price to
+            # prev_close here left shares/cost_basis untouched, so enrich_position recomputed
+            # cost_basis = shares*prev_close != deployed capital -> positions no longer summed to the
+            # fund's Total P&L on seed day. Do not re-add this block.
             enriched = [enrich_position(p, prices, prev_closes) for p in raw_pos]
             pos_val  = sum(p["value"]   for p in enriched)
             pnl      = sum(p["pnl"]     for p in enriched)   # always matches table sum
