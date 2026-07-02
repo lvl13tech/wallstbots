@@ -29,6 +29,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 import refresh_portfolios
 from bot13_engine import (
+    resolve_edge_score,
     run_bot13_crypto, check_drawdown,
     CRYPTO_CFG,
     grade, grade_overall, et_now, window_open as _engine_window_open,
@@ -1380,6 +1381,7 @@ def main():
                         "session_open_et": f"{TRADING_WINDOW_START}:00",
                         "session_close_et": f"{TRADING_WINDOW_END}:00",
                         "positions": display_positions}
+            b13_proj = resolve_edge_score(b13_prev_strategy, b13_proj, today_iso)  # FREEZE decision-time edge score for the day (never becomes Today's Change)
             _display_decision = "TRADE" if traded_today else b13_decision
             strategy = {
                 "day":              today_iso,

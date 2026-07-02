@@ -35,6 +35,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from bot13_engine import (
+    resolve_edge_score,
     run_bot13_equity, run_bot13_crypto,
     EQUITY_CFG, CRYPTO_CFG,
     et_now, window_open as _window_open,
@@ -656,6 +657,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                         cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
                     )
                 positions = b13_pos if b13_dec == "TRADE" and b13_pos else []
+                b13_proj = resolve_edge_score(prev_b13_strategy, b13_proj, today_iso)  # FREEZE decision-time edge score (parity w/ engines)
                 strategy  = {
                     "decision": b13_dec, "picks": b13_picks, "rationale": b13_rat,
                     "projected_return": b13_proj, "day": today_iso,

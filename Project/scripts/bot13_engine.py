@@ -387,6 +387,22 @@ def _append_log(prev_strategy, today_iso, new_entry):
 # |        Profit target: +3.0%. ATR filter tightens entry on volatile days.      |
 # +==============================================================================+
 
+def resolve_edge_score(prev_strategy, fresh_proj, today_iso):
+    """
+    Projected Edge Score = the number BOT13 computed WHEN IT DECIDED (trade if it exceeds the
+    1.74% threshold, else hold cash). It is a DECISION-TIME snapshot and must NEVER be
+    recomputed from live prices on later refreshes -- doing so makes it drift until it equals
+    Today's Change (the bug). Once a decision is recorded for today, FREEZE that number for the
+    rest of the day; a new day computes a fresh one. Used by all 3 site engines + the member
+    script so public and member always show the identical edge score.
+    """
+    prev = prev_strategy or {}
+    prev_proj = prev.get("projected_return")
+    if prev.get("day") == today_iso and prev_proj is not None:
+        return round(float(prev_proj), 2)          # frozen: the day's decision number
+    return round(float(fresh_proj or 0.0), 2)      # first decision of a new day
+
+
 def run_bot13_equity(
     cfg, universe, prices, prev_closes, hist_data,
     starting_capital, today_iso, prev_strategy=None,
@@ -417,15 +433,15 @@ def run_bot13_equity(
     stop_display  = cfg["stop_display"]
     target_pct    = cfg["target_pct"]
 
-    def _cash_return(reason_str, log_action, log_detail):
+    def _cash_return(reason_str, log_action, log_detail, proj=0.0):
         log_entry  = {"time": time_label, "phase": phase.upper(), "action": log_action, "detail": log_detail}
         slog       = _append_log(prev_strategy, today_iso, log_entry)
-        return "CASH", [], [], reason_str, slog, 0.0
+        return "CASH", [], [], reason_str, slog, round(float(proj or 0.0), 2)
 
-    def _hold_return(reason_str, log_action, log_detail):
+    def _hold_return(reason_str, log_action, log_detail, proj=0.0):
         log_entry  = {"time": time_label, "phase": phase.upper(), "action": log_action, "detail": log_detail}
         slog       = _append_log(prev_strategy, today_iso, log_entry)
-        return "HOLD", [], [], reason_str, slog, 0.0
+        return "HOLD", [], [], reason_str, slog, round(float(proj or 0.0), 2)
 
     # -- ATR-based pre-session volatility filter ------------------------------
     entry_hurdle = 1.0   # default
@@ -523,6 +539,7 @@ def run_bot13_equity(
             f"HOLD — INSUFFICIENT EDGE ({projected_return:.2f}%)",
             f"Calculated edge score {projected_return:.2f}% ≤ {cfg['proj_threshold']}% threshold. "
             "Not enough edge to justify risk today. Holding for the day.",
+            projected_return,
         )
 
     # -- Build positions & picks ----------------------------------------------
@@ -647,10 +664,10 @@ def run_bot13_crypto(
     stop_display  = cfg["stop_display"]
     target_pct    = cfg["target_pct"]
 
-    def _hold_return(reason_str, log_action, log_detail):
+    def _hold_return(reason_str, log_action, log_detail, proj=0.0):
         log_entry  = {"time": time_label, "phase": phase.upper(), "action": log_action, "detail": log_detail}
         slog       = _append_log(prev_strategy, today_iso, log_entry)
-        return "HOLD", [], [], reason_str, slog, 0.0
+        return "HOLD", [], [], reason_str, slog, round(float(proj or 0.0), 2)
 
     # -- Score each coin ------------------------------------------------------
     scored = []
@@ -724,6 +741,7 @@ def run_bot13_crypto(
             f"HOLD — INSUFFICIENT EDGE ({projected_return:.2f}%)",
             f"Calculated edge score {projected_return:.2f}% ≤ {cfg['proj_threshold']}% threshold. "
             "Not enough edge to justify risk. Standing down.",
+            projected_return,
         )
 
     # -- Build positions & picks (equal-weight) -------------------------------

@@ -294,6 +294,12 @@ for platform, usize in PLATFORMS.items():
                 rc.note("Holdings TODAY sums to Today's Change", round(_pos_day,2), False, f"(sum {round(_pos_day,2)} vs box {DPN})")
 
         # ---------- STRATEGY box ----------
+        # Projected Edge Score is a frozen decision-time number, NOT the live day return.
+        # If it equals day_pct the drift bug is back (edge score = Today's Change).
+        _strat0 = f.get("current_strategy") or {}
+        _pr = fnum(_strat0.get("projected_return"))
+        if fund == "bot13" and _pr is not None and DP is not None and abs(_pr) > 0.01 and approx(_pr, DP, 0.05):
+            WARN(scope, f"Projected Edge Score {_pr} == Today's Change {DP} (should be the frozen decision-time score, not the live day return)")
         strat = f.get("current_strategy") or {}
         dec = str(strat.get("decision", "")).upper()
         if fund in ALWAYS_DEPLOY and dec == "HOLD":
