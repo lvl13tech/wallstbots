@@ -106,6 +106,9 @@ def run(platform):
     payload={"generated_at":dt.datetime.utcnow().isoformat()+"Z","sectors":list(PLATFORM_QUERIES[platform].keys()),"items":out}
     tagged=sum(1 for i in out if i["tickers"])
     print("[news] %s: %d headlines (%d ticker-tagged)" % (platform,len(out),tagged))
+    if not out:
+        print("  [push] 0 items fetched -- SKIPPING push to preserve the last good feed "
+              "(a transient empty fetch must never blank the live news)."); return 0
     if not BACKEND_URL or not INTERNAL_KEY:
         print("  [push] missing backend/key -- not pushed"); return len(out)
     try:

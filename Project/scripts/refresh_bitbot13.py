@@ -1360,17 +1360,11 @@ def main():
             )
             display_positions = enriched
             if not enriched and traded_today and stored_positions:
+                # Re-enrich stored positions for the read-only Holdings display after close.
+                # Today's Change keeps day_pnl_total = total - b13_day_open (computed above), so it
+                # equals Total P&L on day 1 and matches wallstbots/aistocks. (Removed the realized-
+                # sum override that diverged bitbot13 and broke the one-day rule.)
                 display_positions = [enrich_position(p, prices, prev_closes) for p in stored_positions]
-                # Box C: hold the day's REALIZED result at close (value-at-close)
-                # instead of snapping to $0 the instant we go flat. Resets to 0 at the
-                # next session open, when a new day_open is established.
-                _realized_today = sum(
-                    (float(p.get("price") or p.get("entry_price") or 0)
-                     - float(p.get("entry_price") or 0)) * float(p.get("shares") or 0)
-                    for p in display_positions
-                )
-                day_pnl_total = _realized_today
-                day_pct       = (day_pnl_total / b13_day_open * 100) if b13_day_open else 0
 
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
