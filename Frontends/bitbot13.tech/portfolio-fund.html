@@ -751,8 +751,8 @@ function renderPositions() {
     const dayPct = p.day_pct != null ? p.day_pct : 0;
     return '<tr><td><strong>'+escHtml(p.symbol||'—')+'</strong></td>'
       + '<td class="num">'+shares.toFixed(2)+'</td>'
-      + '<td class="num">$'+entry.toFixed(2)+'</td>'
-      + '<td class="num">$'+price.toFixed(2)+'</td>'
+      + '<td class="num">$'+fmtCrypto(entry)+'</td>'
+      + '<td class="num">$'+fmtCrypto(price)+'</td>'
       + '<td class="num">'+fmt$0(value)+'</td>'
       + '<td class="num '+cls(dayPnl)+'">'+fmtPct(dayPct)+'</td>'
       + '<td class="num '+cls(pnl)+'">'+fmt$0(pnl)+'</td>'

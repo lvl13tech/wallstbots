@@ -1988,6 +1988,7 @@
 
     const fmtD = n => { const a = Math.abs(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}); return (n < 0 ? "-$" : "$") + a; };
     const fmtP = n => (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
+    const fmtCrypto = n => { var x=Number(n)||0; if(x===0) return "0"; var a=Math.abs(x); return a>=1?x.toFixed(2):a>=0.01?x.toFixed(4):a>=0.0001?x.toFixed(6):x.toFixed(8); };
 
     document.getElementById("botSessionSummary").innerHTML = `
       <div class="session-stat">
@@ -2028,8 +2029,8 @@
       const entryTime  = p.entry_time
         ? new Date(p.entry_time).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",timeZone:"America/New_York"}) + " ET"
         : "—";
-      const ep   = p.entry_price   ? "$" + p.entry_price.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:4}) : "—";
-      const cur  = p.current_price ? "$" + p.current_price.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:4}) : "—";
+      const ep   = p.entry_price   ? "$" + fmtCrypto(p.entry_price) : "—";
+      const cur  = p.current_price ? "$" + fmtCrypto(p.current_price) : "—";
       const m1h  = p.momentum_1h != null ? ((p.momentum_1h >= 0 ? "+" : "") + p.momentum_1h.toFixed(2) + "%") : "—";
       const m4h  = p.momentum_4h != null ? ((p.momentum_4h >= 0 ? "+" : "") + p.momentum_4h.toFixed(2) + "%") : "—";
       const pnlD = p.pnl != null ? fmtD(p.pnl) : "—";
