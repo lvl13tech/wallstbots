@@ -94,6 +94,7 @@ def reset_blob(state, start_cap):
         print(f"    {bot}: {old} -> {start_cap:,.0f}")
         f["value"] = clean_value(start_cap, f.get("value"))
         f["current_strategy"] = clean_strategy()
+        f["inception"] = TODAY   # fresh inception -> engine's holdover guard deploys exactly sc
     state["starting_capital"] = start_cap
     n = len(state.get("snapshots", []))
     state["snapshots"] = [{"date": TODAY, **{b: start_cap for b in BOTS}}]

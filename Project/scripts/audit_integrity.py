@@ -216,17 +216,9 @@ for platform, usize in PLATFORMS.items():
             else:
                 rc.check("total = cash + pos_val", T, exp_cp, teq(T))
         if PN is not None:
-            if fund in HOLD_FUNDS and positions:
-                # Total P&L = sum of current holdings (value - real cost), measured vs the
-                # holdings' cost basis (carried-forward amount deployed this period), NOT sc.
-                rc.check("pnl = pos_val - sum(cost)", PN, round(PV - sum_cost, 2) if PV is not None else None, teq(PN))
-            else:
-                rc.check("pnl = total - sc", PN, (T - sc) if T is not None else None, teq(PN))
+            rc.check("pnl = total - sc", PN, (T - sc) if T is not None else None, teq(PN))
         if PP is not None and T is not None:
-            if fund in HOLD_FUNDS and positions and sum_cost:
-                rc.check("pnl_pct = pnl/cost*100", PP, (PN / sum_cost * 100) if PN is not None else None, TPCT, "%")
-            else:
-                rc.check("pnl_pct = pnl/sc*100", PP, (T - sc)/sc*100, TPCT, "%")
+            rc.check("pnl_pct = pnl/sc*100", PP, (T - sc)/sc*100, TPCT, "%")
 
         # day_open must equal prior-day snapshot close (or sc on day 1)
         exp_open = prior_close.get(fund, sc)
@@ -305,19 +297,30 @@ for platform, usize in PLATFORMS.items():
             if DPN is not None and not approx(_pos_day, DPN, max(2.0, abs(T or 0)*0.0015)):
                 rc.note("Holdings TODAY sums to Today's Change", round(_pos_day,2), False, f"(sum {round(_pos_day,2)} vs box {DPN})")
 
-        # ---------- FUND-LEVEL P&L RECONCILIATION (holdings must sum to Total P&L) ----------
-        # Owner's model (2026-07-02): oracle/wizard/equalizer/titan buy once per period and
-        # HOLD, so Total P&L = SUM of the current holdings (each = value - real cost). The
-        # Holdings P&L column MUST therefore sum to the fund's Total P&L box exactly. bot13
-        # rotates intraday and BANKS realized gains into cash/total, so it is exempt.
+        # ---------- HOLDOVER / RECONCILIATION GUARDS ----------
+        # Total P&L is SINCE LAUNCH: pnl = total - sc. For a hold fund (oracle/wizard/equalizer/
+        # titan) that has NOT compounded yet, the holdings were deployed with exactly the
+        # starting capital, so SUM(cost_basis) == sc AND the Holdings P&L column sums to the
+        # Total P&L box. A "holdover" (a reset that left a stale carried balance) shows up as
+        # SUM(cost) != sc on a fund whose inception is TODAY -- this is the exact bug that made
+        # bitbot13 Wizard read a $50,019 cost basis. We FAIL that hard.
         if positions and CH is not None:
-            # UNIVERSAL: a fund can never deploy more capital than it holds -> no negative cash
             if CH < -0.5:
                 FAIL(scope, f"negative cash {CH} -> fund deployed more than its capital (overcommit/churn)")
-            if fund in HOLD_FUNDS and not display_freeze and PN is not None:
-                if not approx(sum_ppnl, PN, max(0.5, abs(PN) * 0.01)):
-                    FAIL(scope, f"Holdings P&L {sum_ppnl} != Total P&L box {PN} "
-                                f"(holdings must sum to the Total P&L box)")
+            fund_incep = str(f.get("inception") or "")
+            if fund in HOLD_FUNDS and not display_freeze:
+                # (1) HOLDOVER: a freshly seeded/reset fund (inception today) MUST have deployed
+                #     exactly sc. If sum(cost) != sc, a stale carried balance leaked through.
+                if fund_incep == TODAY and abs(sum_cost - sc) > max(2.0, sc * 0.0001):
+                    FAIL(scope, f"HOLDOVER: sum(cost_basis) {sum_cost} != starting capital {sc} on a fresh "
+                                f"(inception=today) fund -> a reset left a stale carried balance; the fund "
+                                f"deployed the wrong amount. Holdings will not sum to Total P&L.")
+                # (2) When cost basis == sc (fund hasn't compounded), holdings P&L MUST sum to the
+                #     Total P&L box, and Today's Change must equal Total P&L on day 1.
+                if abs(sum_cost - sc) <= max(2.0, sc * 0.0001) and PN is not None:
+                    if not approx(sum_ppnl, PN, max(0.5, abs(PN) * 0.01)):
+                        FAIL(scope, f"Holdings P&L {sum_ppnl} != Total P&L box {PN} (cost basis == sc so they "
+                                    f"must match)")
 
         # ---------- STRATEGY box ----------
         # Projected Edge Score is a frozen decision-time number, NOT the live day return.

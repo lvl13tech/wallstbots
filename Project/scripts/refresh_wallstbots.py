@@ -1178,7 +1178,11 @@ def main():
     _window_open_now = _engine_window_open(EQUITY_CFG)
     if (is_monday or oracle_needs_seed) and hist_data and oracle_past_inception and _window_open_now:
         print(f"[wallstbots] {'Monday' if is_monday else 'first run'} -- running ORACLE recompute...")
-        _oracle_capital = float((funds.get("oracle", {}).get("value", {}) or {}).get("total") or sc_global)
+        # HOLDOVER GUARD: on the fund's inception day (fresh launch or a just-run reset) deploy
+        # EXACTLY the starting capital -- never a carried/stale total -- so cost basis can never
+        # inherit a holdover. Only AFTER inception does it compound (deploy the carried balance).
+        _oracle_incep   = str(funds.get("oracle", {}).get("inception") or today_iso)
+        _oracle_capital = sc_global if _oracle_incep >= today_iso else float((funds.get("oracle", {}).get("value", {}) or {}).get("total") or sc_global)
         oracle_new_positions, oracle_new_picks, oracle_new_rationale, oracle_new_proj = run_oracle_decision(
             prices, prev_closes, hist_data, _oracle_capital, week_str
         )
@@ -1194,7 +1198,9 @@ def main():
     wizard_past_inception = funds.get("wizard", {}).get("inception", today_iso) < today_iso
     if (is_month_start or wizard_needs_seed) and hist_data and wizard_past_inception and _window_open_now:
         print(f"[wallstbots] {'Month start' if is_month_start else 'first run'} ({today_iso}) -- running WIZARD recompute...")
-        _wizard_capital = float((funds.get("wizard", {}).get("value", {}) or {}).get("total") or sc_global)
+        # HOLDOVER GUARD (see oracle): inception day -> deploy exactly sc; afterwards compound.
+        _wizard_incep   = str(funds.get("wizard", {}).get("inception") or today_iso)
+        _wizard_capital = sc_global if _wizard_incep >= today_iso else float((funds.get("wizard", {}).get("value", {}) or {}).get("total") or sc_global)
         wizard_new_positions, wizard_new_picks, wizard_new_rationale, wizard_new_proj = run_wizard_decision(
             prices, prev_closes, hist_data, _wizard_capital, month_str
         )
@@ -1317,17 +1323,15 @@ def main():
             # so it compounds across rotations and NEVER resets to sc.
             _prev_total = float((fund.get("value", {}) or {}).get("total") or sc)
             total    = pos_val if enriched else _prev_total
-            # Total P&L = SUM OF CURRENT HOLDINGS (owner's model 2026-07-02): oracle/wizard buy
-            # once per week/month and HOLD, deploying the carried-forward balance (last period's
-            # ending value), so the current holdings' cost basis is what was paid THIS period --
-            # NOT the original sc. pnl = current value - that real cost, so the Holdings P&L
-            # column ALWAYS sums to this box at real entry prices. Compounding still shows in
-            # Current Value (total) carrying forward. Falls back to total-sc only when flat (no
-            # positions, e.g. weekend cash) so the box is never blank.
-            _cost    = sum(p.get("cost_basis") or 0 for p in enriched)
-            pnl      = round(pos_val - _cost, 2) if enriched else round(total - sc, 2)
+            # Total P&L = SINCE LAUNCH: current value vs the fund's original starting capital (sc).
+            # It compounds across periods and never resets. "Today's Change" (day_pnl below) is the
+            # separate per-day number. NOTE: entry_price on each holding is the REAL price paid at
+            # THIS period's buy, so the Holdings P&L column shows gain since this period's entry and
+            # will not always equal this since-launch box for oracle/wizard -- the difference is
+            # prior periods' profit already reinvested into the carried-forward balance.
+            pnl      = round(total - sc, 2)
             cash     = max(0.0, total - pos_val)
-            pnl_pct  = (pnl / _cost * 100) if _cost else 0
+            pnl_pct  = (pnl / sc * 100) if sc else 0
             # Today's Change = total - today's OPENING total (consistent with Total P&L;
             # on day 1 day_open == sc so day_pnl == pnl). day_open carries within a day,
             # resets to the prior close on a new day.
@@ -1401,17 +1405,15 @@ def main():
             # CUMULATIVE / COMPOUNDING (mark-to-market on full balance) -- see oracle note.
             _prev_total = float((fund.get("value", {}) or {}).get("total") or sc)
             total    = pos_val if enriched else _prev_total
-            # Total P&L = SUM OF CURRENT HOLDINGS (owner's model 2026-07-02): oracle/wizard buy
-            # once per week/month and HOLD, deploying the carried-forward balance (last period's
-            # ending value), so the current holdings' cost basis is what was paid THIS period --
-            # NOT the original sc. pnl = current value - that real cost, so the Holdings P&L
-            # column ALWAYS sums to this box at real entry prices. Compounding still shows in
-            # Current Value (total) carrying forward. Falls back to total-sc only when flat (no
-            # positions, e.g. weekend cash) so the box is never blank.
-            _cost    = sum(p.get("cost_basis") or 0 for p in enriched)
-            pnl      = round(pos_val - _cost, 2) if enriched else round(total - sc, 2)
+            # Total P&L = SINCE LAUNCH: current value vs the fund's original starting capital (sc).
+            # It compounds across periods and never resets. "Today's Change" (day_pnl below) is the
+            # separate per-day number. NOTE: entry_price on each holding is the REAL price paid at
+            # THIS period's buy, so the Holdings P&L column shows gain since this period's entry and
+            # will not always equal this since-launch box for oracle/wizard -- the difference is
+            # prior periods' profit already reinvested into the carried-forward balance.
+            pnl      = round(total - sc, 2)
             cash     = max(0.0, total - pos_val)
-            pnl_pct  = (pnl / _cost * 100) if _cost else 0
+            pnl_pct  = (pnl / sc * 100) if sc else 0
             # Today's Change = total - today's OPENING total (consistent with Total P&L).
             # Today's Change = total - YESTERDAY'S close (prior-day snapshot) -- see oracle note.
             _prior_snaps = sorted([s for s in (snapshots or [])

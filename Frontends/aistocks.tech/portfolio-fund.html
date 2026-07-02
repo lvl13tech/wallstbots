@@ -515,10 +515,10 @@ function renderFundStats() {
   const dayPct = fundState && fundState.day_pct       != null ? fundState.day_pct       : 0;
 
   document.getElementById('fsTotal').textContent   = fmt$0(total);
-  document.getElementById('fsStarted').textContent = 'Cost basis ' + fmt$0(total - pnl);
+  document.getElementById('fsStarted').textContent = 'Started at ' + fmt$0(cap);
   document.getElementById('fsPnl').textContent     = fmt$0(pnl);
   document.getElementById('fsPnl').className       = 'fund-value ' + cls(Math.round(pnl));
-  document.getElementById('fsPnlPct').textContent  = fmtPct(pnlPct) + ' vs cost basis';
+  document.getElementById('fsPnlPct').textContent  = fmtPct(pnlPct) + ' all-time';
   document.getElementById('fsPnlPct').className    = 'fund-pnl ' + cls(pnlPct);
   document.getElementById('fsDayPnl').textContent  = fmt$0(dayPnl);
   document.getElementById('fsDayPnl').className    = 'fund-value ' + cls(dayPnl);
@@ -933,7 +933,7 @@ async function loadPublicPortfolio() {
     document.getElementById('fundHeroName').textContent = data.portfolio_name || 'Portfolio';
     const fsPnlEl = document.getElementById('fsPnlPct');
     if (fsPnlEl && data.gain_loss_pct != null) {
-      fsPnlEl.textContent = (data.gain_loss_pct >= 0 ? '+' : '') + data.gain_loss_pct.toFixed(2) + '% vs cost basis';
+      fsPnlEl.textContent = (data.gain_loss_pct >= 0 ? '+' : '') + data.gain_loss_pct.toFixed(2) + '% all-time';
       fsPnlEl.className = 'fund-pnl ' + (data.gain_loss_pct >= 0 ? 'pos' : 'neg');
     }
     if (data.performance_curve && data.performance_curve.length) {
