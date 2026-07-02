@@ -1209,19 +1209,27 @@ async def get_bot_performance(bot_id: str, days: int = 90, current_user: dict = 
             LIMIT %s
         """, (bot_id, days))
         rows = cursor.fetchall()
-        return {
-            "success": True,
-            "snapshots": [
-                {
-                    "date":          str(r["snapshot_date"]),
-                    "total_value":   float(r["total_value"]   or 0),
-                    "entry_cost":    float(r["entry_cost"]    or 0),
-                    "gain_loss":     float(r["gain_loss"]     or 0),
-                    "gain_loss_pct": float(r["gain_loss_pct"] or 0),
-                }
-                for r in rows
-            ]
-        }
+        snaps = [
+            {
+                "date":          str(r["snapshot_date"]),
+                "total_value":   float(r["total_value"]   or 0),
+                "entry_cost":    float(r["entry_cost"]    or 0),
+                "gain_loss":     float(r["gain_loss"]     or 0),
+                "gain_loss_pct": float(r["gain_loss_pct"] or 0),
+            }
+            for r in rows
+        ]
+        # ERA GUARD (server-side, mirrors frontend bot13CurrentEra): a reset restarts the
+        # record at the member's entry cost, appearing as an impossible >40% one-step DROP.
+        # Return ONLY the current era so a reset boundary can never be read as a real trading
+        # day by ANY consumer (tile, chart, future features). Set-and-forget, no monitoring.
+        _start = 0
+        for _i in range(1, len(snaps)):
+            _p = snaps[_i - 1]["total_value"]; _c = snaps[_i]["total_value"]
+            if _p > 0 and (_c / _p - 1) < -0.40:
+                _start = _i
+        snaps = snaps[_start:]
+        return {"success": True, "snapshots": snaps}
     finally:
         cursor.close()
         return_db_connection(conn)

@@ -1006,7 +1006,7 @@ function drawPortfolioChart() {
     return;
   }
 
-  const platformCap = (STATE.funds && STATE.funds.starting_capital) || 49000;
+  const platformCap = (STATE.funds && STATE.funds.starting_capital) || 55000;
   const labels   = snaps.map(s => s.date);
   const datasets = FUND_ORDER.map(fid => {
     const meta = FUND_META[fid];
