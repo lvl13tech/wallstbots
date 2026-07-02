@@ -800,13 +800,28 @@ function renderNews() {
 }
 
 // ===== BOT13 Track Record (members) — computes from the member's OWN snapshots =====
+// A reset restarts the member's record at their entry cost -- it shows up as an impossible
+// one-step DROP (>40%; a diversified BOT13 basket cannot move that much in a day). The track
+// record + chart must only span the CURRENT era (everything after the last reset), so a reset
+// boundary or any impossible move can NEVER be counted as a real trading day. Self-defends
+// against dirty data forever (set-and-forget), independent of any DB cleanup.
+function bot13CurrentEra(snaps) {
+  const a = (snaps || []).filter(s => s && s.total_value != null);
+  let start = 0;
+  for (let i = 1; i < a.length; i++) {
+    const p = Number(a[i-1].total_value), c = Number(a[i].total_value);
+    if (p > 0 && (c / p - 1) < -0.40) start = i;
+  }
+  return a.slice(start);
+}
 function memberBot13Record(snaps) {
   let prev = null, up = 0, down = 0, cash = 0, worst = 0, best = 0, days = 0;
-  for (const sn of (snaps || [])) {
+  for (const sn of bot13CurrentEra(snaps)) {
     const v = (sn && sn.total_value != null) ? Number(sn.total_value) : null;
     if (v === null) continue;
     if (prev !== null && prev > 0) {
       const ch = (v / prev - 1) * 100;
+      if (Math.abs(ch) > 40) { prev = v; continue; }   // impossible move (reset/glitch) -> never a real day
       days++;
       if (ch > 0.05) up++; else if (ch < -0.05) down++; else cash++;
       if (ch < worst) worst = ch;
@@ -871,8 +886,9 @@ async function drawFundChart() {
     wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.8">Portfolio started ' + created + '.<br>Performance history appears after the first trading day.</div>';
     return;
   }
-  const labels = snapshots.map(s => s.date);
-  const values = snapshots.map(s => s.total_value);
+  const _era = bot13CurrentEra(snapshots);   // chart only spans the current era (post last reset)
+  const labels = _era.map(s => s.date);
+  const values = _era.map(s => s.total_value);
   // The snapshots table (bot_performance_snapshots) can lag behind the live
   // fund state (bot_fund_state) by a day or more, which made the chart END on a
   // stale value that didn't match the Current Value card. If we have a current

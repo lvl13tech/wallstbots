@@ -730,13 +730,28 @@ async function loadSiteData() {
 // Same logic as portfolio-fund.html's memberBot13Record/renderMemberBot13Tile, but shown
 // unconditionally here since bot-detail.html is the whole-portfolio overview (not gated to
 // a single fund slug).
+// A reset restarts the member's record at their entry cost -- it shows up as an impossible
+// one-step DROP (>40%; a diversified BOT13 basket cannot move that much in a day). The track
+// record + chart must only span the CURRENT era (everything after the last reset), so a reset
+// boundary or any impossible move can NEVER be counted as a real trading day. Self-defends
+// against dirty data forever (set-and-forget), independent of any DB cleanup.
+function bot13CurrentEra(snaps) {
+  const a = (snaps || []).filter(s => s && s.total_value != null);
+  let start = 0;
+  for (let i = 1; i < a.length; i++) {
+    const p = Number(a[i-1].total_value), c = Number(a[i].total_value);
+    if (p > 0 && (c / p - 1) < -0.40) start = i;
+  }
+  return a.slice(start);
+}
 function memberBot13Record(snaps) {
   let prev = null, up = 0, down = 0, cash = 0, worst = 0, best = 0, days = 0;
-  for (const sn of (snaps || [])) {
+  for (const sn of bot13CurrentEra(snaps)) {
     const v = (sn && sn.total_value != null) ? Number(sn.total_value) : null;
     if (v === null) continue;
     if (prev !== null && prev > 0) {
       const ch = (v / prev - 1) * 100;
+      if (Math.abs(ch) > 40) { prev = v; continue; }   // impossible move (reset/glitch) -> never a real day
       days++;
       if (ch > 0.05) up++; else if (ch < -0.05) down++; else cash++;
       if (ch < worst) worst = ch;
