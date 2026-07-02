@@ -1148,54 +1148,62 @@ def main():
         _held_syms  = {p.get("symbol") for p in stored_positions if p.get("symbol")}
         _fresh_syms = {p.get("symbol") for p in (_f_positions or []) if p.get("symbol")}
 
-        if _f_decision != "TRADE" or not _f_positions:
-            # Nothing qualifies now -> every held thesis has died -> sell all to cash.
-            b13_decision  = "HOLD"
-            b13_positions = []
-            b13_picks     = []
-            b13_rationale = (_f_rationale or "No coin currently clears the edge filters -- "
-                             "rotated out of all positions to cash.")
-            b13_log       = _f_log or b13_prev_strategy.get("session_log", [])
-            b13_proj      = 0.0
-            print("  BOT13: intraday rotation -> all positions' edge died, moved to cash")
-        else:
-            # Score lookup from the fresh picks (each pick carries 'score').
-            _score = {pk.get("symbol"): float(pk.get("score") or 0) for pk in (_f_picks or [])}
-            _held_score = {p.get("symbol"): float(p.get("score") or 0) for p in stored_positions}
-            _weakest_held = min(_held_score.values()) if _held_score else 0.0
-
-            # Keep held names that still qualify (still in fresh set => edge alive).
-            _keep = _held_syms & _fresh_syms
-            # Drop held names no longer qualified (edge died).
-            _dropped = _held_syms - _fresh_syms
-            # Add fresh names only if clearly better than the weakest held.
-            _added = set()
-            for sym in (_fresh_syms - _held_syms):
-                cand = _score.get(sym, 0.0)
-                if _weakest_held <= 0 or cand >= _weakest_held * (1 + SWITCH_MARGIN_PCT/100.0):
-                    _added.add(sym)
-
-            if not _dropped and not _added:
-                # No qualifying change -> just re-price existing (no churn).
-                b13_positions = stored_positions
-                b13_decision  = "TRADE"
-                b13_picks     = b13_prev_strategy.get("picks", [])
-                b13_rationale = b13_prev_strategy.get("rationale", "")
-                b13_log       = b13_prev_strategy.get("session_log", [])
-                b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
-                print(f"  BOT13: same-session hold ({len(b13_positions)} positions, no better edge)")
+        # -- HOLD winners; only rotate out a genuine LOSER (owner rule, 2026-07-02) --------
+        # A held name is SOLD intraday ONLY if it hit its stop OR it is down >= LOSS_EXIT_PCT
+        # AND its edge has died (no longer in the fresh qualified set). Winners/flat names are
+        # KEPT with their ORIGINAL entry & shares (never re-sourced from the fresh run) so they
+        # are held, not churned. Each freed slot is filled by the best QUALIFIED, not-currently-
+        # held candidate that clearly beats the loser it replaces (SWITCH_MARGIN); any slot with
+        # no stronger name goes to CASH. No more selling-and-rebuying the same name every refresh.
+        _score        = {pk.get("symbol"): float(pk.get("score") or 0) for pk in (_f_picks or [])}
+        _fresh_by_sym = {p.get("symbol"): p for p in (_f_positions or []) if p.get("symbol")}
+        _stop_pct     = float(CRYPTO_CFG.get("stop_internal", 1.35))
+        LOSS_EXIT_PCT = 1.0
+        _kept, _exited, _exit_scores = [], [], []
+        for _p in stored_positions:
+            _sym   = _p.get("symbol")
+            _entry = float(_p.get("entry_price") or 0)
+            _cur   = float(prices.get(_sym, _entry) or _entry)
+            _ppct  = ((_cur / _entry) - 1) * 100 if _entry > 0 else 0.0
+            if (_ppct <= -_stop_pct) or (_ppct <= -LOSS_EXIT_PCT and _sym not in _fresh_syms):
+                _exited.append(_sym); _exit_scores.append(float(_p.get("score") or 0))
             else:
-                # Build the rotated target set: kept + added, sourced from fresh positions
-                # (fresh entries/prices). Dropped names simply absent -> stamp_and_log emits
-                # their SELL automatically; added names emit BUY.
-                _target = _keep | _added
-                b13_positions = [p for p in (_f_positions or []) if p.get("symbol") in _target]
-                b13_decision  = "TRADE"
-                b13_picks     = [pk for pk in (_f_picks or []) if pk.get("symbol") in _target]
-                b13_rationale = _f_rationale or b13_prev_strategy.get("rationale", "")
-                b13_log       = _f_log or b13_prev_strategy.get("session_log", [])
+                _kept.append(_p)                       # HOLD -- original position untouched
+        _kept_syms = {p.get("symbol") for p in _kept}
+        _added = []
+        if _exited:
+            _bar = min(_exit_scores) if _exit_scores else 0.0
+            for _s in sorted([s for s in _fresh_syms if s not in _kept_syms], key=lambda s: -_score.get(s, 0.0)):
+                if len(_added) >= len(_exited): break
+                _cs = _score.get(_s, 0.0)
+                if _cs > 0 and (_bar <= 0 or _cs >= _bar * (1 + SWITCH_MARGIN_PCT/100.0)):
+                    _added.append(_fresh_by_sym[_s])   # rotate a loser into a DIFFERENT stronger name
+        _added_syms = {a.get("symbol") for a in _added}
+        if not _exited and not _added:
+            # Pure hold -- no losers to rotate, nothing stronger to add. NO churn.
+            b13_positions = stored_positions
+            b13_decision  = "TRADE" if stored_positions else "HOLD"
+            b13_picks     = (b13_prev_strategy or {}).get("picks", [])
+            b13_rationale = (b13_prev_strategy or {}).get("rationale", "")
+            b13_log       = (b13_prev_strategy or {}).get("session_log", [])
+            b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
+            print(f"  BOT13: hold ({len(b13_positions)} positions -- no losers to rotate)")
+        else:
+            b13_positions = _kept + _added
+            b13_decision  = "TRADE" if b13_positions else "HOLD"
+            b13_picks     = ([pk for pk in (b13_prev_strategy or {}).get("picks", []) if pk.get("symbol") in _kept_syms]
+                             + [pk for pk in (_f_picks or []) if pk.get("symbol") in _added_syms])
+            if _added:
+                b13_rationale = _f_rationale or (b13_prev_strategy or {}).get("rationale", "")
                 b13_proj      = float(_f_proj or 0.0)
-                print(f"  BOT13: intraday rotation -> kept {len(_keep)}, added {len(_added)}, dropped {len(_dropped)}")
+            elif b13_positions:
+                b13_rationale = (b13_prev_strategy or {}).get("rationale", "")
+                b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
+            else:
+                b13_rationale = "Rotated out of losing position(s) to cash -- no stronger name qualified."
+                b13_proj      = 0.0
+            b13_log       = _f_log or (b13_prev_strategy or {}).get("session_log", [])
+            print(f"  BOT13: rotation -> kept {len(_kept)}, exited {len(_exited)}, added {len(_added)}, cash-slots {len(_exited)-len(_added)}")
     elif not _engine_window_open(CRYPTO_CFG):
         # Market closed -- don't enter new positions after hours.
         # If today already had a completed TRADE, preserve its picks/log so the
