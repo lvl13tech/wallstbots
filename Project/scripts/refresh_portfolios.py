@@ -676,7 +676,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                           f"${prev_oracle_total:,.0f} vs clean ${member_value:,.0f} "
                           f"-- bad data, using scaled.")
                     prev_oracle_total = member_value
-                if oracle_day or not oracle_state.get("positions"):
+                if (oracle_day or not oracle_state.get("positions")) and win_open:  # never seed on a non-trading day
                     oracle_dec, oracle_pos, oracle_picks, oracle_rat, oracle_proj = run_oracle_for_universe(
                         universe, prices, prev_closes, hist_data, prev_oracle_total, week_str
                     )
@@ -701,7 +701,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                           f"${prev_wizard_total:,.0f} vs clean ${member_value:,.0f} "
                           f"-- bad data, using scaled.")
                     prev_wizard_total = member_value
-                if wizard_day or not wizard_state.get("positions"):
+                if (wizard_day or not wizard_state.get("positions")) and win_open:  # never seed on a non-trading day
                     wizard_dec, wizard_pos, wizard_picks, wizard_rat, wizard_proj = run_wizard_for_universe(
                         universe, prices, prev_closes, hist_data, prev_wizard_total, month_str
                     )
@@ -720,11 +720,14 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
 
             elif fund_name == "equalizer":
                 eq_prev_positions = eq_state.get("positions") or []
-                positions, _, _ = build_baseline_positions(
-                    universe, prices, prev_closes, original_cost, eq_prev_positions
-                )
+                if not eq_prev_positions and not win_open:
+                    positions = []                      # market closed -- wait for next session to seed
+                else:
+                    positions, _, _ = build_baseline_positions(
+                        universe, prices, prev_closes, original_cost, eq_prev_positions
+                    )
                 strategy     = {"decision": "TRADE"}
-                holding_cash = False
+                holding_cash = not positions
 
             elif fund_name == "titan":
                 titan_prev_positions = titan_state.get("positions") or []
@@ -732,6 +735,8 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                     positions, _, _ = build_baseline_positions(
                         universe, prices, prev_closes, original_cost, titan_prev_positions
                     )
+                elif not win_open:
+                    positions = []                      # market closed -- wait for next session to seed
                 else:
                     n      = len(universe)
                     top_n  = max(1, round(n * 0.20))
@@ -756,7 +761,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                         universe, prices, prev_closes, original_cost, inception_positions
                     )
                 strategy     = {"decision": "TRADE"}
-                holding_cash = False
+                holding_cash = not positions
 
             # --- Transparency ledger (member side): stamp opens + BUY/SELL log ---
             # Box F (Trade History) is BOT13-ONLY. Baselines/swing/hold bots were

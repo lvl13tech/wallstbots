@@ -29,6 +29,17 @@ import json, os, sys
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from datetime import date as _date, timedelta as _timedelta
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from bot13_engine import is_trading_day as _is_trading_day, EQUITY_CFG as _EQ_CFG, CRYPTO_CFG as _CR_CFG
+
+def _last_trading_day(cfg, d):
+    """Most recent real trading day on/before d (skips weekends + US market holidays)."""
+    for _ in range(10):
+        if _is_trading_day(cfg, d):
+            return d
+        d = d - _timedelta(days=1)
+    return d
 import requests
 
 ROOT     = Path(__file__).resolve().parents[2]
@@ -82,7 +93,7 @@ def clean_strategy():
             "projected_return": 0.0}
 
 
-def reset_blob(state, start_cap):
+def reset_blob(state, start_cap, snap_date):
     """Zero every fund, delete all snapshots, reset leaderboards. In place."""
     funds = state.get("funds", {})
     for bot in BOTS:
@@ -97,7 +108,7 @@ def reset_blob(state, start_cap):
         f["inception"] = TODAY   # fresh inception -> engine's holdover guard deploys exactly sc
     state["starting_capital"] = start_cap
     n = len(state.get("snapshots", []))
-    state["snapshots"] = [{"date": TODAY, **{b: start_cap for b in BOTS}}]
+    state["snapshots"] = [{"date": snap_date, **{b: start_cap for b in BOTS}}]  # last TRADING day, not a weekend/holiday
     print(f"    snapshots: deleted {n}, seeded 1 clean baseline row")
     lb = state.get("leaderboards", {})
     for period, rows in lb.items():
@@ -142,7 +153,9 @@ def main():
 
         # LAYER 1: reset + push to backend cache
         print("  LAYER 1: backend cache")
-        reset_blob(blob, start_cap)
+        _cfg = _CR_CFG if platform == "bitbot13" else _EQ_CFG
+        _snap_date = _last_trading_day(_cfg, _date.fromisoformat(TODAY)).isoformat()
+        reset_blob(blob, start_cap, _snap_date)
         if not DRY:
             pr = requests.post(f"{BACKEND}/internal/tracker/push",
                                json={"platform": platform, "data_type": "state", "data": blob},

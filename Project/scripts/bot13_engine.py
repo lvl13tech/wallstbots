@@ -80,12 +80,62 @@ def et_now():
     return utc + dt.timedelta(hours=offset)
 
 
+# US stock-market holidays (NYSE/Nasdaq) -- dates the EQUITY market is CLOSED.
+# Uses OBSERVED dates (holiday on Sat -> observed Fri; on Sun -> observed Mon).
+# Crypto trades 365 days, so these apply to equity only (see is_market_holiday).
+US_MARKET_HOLIDAYS = {
+    # 2026
+    "2026-01-01",  # New Year's Day
+    "2026-01-19",  # Martin Luther King Jr. Day
+    "2026-02-16",  # Presidents' Day
+    "2026-04-03",  # Good Friday
+    "2026-05-25",  # Memorial Day
+    "2026-06-19",  # Juneteenth
+    "2026-07-03",  # Independence Day (observed -- Jul 4 is a Saturday)
+    "2026-09-07",  # Labor Day
+    "2026-11-26",  # Thanksgiving Day
+    "2026-12-25",  # Christmas Day
+    # 2027
+    "2027-01-01",  # New Year's Day
+    "2027-01-18",  # Martin Luther King Jr. Day
+    "2027-02-15",  # Presidents' Day
+    "2027-03-26",  # Good Friday
+    "2027-05-31",  # Memorial Day
+    "2027-06-18",  # Juneteenth (observed -- Jun 19 is a Saturday)
+    "2027-07-05",  # Independence Day (observed -- Jul 4 is a Sunday)
+    "2027-09-06",  # Labor Day
+    "2027-11-25",  # Thanksgiving Day
+    "2027-12-24",  # Christmas Day (observed -- Dec 25 is a Saturday)
+}
+
+
+def is_market_holiday(cfg, d=None):
+    """True if date d (ET) is a US stock-market holiday. Crypto never has holidays."""
+    if cfg.get("market_type") == "crypto":
+        return False
+    if d is None:
+        d = et_now().date()
+    return d.isoformat() in US_MARKET_HOLIDAYS
+
+
+def is_trading_day(cfg, d=None):
+    """True only if date d is a REAL trading day for this market: an allowed weekday AND
+    (for equity) not a US market holiday. Crypto trades every day. This is the single
+    gate that keeps funds from seeding/trading/snapshotting on weekends or holidays."""
+    if d is None:
+        d = et_now().date()
+    if d.weekday() not in cfg["trading_days"]:
+        return False
+    return not is_market_holiday(cfg, d)
+
+
 def window_open(cfg):
-    """Return True if current ET time is within the platform's trading session."""
+    """Return True if the market is OPEN right now: a real trading day (weekday, not a
+    holiday) AND inside the platform's session hours."""
     now = et_now()
     sh, sm = cfg["session_start"]
     eh, em = cfg["session_end"]
-    if now.weekday() not in cfg["trading_days"]:
+    if not is_trading_day(cfg, now.date()):   # weekend OR US market holiday -> closed
         return False
     session_start_mins = sh * 60 + sm
     session_end_mins   = eh * 60 + em

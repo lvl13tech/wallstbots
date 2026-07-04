@@ -32,7 +32,7 @@ from bot13_engine import (
     resolve_edge_score,
     run_bot13_equity, check_drawdown,
     EQUITY_CFG,
-    grade, grade_overall, et_now, window_open as _engine_window_open,
+    grade, grade_overall, et_now, window_open as _engine_window_open, is_trading_day,
     session_phase as _engine_session_phase, enrich_position as _engine_enrich,
     stamp_and_log, past_close_out,
 )
@@ -1357,7 +1357,7 @@ def main():
                     _p["day_pnl"] = _p["pnl"]; _p["day_pct"] = _p["pnl_pct"]
 
             # holding_cash for oracle: true on weekends (no active management until Monday)
-            oracle_holding_cash = et_now().weekday() >= 5  # Sat=5, Sun=6
+            oracle_holding_cash = not enriched   # in cash ONLY when it holds no positions (oracle holds its basket through weekends/closed days, so never flag "cash" while invested)
             # Oracle NEVER decides to sit out -- if it holds positions the decision is TRADE.
             if enriched:
                 strategy = {**(strategy or {}), "decision": "TRADE"}
@@ -1589,16 +1589,25 @@ def main():
             "per_rest_dollars": fund.get("per_rest_dollars"),
         }
 
-    # -- Snapshots -------------------------------------------------------------
-    today_snap = {"date": today_iso}
-    for fid in FUND_ORDER:
-        if fid in funds_out:
-            today_snap[fid] = funds_out[fid]["value"]["total"]
-    snapshots = [s for s in snapshots if s.get("date") != today_iso]
-    snapshots = [s for s in snapshots if s.get("date", "") <= today_iso]  # guard: strip any future-dated snapshots
-    snapshots.append(today_snap)
-    snapshots.sort(key=lambda s: s.get("date", ""))
-    snapshots = snapshots[-90:]
+    # -- Snapshots (TRADING DAYS ONLY) -----------------------------------------
+    # The market is closed on weekends and US market holidays, so nothing happens and
+    # we must NOT write a snapshot for those dates -- otherwise the chart shows a flat
+    # holiday point and day_open would baseline off a non-trading day. On a closed day
+    # the funds are only marked-to-market (frozen prices) and carried forward unchanged;
+    # no seeding, no trading (window_open is False), and no snapshot.
+    if is_trading_day(EQUITY_CFG, today):
+        today_snap = {"date": today_iso}
+        for fid in FUND_ORDER:
+            if fid in funds_out:
+                today_snap[fid] = funds_out[fid]["value"]["total"]
+        snapshots = [s for s in snapshots if s.get("date") != today_iso]
+        snapshots = [s for s in snapshots if s.get("date", "") <= today_iso]  # strip any future-dated
+        snapshots.append(today_snap)
+        snapshots.sort(key=lambda s: s.get("date", ""))
+        snapshots = snapshots[-90:]
+    else:
+        print(f"[market closed] {today_iso} ({today.strftime('%A')}) -- weekend/holiday: no snapshot, "
+              f"no seeding or trading this run; funds carried forward frozen.")
 
     # -- Leaderboards ----------------------------------------------------------
     week_start = today - dt.timedelta(days=today.weekday())

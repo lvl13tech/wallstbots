@@ -73,6 +73,11 @@ import json, sys, urllib.request, urllib.parse
 from pathlib import Path
 from datetime import datetime, date
 from zoneinfo import ZoneInfo
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from bot13_engine import is_trading_day as _is_trading_day, EQUITY_CFG as _EQ_CFG, CRYPTO_CFG as _CR_CFG
+except Exception:
+    _is_trading_day = None
 
 ROOT = Path(__file__).resolve().parents[2]
 secrets = {}
@@ -170,12 +175,25 @@ for platform, usize in PLATFORMS.items():
 
     # snapshot structural checks
     dates = [s["date"] for s in dated]
-    if dates.count(TODAY) == 0: FAIL(platform, "snapshots: today missing -> chart is stale")
+    # Holiday-aware: markets are CLOSED on weekends + US holidays, so a non-trading day
+    # legitimately has NO snapshot, and a snapshot must NEVER be dated on one.
+    _cfg = _CR_CFG if platform == "bitbot13" else _EQ_CFG
+    _today_is_trading = (_is_trading_day is None) or _is_trading_day(_cfg, date.fromisoformat(TODAY))
+    if _today_is_trading and dates.count(TODAY) == 0:
+        FAIL(platform, "snapshots: today missing -> chart is stale")
     if dates.count(TODAY) > 1:  FAIL(platform, "snapshots: today duplicated")
     for i in range(1, len(dates)):
         if dates[i] <= dates[i-1]: FAIL(platform, f"snapshots: dates not strictly increasing ({dates[i-1]} -> {dates[i]})")
     for dt in dates:
-        if dt > TODAY: FAIL(platform, f"snapshots: future-dated snapshot {dt}")
+        if dt > TODAY:
+            FAIL(platform, f"snapshots: future-dated snapshot {dt}")
+        elif _is_trading_day is not None:
+            try:
+                if not _is_trading_day(_cfg, date.fromisoformat(dt)):
+                    FAIL(platform, f"snapshots: {dt} is a NON-TRADING day (weekend/holiday) -- a fund "
+                                   f"seeded/snapshotted on a closed market; nothing should run that day")
+            except Exception:
+                pass
     for s in dated:
         miss = [fn for fn in FUNDS if fnum(s.get(fn)) is None]
         if miss: FAIL(platform, f"snapshots {s['date']}: missing funds {miss}")

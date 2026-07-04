@@ -1473,7 +1473,7 @@ def main():
                     _p["day_pnl"] = _p["pnl"]; _p["day_pct"] = _p["pnl_pct"]
 
             # holding_cash for oracle: true on weekends (no active management until Monday)
-            oracle_holding_cash = et_now().weekday() >= 5  # Sat=5, Sun=6
+            oracle_holding_cash = not enriched   # in cash ONLY when it holds no positions (oracle holds its basket through weekends/closed days, so never flag "cash" while invested)
             # Oracle NEVER decides to sit out -- if it holds positions the decision is TRADE.
             if enriched:
                 strategy = {**(strategy or {}), "decision": "TRADE"}
