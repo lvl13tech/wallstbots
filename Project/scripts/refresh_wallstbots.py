@@ -1082,14 +1082,22 @@ def main():
             b13_picks     = ([pk for pk in (prev_b13_strategy or {}).get("picks", []) if pk.get("symbol") in _kept_syms]
                              + [pk for pk in (_f_picks or []) if pk.get("symbol") in _added_syms])
             if _added:
-                b13_rationale = _f_rationale or (prev_b13_strategy or {}).get("rationale", "")
                 b13_proj      = float(_f_proj or 0.0)
             elif b13_positions:
-                b13_rationale = (prev_b13_strategy or {}).get("rationale", "")
                 b13_proj      = float((prev_b13_strategy or {}).get("projected_return", 0.0))
             else:
-                b13_rationale = "Rotated out of losing position(s) to cash -- no stronger name qualified."
                 b13_proj      = 0.0
+            # Rebuild the rationale from the FINAL held names so the Strategy-box prose ALWAYS
+            # lists the same names as the pick cards. (A rotation rebuilt the picks but used to
+            # reuse a stale rationale, so the text named different stocks than the cards.)
+            if b13_picks:
+                _names = ", ".join(pk.get("symbol", "") for pk in b13_picks)
+                _plural = "s" if len(b13_picks) != 1 else ""
+                b13_rationale = (f"Holding {len(b13_picks)} high-conviction name{_plural} "
+                                 f"({_names}). Rotated {len(_exited)} loser(s) into {len(_added)} "
+                                 f"stronger name(s). Stop -{EQUITY_CFG['stop_display']}% | Target +{EQUITY_CFG['target_pct']}%.")
+            else:
+                b13_rationale = "Rotated out of losing position(s) to cash -- no stronger name qualified."
             b13_log       = _f_log or (prev_b13_strategy or {}).get("session_log", [])
             print(f"  BOT13: rotation -> kept {len(_kept)}, exited {len(_exited)}, added {len(_added)}, cash-slots {len(_exited)-len(_added)}")
     elif not _engine_window_open(EQUITY_CFG):

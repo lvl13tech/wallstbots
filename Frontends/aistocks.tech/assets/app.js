@@ -536,6 +536,10 @@ function renderTradeLog(tl, fid, windowOpen){
   var sub  = open ? 'Every buy and sell is timestamped, in the order it happened.'
                   : 'Today\u2019s trades, grouped by symbol \u2014 buy then sell.';
   var _thDate = new Date().toLocaleDateString('en-US', {timeZone:'America/New_York', month:'short', day:'numeric', year:'numeric'});
+  // Show ONLY today's (ET) trades -- the header says "Today", so stale trades from a prior
+  // session (e.g. over a weekend/holiday when nothing traded) must not appear under today's date.
+  var _todayISO = new Date().toLocaleDateString('en-CA', {timeZone:'America/New_York'});  // YYYY-MM-DD
+  tl = (tl || []).filter(function(t){ return String((t && t.ts) || '').slice(0,10) === _todayISO; });
   var head = '<div class="panel"><h3>Trade History - '+_thDate+'</h3>'
     + '<div style="color:var(--muted);font-size:12px;margin:-4px 0 10px">'+sub+'</div>'
     + '<div class="tbl-wrap"><table>'
