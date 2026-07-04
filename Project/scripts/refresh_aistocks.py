@@ -1669,16 +1669,11 @@ def main():
     print(f"[wallstbots] signals -- {n_sig} signals")
     push_to_api("signals", signals_data, secrets)
 
-    # -- News ------------------------------------------------------------------
-    print("[aistocks] fetching news...")
-    news_items = fetch_news(newsapi_key)
-    news_data = {
-        "items":        news_items,
-        "sectors":      sorted({it["sector"] for it in news_items}) if news_items else [],
-        "generated_at": dt.datetime.utcnow().isoformat() + "Z",
-    }
-    print(f"[aistocks] news -- {len(news_items)} articles")
-    push_to_api("news", news_data, secrets)
+    # -- News: owned EXCLUSIVELY by refresh_news.py (Google News RSS, every 4h). The old
+    # per-engine NewsAPI fetch/push was REMOVED 2026-07-04: NewsAPI's free tier rate-limits to
+    # 0, and this ran every refresh with NO skip-guard, so it kept OVERWRITING the good RSS feed
+    # with empty (worst on bitbot13/crypto, which refreshes 24/7 -> news went blank). Do NOT
+    # re-add a news push here. refresh_news.py owns the feed and skips pushing on a 0-item fetch.
 
     # -- Reports (placeholder -- keeps API consistent) --------------------------
     push_to_api("reports", {"reports": [], "generated_at": now_iso}, secrets)
