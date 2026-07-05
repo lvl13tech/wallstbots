@@ -984,14 +984,17 @@ class AdminInviteRequest(BaseModel):
     note: Optional[str] = None
 
 @app.post("/admin/send-invite")
-async def send_admin_invite(request: AdminInviteRequest, current_user: dict = Depends(get_current_user)):
+async def send_admin_invite(request: AdminInviteRequest, current_user: dict = Depends(get_current_user_with_role)):
     """
     Webmaster-only: send a free lifetime account invite with an embedded admin code.
     admin13  → Insider tier (free lifetime)
     adminm13 → Syndicate tier (free lifetime)
     """
-    # Must be admin/webmaster
-    if current_user.get("role") not in ("admin", "webmaster"):
+    # Must be admin/webmaster. "webmaster" lives in subscription_tier, not role --
+    # same check the frontend uses for its isWM gate (dashboard.html).
+    _role = (current_user.get("role") or "").lower()
+    _tier = (current_user.get("subscription_tier") or "").lower()
+    if _role != "admin" and "webmaster" not in _tier:
         raise HTTPException(status_code=403, detail="Admin access required.")
 
     code = request.admin_code.lower()

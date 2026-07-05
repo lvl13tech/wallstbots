@@ -1,6 +1,6 @@
 @echo off
 title DEPLOY BACKEND TO CLOUD RUN
-cd /d "C:\Users\temps\OneDrive\Desktop\Claude\Websites\WallStBots\Backend"
+cd /d "%~dp0Backend"
 
 set LOG=%~dp0deploy-backend-result.txt
 echo === DEPLOY BACKEND TO CLOUD RUN === > "%LOG%"
