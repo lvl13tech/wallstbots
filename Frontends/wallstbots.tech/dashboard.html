@@ -1297,6 +1297,16 @@
   </div>
 </div>
 
+<!-- --- REPORTS MODAL --- -->
+<div class="modal-overlay" id="reportsModal" style="display:none" onclick="if(event.target===this)closeReportsModal()">
+  <div style="background:var(--panel,#12161f);border:1px solid var(--border,#242b38);border-radius:14px;max-width:520px;width:92%;margin:8vh auto;padding:22px 24px;max-height:80vh;overflow:auto">
+    <h2 style="margin:0 0 6px">Monthly Statements</h2>
+    <p style="color:var(--muted);font-size:0.85rem;margin:0 0 12px">Download a combined bank-statement PDF across all your portfolios &mdash; BOT13&rsquo;s daily trades, each bot&rsquo;s monthly P&amp;L, and the weekly &amp; monthly picks.</p>
+    <div id="memberReportsList"><p style="color:var(--muted)">Loading&hellip;</p></div>
+    <div style="text-align:right;margin-top:18px"><button class="btn-copy" onclick="closeReportsModal()">Close</button></div>
+  </div>
+</div>
+
 <!-- --- MAIN --- -->
 <main>
   <div class="page-header">
@@ -1309,6 +1319,7 @@
         <option value="return-asc">Worst Return</option>
         <option value="name-asc">Name A–Z</option>
       </select>
+      <button class="btn-create" id="reportsBtn" style="background:var(--panel2);border:1px solid var(--border);color:var(--text)" onclick="openReportsModal()">Reports</button>
       <button class="btn-create" id="createBtn" onclick="openCreateModal()">+ New Portfolio</button>
     </div>
   </div>
@@ -1501,6 +1512,81 @@
   const BACKEND_URL = "https://wallstbots-backend-868128114349.us-east1.run.app";
   const auth = new WallStBotsAuth(BACKEND_URL);
   const api  = new WallStBotsAPI(BACKEND_URL, auth);
+
+  // ===================== MEMBER REPORTS (monthly bank-statement PDF) =====================
+  const REPORT_BRAND = 'Wall St. Bots';
+  function _repToken(){ try { return auth.getToken ? auth.getToken() : (auth._token || localStorage.getItem('auth_token') || ''); } catch(_) { return localStorage.getItem('auth_token') || ''; } }
+  function _mLabel(ym){ const M=['January','February','March','April','May','June','July','August','September','October','November','December']; const p=String(ym||'').split('-'); if(p.length<2) return ym; return M[(parseInt(p[1],10)||1)-1]+' '+p[0]; }
+  function closeReportsModal(){ const m=document.getElementById('reportsModal'); if(m) m.style.display='none'; }
+  async function openReportsModal(){
+    const m=document.getElementById('reportsModal'); if(!m) return; m.style.display='block';
+    const list=document.getElementById('memberReportsList'); list.innerHTML='<p style="color:var(--muted)">Loading&hellip;</p>';
+    try{
+      const d=await fetch(BACKEND_URL+'/reports/member/available',{headers:{'Authorization':'Bearer '+_repToken()}}).then(r=>r.json());
+      const months=(d&&d.months)||[]; const cur=d&&d.current_month; const rows=[];
+      const mk=(ym,isCur)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border,#242b38)"><span>${_mLabel(ym)}${isCur?' <span style="color:var(--muted);font-size:0.75rem">(so far)</span>':''}</span><button class="btn-copy" onclick="downloadMemberStatement('${ym}',this)">Download PDF</button></div>`;
+      if(cur) rows.push(mk(cur,true));
+      months.filter(x=>x!==cur).forEach(x=>rows.push(mk(x,false)));
+      list.innerHTML = rows.length ? rows.join('') : '<p style="color:var(--muted)">No statements yet &mdash; your first one builds as your portfolios trade this month.</p>';
+    }catch(e){ list.innerHTML='<p style="color:var(--muted)">Couldn&rsquo;t load reports right now.</p>'; }
+  }
+  function _ensureJsPDF(){ return new Promise((res,rej)=>{ if(window.jspdf&&window.jspdf.jsPDF) return res(); const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; sc.onload=()=>res(); sc.onerror=()=>rej(new Error('pdf load')); document.head.appendChild(sc); }); }
+  async function downloadMemberStatement(ym,btn){
+    const lbl=btn?btn.textContent:'';
+    try{ if(btn){ btn.disabled=true; btn.textContent='Preparing…'; }
+      await _ensureJsPDF();
+      const d=await fetch(BACKEND_URL+'/reports/member/monthly?month='+ym,{headers:{'Authorization':'Bearer '+_repToken()}}).then(r=>r.json());
+      if(!d||!d.success) throw new Error('no data');
+      buildMemberStatementPDF(d);
+    }catch(e){ alert('Sorry — could not generate the PDF right now.'); }
+    finally{ if(btn){ btn.disabled=false; btn.textContent=lbl||'Download PDF'; } }
+  }
+  function buildMemberStatementPDF(d){
+    const { jsPDF }=window.jspdf; const doc=new jsPDF({unit:'pt',format:'letter'});
+    const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=48; let y=54;
+    const money=n=>{ n=Number(n)||0; return (n<0?'-$':'$')+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+    const pcts=n=>{ n=Number(n)||0; return (n>=0?'+':'')+n.toFixed(2)+'%'; };
+    const need=h=>{ if(y+h>H-54){ doc.addPage(); y=54; } };
+    const line=()=>{ doc.setDrawColor(210); doc.line(M,y,W-M,y); y+=12; };
+    doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(20); doc.text(REPORT_BRAND, M, y);
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(120); doc.text('Member Monthly Statement', W-M, y, {align:'right'}); y+=20;
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(20); doc.text(d.month_label||d.month||'', M, y);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(140); doc.text('Generated '+String(d.generated_at||'').replace('T',' '), W-M, y, {align:'right'}); y+=8; line();
+    const c=d.combined||{};
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(20); doc.text('All portfolios — combined', M, y); y+=16;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(60);
+    doc.text('Start '+money(c.start_value)+'    End '+money(c.end_value), M, y);
+    doc.setTextColor((Number(c.month_pnl)||0)<0?183:22,22,22);
+    doc.text(money(c.month_pnl)+'  ('+pcts(c.month_pct)+')', W-M, y, {align:'right'}); y+=10; line();
+    (d.portfolios||[]).forEach(p=>{
+      need(30); doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(20);
+      doc.text(String(p.name||'Portfolio')+'  ('+String(p.platform||'')+')', M, y);
+      doc.setTextColor((Number(p.month_pnl)||0)<0?183:22,22,22);
+      doc.text(money(p.month_pnl)+' ('+pcts(p.month_pct)+')', W-M, y, {align:'right'}); y+=16;
+      doc.setFontSize(9); doc.setTextColor(120);
+      doc.text('BOT', M, y); doc.text('MONTH P&L', M+330, y,{align:'right'}); doc.text('%', W-M, y,{align:'right'}); y+=4; line();
+      doc.setFontSize(10);
+      (p.funds||[]).forEach(f=>{ need(16); doc.setTextColor(20); doc.setFont('helvetica','bold'); doc.text(String(f.name)+(f.is_baseline?'  (baseline)':''), M, y);
+        doc.setFont('helvetica','normal'); doc.setTextColor((Number(f.month_pnl)||0)<0?183:20,20,20);
+        doc.text(money(f.month_pnl), M+330, y,{align:'right'}); doc.text(pcts(f.month_pct), W-M, y,{align:'right'}); y+=15; });
+      const b=p.bot13||{}; const days=(b.daily||[]).filter(x=>(x.trades||[]).length);
+      need(18); doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(20); doc.text('BOT13 — daily trades', M, y); y+=13;
+      if(!days.length){ doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(120); doc.text('No BOT13 trades this month yet.', M+14, y); y+=13; }
+      days.forEach(day=>{ need(16); doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(90); doc.text(day.date+'  —  day P&L '+money(day.day_pnl), M+8, y); y+=12;
+        doc.setFont('helvetica','normal'); doc.setFontSize(9);
+        (day.trades||[]).forEach(t=>{ need(12); const isBuy=String(t.action).toUpperCase()==='BUY'; doc.setTextColor(isBuy?20:150,isBuy?120:30,isBuy?60:30);
+          let rt=(isBuy?'BUY  ':'SELL ')+(t.symbol||''); if(t.price!=null) rt+='  @ '+money(t.price); if(!isBuy&&t.realized!=null) rt+='  realized '+money(t.realized);
+          doc.text(rt, M+18, y); y+=11; }); y+=2; });
+      const pk=p.picks||{}; const drawPk=(title,arr)=>{ if(!arr||!arr.length) return; need(16); doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(20); doc.text(title, M, y); y+=12;
+        doc.setFont('helvetica','normal'); doc.setTextColor(80); arr.forEach(x=>{ need(12); doc.text(x.start_date+':  '+((x.symbols||[]).join(', ')), M+14, y); y+=11; }); y+=2; };
+      if((pk.oracle&&pk.oracle.length)||(pk.wizard&&pk.wizard.length)){ need(16); doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(20); doc.text('Strategy picks', M, y); y+=13; drawPk('Oracle — weekly', pk.oracle); drawPk('Wizard — monthly', pk.wizard); }
+      y+=6; need(20); line();
+    });
+    const pages=doc.internal.getNumberOfPages();
+    for(let i=1;i<=pages;i++){ doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(150);
+      doc.text('Simulated performance for education only — not financial advice. '+REPORT_BRAND, M, H-30); doc.text(i+' / '+pages, W-M, H-30, {align:'right'}); }
+    doc.save('my_statement_'+(d.month||'')+'.pdf');
+  }
   if (!auth.isAuthenticated()) { window.location.href = "login.html"; }
 
   const PLATFORM = "wallstbots";

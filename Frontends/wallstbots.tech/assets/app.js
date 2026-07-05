@@ -32,6 +32,8 @@ const FUND_ORDER = ['bot13','oracle','wizard','equalizer','titan'];
 
 const TRACKER_API = 'https://wallstbots-backend-868128114349.us-east1.run.app/public/tracker';
 const API_BASE    = 'https://wallstbots-backend-868128114349.us-east1.run.app';
+const REPORT_PLATFORM = 'wallstbots';   // this site's platform (per-site branding value)
+const REPORT_BRAND    = 'Wall St. Bots';
 
 const JWT_KEY = 'wallstbots_jwt';
 function getJWT()      { try { return localStorage.getItem(JWT_KEY) || localStorage.getItem('auth_token'); } catch(e) { return null; } }
@@ -701,42 +703,188 @@ function renderSignals() {
 }
 
 // ============ PAGE: REPORTS ============
-function renderReports() {
-  const reports = (STATE.reports && STATE.reports.reports) || [];
-  if (!reports.length) {
-    $('app').innerHTML = '<h1>Sunday Reports</h1>'
-      + '<p class="sub">Auto-generated every Sunday. Past-week analysis, fund grades, trade-by-trade review.</p>'
-      + '<div class="panel"><p style="color:var(--muted);text-align:center;padding:20px">No reports yet — first one runs this Sunday.</p></div>'
-      + getYoursHint();
-    return;
-  }
-  const cards = reports.map(r =>
-    '<a class="card clickable" href="#/report/'+r.week_end+'">'
-    + '<h3 style="margin-bottom:4px">Week ending</h3>'
-    + '<div style="font-size:18px;font-weight:700;margin-bottom:14px">'+r.week_end+'</div>'
-    + Object.entries(r.fund_results||{}).map(([id, res]) =>
-        '<div class="stat-row"><span class="stat-label">'+(res.name||id).toUpperCase()+'</span>'
-        + '<span><span class="grade grade-'+(res.week_grade||'C')[0]+'">'+res.week_grade+'</span>'
-        + '<span class="'+cls(res.week_pct)+'" style="margin-left:8px;font-weight:600">'+fmtPct(res.week_pct)+'</span></span></div>'
-      ).join('') + '</a>').join('');
-  $('app').innerHTML = '<h1>Sunday Reports</h1>'
-    + '<p class="sub">Auto-generated every Sunday at market close.</p>'
-    + '<div class="grid grid-3">'+cards+'</div>' + getYoursHint();
+function monthLabel(ym){
+  const M=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const p=String(ym||'').split('-'); if(p.length<2) return ym;
+  return M[(parseInt(p[1],10)||1)-1]+' '+p[0];
 }
 
-function renderReport(weekEnd) {
-  const reports = (STATE.reports && STATE.reports.reports) || [];
-  const report = reports.find(r => r.week_end === weekEnd);
-  if (!report) { $('app').innerHTML = '<p>Report not found.</p>'; return; }
-  const fundCards = Object.entries(report.fund_results||{}).map(([fid, res]) =>
-    '<div class="card"><div class="fund-head">'
-    + '<div><div class="fund-name">'+(res.name||fid)+'</div><div class="fund-tag">'+escapeHtml(res.narrative||'')+'</div></div>'
-    + '<div style="margin-left:auto"><span class="grade grade-'+(res.week_grade||'C')[0]+'">'+res.week_grade+'</span></div></div>'
-    + '<div class="stat-row"><span class="stat-label">Week P&amp;L</span><span class="stat-val '+cls(res.week_pnl)+'">'+fmt$(res.week_pnl)+' ('+fmtPct(res.week_pct)+')</span></div></div>'
-  ).join('');
-  $('app').innerHTML = '<h1>Weekly Report — '+report.week_start+' to '+report.week_end+'</h1>'
-    + '<p class="sub">Generated '+report.report_date+'</p>'
-    + '<div class="grid grid-3">'+fundCards+'</div>' + getYoursHint();
+// Reports page: list every month with a bank-statement PDF download.
+function renderReports(){
+  $('app').innerHTML='<h1>Monthly Reports</h1>'
+    +'<p class="sub">Bank-statement-style performance reports. Download any month as a PDF \u2014 BOT13\u2019s daily trades, every bot\u2019s monthly P&amp;L, and the weekly &amp; monthly picks.</p>'
+    +'<div class="panel" id="repList"><p style="color:var(--muted);text-align:center;padding:20px">Loading reports\u2026</p></div>'
+    +getYoursHint();
+  fetch(API_BASE+'/public/reports/available?platform='+REPORT_PLATFORM,{cache:'no-store'})
+    .then(r=>r.json()).then(d=>{
+      const el=$('repList'); if(!el) return;
+      const months=(d&&d.months)||[]; const cur=d&&d.current_month;
+      const rows=[];
+      if(cur) rows.push(reportCard(cur,true));
+      months.filter(m=>m!==cur).forEach(m=>rows.push(reportCard(m,false)));
+      el.innerHTML = rows.length
+        ? '<div class="grid grid-3">'+rows.join('')+'</div>'
+        : '<p style="color:var(--muted);text-align:center;padding:20px">No reports yet \u2014 statements begin accumulating this month.</p>';
+    }).catch(()=>{ const el=$('repList'); if(el) el.innerHTML='<p style="color:var(--muted);text-align:center;padding:20px">Couldn\u2019t load reports right now.</p>'; });
+}
+
+function reportCard(ym,isCurrent){
+  return '<div class="card">'
+    +'<h3 style="margin-bottom:2px">'+monthLabel(ym)+'</h3>'
+    +'<div style="font-size:12px;color:var(--muted);margin-bottom:14px">'+(isCurrent?'This month so far':'Full month')+'</div>'
+    +'<div class="hero-ctas" style="gap:8px;flex-wrap:wrap">'
+    +'<button class="btn btn-primary" onclick="downloadStatementPDF(\''+ym+'\',this)">Download PDF</button>'
+    +'<a class="btn btn-secondary" href="#/report/'+ym+'">View</a>'
+    +'</div></div>';
+}
+
+// On-page preview of a single month (also offers the PDF).
+function renderReport(ym){
+  $('app').innerHTML='<h1>'+monthLabel(ym)+' Statement</h1>'
+    +'<p class="sub">'+REPORT_BRAND+' \u2014 simulated performance</p>'
+    +'<div style="margin-bottom:14px"><button class="btn btn-primary" onclick="downloadStatementPDF(\''+ym+'\',this)">Download PDF</button> '
+    +'<a class="btn btn-secondary" href="#/reports">All reports</a></div>'
+    +'<div class="panel" id="repView"><p style="color:var(--muted);text-align:center;padding:20px">Loading\u2026</p></div>';
+  fetch(API_BASE+'/public/reports/monthly?platform='+REPORT_PLATFORM+'&month='+ym,{cache:'no-store'})
+    .then(r=>r.json()).then(d=>{ const el=$('repView'); if(el) el.innerHTML=reportPreviewHTML(d); })
+    .catch(()=>{ const el=$('repView'); if(el) el.innerHTML='<p style="color:var(--muted);text-align:center;padding:20px">Couldn\u2019t load this statement.</p>'; });
+}
+
+function reportPreviewHTML(d){
+  if(!d||!d.success) return '<p style="color:var(--muted);text-align:center;padding:20px">No data for this month yet.</p>';
+  const funds=(d.funds||[]).map(f=>
+    '<div class="stat-row"><span class="stat-label">'+escapeHtml(f.name)+(f.is_baseline?' <span style="color:var(--muted);font-size:11px">(baseline)</span>':'')+'</span>'
+    +'<span class="'+cls(f.month_pnl)+'" style="font-weight:600">'+fmt$(f.month_pnl)+' ('+fmtPct(f.month_pct)+')</span></div>').join('');
+  const b=d.bot13||{}; const days=(b.daily||[]).filter(x=>(x.trades||[]).length);
+  const bDaily = days.length ? days.map(day=>
+    '<div style="margin:8px 0"><div style="font-size:12px;color:var(--muted);margin-bottom:2px">'+day.date+'  \u2014  day P&amp;L '+fmt$(day.day_pnl)+'</div>'
+    +(day.trades||[]).map(t=>
+      '<div class="stat-row" style="padding:2px 0"><span class="stat-label"><span class="'+((String(t.action).toUpperCase()==='BUY')?'pos':'neg')+'">'+escapeHtml(t.action)+'</span> '+escapeHtml(t.symbol||'')+'</span>'
+      +'<span style="font-size:12px">'+((t.price!=null)?('@ '+fmt$(t.price)):'')+((t.realized!=null&&String(t.action).toUpperCase()==='SELL')?('  \u2014  '+fmt$(t.realized)):'')+'</span></div>').join('')
+    +'</div>').join('') : '<p style="color:var(--muted);font-size:13px">No BOT13 trades recorded this month yet.</p>';
+  const picks=(d.picks||{}); 
+  const pickBlock=(title,arr)=> (arr&&arr.length)? '<div style="margin-top:8px"><div style="font-weight:600">'+title+'</div>'
+      +arr.map(p=>'<div style="font-size:13px;color:var(--muted)">'+p.start_date+': '+escapeHtml((p.symbols||[]).join(', '))+'</div>').join('')+'</div>' : '';
+  return '<h3 style="margin-bottom:8px">Monthly P&amp;L by bot</h3>'+funds
+    +'<h3 style="margin:16px 0 8px">BOT13 \u2014 daily trades</h3>'+bDaily
+    +((picks.oracle&&picks.oracle.length)||(picks.wizard&&picks.wizard.length)?'<h3 style="margin:16px 0 8px">Strategy picks</h3>'+pickBlock('Oracle (weekly)',picks.oracle)+pickBlock('Wizard (monthly)',picks.wizard):'');
+}
+
+// Lazy-load jsPDF (only when a download is requested).
+function ensureJsPDF(){
+  return new Promise((resolve,reject)=>{
+    if(window.jspdf&&window.jspdf.jsPDF) return resolve();
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload=()=>resolve(); s.onerror=()=>reject(new Error('PDF library failed to load'));
+    document.head.appendChild(s);
+  });
+}
+
+async function downloadStatementPDF(ym,btn){
+  const label=btn?btn.textContent:''; 
+  try{
+    if(btn){ btn.disabled=true; btn.textContent='Preparing\u2026'; }
+    await ensureJsPDF();
+    const d=await fetch(API_BASE+'/public/reports/monthly?platform='+REPORT_PLATFORM+'&month='+ym,{cache:'no-store'}).then(r=>r.json());
+    if(!d||!d.success) throw new Error('no data');
+    buildStatementPDF(d);
+  }catch(e){ alert('Sorry \u2014 could not generate the PDF right now.'); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent=label||'Download PDF'; } }
+}
+
+// Render the bank-statement PDF from backend-computed numbers (frontend draws only).
+function buildStatementPDF(d){
+  const { jsPDF }=window.jspdf;
+  const doc=new jsPDF({unit:'pt',format:'letter'});
+  const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=48;
+  let y=54;
+  const money=n=>{ n=Number(n)||0; return (n<0?'-$':'$')+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+  const pcts=n=>{ n=Number(n)||0; return (n>=0?'+':'')+n.toFixed(2)+'%'; };
+  const need=h=>{ if(y+h>H-54){ doc.addPage(); y=54; } };
+  const line=()=>{ doc.setDrawColor(210); doc.line(M,y,W-M,y); y+=12; };
+
+  // Header
+  doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(20);
+  doc.text(REPORT_BRAND, M, y);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(120);
+  doc.text('Monthly Performance Statement', W-M, y, {align:'right'}); y+=20;
+  doc.setFontSize(13); doc.setTextColor(20); doc.setFont('helvetica','bold');
+  doc.text(d.month_label||d.month||'', M, y);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(140);
+  doc.text('Generated '+String(d.generated_at||'').replace('T',' '), W-M, y, {align:'right'}); y+=8;
+  line();
+
+  // Summary table: monthly P&L by bot
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(20);
+  doc.text('Monthly P&L by bot', M, y); y+=16;
+  doc.setFontSize(9); doc.setTextColor(120);
+  doc.text('BOT', M, y); doc.text('START', M+230, y,{align:'right'}); doc.text('END', M+330, y,{align:'right'});
+  doc.text('MONTH P&L', M+450, y,{align:'right'}); doc.text('%', W-M, y,{align:'right'}); y+=6; line();
+  doc.setFontSize(10);
+  (d.funds||[]).forEach(f=>{
+    need(18);
+    doc.setTextColor(20); doc.setFont('helvetica','bold');
+    doc.text(String(f.name)+(f.is_baseline?'  (baseline)':''), M, y);
+    doc.setFont('helvetica','normal'); doc.setTextColor(60);
+    doc.text(money(f.start_value), M+230, y,{align:'right'});
+    doc.text(money(f.end_value),   M+330, y,{align:'right'});
+    doc.setTextColor((Number(f.month_pnl)||0)<0?190:20); if((Number(f.month_pnl)||0)>=0) doc.setTextColor(20);
+    doc.setTextColor((Number(f.month_pnl)||0)<0?183:22,(Number(f.month_pnl)||0)<0?28:22,(Number(f.month_pnl)||0)<0?28:22);
+    doc.text(money(f.month_pnl), M+450, y,{align:'right'});
+    doc.text(pcts(f.month_pct), W-M, y,{align:'right'});
+    y+=17;
+  });
+  y+=6; line();
+
+  // BOT13 daily trades
+  need(24); doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(20);
+  const b=d.bot13||{};
+  doc.text('BOT13 \u2014 daily trades  ('+money(b.month_pnl)+' this month, '+pcts(b.month_pct)+')', M, y); y+=16;
+  const days=(b.daily||[]).filter(x=>(x.trades||[]).length);
+  if(!days.length){ doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(120);
+    doc.text('No BOT13 trades recorded this month yet.', M, y); y+=18; }
+  days.forEach(day=>{
+    need(20); doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(90);
+    doc.text(day.date+'   \u2014   day P&L '+money(day.day_pnl), M, y); y+=14;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+    (day.trades||[]).forEach(t=>{
+      need(14);
+      const isBuy=String(t.action).toUpperCase()==='BUY';
+      doc.setTextColor(isBuy?20:150,isBuy?120:30,isBuy?60:30);
+      doc.text((isBuy?'BUY  ':'SELL ')+(t.symbol||''), M+14, y);
+      doc.setTextColor(80);
+      let rt=[]; if(t.shares!=null) rt.push(Number(t.shares).toLocaleString()+' u'); if(t.price!=null) rt.push('@ '+money(t.price));
+      if(!isBuy&&t.realized!=null) rt.push('realized '+money(t.realized));
+      doc.text(rt.join('   '), M+120, y); y+=13;
+    });
+    y+=4;
+  });
+  y+=6; need(30); line();
+
+  // Strategy picks
+  const picks=d.picks||{};
+  const drawPicks=(title,arr)=>{
+    if(!arr||!arr.length) return;
+    need(20); doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(20);
+    doc.text(title, M, y); y+=14; doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(80);
+    arr.forEach(p=>{ need(13); doc.text(p.start_date+':  '+((p.symbols||[]).join(', ')), M+14, y); y+=13; });
+    y+=4;
+  };
+  if((picks.oracle&&picks.oracle.length)||(picks.wizard&&picks.wizard.length)){
+    need(22); doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(20);
+    doc.text('Strategy picks', M, y); y+=16;
+    drawPicks('Oracle \u2014 weekly', picks.oracle);
+    drawPicks('Wizard \u2014 monthly', picks.wizard);
+  }
+
+  // Footer on every page
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){ doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(150);
+    doc.text('Simulated performance for education only \u2014 not financial advice. '+REPORT_BRAND, M, H-30);
+    doc.text(i+' / '+pages, W-M, H-30, {align:'right'});
+  }
+  doc.save(REPORT_PLATFORM+'_statement_'+(d.month||'')+'.pdf');
 }
 
 // ============ PAGE: GET YOURS ============

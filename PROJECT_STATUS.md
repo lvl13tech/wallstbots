@@ -618,6 +618,31 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+- **2026-07-04 (NEW FEATURE: monthly bank-statement Reports — public + member).
+  Built + verified, staged.** Deploy: `DEPLOY-reports-feature_2026-07-04.bat`.
+  - Durable archive: new `daily_fund_archive` table (auto-created; schema also in
+    `Backend/reports_archive_migration.sql`). Backend archives one row per fund per day
+    from data the engines ALREADY push — ZERO engine changes. Hooks run on their own DB
+    connection AFTER the live push commits (`_archive_state_push` in `tracker_push`;
+    `_archive_member_states` in `upsert_portfolio_bot_state`), so a report hiccup can
+    never touch trading data. RESET-AWARE: the archive only holds data on/after each
+    fund's inception (reset) date — a reset sets inception=today, and the next push prunes
+    any pre-inception rows and refuses to backfill before it, so history self-heals to
+    start at the reset date (a reset was run today → reports start empty, fill from today).
+  - Endpoints (backend computes every number): `/public/reports/available`,
+    `/public/reports/monthly` (public, per site) and `/reports/member/available`,
+    `/reports/member/monthly` (authed, `get_current_user`). Monthly P&L per fund =
+    end-value − prior-month-end (or starting capital / first observed value at launch).
+  - Frontend (parity, 3 sites): repurposed the `#/reports` + `#/report/<month>` routes
+    (were the old weekly reports) into a monthly Reports page; bank-statement PDF built
+    in-browser via jsPDF (lazy-loaded from cdnjs). Member dashboard: a "Reports" button +
+    modal + combined-statement PDF (all portfolios + BOT13 daily trades + each bot's
+    monthly P&L + weekly/monthly picks). Per-site only differs by REPORT_PLATFORM/BRAND.
+  - Verified: main.py compiles; archive + monthly-aggregation logic unit-tested offline
+    (P&L, BOT13 daily/trade-count, baseline flag, pick history); all app.js + dashboard
+    inline JS pass `node --check`; reports blocks byte-identical across the 3 sites.
+  - Deploys via one push (Backend/** → Cloud Run Action; frontends → Cloudflare Pages).
+
 - **2026-07-04 (BOT13 authoritative trade ledger — replaces snapshot-diff inference).
   Built + verified, staged.** Deploy: `DEPLOY-bot13-authoritative-ledger_2026-07-04.bat`.
   - Problem: BOT13's Trade History was never recorded at execution time; the engine inferred

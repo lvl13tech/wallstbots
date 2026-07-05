@@ -1831,6 +1831,167 @@ async def get_active_portfolios(
         return_db_connection(conn)
 
 
+# ============================================================================
+# REPORTS -- durable daily archive (feeds the monthly bank-statement PDFs)
+# ----------------------------------------------------------------------------
+# tracker_live_data keeps only ONE upserted row per platform, so month-over-month
+# history is not retained there. These helpers persist one durable row per fund per
+# day into daily_fund_archive: monthly P&L for every fund, plus BOT13's daily trades
+# and Oracle/Wizard strategy picks. They run on their OWN connection AFTER the live
+# push has already committed, so a report-archive hiccup can never affect trading data.
+# ============================================================================
+PUBLIC_BOT_ID = "00000000-0000-0000-0000-000000000000"  # sentinel bot_id for public platform funds
+
+
+def _ensure_archive_table(cursor):
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS daily_fund_archive (
+            platform      TEXT        NOT NULL,
+            bot_id        UUID        NOT NULL,
+            fund_name     TEXT        NOT NULL,
+            archive_date  DATE        NOT NULL,
+            total_value   NUMERIC(16,2),
+            pnl           NUMERIC(16,2),
+            pnl_pct       NUMERIC(12,4),
+            day_pnl       NUMERIC(16,2),
+            day_pct       NUMERIC(12,4),
+            positions     JSONB,
+            strategy      JSONB,
+            trade_log     JSONB,
+            updated_at    TIMESTAMPTZ DEFAULT NOW(),
+            PRIMARY KEY (platform, bot_id, fund_name, archive_date)
+        )
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_dfa_lookup "
+                   "ON daily_fund_archive (platform, bot_id, archive_date)")
+
+
+def _afloat(x, default=0.0):
+    try:
+        return float(x)
+    except (TypeError, ValueError):
+        return default
+
+
+def _archive_state_push(platform, data):
+    """Archive public-platform funds into the durable report store.
+
+    Reset-aware: the archive must NEVER hold data from before a fund's current inception
+    (reset) date. A reset sets inception = today, so on the next push this prunes every
+    row older than inception and refuses to backfill anything before it -> the report
+    history self-heals to start exactly at the reset date, with no pre-reset data.
+
+    (1) Prune rows older than each fund's inception.
+    (2) Backfill total_value from the rolling 90-day snapshots, but ONLY on/after inception.
+    (3) Rewrite TODAY's rich row per fund (trades + strategy + P&L), which converges to the
+        full trading day."""
+    if not isinstance(data, dict):
+        return
+    funds     = data.get("funds") or {}
+    snapshots = data.get("snapshots") or []
+    from zoneinfo import ZoneInfo
+    et_date = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
+    # Each fund's inception (reset) date. Only trust a well-formed YYYY-MM-DD.
+    incep = {}
+    for fid, fund in funds.items():
+        iv = str((fund or {}).get("inception") or "")[:10]
+        incep[fid] = iv if len(iv) == 10 else None
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        _ensure_archive_table(cursor)
+        # (1) Prune any pre-inception rows (self-heals the archive after a reset).
+        for fid, iv in incep.items():
+            if iv:
+                cursor.execute(
+                    "DELETE FROM daily_fund_archive WHERE platform=%s AND bot_id=%s "
+                    "AND fund_name=%s AND archive_date < %s",
+                    (platform, PUBLIC_BOT_ID, fid, iv))
+        # (2) Backfill monthly totals, but never before inception (and, if inception is
+        #     unknown for a fund, never backfill history at all -- today only).
+        for snap in snapshots:
+            sd = str(snap.get("date") or "")[:10]
+            if not sd:
+                continue
+            for fid, tot in snap.items():
+                if fid == "date":
+                    continue
+                iv = incep.get(fid)
+                if iv:
+                    if sd < iv:
+                        continue
+                elif sd < et_date:
+                    continue
+                cursor.execute("""
+                    INSERT INTO daily_fund_archive (platform, bot_id, fund_name, archive_date, total_value)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON CONFLICT (platform, bot_id, fund_name, archive_date) DO NOTHING
+                """, (platform, PUBLIC_BOT_ID, fid, sd, round(_afloat(tot), 2)))
+        # (3) Today's rich row per fund (always on/after inception).
+        for fid, fund in funds.items():
+            v = (fund or {}).get("value") or {}
+            cursor.execute("""
+                INSERT INTO daily_fund_archive
+                    (platform, bot_id, fund_name, archive_date, total_value, pnl, pnl_pct,
+                     day_pnl, day_pct, positions, strategy, trade_log, updated_at)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, NOW())
+                ON CONFLICT (platform, bot_id, fund_name, archive_date) DO UPDATE SET
+                    total_value = EXCLUDED.total_value, pnl = EXCLUDED.pnl, pnl_pct = EXCLUDED.pnl_pct,
+                    day_pnl = EXCLUDED.day_pnl, day_pct = EXCLUDED.day_pct,
+                    positions = EXCLUDED.positions, strategy = EXCLUDED.strategy,
+                    trade_log = EXCLUDED.trade_log, updated_at = NOW()
+            """, (
+                platform, PUBLIC_BOT_ID, fid, et_date,
+                round(_afloat(v.get("total")), 2), round(_afloat(v.get("pnl")), 2), round(_afloat(v.get("pnl_pct")), 4),
+                round(_afloat(v.get("day_pnl")), 2), round(_afloat(v.get("day_pct")), 4),
+                json.dumps(v.get("positions") or []),
+                json.dumps((fund or {}).get("current_strategy") or {}),
+                json.dumps(v.get("trade_log") or []),
+            ))
+        conn.commit()
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
+def _archive_member_states(results, et_date):
+    """Archive one durable row per member portfolio fund per day (feeds member monthly
+    reports). platform is fixed to 'member' so the archive key stays stable per portfolio."""
+    if not results:
+        return
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        _ensure_archive_table(cursor)
+        for r in results:
+            bot_id = r.get("bot_id")
+            if not bot_id:
+                continue
+            cursor.execute("""
+                INSERT INTO daily_fund_archive
+                    (platform, bot_id, fund_name, archive_date, total_value, pnl, pnl_pct,
+                     day_pnl, day_pct, positions, strategy, trade_log, updated_at)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, NOW())
+                ON CONFLICT (platform, bot_id, fund_name, archive_date) DO UPDATE SET
+                    total_value = EXCLUDED.total_value, pnl = EXCLUDED.pnl, pnl_pct = EXCLUDED.pnl_pct,
+                    day_pnl = EXCLUDED.day_pnl, day_pct = EXCLUDED.day_pct,
+                    positions = EXCLUDED.positions, strategy = EXCLUDED.strategy,
+                    trade_log = EXCLUDED.trade_log, updated_at = NOW()
+            """, (
+                "member", bot_id, r.get("fund_name"), et_date,
+                round(_afloat(r.get("total_value")), 2), round(_afloat(r.get("gain_loss")), 2),
+                round(_afloat(r.get("gain_loss_pct")), 4),
+                round(_afloat(r.get("day_pnl")), 2), round(_afloat(r.get("day_pct")), 4),
+                json.dumps(r.get("positions") or []),
+                json.dumps(r.get("strategy") or {}),
+                json.dumps(r.get("trade_log") or []),
+            ))
+        conn.commit()
+    finally:
+        cursor.close()
+        return_db_connection(conn)
+
+
 @app.post("/internal/tracker/push")
 async def tracker_push(
     payload: TrackerPushRequest,
@@ -1852,6 +2013,12 @@ async def tracker_push(
         """, (payload.data_type, payload.platform, json.dumps(payload.data)))
         row = cursor.fetchone()
         conn.commit()
+        # Durable monthly-report archive -- isolated; never blocks the live state push.
+        if payload.data_type == "state":
+            try:
+                _archive_state_push(payload.platform, payload.data)
+            except Exception as _arch_e:
+                print(f"[reports-archive] state archive skipped: {_arch_e!r}")
         return {
             "success":   True,
             "id":        row["id"],
@@ -2100,6 +2267,11 @@ async def upsert_portfolio_bot_state(
             upserted += 1
 
         conn.commit()
+        # Durable monthly-report archive for member portfolios -- isolated; never blocks the upsert.
+        try:
+            _archive_member_states(results, today_str)
+        except Exception as _arch_e:
+            print(f"[reports-archive] member archive skipped: {_arch_e!r}")
         return {"success": True, "upserted": upserted, "date": today_str}
     except Exception as e:
         conn.rollback()
@@ -2337,6 +2509,241 @@ async def tracker_read(data_type: str, platform: str = "aistocks"):
     finally:
         cursor.close()
         return_db_connection(conn)
+
+# ============================================================================
+# REPORTS -- monthly bank-statement data (backend computes every number; the
+# frontend only renders the PDF). Reads the durable daily_fund_archive.
+# ============================================================================
+REPORT_PLATFORMS = {"wallstbots", "aistocks", "bitbot13"}
+REPORT_SC = {"wallstbots": 55000.0, "aistocks": 50000.0, "bitbot13": 50000.0}
+FUND_META = {
+    "bot13":     {"name": "BOT13",     "kind": "daily",    "baseline": False},
+    "oracle":    {"name": "Oracle",    "kind": "weekly",   "baseline": False},
+    "wizard":    {"name": "Wizard",    "kind": "monthly",  "baseline": False},
+    "equalizer": {"name": "Equalizer", "kind": "baseline", "baseline": True},
+    "titan":     {"name": "Titan",     "kind": "baseline", "baseline": True},
+}
+FUND_ORDER = ["bot13", "oracle", "wizard", "equalizer", "titan"]
+_MONTHS = ["", "January", "February", "March", "April", "May", "June",
+           "July", "August", "September", "October", "November", "December"]
+
+
+def _month_bounds(month):
+    """'YYYY-MM' -> (first_iso, next_first_iso, 'Month YYYY'). Raises 400 on bad input."""
+    try:
+        y, m = month.split("-"); y = int(y); m = int(m)
+        assert 1 <= m <= 12
+    except Exception:
+        raise HTTPException(status_code=400, detail="month must be 'YYYY-MM'")
+    first = f"{y:04d}-{m:02d}-01"
+    ny, nm = (y + 1, 1) if m == 12 else (y, m + 1)
+    return first, f"{ny:04d}-{nm:02d}-01", f"{_MONTHS[m]} {y}"
+
+
+def _pos_symbols(positions):
+    out = []
+    for p in (positions or []):
+        if isinstance(p, dict) and p.get("symbol"):
+            out.append(p["symbol"])
+    return out
+
+
+def _build_month_report(cursor, platform, bot_id, month, sc_default):
+    """Aggregate one (platform, bot_id) portfolio's month into report data.
+    Returns per-fund monthly P&L (all 5 funds), BOT13 daily trade detail, and the
+    Oracle/Wizard pick history derived from the symbols each fund held."""
+    first, nxt, _label = _month_bounds(month)
+    cursor.execute("""
+        SELECT fund_name, archive_date, total_value, day_pnl, positions, trade_log
+        FROM daily_fund_archive
+        WHERE platform=%s AND bot_id=%s AND archive_date >= %s AND archive_date < %s
+        ORDER BY fund_name, archive_date
+    """, (platform, bot_id, first, nxt))
+    rows = cursor.fetchall()
+    # baseline value = each fund's last total the day BEFORE this month (else fund's sc)
+    cursor.execute("""
+        SELECT DISTINCT ON (fund_name) fund_name, total_value
+        FROM daily_fund_archive
+        WHERE platform=%s AND bot_id=%s AND archive_date < %s
+        ORDER BY fund_name, archive_date DESC
+    """, (platform, bot_id, first))
+    prior = {r["fund_name"]: float(r["total_value"] or 0) for r in cursor.fetchall()}
+
+    by_fund = {}
+    for r in rows:
+        by_fund.setdefault(r["fund_name"], []).append(r)
+
+    def _jload(x, d):
+        if x is None: return d
+        if isinstance(x, (list, dict)): return x
+        try: return json.loads(x)
+        except Exception: return d
+
+    funds_out = []
+    for fid in FUND_ORDER:
+        frows = by_fund.get(fid) or []
+        if not frows and fid not in prior:
+            continue
+        end_value = float(frows[-1]["total_value"] or 0) if frows else prior.get(fid, sc_default)
+        start_value = prior.get(fid)
+        if start_value is None:
+            start_value = float(frows[0]["total_value"] or sc_default) if frows else sc_default
+        month_pnl = round(end_value - start_value, 2)
+        month_pct = round((month_pnl / start_value * 100) if start_value else 0.0, 2)
+        meta = FUND_META.get(fid, {"name": fid, "kind": "", "baseline": False})
+        funds_out.append({
+            "fund": fid, "name": meta["name"], "kind": meta["kind"], "is_baseline": meta["baseline"],
+            "start_value": round(start_value, 2), "end_value": round(end_value, 2),
+            "month_pnl": month_pnl, "month_pct": month_pct, "days": len(frows),
+        })
+
+    # BOT13 daily trade detail
+    bot13 = {"daily": [], "trade_count": 0, "start_value": 0.0, "end_value": 0.0,
+             "month_pnl": 0.0, "month_pct": 0.0}
+    b_rows = by_fund.get("bot13") or []
+    if b_rows or "bot13" in prior:
+        b_start = prior.get("bot13")
+        if b_start is None:
+            b_start = float(b_rows[0]["total_value"] or sc_default) if b_rows else sc_default
+        b_end = float(b_rows[-1]["total_value"] or 0) if b_rows else b_start
+        for r in b_rows:
+            trades = _jload(r["trade_log"], [])
+            if trades:
+                bot13["trade_count"] += len(trades)
+            bot13["daily"].append({
+                "date": str(r["archive_date"]),
+                "end_value": round(float(r["total_value"] or 0), 2),
+                "day_pnl": round(float(r["day_pnl"] or 0), 2),
+                "trades": trades,
+            })
+        bot13["start_value"] = round(b_start, 2)
+        bot13["end_value"] = round(b_end, 2)
+        bot13["month_pnl"] = round(b_end - b_start, 2)
+        bot13["month_pct"] = round((bot13["month_pnl"] / b_start * 100) if b_start else 0.0, 2)
+
+    # Oracle (weekly) + Wizard (monthly) pick history from held symbols
+    picks = {}
+    for fid in ("oracle", "wizard"):
+        seq, last = [], None
+        for r in (by_fund.get(fid) or []):
+            syms = sorted(_pos_symbols(_jload(r["positions"], [])))
+            if syms and syms != last:
+                seq.append({"start_date": str(r["archive_date"]), "symbols": syms})
+                last = syms
+        picks[fid] = seq
+
+    return {"funds": funds_out, "bot13": bot13, "picks": picks}
+
+
+@app.get("/public/reports/available")
+async def public_reports_available(platform: str):
+    if platform not in REPORT_PLATFORMS:
+        raise HTTPException(status_code=400, detail="unknown platform")
+    from zoneinfo import ZoneInfo
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        _ensure_archive_table(cursor)
+        cursor.execute("""
+            SELECT DISTINCT to_char(archive_date, 'YYYY-MM') AS ym
+            FROM daily_fund_archive WHERE platform=%s AND bot_id=%s
+            ORDER BY ym DESC
+        """, (platform, PUBLIC_BOT_ID))
+        months = [r["ym"] for r in cursor.fetchall()]
+        cur = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m")
+        return {"success": True, "platform": platform, "current_month": cur, "months": months}
+    finally:
+        cursor.close(); return_db_connection(conn)
+
+
+@app.get("/public/reports/monthly")
+async def public_reports_monthly(platform: str, month: str):
+    if platform not in REPORT_PLATFORMS:
+        raise HTTPException(status_code=400, detail="unknown platform")
+    from zoneinfo import ZoneInfo
+    _first, _nxt, label = _month_bounds(month)
+    sc = REPORT_SC.get(platform, 50000.0)
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        _ensure_archive_table(cursor)
+        rep = _build_month_report(cursor, platform, PUBLIC_BOT_ID, month, sc)
+        return {
+            "success": True, "platform": platform, "month": month, "month_label": label,
+            "starting_capital": sc,
+            "generated_at": datetime.now(ZoneInfo("America/New_York")).isoformat(timespec="seconds"),
+            **rep,
+        }
+    finally:
+        cursor.close(); return_db_connection(conn)
+
+
+@app.get("/reports/member/available")
+async def member_reports_available(current_user: dict = Depends(get_current_user)):
+    from zoneinfo import ZoneInfo
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        _ensure_archive_table(cursor)
+        cursor.execute("SELECT id FROM bots WHERE user_id=%s AND status != 'deleted'",
+                       (current_user["user_id"],))
+        bot_ids = [str(b["id"]) for b in cursor.fetchall()]
+        if not bot_ids:
+            cur = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m")
+            return {"success": True, "current_month": cur, "months": []}
+        cursor.execute("""
+            SELECT DISTINCT to_char(archive_date, 'YYYY-MM') AS ym
+            FROM daily_fund_archive WHERE platform='member' AND bot_id = ANY(%s)
+            ORDER BY ym DESC
+        """, (bot_ids,))
+        months = [r["ym"] for r in cursor.fetchall()]
+        cur = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m")
+        return {"success": True, "current_month": cur, "months": months}
+    finally:
+        cursor.close(); return_db_connection(conn)
+
+
+@app.get("/reports/member/monthly")
+async def member_reports_monthly(month: str, current_user: dict = Depends(get_current_user)):
+    from zoneinfo import ZoneInfo
+    _first, _nxt, label = _month_bounds(month)
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(row_factory=dict_row)
+        _ensure_archive_table(cursor)
+        cursor.execute("""
+            SELECT id, name, platform FROM bots
+            WHERE user_id=%s AND status != 'deleted' ORDER BY created_at ASC
+        """, (current_user["user_id"],))
+        bots = cursor.fetchall()
+        portfolios, c_start, c_end = [], 0.0, 0.0
+        for b in bots:
+            rep = _build_month_report(cursor, "member", str(b["id"]), month, 0.0)
+            if not rep["funds"]:
+                continue
+            p_start = round(sum(f["start_value"] for f in rep["funds"]), 2)
+            p_end = round(sum(f["end_value"] for f in rep["funds"]), 2)
+            c_start += p_start; c_end += p_end
+            portfolios.append({
+                "bot_id": str(b["id"]), "name": b["name"], "platform": b["platform"],
+                "start_value": p_start, "end_value": p_end,
+                "month_pnl": round(p_end - p_start, 2),
+                "month_pct": round(((p_end - p_start) / p_start * 100) if p_start else 0.0, 2),
+                **rep,
+            })
+        return {
+            "success": True, "month": month, "month_label": label,
+            "generated_at": datetime.now(ZoneInfo("America/New_York")).isoformat(timespec="seconds"),
+            "combined": {
+                "start_value": round(c_start, 2), "end_value": round(c_end, 2),
+                "month_pnl": round(c_end - c_start, 2),
+                "month_pct": round(((c_end - c_start) / c_start * 100) if c_start else 0.0, 2),
+            },
+            "portfolios": portfolios,
+        }
+    finally:
+        cursor.close(); return_db_connection(conn)
+
 
 # ============================================================================
 # STOCK SEARCH
