@@ -1616,7 +1616,18 @@
     const sel=selEl?selEl.value:"personal";
     btn.disabled=true;btn.textContent="Sending…";msg.textContent="";
     try{
-      const tok=localStorage.getItem("auth_token")||localStorage.getItem("aistocks_jwt");
+      // Refresh the JWT first (same as every other authenticated call via
+      // api.js's request()) — without this, a session open longer than the
+      // token's lifetime hits a 401 "Token expired" here before the invite
+      // is ever sent.
+      const refreshed = await auth.refreshTokenIfNeeded();
+      if(!refreshed){
+        msg.style.color="var(--red)";
+        msg.textContent="Your session expired — please log in again.";
+        btn.disabled=false;btn.textContent="Send";
+        return;
+      }
+      const tok=auth.getToken()||localStorage.getItem("auth_token")||localStorage.getItem("aistocks_jwt");
       // Admin comp codes (admin13/adminm13) route through the webmaster-only
       // /admin/send-invite endpoint, which sends the "free lifetime account"
       // template. The personal code keeps using /account/invite (50%-off
