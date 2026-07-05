@@ -1106,14 +1106,33 @@ def main():
         b13_proj      = float(b13_prev_strategy.get("projected_return", 0.0))
         print(f"  BOT13: close-out -- flattened {len(stored_positions)} position(s) at 9pm ET")
     elif not window_open:
-        # Outside trading window -- carry forward last session's decision and positions
-        b13_decision  = b13_prev_strategy.get("decision", "HOLD")
-        b13_positions = stored_positions  # preserve for receipt display
-        b13_picks     = b13_prev_strategy.get("picks", [])
-        b13_rationale = b13_prev_strategy.get("rationale", "")
-        b13_log       = b13_prev_strategy.get("session_log", [])
-        b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
-        print(f"  BOT13: {b13_decision} (outside trading window {TRADING_WINDOW_START}am-{TRADING_WINDOW_END-12}pm ET -- carrying forward last session)")
+        # Outside trading window. BOT13 is a DAILY bot -- it NEVER holds across days. Carry last
+        # session's positions for the receipt display ONLY if they are from TODAY. Positions left
+        # over from a PRIOR day (a missed 9pm cron, a day roll, or a mid-cycle reset) are stamped
+        # closed at that day's 9pm session close and dropped, so BOT13 can never carry stale
+        # holdings across midnight (which made Trade History show yesterday's positions with no log).
+        _pos_day = (b13_prev_strategy or {}).get("day")
+        if stored_positions and _pos_day not in (None, today_iso):
+            _eh, _em = CRYPTO_CFG["session_end"]
+            _close_ts = f"{_pos_day}T{_eh:02d}:{_em:02d}:00"
+            for p in stored_positions:
+                p["exit_reason"] = p.get("exit_reason") or "daily close-out (9pm ET)"
+                p["exit_time"]   = p.get("exit_time") or _close_ts
+            b13_decision  = "HOLD"
+            b13_positions = []            # prior day's positions are closed -- BOT13 starts flat
+            b13_picks     = []
+            b13_rationale = "Prior session closed out -- BOT13 starts each day flat."
+            b13_log       = []
+            b13_proj      = 0.0
+            print(f"  BOT13: dropped {len(stored_positions)} stale position(s) from {_pos_day} (never carry across days)")
+        else:
+            b13_decision  = b13_prev_strategy.get("decision", "HOLD")
+            b13_positions = stored_positions  # today's positions -- preserve for receipt display
+            b13_picks     = b13_prev_strategy.get("picks", [])
+            b13_rationale = b13_prev_strategy.get("rationale", "")
+            b13_log       = b13_prev_strategy.get("session_log", [])
+            b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
+            print(f"  BOT13: {b13_decision} (outside trading window {TRADING_WINDOW_START}am-{TRADING_WINDOW_END-12}pm ET -- carrying forward last session)")
     elif stops_triggered:
         # Stop-loss triggered -- mark stopped positions and open fresh picks
         now_exit = et_now().isoformat(timespec="seconds")
