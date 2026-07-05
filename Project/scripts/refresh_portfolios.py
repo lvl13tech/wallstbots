@@ -39,7 +39,7 @@ from bot13_engine import (
     resolve_edge_score,
     run_bot13_equity, run_bot13_crypto,
     EQUITY_CFG, CRYPTO_CFG,
-    et_now, window_open as _window_open,
+    et_now, window_open as _window_open, next_trading_day,
     session_phase as _session_phase,
     check_drawdown, enrich_position,
     stamp_and_log, past_close_out,
@@ -568,7 +568,25 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
         except Exception:
             created_date = None
         if created_date is not None and today <= created_date:
-            print(f"  [portfolios] skipping bot_id={bot_id} -- created {created_date} (ET); activates next trading session")
+            # A portfolio NEVER trades on its creation day (day-1 numbers would be fake). Instead of
+            # skipping it (which left the page blank), write a PENDING state at starting capital so the
+            # member sees their portfolio at cost with a clear "trading begins next session" message.
+            # It activates -- takes its first REAL entries -- at the next trading session.
+            _oc = round(len(universe) * 1000.0, 2)
+            try:
+                _starts = next_trading_day(cfg, created_date).isoformat()
+            except Exception:
+                _starts = ""
+            for _fn in ["bot13", "oracle", "wizard", "equalizer", "titan"]:
+                results.append({
+                    "bot_id": bot_id, "fund_name": _fn, "positions": [], "trade_log": [],
+                    "strategy": {"decision": "PENDING", "pending": True, "starts_on": _starts,
+                                 "rationale": f"Trading begins the next trading session ({_starts})."},
+                    "total_value": _oc, "entry_cost": _oc, "gain_loss": 0.0, "gain_loss_pct": 0.0,
+                    "day_pnl": 0.0, "day_pct": 0.0, "window_open": False, "holding_cash": True,
+                    "traded_today": False, "closed_out": False,
+                })
+            print(f"  [portfolios] bot_id={bot_id} PENDING -- created {created_date} (ET); trading begins {_starts}")
             continue
 
         if len(universe) < 5:
@@ -785,49 +803,82 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 strategy     = {"decision": "TRADE"}
                 holding_cash = not positions
 
-            # --- Transparency ledger (member side): stamp opens + BUY/SELL log ---
-            # Box F (Trade History) is BOT13-ONLY. Baselines/swing/hold bots were
-            # generating spurious BUY/SELL/RESIZE rows from the >2% share-drift rule,
-            # so we only run the ledger for bot13 and clear any stale log otherwise.
+            # --- Member Trade History = the member's OWN BOT13 trades (data-integrity Rule 0:
+            #     verifiable from THIS portfolio's real entries, NEVER scaled from the tracker) ---
             _member_traded_today = False
             if fund_name == "bot13":
-                # DERIVE the member trade history from the tracker's AUTHORITATIVE bot13
-                # trade_log (same buys, sells, rotations, and close-outs the main site
-                # shows), scaled to this member's balance. This guarantees member and
-                # main pages always agree -- the old independent re-diff dropped the
-                # close-out SELLs (BUYs showed, SELLs didn't). Scale shares & realized by
-                # the member ratio (member_value / tracker total); price/action/ts/symbol
-                # are identical. TODAY-ONLY: keep only rows stamped today.
-                _tracker_log = (tracker_funds.get("bot13") or {}).get("trade_log") or []
-                _tf_total    = float((tracker_funds.get("bot13") or {}).get("total") or 0)
-                _ratio       = (member_value / _tf_total) if _tf_total > 0 else 0.0
-                _today       = et_now().date().isoformat()
-                _trade_log   = []
-                for e in _tracker_log:
-                    if str(e.get("ts", ""))[:10] != _today:
-                        continue  # today-only log
-                    row = dict(e)
-                    if e.get("shares") is not None:
-                        row["shares"] = round(float(e["shares"]) * _ratio, 6)
-                    if e.get("realized") is not None:
-                        row["realized"] = round(float(e["realized"]) * _ratio, 2)
-                    _trade_log.append(row)
-                _has_sell = any(str(r.get("action","")).upper() == "SELL" for r in _trade_log)
+                _today_iso = et_now().date().isoformat()
+                _trade_log = [dict(e) for e in (b13_log or []) if str(e.get("ts", ""))[:10] == _today_iso]
                 _member_traded_today = bool(_trade_log) or _member_closed_out
             else:
                 _trade_log = []
 
-            # Reconcile member Holdings TODAY with the fund's Today's Change (PARITY with the
-            # public engines refresh_wallstbots/aistocks/bitbot13.py): if this buy-and-hold fund
-            # deployed fresh capital today, its positions were NOT held at yesterday's close, so
-            # each position's day change is measured from entry (== its pnl). Otherwise Holdings
-            # shows a full-day move the fund never took. bot13 is intraday -- handled separately.
-            if fund_name != "bot13" and positions and member_day_open:
-                _m_held = sum(float(_p.get("shares") or 0) * prev_closes.get(_p["symbol"], _p.get("price") or 0) for _p in positions)
-                if abs(_m_held - member_day_open) > max(1.0, member_day_open * 0.001):
-                    for _p in positions:
-                        if _p.get("pnl") is not None:
-                            _p["day_pnl"] = _p["pnl"]; _p["day_pct"] = _p.get("pnl_pct", 0)
+            # ===== REAL, INDEPENDENT DOLLAR VALUES (data-integrity mission -- CLAUDE.md Rule 0) =====
+            # Each member fund is its OWN simulation, seeded at original_cost (= N x $1,000) on THIS
+            # portfolio's creation day. total = the LIVE value of the fund's own positions (+ carried
+            # cash on a cash day) -- never scaled from the platform tracker, never inheriting prior
+            # gains. Day 1 opens at original_cost, so Today's Change == Total P&L on day 1 and every
+            # number is verifiable from the member's real entry prices.
+            # Re-mark EVERY holding to LIVE prices (held oracle/wizard lots are otherwise reused
+            # stale) so both the total and the Holdings table are current and verifiable.
+            _pv = 0.0
+            for _p in positions:
+                _sh = float(_p.get("shares") or 0)
+                _px = float(prices.get(_p.get("symbol"), _p.get("price") or 0) or 0)
+                _en = float(_p.get("entry_price") or 0)
+                _cb = float(_p.get("cost_basis") or (_sh * _en))
+                _val = round(_sh * _px, 2)
+                _pc = float(prev_closes.get(_p.get("symbol"), _px) or _px)
+                _p["price"]   = _px
+                _p["value"]   = _val
+                _p["pnl"]     = round(_val - _cb, 2)
+                _p["pnl_pct"] = round((_px / _en - 1) * 100, 2) if _en > 0 else 0
+                _p["day_pnl"] = round(_sh * (_px - _pc), 2)
+                _p["day_pct"] = round((_px / _pc - 1) * 100, 2) if _pc > 0 else 0
+                _pv += _val
+            _pos_value = round(_pv, 2)
+            if fund_name == "bot13":
+                _carry = float(b13_capital)
+            elif fund_name == "oracle":
+                _carry = float(prev_oracle_total)
+            elif fund_name == "wizard":
+                _carry = float(prev_wizard_total)
+            else:
+                _carry = float(original_cost)            # equalizer/titan are always fully invested
+            real_total = _pos_value if positions else round(_carry, 2)
+
+            # Day-1 rule + day_open carry (per fund, ET). First-ever run -> day 1 opens at cost.
+            _ps_map = {"bot13": b13_state, "oracle": oracle_state, "wizard": wizard_state,
+                       "equalizer": eq_state, "titan": titan_state}
+            _ps            = _ps_map.get(fund_name, {})
+            _prev_total_f  = float(_ps.get("total_value") or 0)
+            _prev_dayopen  = float((_ps.get("strategy") or {}).get("_day_open") or 0)
+            _prev_asof     = str((_ps.get("strategy") or {}).get("_asof") or _ps.get("snapshot_date") or "")[:10]
+            _is_day1       = _prev_total_f <= 0
+            if _is_day1:
+                fund_day_open = float(original_cost)      # DAY 1: opens at starting capital
+            elif _prev_asof != today_iso:
+                fund_day_open = _prev_total_f             # new day: prior close becomes today's open
+            else:
+                fund_day_open = _prev_dayopen if _prev_dayopen > 0 else _prev_total_f
+
+            member_value  = real_total
+            gain_loss     = round(real_total - original_cost, 2)
+            gain_loss_pct = round(gain_loss / original_cost * 100, 4) if original_cost else 0.0
+            day_pnl       = round(real_total - fund_day_open, 2)
+            day_pct       = round(day_pnl / fund_day_open * 100, 4) if fund_day_open else 0.0
+            strategy["_day_open"] = round(fund_day_open, 2)   # persist so tomorrow can open correctly
+            strategy["_asof"]     = today_iso
+
+            # Holdings "Today's Change" must sum to the fund's Today's Change. On day 1 every lot was
+            # opened today, so each lot's day change is measured from its ENTRY (== its pnl), not a
+            # prior close it never saw. (Held-overnight lots keep their prev_close day change.)
+            _first_trading = (not (_ps.get("positions"))) and bool(positions)   # first day this fund holds
+            if (_is_day1 or _first_trading) and positions:
+                for _p in positions:
+                    if _p.get("pnl") is not None:
+                        _p["day_pnl"] = _p["pnl"]
+                        _p["day_pct"] = _p.get("pnl_pct", 0)
 
             results.append({
                 "bot_id":        bot_id,

@@ -129,6 +129,22 @@ def is_trading_day(cfg, d=None):
     return not is_market_holiday(cfg, d)
 
 
+def next_trading_day(cfg, d=None):
+    """The next REAL trading day strictly AFTER date d (ET). Crypto -> tomorrow; equity ->
+    the next weekday that is not a US market holiday. Used to tell users exactly when a
+    freshly created portfolio (or a just-reset fund) will begin trading -- nothing trades on
+    its creation/reset day; it holds starting capital flat and opens at the next session."""
+    import datetime as _dt
+    if d is None:
+        d = et_now().date()
+    nd = d + _dt.timedelta(days=1)
+    for _ in range(14):   # safety cap
+        if is_trading_day(cfg, nd):
+            return nd
+        nd = nd + _dt.timedelta(days=1)
+    return nd
+
+
 def window_open(cfg):
     """Return True if the market is OPEN right now: a real trading day (weekday, not a
     holiday) AND inside the platform's session hours."""

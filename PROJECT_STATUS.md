@@ -618,6 +618,35 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+- **2026-07-05 (Next-session start — nothing trades on creation/reset day). Built + verified,
+  staged.** Deploy: `DEPLOY-next-session-start_2026-07-05.bat`.
+  - Rule refined (CLAUDE.md Rule 0): a fund/portfolio holds starting capital flat on its
+    creation/reset day and takes its first REAL entries at the NEXT trading session.
+  - Public engines (parity): Oracle/Wizard/Equalizer/Titan now gated to `today>inception`
+    (BOT13 already was) — a reset lands everything flat that day, real entries next open.
+  - Member: created-today portfolios get a PENDING state at cost (not blank) + first-trading-day
+    holdings measure Today's Change from real entries. New shared `next_trading_day()` (crypto=next
+    day; equity skips weekends+holidays). Portfolio page (3 sites) shows a "Trading begins <day>"
+    banner using the real start date. All compile; next_trading_day logic unit-tested; parity ok.
+
+- **2026-07-05 (DATA-INTEGRITY / DAY-1 RULE — Rule 0 established + fixes). Built + verified,
+  staged.** Deploy: `DEPLOY-day1-integrity_2026-07-05.bat`.
+  - Mission recorded as **CLAUDE.md Rule 0**: Day 1 = day of reset/creation; starting capital =
+    N×$1,000; no inherited/scaled/fictitious numbers; everything verifiable from real day-1 entries.
+  - Midday bitbot13 audit: fund numbers correct (BOT13 +$1,227.75 real), but the **per-holding
+    "Today's Change"** used yesterday's close as the baseline for a lot bought TODAY (NOT bought on
+    a dip → showed −$2,097 vs +$1,227). Fixed in `enrich_position` (3 engines, parity): a lot whose
+    entry_time is today baselines off its **entry price**, not prior close.
+  - **CRITICAL member bug fixed:** member value was `original_cost × platform_total/platform_sc` —
+    a portfolio created on day 30 inherited 30 days of platform gains, and a reset would crater
+    members. Rewrote `refresh_portfolios.py` so each member fund is its **own** simulation valued
+    from its **own live positions**, seeded at cost on the portfolio's creation day (day 1 opens at
+    cost). Member BOT13 Trade History now = the member's own trades. Held lots re-marked to live
+    prices each run. Value logic unit-tested (day-1 new portfolio = 0%, day-30 create = 0%, held
+    day-2, cash day, intraday re-run all correct).
+  - Audit updated: dropped obsolete member==platform-scaled check; now verifies member independence.
+  - Files: 3 engines, refresh_portfolios.py, audit_integrity.py, CLAUDE.md. All compile; parity ok.
+
 - **2026-07-04 (Marketing copy rewrite — all 3 product sites). Built + verified, staged.**
   Deploy: `DEPLOY-copy-rewrite_2026-07-04.bat` (frontend only; Cloudflare Pages).
   - Home hero sells BOT13 as "the one to watch" — honest, no fabricated numbers ("results

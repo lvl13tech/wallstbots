@@ -46,6 +46,32 @@ reference site.** (lvl13.tech, the parent site, is outside this parity set — s
 
 ---
 
+## Rule 0 — Data Integrity Is the Mission (overrides everything)
+
+**Data integrity is this platform's mission statement.** Every number shown must be REAL and
+VERIFIABLE from real trades. Nothing fictitious, ever — no matter how convenient.
+
+**The Day-1 Rule (every fund AND every member portfolio, all 5 bots + baselines):**
+
+- A fund is **reset** / a portfolio is **created** on day 0. There is no "before."
+- Starting capital = **(number of assets) × $1,000**. Nothing else.
+- **Nothing trades on the creation/reset day.** The fund/portfolio holds starting capital flat
+  that day and takes its **first real entries at the NEXT trading session** (crypto = next day;
+  equity = next weekday, skipping weekends + US market holidays). This keeps every entry clean at
+  a real session open — no partial-day numbers to reconcile. Show users a clear "trading begins
+  <next session>" message until then. (`next_trading_day()` in `bot13_engine.py` computes the date.)
+- **Never** inherit prior data, **never** scale from the platform's since-launch performance, and
+  **never** reference "yesterday / last session" for something that started today.
+- Every trade must be verifiable from its real entry price.
+
+This is a simple concept. Do not "make it up" or make it more complicated. Members will constantly
+create portfolios — day 1 is the common case. A new portfolio starts at its own capital and tracks
+forward from its own real entries; a reset restarts a fund the same way. If code violates this, the
+code is wrong. (Historical bug: member value was scaled by `platform_total / platform_sc`, so a
+portfolio created on day 30 inherited 30 days of platform gains — forbidden by this rule.)
+
+---
+
 ## Rule 1 — Smallest Possible Change
 
 Make the smallest change that achieves the goal. Do not refactor, rename, reformat, or

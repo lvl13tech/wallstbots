@@ -488,18 +488,20 @@ async function loadSiteData() {
   // DO NOT render here — holdings may not be loaded yet
 }
 
+function niceDate(iso){ try{ var d=new Date(String(iso)+'T12:00:00'); return d.toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'}); }catch(e){ return String(iso||''); } }
 function renderFundStats() {
-  // -- Activation pending banner ---------------------------------------------
+  // -- Activation pending banner: nothing trades on the creation day; the PENDING state carries the
+  // next-session start date; the portfolio takes its first REAL entries then.
   const hasSimulated = fundState && fundState.snapshot_date;
-  const createdAt    = botData && botData.created_at ? botData.created_at.slice(0, 10) : null;
-  const todayIso     = new Date().toISOString().slice(0, 10);
+  const _strat       = (fundState && fundState.strategy) || {};
+  const isPending    = (_strat.pending === true) || (_strat.decision === 'PENDING') || !hasSimulated;
+  const _startsOn    = _strat.starts_on || '';
   const activationEl = document.getElementById('activationBanner');
   if (activationEl) {
-    if (!hasSimulated) {
-      const isCreatedToday = createdAt === todayIso;
-      const msg = isCreatedToday
-        ? '🕐 Your portfolio activates next trading day. Bots begin simulating from market open (9:30 AM ET).'
-        : '⏳ Simulation data is being prepared. Check back after the next market open (9:30 AM ET).';
+    if (isPending) {
+      const _when = _startsOn ? niceDate(_startsOn) : 'the next trading session';
+      const _cap$ = '$' + (holdings.length * 1000).toLocaleString();
+      const msg = '🕐 Your portfolio is set. <strong>Trading begins ' + _when + '</strong> — the bots take their first positions at the next market open, starting fresh at your ' + _cap$ + ' (' + holdings.length + ' × $1,000). Nothing trades before then, so every number is real from day one.';
       activationEl.innerHTML = `<div style="background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.25);border-radius:10px;padding:14px 18px;color:var(--blue);font-size:13px;margin-bottom:18px;line-height:1.6">${msg}</div>`;
     } else {
       activationEl.innerHTML = '';
@@ -526,7 +528,7 @@ function renderFundStats() {
   document.getElementById('fsDayPct').className    = 'fund-pnl ' + cls(dayPct);
 
   // -- Strategy panel: use per-portfolio simulation if available --
-  if (hasSimulated && ['bot13','oracle','wizard'].includes(BOT_SLUG) && fundState.strategy) {
+  if (!isPending && hasSimulated && ['bot13','oracle','wizard'].includes(BOT_SLUG) && fundState.strategy) {
     document.getElementById('strategyPanel').innerHTML = renderStrategyPanel(BOT_SLUG, fundState.strategy);
   } else {
     document.getElementById('strategyPanel').innerHTML = '';

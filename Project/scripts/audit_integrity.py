@@ -440,15 +440,14 @@ for platform, usize in PLATFORMS.items():
         bs = f"{best:+.2f}%" if best>-1e8 else "-"; ws = f"{worst:+.2f}%" if worst<1e8 else "-"
         print(f"\n   BOT13 record (from {len(b13)} snapshots): up={up} down={down} cash={cash} best={bs} worst={ws}")
 
-    # ---------- MEMBER pages vs PUBLIC pages ----------
-    # Member portfolios ARE the public pages scaled to the member's capital, written by
-    # refresh_portfolios.py (the 4th parity target). Read each member fund-state via the
-    # internal endpoint and reconcile INTERNALLY and AGAINST the public fund:
+    # ---------- MEMBER portfolios (INDEPENDENT sims -- Rule 0) ----------
+    # Member portfolios are their OWN simulations, seeded at their own cost (N x $1,000) on their
+    # creation day and tracking forward from real entries -- NOT scaled from the platform. Read each
+    # member fund-state via the internal endpoint and reconcile INTERNALLY (the only thing that must
+    # hold, and the thing the mission demands -- every number verifiable from the member's entries):
     #   total_value == entry_cost + gain_loss ; gain_loss_pct == gain_loss/entry_cost*100
-    #   total_value == entry_cost * (public_total / public_sc)  (correct scaling)
-    #   gain_loss_pct == public pnl_pct                         (capital-neutral match)
-    # day_pnl/day_pct live behind member-session auth so are not readable here; they are
-    # fixed at source (day_pnl == gain_loss on the member's day 1).
+    # day_pnl/day_pct live behind member-session auth so are not readable here; they are fixed at
+    # source (day_pnl == gain_loss on the member's day 1; day_open == cost on the creation day).
     if KEY:
         probe = get(f"{BACKEND}/internal/portfolios/active?platform={platform}", KEY)
         if "_error" in probe:
@@ -471,15 +470,15 @@ for platform, usize in PLATFORMS.items():
                         FAIL(ms, f"total_value {tv} != entry_cost+gain_loss {round(ec+gl,2)}")
                     if glp is not None and gl is not None and ec not in (None,0) and not approx(glp, gl/ec*100, 0.2):
                         FAIL(ms, f"gain_loss_pct {glp} != gain_loss/entry_cost*100 {round(gl/ec*100,2)}")
-                    pv = (funds.get(fund) or {}).get("value") or {}
-                    pT = fnum(pv.get("total")); pPP = fnum(pv.get("pnl_pct"))
-                    if tv is not None and ec is not None and pT is not None and sc and not approx(tv, ec*(pT/sc), max(1.0, abs(tv)*0.015)):
-                        FAIL(ms, f"total_value {tv} != entry_cost*public_total/sc {round(ec*(pT/sc),2)} (member/public scaling off)")
-                    if glp is not None and pPP is not None and not approx(glp, pPP, 0.2):
-                        FAIL(ms, f"member gain_loss_pct {glp} != public pnl_pct {pPP} (member/public mismatch)")
+                    # DATA-INTEGRITY RULE 0: member portfolios are INDEPENDENT simulations seeded at
+                    # their OWN cost (N x $1,000) on their creation day -- they are NOT scaled from the
+                    # platform, so member==public scaling is NO LONGER expected (a portfolio made on
+                    # day 30 must start at 0%, not inherit the platform's since-launch gains). What
+                    # must hold is internal consistency, verifiable from the member's own entries:
+                    # Current Value == cost + P&L, and P&L% == P&L / cost (checked above).
                     checked += 1
             if not QUIET:
-                print(f"\n   MEMBER vs PUBLIC: reconciled {checked} member fund-states (Current Value + Total P&L scale correctly)")
+                print(f"\n   MEMBER (independent sims): reconciled {checked} fund-states (total == cost + P&L; no platform scaling)")
     else:
         if not QUIET: print("\n   MEMBER checks skipped (no internal key in secrets.json)")
 

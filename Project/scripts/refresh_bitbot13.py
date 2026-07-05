@@ -323,6 +323,14 @@ def enrich_position(pos, prices, prev_closes):
             pos["shares"]      = shares
     cost_basis = shares * entry  # always recompute; stored cost_basis may be stale after inception reset
     prev       = prev_closes.get(sym, price)
+    # A lot OPENED TODAY (intraday) was not held overnight, so its "Today's Change" baseline is
+    # the price it was actually bought at -- NOT yesterday's close. Using prev_close would show a
+    # phantom move vs a day the lot wasn't held and would stop the Holdings box from summing to the
+    # fund's Today's Change (e.g. BOT13 buys a dip below yesterday's close -> the lot is UP vs its
+    # entry but "down" vs prev_close). Lots held from a prior day keep the prev_close baseline.
+    _et_today = str(pos.get("entry_time") or "")[:10]
+    if _et_today and _et_today == et_now().date().isoformat() and entry > 0:
+        prev = entry
     value      = shares * price
     pnl        = value - cost_basis
     pnl_pct    = (price / entry - 1) * 100 if entry > 0 else 0
@@ -1311,7 +1319,8 @@ def main():
     oracle_new_picks     = None
     oracle_new_rationale = None
     oracle_new_proj      = 0.0
-    if (is_monday or oracle_needs_seed) and hist_data and window_open:
+    if (is_monday or oracle_needs_seed) and hist_data and window_open \
+       and today_iso > str(funds.get("oracle", {}).get("inception") or today_iso):
         print(f"[bitbot13] {'Monday' if is_monday else 'first run'} -- running ORACLE recompute...")
         # Compounding: deploy the fund's CURRENT balance into new picks, not the
         # original starting capital -- so winnings are reinvested each rotation.
@@ -1333,7 +1342,8 @@ def main():
     wizard_new_picks     = None
     wizard_new_rationale = None
     wizard_new_proj      = 0.0
-    if (is_month_start or wizard_needs_seed) and hist_data and window_open:
+    if (is_month_start or wizard_needs_seed) and hist_data and window_open \
+       and today_iso > str(funds.get("wizard", {}).get("inception") or today_iso):
         print(f"[bitbot13] {'Month start' if is_month_start else 'first run'} ({today_iso}) -- running WIZARD recompute...")
         # HOLDOVER GUARD (see oracle): inception day -> deploy exactly sc; afterwards compound.
         _wizard_incep   = str(funds.get("wizard", {}).get("inception") or today_iso)
@@ -1584,7 +1594,8 @@ def main():
             # Equalizer + Titan -- mark-to-market; auto-seed on first run
             raw_pos = fund.get("value", {}).get("positions", [])
 
-            if not raw_pos and fid == "equalizer" and prices and window_open:
+            if not raw_pos and fid == "equalizer" and prices and window_open \
+               and today_iso > str(fund.get("inception") or today_iso):
                 per_coin = sc / len(UNIVERSE)
                 for sym in UNIVERSE:
                     price = prev_closes.get(sym) or prices.get(sym, 0)
@@ -1598,7 +1609,8 @@ def main():
                         })
                 print(f"  EQUALIZER: seeded {len(raw_pos)} positions at ${per_coin:.0f}/coin")
 
-            elif not raw_pos and fid == "titan" and prices and window_open:
+            elif not raw_pos and fid == "titan" and prices and window_open \
+                 and today_iso > str(fund.get("inception") or today_iso):
                 top10    = fund.get("top10") or []
                 per_top  = float(fund.get("per_top_dollars") or 0)
                 per_rest = float(fund.get("per_rest_dollars") or 0)
