@@ -124,21 +124,13 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
   </div>
+  <!-- 2026-07-05: this page had its own stale, duplicated copy of the account
+       drawer (Profile/Referral/Reset Password) that had drifted out of parity
+       with dashboard.html's real Invite & Earn implementation. Removed --
+       "Manage Account" below links to the one real account page instead.
+       Portfolio Settings below is page-specific and stays here. -->
   <div class="drawer-section">
-    <div class="tier-row">
-      <span class="tier-badge" id="drawerTierBadge">FREE</span>
-      <span class="tier-name" id="drawerTierName">Free Plan</span>
-    </div>
-    <div class="profile-email" id="drawerEmail">Loading…</div>
-    <button class="btn-outline" onclick="openPwModal()">Reset Password</button>
-  </div>
-  <div class="drawer-section">
-    <div class="drawer-section-title">Referral</div>
-    <div class="referral-box">
-      <span class="referral-code" id="drawerRefCode">———</span>
-      <button class="btn-copy" onclick="copyReferral()">Copy</button>
-    </div>
-    <div class="referral-stats">Referrals: <span id="drawerRefCount">0</span></div>
+    <a href="dashboard.html" class="manage-link">Manage Account &amp; Referrals →</a>
   </div>
   <div class="drawer-section" id="drawerPortfolioSection" style="display:none">
     <div class="drawer-section-title">Portfolio Settings</div>
@@ -173,19 +165,7 @@
     <div id="sharedWithList" style="margin-top:4px"></div>
   </div>
   <div class="drawer-section">
-    <a href="#/dashboard" class="manage-link">Manage Subscription →</a>
-  </div>
-</div>
-
-<!-- -- Password Reset Modal -- -->
-<div class="modal-overlay" id="pwModal">
-  <div class="modal-box">
-    <h3>Reset Password</h3>
-    <p id="pwModalText">We'll send a reset link to your email address.</p>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closePwModal()">Cancel</button>
-      <button class="btn-confirm" id="pwConfirmBtn" onclick="sendPasswordReset()">Send Reset Link</button>
-    </div>
+    <a href="dashboard.html" class="manage-link">Manage Subscription →</a>
   </div>
 </div>
 
@@ -1001,32 +981,9 @@ async function loadSubscriptionInfo() {
 
 function openDrawer()  { document.getElementById('accountDrawer').classList.add('open'); document.getElementById('drawerOverlay').classList.add('open'); }
 function closeDrawer() { document.getElementById('accountDrawer').classList.remove('open'); document.getElementById('drawerOverlay').classList.remove('open'); }
-function openPwModal()  { document.getElementById('pwModal').classList.add('open'); }
-function closePwModal() { document.getElementById('pwModal').classList.remove('open'); }
-
-async function sendPasswordReset() {
-  const btn = document.getElementById('pwConfirmBtn');
-  btn.textContent = 'Sending…'; btn.disabled = true;
-  try {
-    const email = userProfile?.email;
-    if (!email) throw new Error('No email found');
-    await auth.resetPassword(email);
-    document.getElementById('pwModalText').textContent = 'Reset link sent! Check your email.';
-    btn.style.display = 'none';
-  } catch(e) {
-    document.getElementById('pwModalText').textContent = 'Could not send reset link. Try again.';
-    btn.textContent = 'Retry'; btn.disabled = false;
-  }
-}
-
-function copyReferral() {
-  const code = document.getElementById('drawerRefCode').textContent;
-  if (code && code !== '———') {
-    navigator.clipboard.writeText(code)
-      .then(() => showToast('Referral code copied!', 'success'))
-      .catch(() => showToast('Copy failed', 'error'));
-  }
-}
+// openPwModal/closePwModal/sendPasswordReset/copyReferral removed 2026-07-05 --
+// they belonged to this page's stale duplicated account section (now a link to
+// dashboard.html instead). See note above the drawer markup.
 
 // -- Privacy & Sharing ---------------------------------------------------------
 async function loadPrivacySettings() {

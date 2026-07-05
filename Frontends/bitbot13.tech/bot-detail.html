@@ -271,7 +271,7 @@
         </a>
       </div>
     </div>
-    <button class="account-btn" onclick="openDrawer()">My Account</button>
+    <a href="dashboard.html" class="account-btn">My Account</a>
   </div>
 </header>
 
@@ -286,54 +286,12 @@
 <div class="mob-nav-overlay" id="mobNavOverlay" onclick="closeMobNav()"></div>
 
 <!-- -- ACCOUNT DRAWER -- -->
-<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
-<div class="drawer" id="accountDrawer">
-  <div class="drawer-header">
-    <h2>My Account</h2>
-    <button class="drawer-close" onclick="closeDrawer()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
-  <div class="drawer-section">
-    <div class="drawer-section-title">Profile</div>
-    <div class="profile-email" id="drawerEmail">Loading…</div>
-    <button class="btn-outline" onclick="openPwModal()">🔑 Reset Password</button>
-  </div>
-  <div class="drawer-section">
-    <div class="drawer-section-title">Membership</div>
-    <div class="tier-row">
-      <span class="tier-badge" id="drawerTierBadge">Free</span>
-      <span class="tier-name" id="drawerTierName">Free Plan</span>
-    </div>
-    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:6px">Status: <span id="drawerStatus" style="color:var(--text);font-weight:500">—</span></div>
-    <div style="font-size:0.8rem;color:var(--muted)">Renewal: <span id="drawerBillDate" style="color:var(--text);font-weight:500">—</span></div>
-  </div>
-  <div class="drawer-section">
-    <div class="drawer-section-title">Referral Program</div>
-    <div class="referral-box">
-      <span class="referral-code" id="drawerRefCode">———</span>
-      <button class="btn-copy" onclick="copyReferral()">Copy</button>
-    </div>
-    <div class="referral-stats"><span id="drawerRefCount">0</span> referrals · Earn 1 free month per 3 referrals</div>
-  </div>
-  <div class="drawer-section">
-    <a href="#/dashboard" class="manage-link">Manage Subscription →</a>
-  </div>
-</div>
-
-<!-- -- PASSWORD RESET MODAL -- -->
-<div class="modal-overlay" id="pwModal">
-  <div class="modal-box">
-    <h3>Reset Password</h3>
-    <p id="pwModalText">We'll send a reset link to your email address.</p>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closePwModal()">Cancel</button>
-      <button class="btn-confirm" id="pwConfirmBtn" onclick="sendPasswordReset()">Send Reset Link</button>
-    </div>
-  </div>
-</div>
+<!-- Removed 2026-07-05: this page had its own stale, duplicated copy of the
+     account drawer (no Invite & Earn, no admin codes, no email prefs) that had
+     silently drifted out of parity with dashboard.html's real implementation.
+     "My Account" now links to dashboard.html instead, matching the pattern
+     leaderboard.html already used -- one real account drawer, zero duplicates,
+     permanently. See PROJECT_STATUS.md 2026-07-05 session log. -->
 
 <!-- -- DELETE PORTFOLIO MODAL -- -->
 <div class="modal-overlay" id="deleteModal">
@@ -1241,50 +1199,9 @@ function togglePlatformMenu() {
   }
 }
 
-// -- Account Drawer ------------------------------------------------------------
-function openDrawer() {
-  document.getElementById('accountDrawer').classList.add('open');
-  document.getElementById('drawerOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeDrawer() {
-  document.getElementById('accountDrawer').classList.remove('open');
-  document.getElementById('drawerOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-// -- Password Reset Modal ------------------------------------------------------
-function openPwModal() {
-  document.getElementById('pwModal').classList.add('open');
-  document.getElementById('pwModalText').textContent = "We'll send a reset link to your email address.";
-  const btn = document.getElementById('pwConfirmBtn');
-  btn.disabled = false; btn.textContent = 'Send Reset Link';
-}
-function closePwModal() { document.getElementById('pwModal').classList.remove('open'); }
-async function sendPasswordReset() {
-  const btn = document.getElementById('pwConfirmBtn');
-  btn.disabled = true; btn.textContent = 'Sending…';
-  try {
-    const email = userProfile?.email || userProfile?.user?.email;
-    if (!email) throw new Error('No email on file');
-    await api.requestPasswordReset(email);
-    document.getElementById('pwModalText').textContent = 'Reset link sent! Check your inbox.';
-    btn.textContent = 'Sent ✓';
-  } catch(e) {
-    document.getElementById('pwModalText').textContent = e.message || 'Failed to send reset link.';
-    btn.disabled = false; btn.textContent = 'Try Again';
-  }
-}
-
-// -- Referral ------------------------------------------------------------------
-function copyReferral() {
-  const code = document.getElementById('drawerRefCode').textContent;
-  if (code && code !== '———') {
-    navigator.clipboard.writeText(code)
-      .then(() => showToast('Referral code copied!', 'success'))
-      .catch(() => showToast('Copy failed', 'error'));
-  }
-}
+// -- Account Drawer / Password Reset / Referral removed 2026-07-05 --------------
+// This page's own copy of the account UI was a stale duplicate of dashboard.html's
+// real implementation. "My Account" now links to dashboard.html instead.
 
 // -- Logout --------------------------------------------------------------------
 function logout() { auth.logout(); window.location.href = 'login.html'; }
@@ -1521,12 +1438,6 @@ window.addShare               = addShare;
 window.togglePrivacyPill      = togglePrivacyPill;
 window.postComment            = postComment;
 window.deleteComment          = deleteComment;
-window.openDrawer             = openDrawer;
-window.closeDrawer            = closeDrawer;
-window.openPwModal            = openPwModal;
-window.closePwModal           = closePwModal;
-window.sendPasswordReset      = sendPasswordReset;
-window.copyReferral           = copyReferral;
 window.logout                 = logout;
 
 // -- Boot ----------------------------------------------------------------------
