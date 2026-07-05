@@ -618,6 +618,18 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+- **2026-07-04 (Marketing copy rewrite — all 3 product sites). Built + verified, staged.**
+  Deploy: `DEPLOY-copy-rewrite_2026-07-04.bat` (frontend only; Cloudflare Pages).
+  - Home hero sells BOT13 as "the one to watch" — honest, no fabricated numbers ("results
+    speak for themselves; watch them live"). How It Works expanded into a full sales page:
+    intro pitch, Meet-BOT13 spotlight, edge explainer, "Why most traders lose", "Nothing to
+    hide" transparency, a vs-typical-alerts-group comparison, and a run-it-on-YOUR-picks block.
+  - Get Yours restructured: paid tiers first, FREE account moved to the bottom; tier bullets
+    benefit-first; "BOT13 won it" claim replaced with method framing. All report wording
+    updated weekly/Sunday → downloadable MONTHLY statements. aistocks: all "Claude" removed.
+  - Verified: node --check on all 3 app.js; shared blocks byte-identical (only per-site asset
+    words + REPORT_BRAND differ); zero Claude refs; free below paid on all 3.
+
 - **2026-07-04 (NEW FEATURE: monthly bank-statement Reports — public + member).
   Built + verified, staged.** Deploy: `DEPLOY-reports-feature_2026-07-04.bat`.
   - Durable archive: new `daily_fund_archive` table (auto-created; schema also in

@@ -277,8 +277,8 @@ function renderHome() {
   $('app').innerHTML =
     '<section class="hero"><img src="assets/logo.svg" alt="" class="hero-robot">'
     + '<div class="hero-content"><span class="hero-eyebrow">Sector Stock Tracker</span>'
-    + '<h1>5 strategies. '+stockCount+' stocks. Watch them race.</h1>'
-    + '<p>Three bots — daily, weekly, monthly — trading head-to-head against two passive strategies on the top 3 stocks per S&amp;P 500 sector plus the hottest IPOs since 2024. '+fmt$0(cap)+' starting capital. Daily Buy/Sell/Hold signals on every name. Sector news, filtered to what matters. <strong>Welcome to Wall St. Bots.</strong></p>'
+    + '<h1>5 bots race on the same money. BOT13 is the one to watch.</h1>'
+    + '<p>Three bots — daily, weekly, monthly — trade head-to-head against two passive benchmarks on the top 3 stocks in every S&amp;P 500 sector plus the hottest IPOs since 2024. Same '+fmt$0(cap)+'. Same market. Every trade public. <strong style="color:var(--pink)">BOT13 is the one to watch</strong> — it only buys when it sees a real edge and holds cash when it doesn’t, so a quiet day costs you nothing. Daily Buy/Sell/Hold signals on every name. Sector news, filtered. Monthly statements you can download. <strong>Welcome to Wall St. Bots.</strong></p>'
     + '<div class="hero-ctas"><a class="btn btn-primary" href="#/race">See The Race</a>'
     + '<a class="btn btn-secondary" href="#/how">How It Works</a></div></div></section>'
     + bot13RecordTile()
@@ -313,7 +313,7 @@ function renderHome() {
     + '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--blue);margin-bottom:12px;text-transform:uppercase">Our<br>AI &amp; Quantum<br>Bots</div>'
     + '<a href="https://aistocks.tech" target="_blank" rel="noopener">'
     + '<img src="assets/logo-aistocks.png" alt="aistocks.tech" style="width:100%;max-width:260px;height:auto;display:block;margin-bottom:14px;border-radius:8px"></a>'
-    + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 14px;flex:1">The same 5 bots racing on 50 hand-picked AI &amp; Quantum stocks. Daily signals, live leaderboards, and weekly performance reports.</p>'
+    + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 14px;flex:1">The same 5 bots racing on 50 hand-picked AI &amp; Quantum stocks. Daily signals, live leaderboards, and downloadable monthly statements.</p>'
     + '<a class="btn btn-secondary" href="https://aistocks.tech" target="_blank" rel="noopener" style="font-size:12px;margin-top:auto">Visit aistocks.tech →</a>'
     + '</div>'
 
@@ -379,19 +379,52 @@ function renderHowItWorks() {
   }).join('');
   const features = [
     ['Daily Buy / Sell / Hold','Composite analysis on every stock — every day. Score combines momentum, RSI, MACD, volume, volatility into a Strong Buy → Strong Sell call with target price.'],
-    ['Auto Reports, Every Sunday','Weekly grades A–F per strategy. Pros, cons, narrative for what worked. Trade-by-trade review for every bot.'],
+    ['Monthly Statements You Can Download','A bank-statement PDF for every month — BOT13’s daily trades, every bot’s monthly P&L, and the weekly &amp; monthly picks.'],
     ['Sector News, Filtered','Headlines pulled from all 11 GICS sectors. Energy, Tech, Health Care, Financials — pick what you follow.'],
   ];
   const featureCards = features.map(f =>
     '<div class="card"><h3 style="color:var(--blue)">✓ '+f[0]+'</h3>'
     + '<p style="color:var(--muted);font-size:13px;margin:0">'+f[1]+'</p></div>').join('');
   $('app').innerHTML = '<h1>How It Works</h1>'
-    + '<p class="sub">Five strategies. One universe. The same starting capital. Then we watch.</p>'
+    + '<p class="sub">Five strategies. One universe. The same starting capital. Then we let them prove it — in public.</p>'
+    + '<div class="panel" style="margin-bottom:20px">'
+    + '<p style="font-size:15px;line-height:1.7;margin:0 0 10px">Most trading advice is noise — screenshots, hot takes, and “trust me.” We built something you can actually watch instead: five strategies, each handed the same money and the same stocks, trading head-to-head every single market day. Three are active bots — daily, weekly, monthly. Two are passive benchmarks that show what plain buy-and-hold would have done.</p>'
+    + '<p style="font-size:15px;line-height:1.7;margin:0;color:var(--muted)">Nothing is hidden. Every trade is timestamped, every result is live, and every month is downloadable. This isn’t a pitch — it’s a scoreboard.</p>'
+    + '</div>'
+    + '<div class="panel" style="border-color:var(--pink);background:linear-gradient(135deg,rgba(236,72,153,0.08),rgba(236,72,153,0.01));margin-bottom:20px">'
+    + '<div class="section-head" style="margin:0 0 12px"><h3 style="color:var(--pink)">Meet BOT13 — the one to watch</h3></div>'
+    + '<p style="font-size:15px;line-height:1.7;margin:0 0 12px">BOT13 is the daily bot, and it lives by one rule: <strong style="color:var(--pink)">no edge, no trade.</strong> Each morning it scores the entire universe. See a real edge? It buys — and sells before the close. No edge? It does the hardest thing in trading: nothing. It holds cash and risks zero. That is the discipline most traders wish they had, running automatically, on the record.</p>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+    + '<div style="flex:1;min-width:150px;text-align:center;padding:12px;background:var(--panel2);border:1px solid var(--border);border-radius:8px"><div class="stat-val pos" style="font-size:19px">No edge, no trade</div><div class="stat-label" style="margin-top:5px">A quiet day costs you nothing</div></div>'
+    + '<div style="flex:1;min-width:150px;text-align:center;padding:12px;background:var(--panel2);border:1px solid var(--border);border-radius:8px"><div class="stat-val" style="font-size:19px;color:var(--pink)">Flat by every close</div><div class="stat-label" style="margin-top:5px">No overnight surprises</div></div>'
+    + '<div style="flex:1;min-width:150px;text-align:center;padding:12px;background:var(--panel2);border:1px solid var(--border);border-radius:8px"><div class="stat-val" style="font-size:19px">Every trade public</div><div class="stat-label" style="margin-top:5px">Timestamped, on the record</div></div>'
+    + '</div>'
+    + '<p style="font-size:13px;color:var(--muted);margin:12px 0 0">The results speak for themselves — watch them live on the leaderboard, or download the monthly statement and read every trade BOT13 made.</p>'
+    + '</div>'
     + '<h3>The 5 Strategies</h3><div class="bot-strip">'+stripCards+'</div>'
-    + '<h3>What You Get</h3><div class="grid grid-3">'+featureCards+'</div>'
-    + '<div class="sales-strip" style="margin-top:24px"><div><h3>The Challenge.</h3>'
-    + '<p>Can three bots beat two passive strategies on the same 55-stock universe with the same money?</p></div></div>'
-    + getYoursHint('Join and get these signals running on your own stock picks.');
+    + '<div class="sales-strip" style="margin-top:20px"><div><h3>How the edge is scored.</h3>'
+    + '<p>Every stock, every day, gets one composite score — momentum, RSI, MACD, volume, and volatility rolled into a single Strong Buy → Strong Sell call with a target price. The bots don’t guess and they don’t get emotional. They act on the score, log the trade, and move on. You see exactly why every move was made.</p></div></div>'
+    + '<h3 style="margin-top:24px">What You Get</h3><div class="grid grid-3">'+featureCards+'</div>'
+    + '<div class="panel" style="margin-top:20px;border-color:var(--blue)">'
+    + '<div class="section-head" style="margin:0 0 10px"><h3 style="color:var(--blue)">Now run it on YOUR stocks</h3></div>'
+    + '<p style="font-size:15px;line-height:1.7;margin:0 0 12px">The homepage race runs on our universe. As a member, you point the exact same five bots at <strong>your</strong> picks — up to 50 stocks from any sector. BOT13 trades them by the same no-edge-no-trade rule, and you get daily Buy/Sell/Hold signals, news filtered to your names, and a monthly statement you can keep.</p>'
+    + '<ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.9;color:var(--muted)"><li>Your portfolio, your tickers — the bots supply the discipline.</li><li>Daily signals and alerts, straight to your inbox.</li><li>Downloadable monthly statements for every bot.</li><li>Stocks, AI &amp; Quantum, and crypto — one login on the Syndicate plan.</li></ul>'
+    + '</div>'
+    + '<div class="sales-strip" style="margin-top:20px"><div><h3>Why most traders lose.</h3>'
+    + '<p>It’s rarely the strategy — it’s the human running it. We hold losers too long, dump winners too early, and trade out of boredom on the days we should sit still. The bots don’t. They follow the same rule every single day — no ego, no fear, no FOMO. That discipline is the whole edge.</p></div></div>'
+    + '<div class="panel" style="margin-top:20px">'
+    + '<div class="section-head" style="margin:0 0 10px"><h3>Nothing to hide</h3></div>'
+    + '<p style="font-size:15px;line-height:1.7;margin:0 0 10px">Anyone can post a green screenshot. We post everything — every trade, every day, win or lose, timestamped and public. The leaderboard updates as the market moves; the monthly statement is a PDF you can download and check line by line. No black box. No cherry-picking. No “DM me for results.”</p>'
+    + '<p style="font-size:13px;color:var(--muted);margin:0">If a strategy works, it should prove it in the open — every day. Ours does.</p>'
+    + '</div>'
+    + '<h3 style="margin-top:24px">Why this beats a typical alerts group</h3>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'
+    + '<div class="card"><h3 style="color:var(--muted);margin-bottom:10px">A typical alerts group</h3><ul style="margin:0;padding-left:16px;font-size:13px;line-height:1.9;color:var(--muted)"><li>Vague picks buried in a chat, easy to miss</li><li>Winners screenshotted, losers quietly forgotten</li><li>No track record you can actually audit</li><li>Runs on their picks — never yours</li><li>Loud when it wins, silent when it doesn’t</li></ul></div>'
+    + '<div class="card" style="border-color:var(--pink)"><h3 style="color:var(--pink);margin-bottom:10px">'+"'+REPORT_BRAND+'"+'</h3><ul style="margin:0;padding-left:16px;font-size:13px;line-height:1.9;color:var(--fg)"><li>A clear Buy / Sell / Hold on every name, every day</li><li>Every trade logged — wins and losses both</li><li>Public leaderboard + downloadable monthly statements</li><li>Runs on <strong>your</strong> picks, the same disciplined way</li><li>No edge, no trade — it holds cash instead of forcing it</li></ul></div>'
+    + '</div>'
+    + '<div class="sales-strip" style="margin-top:20px"><div><h3>The Challenge.</h3>'
+    + '<p>Three active bots. Two passive benchmarks. The same money, the same market. The best strategy wins in the open — every trading day.</p></div></div>'
+    + getYoursHint('Point these five bots at your own stocks — start free.');
 }
 
 // ============ PAGE: THE RACE ============
@@ -895,11 +928,11 @@ const PRICING = {
 };
 const TIER_META = {
   member:    { label:'MEMBER',    color:'#00d4ff', popular:false,
-               features:['5 portfolios','Stocks or crypto','Full bot signal history','Daily alerts'] },
+               features:['Run all 5 bots on your own picks','5 portfolios','Daily Buy/Sell/Hold signals + alerts','Monthly statements to download'] },
   insider:   { label:'INSIDER',   color:'#a855f7', popular:false,
-               features:['10 portfolios','Mix stocks &amp; crypto','Priority signals','Analytics dashboard'] },
+               features:['Everything in Member','10 portfolios','Stocks and crypto together','Priority signals + analytics'] },
   syndicate: { label:'SYNDICATE', color:'#ff8c00', popular:true,
-               features:['Up to 25 portfolios','All 5 bots active','All 3 platforms','Max signal coverage','First access to features'] },
+               features:['Everything in Insider','Up to 25 portfolios','All 3 markets: stocks, AI &amp; crypto','First access to new features'] },
 };
 let GY_CYCLE      = 'monthly';
 let GY_TIER       = 'member';
@@ -924,7 +957,7 @@ function renderGetYours() {
     '<section class="hero" style="margin-bottom:24px"><img src="assets/logo.svg" alt="" class="hero-robot">'
     + '<div class="hero-content"><span class="hero-eyebrow">Master the Market — Without the Risk</span>'
     + '<h1>You\'ve seen what it does. Now make it yours.</h1>'
-    + '<p>You’ve seen the race. <strong style="color:var(--pink)">BOT13 won it — by only trading when it sees an edge.</strong> No edge, no trade: it sits in cash and risks nothing, so it chases the market without betting against you. Add your own stocks and it trades them the same way — daily signals, custom news, Sunday reports.</p></div></section>'
+    + '<p>You’ve seen the race. <strong style="color:var(--pink)">BOT13’s edge is simple: it only trades when it sees one.</strong> No edge, no trade — it holds cash and risks nothing. Add your own stocks and it works them the exact same way: daily Buy/Sell/Hold signals, news filtered to your picks, and a monthly statement you can download. The results are public — see them live on the leaderboard.</p></div></section>'
 
     // ── Billing toggle ──
     + '<div style="display:flex;justify-content:center;margin-bottom:28px">'
@@ -933,30 +966,10 @@ function renderGetYours() {
     + '<button id="cycleAnnual"  onclick="setGyCycle(\'annual\')"  style="border:none;cursor:pointer;padding:8px 22px;border-radius:6px;font-weight:600;font-size:13px;transition:all 0.15s">Annual <span style="font-size:11px;color:#10b981">SAVE UP TO 25%</span></button>'
     + '</div></div>'
 
-    // ── FREE tier ──
-    + '<div class="panel" style="margin-bottom:16px;border:1px solid var(--border)">'
-    + '<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px">'
-    + '<div style="flex:1 1 240px">'
-    + '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">FREE</div>'
-    + '<div style="font-size:26px;font-weight:800;color:var(--fg)">$0</div>'
-    + '<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);border-radius:6px;padding:4px 10px;margin:8px 0 6px 0">'
-    + '<span style="color:#10b981;font-weight:700;font-size:13px">✓ 1 Portfolio Included</span></div>'
-    + '<div style="font-size:13px;color:var(--muted);margin-top:4px">Start free with your own portfolio tracker. Get daily Buy/Hold/Sell signals straight to your inbox and see exactly how Bot13 trades every market day.</div>'
-    + '</div>'
-    + '<div style="flex:1 1 240px;min-width:0">'
-    + '<input id="freeEmail" type="email" placeholder="Enter your email" '
-    + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:8px">'
-    + '<input id="freePassword" type="password" placeholder="Create a password (8+ characters)" minlength="8" '
-    + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:8px">'
-    + '<div class="cf-turnstile" data-sitekey="0x4AAAAAADs-8zs2xr2GKeWV" data-theme="dark" style="margin-bottom:8px"></div>'
-    + '<button onclick="gyFreeSignup()" style="width:100%;background:var(--surface2);color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:10px 0;font-weight:700;cursor:pointer;font-size:14px">Create Free Account →</button>'
-    + '<div id="freeMsg" style="font-size:12px;margin-top:6px;min-height:16px"></div>'
-    + '</div></div></div>'
-
     + '<div class="panel" style="margin-bottom:16px;border-color:var(--pink);background:linear-gradient(135deg,rgba(236,72,153,0.07),rgba(236,72,153,0.01))"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch">'
     + '<div style="flex:1;min-width:130px;text-align:center"><div class="stat-val pos" style="font-size:22px">No edge, no trade</div><div class="stat-label" style="margin-top:5px">Holds cash, risks nothing</div></div>'
-    + '<div style="flex:1;min-width:130px;text-align:center"><div class="stat-val" style="font-size:22px;color:var(--pink)">Trades only with an edge</div><div class="stat-label" style="margin-top:5px">No edge = sits in cash</div></div>'
-    + '<div style="flex:1;min-width:130px;text-align:center"><div class="stat-val" style="font-size:22px">Beats every other bot</div><div class="stat-label" style="margin-top:5px">+ both market benchmarks</div></div>'
+    + '<div style="flex:1;min-width:130px;text-align:center"><div class="stat-val" style="font-size:22px;color:var(--pink)">Flat by every close</div><div class="stat-label" style="margin-top:5px">No overnight risk</div></div>'
+    + '<div style="flex:1;min-width:130px;text-align:center"><div class="stat-val" style="font-size:22px">Every trade public</div><div class="stat-label" style="margin-top:5px">See it live, download the statement</div></div>'
     + '</div><p style="color:var(--muted);font-size:11px;margin:10px 0 0;text-align:center">Simulated/paper-trading results, shown live on the leaderboard.</p></div>'
     // ── Paid tier cards ──
     + '<div class="grid grid-3" style="gap:16px;margin-bottom:24px">'
@@ -990,7 +1003,7 @@ function renderGetYours() {
     // ── Subscribe box ──
     + '<div class="sales-hero"><div class="sales-hero-left">'
     + '<h2 style="font-size:28px;letter-spacing:-0.5px">YOUR PORTFOLIO. YOUR STOCKS.</h2>'
-    + '<p style="color:var(--muted);font-size:15px">Pick up to 50 stocks from any sector. Daily, weekly, and monthly AI bots. News filtered to your picks. Sunday auto-reports.</p>'
+    + '<p style="color:var(--muted);font-size:15px">Pick up to 50 stocks from any sector. Daily, weekly, and monthly bots. News filtered to your picks. Monthly statements you can download.</p>'
     + '<div id="activePriceLabel" style="color:var(--blue);font-weight:700;font-size:15px"></div>'
     + '</div><div class="sales-hero-right">'
     + '<h3>Subscribe with Stripe</h3>'
@@ -1007,7 +1020,7 @@ function renderGetYours() {
        ['BOT13 + 4 more','The daily bot that only trades on a real edge — and holds cash otherwise — runs on your picks, plus weekly, monthly, and two benchmarks for context.'],
        ['Daily Buy/Sell/Hold','Composite signals on every stock you picked.'],
        ['Custom news feed','Pick the sectors. We curate, dedupe, deliver.'],
-       ['Sunday auto-reports','Weekly grades, pros/cons, trade-by-trade review.'],
+       ['Downloadable monthly statements','A bank-statement PDF: your bots’ daily trades and monthly P&L.'],
        ['One login, all sites','Syndicate plan includes all 3 platforms.']].map(p =>
          '<div class="card"><h3 style="color:var(--blue);margin-bottom:8px">✓ '+p[0]+'</h3>'
          + '<p style="color:var(--muted);font-size:13px;margin:0">'+p[1]+'</p></div>').join('')
@@ -1015,7 +1028,31 @@ function renderGetYours() {
     + '<div class="panel" style="margin-top:24px">'
     + '<p style="color:var(--muted);font-size:13px;margin:0 0 8px 0">Built by an operator who runs the same system on his own portfolio. Cancel anytime — managed through your Stripe billing portal. Questions? <a href="#" onclick="chatbotOpen();return false;" style="color:var(--blue)">Open a support ticket ↓</a></p>'
     + '<p style="font-size:13px;margin:0">Refer a friend → they get <strong style="color:var(--blue)">50% off their first month</strong> or <strong style="color:var(--blue)">$100 off annual</strong> and you earn a <strong style="color:var(--blue)">$35 bill credit</strong>. <a href="#/referral" style="color:var(--blue)">Learn more →</a></p>'
-    + '</div>';
+    + '</div>'
+
+    // ── Start free (entry option, at the bottom) ──
+    + '<div class="section-head" style="margin-top:30px"><h3>Prefer to start free?</h3></div>'
+    // ── FREE tier ──
+    + '<div class="panel" style="margin-bottom:16px;border:1px solid var(--border)">'
+    + '<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px">'
+    + '<div style="flex:1 1 240px">'
+    + '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">FREE</div>'
+    + '<div style="font-size:26px;font-weight:800;color:var(--fg)">$0</div>'
+    + '<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);border-radius:6px;padding:4px 10px;margin:8px 0 6px 0">'
+    + '<span style="color:#10b981;font-weight:700;font-size:13px">✓ 1 Portfolio Included</span></div>'
+    + '<div style="font-size:13px;color:var(--muted);margin-top:4px">Start free with your own portfolio tracker. Get daily Buy/Hold/Sell signals straight to your inbox and see exactly how Bot13 trades every market day.</div>'
+    + '</div>'
+    + '<div style="flex:1 1 240px;min-width:0">'
+    + '<input id="freeEmail" type="email" placeholder="Enter your email" '
+    + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:8px">'
+    + '<input id="freePassword" type="password" placeholder="Create a password (8+ characters)" minlength="8" '
+    + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:8px">'
+    + '<div class="cf-turnstile" data-sitekey="0x4AAAAAADs-8zs2xr2GKeWV" data-theme="dark" style="margin-bottom:8px"></div>'
+    + '<button onclick="gyFreeSignup()" style="width:100%;background:var(--surface2);color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:10px 0;font-weight:700;cursor:pointer;font-size:14px">Create Free Account →</button>'
+    + '<div id="freeMsg" style="font-size:12px;margin-top:6px;min-height:16px"></div>'
+    + '</div></div></div>'
+
+    ;
 
   // Initialize state
   GY_CYCLE = 'monthly';
