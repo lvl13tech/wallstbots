@@ -32,6 +32,7 @@ import os
 import statistics
 import sys
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).parent))
 from bot13_engine import (
@@ -554,9 +555,20 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
         if not universe:
             continue
 
-        portfolio_created = (portfolio.get("created_at") or "")[:10]
-        if portfolio_created == today_iso:
-            print(f"  [portfolios] skipping bot_id={bot_id} -- created today, activates next trading day")
+        # ACTIVATION: a portfolio NEVER trades on (or before) its creation day -- first-day numbers
+        # would be fake. It begins on the next real trading SESSION. For equity that skips weekends
+        # + holidays (the win_open gate on every seed/trade below enforces it); for crypto it is
+        # simply the next day. Parse created_at in ET so late-evening (UTC-rollover) sign-ups line up.
+        _ca = str(portfolio.get("created_at") or "")
+        try:
+            _cad = dt.datetime.fromisoformat(_ca.replace("Z", "+00:00"))
+            if _cad.tzinfo is None:
+                _cad = _cad.replace(tzinfo=dt.timezone.utc)
+            created_date = _cad.astimezone(ZoneInfo("America/New_York")).date()
+        except Exception:
+            created_date = None
+        if created_date is not None and today <= created_date:
+            print(f"  [portfolios] skipping bot_id={bot_id} -- created {created_date} (ET); activates next trading session")
             continue
 
         if len(universe) < 5:
@@ -647,6 +659,16 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                     b13_proj     = 0.0
                     print(f"  [portfolios] BOT13 close-out -- flattened "
                           f"{len(stored_b13_positions)} position(s) (member-side mirror)")
+                elif not win_open:
+                    # Market closed (weekend / holiday / outside session hours) -- BOT13 NEVER opens
+                    # new positions on a non-trading session. Mirror the frozen public tracker: hold
+                    # cash and keep the prior day's picks for display only.
+                    b13_dec   = "HOLD"
+                    b13_pos   = []
+                    b13_picks = prev_b13_strategy.get("picks", [])
+                    b13_rat   = "Market closed -- BOT13 holds cash until the next trading session."
+                    b13_log   = b13_state.get("trade_log", [])
+                    b13_proj  = float(prev_b13_strategy.get("projected_return", 0.0))
                 elif is_equity:
                     portfolio_cfg = dict(cfg)
                     portfolio_cfg["min_picks"] = max(1, min(3, max(1, round(len(universe) / 3))))
