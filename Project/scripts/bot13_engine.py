@@ -389,6 +389,67 @@ def stamp_and_log(prev_positions, new_positions, trade_log, now_iso, max_entries
     return log[-max_entries:]
 
 
+def reconcile_bot13_log(held_book, real_now, trade_log, today_iso, session_end, prices, now_iso):
+    """AUTHORITATIVE bot13 trade ledger. Records trades at the moment the book changes instead
+    of inferring them from stale snapshots. Reconciles the persisted 'held_book' (what BOT13 held
+    on the books) against 'real_now' (what it holds after this run's decision):
+      * a symbol in real_now but not in the book  -> BUY  (logged at its entry_time)
+      * a symbol in the book but not in real_now  -> SELL (logged with realized P&L)
+      * at a DAY ROLL (or a missed close-out), any position still on the books from a PRIOR day
+        is explicitly CLOSED at that day's session close and dropped, then today's log starts
+        fresh -- so BOT13 can never carry a position across midnight and no trading day is blank.
+    The returned log is TODAY-ONLY (matches the "today's trades" Trade History box). BOT13 is a
+    daily bot on every site, so this holds for the equity engines too.
+    Returns (new_trade_log_today_only, new_held_book) -- caller stores both back on value[].
+    """
+    eh, em = session_end
+    log  = list(trade_log or [])
+    book = {p["symbol"]: dict(p) for p in (held_book or []) if p.get("symbol")}
+    def _day(p): return str(p.get("entry_time") or "")[:10]
+
+    # --- DAY ROLL: close any prior-day positions at that day's session close; reset today's log ---
+    log_is_today = bool(log) and str(log[-1].get("ts", ""))[:10] == today_iso
+    stale = {s: p for s, p in book.items() if _day(p) and _day(p) < today_iso}
+    if stale or not log_is_today:
+        for s, p in sorted(stale.items(), key=lambda kv: _day(kv[1])):
+            d = _day(p) or today_iso
+            ts = f"{d}T{eh:02d}:{em:02d}:00"
+            entry = float(p.get("entry_price") or 0)
+            sh    = float(p.get("shares") or 0)
+            px    = float(prices.get(s, p.get("price") or entry) or entry)
+            log.append({"ts": ts, "action": "SELL", "symbol": s, "shares": round(sh, 6),
+                        "price": round(px, 4), "reason": "daily close-out",
+                        "realized": round((px - entry) * sh, 2) if entry else 0.0})
+        log = [e for e in log if str(e.get("ts", ""))[:10] == today_iso]  # today-only
+        for s in stale:
+            book.pop(s, None)
+
+    now = {p["symbol"]: dict(p) for p in (real_now or []) if p.get("symbol")}
+    last_buy = {e["symbol"]: e["ts"] for e in log if e.get("action") == "BUY" and e.get("symbol")}
+    # SELLs: on the book, no longer held now
+    for s, p in book.items():
+        if s not in now:
+            entry = float(p.get("entry_price") or 0)
+            sh    = float(p.get("shares") or 0)
+            px    = float(prices.get(s, p.get("price") or entry) or entry)
+            ts = p.get("exit_time") or now_iso
+            fl = last_buy.get(s)
+            if fl and str(fl) > str(ts):  # a SELL can never predate its own BUY
+                ts = fl
+            log.append({"ts": ts, "action": "SELL", "symbol": s, "shares": round(sh, 6),
+                        "price": round(px, 4), "reason": p.get("exit_reason") or "closed",
+                        "realized": round((px - entry) * sh, 2) if entry else 0.0})
+    # BUYs: held now, not previously on the book
+    for s, p in now.items():
+        if s not in book:
+            entry = float(p.get("entry_price") or p.get("price") or 0)
+            sh    = float(p.get("shares") or 0)
+            ts = p.get("entry_time") or now_iso
+            log.append({"ts": ts, "action": "BUY", "symbol": s, "shares": round(sh, 6),
+                        "price": round(entry, 4), "reason": "opened"})
+    return log[-200:], list(real_now or [])
+
+
 def check_drawdown(cfg, day_open, stored_positions, prices):
     """
     Return True if the account-level daily drawdown limit has been hit.

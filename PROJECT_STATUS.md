@@ -618,6 +618,22 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+- **2026-07-04 (BOT13 authoritative trade ledger — replaces snapshot-diff inference).
+  Built + verified, staged.** Deploy: `DEPLOY-bot13-authoritative-ledger_2026-07-04.bat`.
+  - Problem: BOT13's Trade History was never recorded at execution time; the engine inferred
+    buys/sells by diffing this run's holdings vs last run's. That silently lost/duplicated trades
+    on missed runs, day-rolls, and same-coin re-entries (why July 4's real trades never showed).
+  - Fix: new SHARED `reconcile_bot13_log()` in `bot13_engine.py` writes a BUY on every open and a
+    SELL (with realized P&L) on every close, and explicitly closes any prior-day book at the day
+    roll so nothing carries across midnight and no trading day is blank; log stays TODAY-ONLY.
+    Wired into all 3 engines at the `if fid=="bot13"` block (parity byte-identical; only the
+    EQUITY_CFG/CRYPTO_CFG session close differs). Oracle/Wizard/Equalizer/Titan untouched.
+  - Audit tightened: an unpaired SELL is now a hard FAIL on every site, and bitbot13 FAILs if
+    BOT13 is ever caught holding a position dated before today. Live audit = PASS (6 expected
+    fresh-baseline warnings only). Known-good after the next crypto session logs a clean round-trip.
+  - Files: `bot13_engine.py`, `refresh_wallstbots.py`, `refresh_aistocks.py`, `refresh_bitbot13.py`,
+    `audit_integrity.py`. Compile + parity + NUL checks pass. Not yet pushed (run the .bat).
+
 - **2026-07-02 (Holdings ALWAYS sum to the Total P&L box — oracle/wizard Total P&L = sum of
   current holdings vs their REAL cost basis; all 3 engines + member + frontends, parity).
   Built + verified, NOT YET PUSHED.** Deploy: `DEPLOY-holdings-sum-to-total-pnl_2026-07-02.bat`.

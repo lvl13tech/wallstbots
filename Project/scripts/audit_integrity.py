@@ -375,20 +375,28 @@ for platform, usize in PLATFORMS.items():
             rc.note("snapshot[today] == total", sv, approx(sv, T, tcross(T)) if (sv is not None and T is not None) else False,
                     f"(chart {sv} vs card {T})")
 
-        # ---------- TRADE LOG: SELLs need a prior BUY ----------
+        # ---------- TRADE LOG: authoritative-ledger invariants (bot13 only) ----------
+        # The trade log is now written authoritatively (a BUY on every open, a SELL on every
+        # close) and is TODAY-ONLY; BOT13 is a DAILY bot on every site and closes out at
+        # session end, so it never carries a position across midnight. Therefore every SELL
+        # must have a matching prior BUY in the same (today-only) log -- on ALL sites now
+        # (the old "crypto carries overnight" WARN exception no longer applies).
         seen = set()
         for e in sorted(v.get("trade_log") or [], key=lambda e: str(e.get("ts",""))):
             act = str(e.get("action","")).upper(); s = e.get("symbol")
             if act == "BUY": seen.add(s)
             elif act == "SELL" and s not in seen:
-                # Equity bots close out each session, so an orphan SELL is a real bug. The
-                # 24/7 crypto bot (bitbot13) carries positions across midnight, so the first
-                # SELL of a symbol may be closing a position opened before midnight -> WARN.
-                if platform == "bitbot13":
-                    WARN(scope, f"SELL of {s} with no prior BUY in today's log (position likely carried overnight by the 24/7 crypto bot)")
-                else:
-                    FAIL(scope, f"SELL of {s} with no prior BUY in trade_log")
+                FAIL(scope, f"SELL of {s} with no prior BUY in the trade_log "
+                            f"(authoritative ledger should pair every SELL with its BUY)")
                 seen.add(s)  # avoid re-flagging every later rotation of the same symbol
+        # No stale carry: bitbot13 trades daily, so BOT13 must not hold any position dated
+        # before today. If it does, a day-roll/missed close-out left it stranded on the book.
+        if fund == "bot13" and platform == "bitbot13":
+            _stale = [p.get("symbol") for p in (v.get("_real_positions") or [])
+                      if 0 < len(str(p.get("entry_time") or "")[:10]) and str(p.get("entry_time"))[:10] < TODAY]
+            if _stale:
+                FAIL(scope, f"bot13 holds prior-day position(s) {_stale} across midnight "
+                            f"(daily bot must close out at session end -- authoritative ledger should have dropped these)")
 
         if not QUIET:
             tag = "DAY-1" if is_day1 else f"day>={len([x for x in dates if x<TODAY])+1}"

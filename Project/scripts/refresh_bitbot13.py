@@ -33,7 +33,7 @@ from bot13_engine import (
     run_bot13_crypto, check_drawdown,
     CRYPTO_CFG,
     grade, grade_overall, et_now, window_open as _engine_window_open,
-    stamp_and_log, past_close_out,
+    stamp_and_log, reconcile_bot13_log, past_close_out,
 )
 
 try:
@@ -1667,15 +1667,6 @@ def main():
                 _prev_real = (fund.get("value") or {}).get("positions") or []
             _cur_real = enriched   # true positions held now ([] after close-out)
             _prev_log = (fund.get("value") or {}).get("trade_log") or []
-            # Trade History is a TODAY-ONLY log. If the carried-forward log's newest
-            # entry is from a prior day (or it's empty), start fresh -- this both keeps
-            # the box to "today's trades" and clears any stale/phantom rows from the
-            # old buggy logic on the first run that sees them.
-            _today = et_now().date().isoformat()
-            _log_is_today = bool(_prev_log) and str((_prev_log[-1] or {}).get("ts",""))[:10] == _today
-            if not _log_is_today:
-                _prev_real = []   # no carryover positions to diff against on a fresh day
-                _prev_log  = []
             # Window-clamped timestamp: a SELL must never be stamped outside 9am-9pm ET.
             # If this run executes after close (e.g. a dropped 9pm cron firing after
             # midnight), clamp the log time to the session close (21:00) of the trading day.
@@ -1686,8 +1677,13 @@ def main():
                 _log_ts = f"{_td}T{_eh2:02d}:{_em2:02d}:00"
             else:
                 _log_ts = _now_et.isoformat(timespec="seconds")
-            value["trade_log"]       = stamp_and_log(_prev_real, _cur_real, _prev_log, _log_ts)
-            value["_real_positions"] = _cur_real
+            # AUTHORITATIVE ledger: record a BUY on every open and a SELL (with realized
+            # P&L) on every close, and explicitly close any PRIOR-day book at the day roll
+            # so nothing carries across midnight and no trading day is ever blank. Replaces
+            # the old snapshot-diff inference (which could silently lose or duplicate trades).
+            value["trade_log"], value["_real_positions"] = reconcile_bot13_log(
+                _prev_real, _cur_real, _prev_log, today_iso,
+                CRYPTO_CFG["session_end"], prices, _log_ts)
         else:
             value["trade_log"] = []
 
