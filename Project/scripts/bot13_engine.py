@@ -950,3 +950,120 @@ def run_bot13_crypto(
         f"Stop -{stop_display}% (internal -{stop_internal}%) | Target +{target_pct}%."
     )
     return "TRADE", positions, picks, rationale, session_log, projected_return
+
+
+# ============================================================================
+# SHARED DISPLAY MATH (2026-07-06 de-duplication)
+# One copy of the number calculations, used by ALL THREE refresh engines.
+# Rule: an engine may differ only by asset class (crypto flag) -- never by
+# formula. Each function reproduces the engines' existing output shape
+# EXACTLY; nothing new appears on any page.
+# ============================================================================
+
+def mark_position(pos, prices, prev_closes, crypto=False):
+    """Mark-to-market one stored position. THE single copy of this math.
+
+    crypto=False (wallstbots/aistocks): 4dp prices, includes current_price,
+        preserves stop_pct/target_pct + entry_time/stop_triggered/exit_reason.
+    crypto=True  (bitbot13): dynamic decimals for tiny coins, preserves the
+        crypto receipt fields (momentum/volume) as well.
+    """
+    from datetime import datetime as _dt  # local to avoid import-order surprises
+    sym        = pos["symbol"]
+    shares     = float(pos.get("shares") or 0)
+    entry      = float(pos.get("entry_price") or pos.get("entry") or 0)
+    price      = prices.get(sym, entry)
+    # BAD-ENTRY SANITY GUARD: a garbage feed price locked in at seed time marks
+    # up a phantom multiple forever. >8x or <0.125x vs entry while held is bad
+    # data -> re-base entry to live price AND shares /= ratio so the dollar
+    # size returns to the intended weight.
+    if entry > 0 and price > 0:
+        _ratio = price / entry
+        if _ratio > 8.0 or _ratio < 0.125:
+            shares = shares / _ratio
+            entry  = price
+            pos["entry_price"] = price
+            pos["shares"]      = shares
+    cost_basis = shares * entry  # always recompute; stored cost may be stale
+    prev       = prev_closes.get(sym, price)
+    # A lot OPENED TODAY was not held overnight: its day baseline is its real
+    # entry price, not yesterday's close (keeps Holdings summing to the box).
+    _et_today = str(pos.get("entry_time") or "")[:10]
+    if _et_today and _et_today == et_now().date().isoformat() and entry > 0:
+        prev = entry
+    value   = shares * price
+    pnl     = value - cost_basis
+    pnl_pct = (price / entry - 1) * 100 if entry > 0 else 0
+    day_pnl = shares * (price - prev)
+    day_pct = (price / prev - 1) * 100 if prev > 0 else 0
+    if crypto:
+        price_dp = 8 if price < 0.01 else (4 if price < 1 else 2)
+        out = {
+            "symbol":      sym,
+            "shares":      round(shares, 6),
+            "entry_price": round(entry, price_dp),
+            "cost_basis":  round(cost_basis, 2),
+            "price":       round(price, price_dp),
+            "value":       round(value, 2),
+            "pnl":         round(pnl, 2),
+            "pnl_pct":     round(pnl_pct, 2),
+            "day_pnl":     round(day_pnl, 2),
+            "day_pct":     round(day_pct, 2),
+        }
+        for field in ("entry_time", "momentum_1h", "momentum_4h", "volume_signal",
+                      "stop_triggered", "exit_reason"):
+            if field in pos:
+                out[field] = pos[field]
+        return out
+    out = {
+        "symbol":        sym,
+        "shares":        round(shares, 6),
+        "entry_price":   round(entry, 4),
+        "current_price": round(price, 4),
+        "cost_basis":    round(cost_basis, 2),
+        "price":         round(price, 4),
+        "value":         round(value, 2),
+        "pnl":           round(pnl, 2),
+        "pnl_pct":       round(pnl_pct, 2),
+        "day_pnl":       round(day_pnl, 2),
+        "day_pct":       round(day_pct, 2),
+    }
+    if "stop_pct" in pos:
+        out["stop_pct"]   = pos["stop_pct"]
+    if "target_pct" in pos:
+        out["target_pct"] = pos["target_pct"]
+    for field in ("entry_time", "stop_triggered", "exit_reason"):
+        if field in pos:
+            out[field] = pos[field]
+    return out
+
+
+def build_day_reference(state_data, snapshots, today_iso, prev_closes, tag=""):
+    """ONE CLOCK: resolve the day-reference price map for display math.
+
+    Returns the stored day_boundary prices (the prices yesterday's snapshot was
+    actually written from) when they exist for the most recent prior snapshot
+    date; otherwise falls back to the feed's prev_closes. Trading signals must
+    keep using feed prev_closes -- this is for DISPLAY math only.
+    """
+    _boundary = (state_data or {}).get("day_boundary") or {}
+    _prior = [s.get("date") for s in (snapshots or []) if s.get("date") and s.get("date") < today_iso]
+    _prev_snap_date = max(_prior) if _prior else None
+    if _boundary.get("date") == _prev_snap_date and isinstance(_boundary.get("prices"), dict) and _boundary.get("prices"):
+        day_ref = dict(prev_closes)
+        for _s, _v in _boundary["prices"].items():
+            try:
+                if _v and float(_v) > 0:
+                    day_ref[_s] = float(_v)
+            except Exception:
+                pass
+        print(f"[{tag}] day reference = boundary prices from {_boundary['date']} ({len(_boundary['prices'])} assets)")
+        return day_ref
+    print(f"[{tag}] day reference = feed prev_closes (no stored boundary for yesterday yet)")
+    return prev_closes
+
+
+def day_boundary_payload(prices, today_iso):
+    """The day_boundary block each engine stores with its state push."""
+    return {"date": today_iso,
+            "prices": {s: round(float(v), 8) for s, v in prices.items() if v}}

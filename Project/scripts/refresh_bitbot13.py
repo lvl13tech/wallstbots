@@ -34,6 +34,7 @@ from bot13_engine import (
     CRYPTO_CFG,
     grade, grade_overall, et_now, window_open as _engine_window_open,
     stamp_and_log, reconcile_bot13_log, past_close_out,
+    mark_position, build_day_reference, day_boundary_payload,
 )
 
 try:
@@ -299,65 +300,12 @@ def _fetch_coingecko(symbols, prices, prev_closes):
 
 # -- Position enrichment --------------------------------------------------------
 def enrich_position(pos, prices, prev_closes):
-    sym        = pos["symbol"]
-    shares     = float(pos.get("shares") or 0)
-    entry      = float(pos.get("entry_price") or pos.get("entry") or 0)
-    price      = prices.get(sym, entry)
-    # -- BAD-ENTRY SANITY GUARD ------------------------------------------------
-    # A garbage feed price at SEED time (e.g. JUP read at 0.000012 vs real 0.00023)
-    # gets locked in as entry_price, then marks up ~19x every refresh and inflates
-    # the whole fund. No position legitimately gains/loses >8x vs its entry while
-    # held. If it does, the ENTRY is bad data -> re-base entry to the live price so
-    # P&L starts clean at 0 instead of a phantom multiple. Protects ALL funds.
-    if entry > 0 and price > 0:
-        _ratio = price / entry
-        if _ratio > 8.0 or _ratio < 0.125:
-            # Bad entry: a garbage-low (or high) seed price means the SHARE count was
-            # inflated (shares = dollars / garbage_price). Re-base BOTH: entry -> live
-            # price (P&L starts at 0) AND shares /= ratio, which restores the position's
-            # correct dollar size (shares*price returns to the intended weight). Without
-            # the share fix the position still shows ~19x its weight in the Holdings box.
-            shares = shares / _ratio
-            entry  = price
-            pos["entry_price"] = price
-            pos["shares"]      = shares
-    cost_basis = shares * entry  # always recompute; stored cost_basis may be stale after inception reset
-    prev       = prev_closes.get(sym, price)
-    # A lot OPENED TODAY (intraday) was not held overnight, so its "Today's Change" baseline is
-    # the price it was actually bought at -- NOT yesterday's close. Using prev_close would show a
-    # phantom move vs a day the lot wasn't held and would stop the Holdings box from summing to the
-    # fund's Today's Change (e.g. BOT13 buys a dip below yesterday's close -> the lot is UP vs its
-    # entry but "down" vs prev_close). Lots held from a prior day keep the prev_close baseline.
-    _et_today = str(pos.get("entry_time") or "")[:10]
-    if _et_today and _et_today == et_now().date().isoformat() and entry > 0:
-        prev = entry
-    value      = shares * price
-    pnl        = value - cost_basis
-    pnl_pct    = (price / entry - 1) * 100 if entry > 0 else 0
-    day_pnl    = shares * (price - prev)
-    day_pct    = (price / prev - 1) * 100 if prev > 0 else 0
-
-    # Use more decimal places for tiny coins (SHIB, PEPE, etc.)
-    price_dp = 8 if price < 0.01 else (4 if price < 1 else 2)
-
-    enriched = {
-        "symbol":      sym,
-        "shares":      round(shares, 6),
-        "entry_price": round(entry, price_dp),
-        "cost_basis":  round(cost_basis, 2),
-        "price":       round(price, price_dp),
-        "value":       round(value, 2),
-        "pnl":         round(pnl, 2),
-        "pnl_pct":     round(pnl_pct, 2),
-        "day_pnl":     round(day_pnl, 2),
-        "day_pct":     round(day_pct, 2),
-    }
-    # Preserve receipt fields if they exist on the stored position
-    for field in ("entry_time", "momentum_1h", "momentum_4h", "volume_signal",
-                  "stop_triggered", "exit_reason"):
-        if field in pos:
-            enriched[field] = pos[field]
-    return enriched
+    # SHARED MATH (2026-07-06 de-dup): the single copy of this calculation lives
+    # in bot13_engine.mark_position and is used by ALL THREE engines. Do not
+    # re-implement it here -- per-site drift in this exact function is what kept
+    # breaking the numbers. crypto=True keeps bitbot13's dynamic decimals and
+    # crypto receipt fields exactly as before.
+    return mark_position(pos, prices, prev_closes, crypto=True)
 
 # -- RSI + history -------------------------------------------------------------
 def compute_rsi(closes, period=14):
@@ -981,30 +929,11 @@ def main():
 
     print(f"[bitbot13] using {len(prices)}/{len(need_syms)} prices after all sources")
 
-    # -- ONE CLOCK FOR "TODAY" (2026-07-06 fix) --------------------------------
-    # "Today's Change" (total - yesterday's SNAPSHOT) and each Holdings row's
-    # TODAY column (price - reference close) must measure from the SAME moment.
+    # ONE CLOCK (shared, 2026-07-06 de-dup): resolver lives in bot13_engine.
     # Crypto has no official close, so the feed's prev_close is a different
-    # clock than the fund snapshot -- the box and the column could never
-    # reconcile (audit 2026-07-06: all four hold funds failed exactly this way).
-    # Each run now stores the price map it wrote the snapshot from ("day
-    # boundary prices"); the NEXT day's display math uses those as its day
-    # reference, so both boxes derive from one clock. Trading signals still use
-    # the feed's prev_closes -- this changes DISPLAY references only.
-    _boundary = state_data.get("day_boundary") or {}
-    _prior_dates = [s.get("date") for s in snapshots if s.get("date") and s.get("date") < today_iso]
-    _prev_snap_date = max(_prior_dates) if _prior_dates else None
-    if _boundary.get("date") == _prev_snap_date and isinstance(_boundary.get("prices"), dict) and _boundary.get("prices"):
-        day_ref_closes = dict(prev_closes)
-        for _s, _v in _boundary["prices"].items():
-            try:
-                if _v and float(_v) > 0: day_ref_closes[_s] = float(_v)
-            except Exception:
-                pass
-        print(f"[bitbot13] day reference = boundary prices from {_boundary['date']} ({len(_boundary['prices'])} assets)")
-    else:
-        day_ref_closes = prev_closes
-        print("[bitbot13] day reference = feed prev_closes (no stored boundary for yesterday yet)")
+    # clock than the fund snapshot -- the stored boundary is what reconciles
+    # the Today's Change box with the Holdings TODAY column here.
+    day_ref_closes = build_day_reference(state_data, snapshots, today_iso, prev_closes, "bitbot13")
 
     # -- Fetch historical data for oracle/wizard scoring -------------------------
     hist_data = get_hist_data(sorted(need_syms))
@@ -1870,11 +1799,8 @@ def main():
         "snapshots":        snapshots,
         "funds":            funds_out,
         "leaderboards":     {"week": wk_lb, "all": all_lb},
-        # ONE CLOCK: the prices this run's snapshot was written from. Tomorrow's
-        # runs use them as the day reference so Today's Change (vs yesterday's
-        # snapshot) and the Holdings TODAY column (vs these prices) reconcile.
-        "day_boundary":     {"date": today_iso,
-                             "prices": {s: round(float(v), 8) for s, v in prices.items() if v}},
+        # ONE CLOCK: stored via the shared helper so all 3 engines stay identical.
+        "day_boundary":     day_boundary_payload(prices, today_iso),
     }
     STATE_FILE.write_text(json.dumps({"data": state_data}, indent=2))
     print(f"[bitbot13] state -- {len(funds_out)} funds, {len(snapshots)} snapshots")
