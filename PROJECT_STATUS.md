@@ -645,6 +645,14 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+- **2026-07-06 pm (DE-DUP increment 2, commit `ab57ff1`):** the fund-level
+  Today's Change math (day_open from prior snapshot / day_pnl / day_pct) — NINE
+  per-engine copies across oracle/wizard/equalizer-titan × 3 engines — now
+  lives once as `bot13_engine.fund_day_fields`; all nine sites delegate. Gates
+  verified zero leftover copies. Remaining per-engine (identical today, next
+  extraction candidates): oracle/wizard total/cash residual lines, bot13 value
+  blocks; plus refresh_portfolios (member engine — P1, own change).
+
 - **2026-07-06 pm (DE-DUP increment 1, commit `ef786ba` — owner-approved, NO new
   features, no page changes).** The position mark-to-market math (incl.
   bad-entry guard + opened-today baseline), the one-clock day-reference
