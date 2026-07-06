@@ -1213,7 +1213,7 @@ async function applyRefCode() {
       GY_ADMIN_TIER = d.tier || 'insider';
       GY_REF        = '';
       GY_VALID      = false;
-      msg.innerHTML = '<span style="color:#ff8c00;font-weight:700">🎉 Admin code verified — ' + (GY_ADMIN_TIER === 'free' ? 'FREE Starter account' : 'free lifetime ' + GY_ADMIN_TIER.toUpperCase() + ' access') + '! Enter your details below to claim.</span>';
+      msg.innerHTML = '<span style="color:#ff8c00;font-weight:700">Admin code verified — ' + (GY_ADMIN_TIER === 'free' ? 'FREE Starter account' : 'free lifetime ' + GY_ADMIN_TIER.toUpperCase() + ' access') + '. Enter your details below to claim.</span>';
       renderPaypalForm();
     } else if (d.valid) {
       GY_ADMIN_CODE = '';
@@ -1248,7 +1248,7 @@ function renderPaypalForm() {
       + '<input id="adminPw" type="password" placeholder="Create a password (min 6 chars)" autocomplete="new-password" '
       + 'style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--fg);font-size:14px;margin-bottom:10px">'
       + '<button onclick="claimAdminAccess()" '
-      + 'style="width:100%;background:#ff8c00;color:#000;border:none;border-radius:8px;padding:12px 0;font-weight:800;cursor:pointer;font-size:15px">🎉 Claim Free ' + GY_ADMIN_TIER.toUpperCase() + ' Access</button>'
+      + 'style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px 0;font-weight:700;cursor:pointer;font-size:15px">Claim Free ' + GY_ADMIN_TIER.toUpperCase() + ' Access</button>'
       + '<div id="adminClaimMsg" style="font-size:12px;margin-top:8px;min-height:16px"></div>';
     return;
   }
