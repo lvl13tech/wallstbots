@@ -446,8 +446,11 @@ for platform, usize in PLATFORMS.items():
     # member fund-state via the internal endpoint and reconcile INTERNALLY (the only thing that must
     # hold, and the thing the mission demands -- every number verifiable from the member's entries):
     #   total_value == entry_cost + gain_loss ; gain_loss_pct == gain_loss/entry_cost*100
-    # day_pnl/day_pct live behind member-session auth so are not readable here; they are fixed at
-    # source (day_pnl == gain_loss on the member's day 1; day_open == cost on the creation day).
+    # day_pnl/day_pct are recomputed below from strategy._day_open (now returned by the
+    # portfolio-fund-state endpoint after the 2026-07-05 readback fix) and asserted against
+    # gain_loss whenever _day_open == entry_cost (the fund's actual day-1 signature) -- this
+    # is the exact invariant that was silently broken before that fix (Today's Change stuck
+    # at $0 while Total P&L was correct), and it previously had NO automated check here.
     if KEY:
         probe = get(f"{BACKEND}/internal/portfolios/active?platform={platform}", KEY)
         if "_error" in probe:
@@ -470,6 +473,17 @@ for platform, usize in PLATFORMS.items():
                         FAIL(ms, f"total_value {tv} != entry_cost+gain_loss {round(ec+gl,2)}")
                     if glp is not None and gl is not None and ec not in (None,0) and not approx(glp, gl/ec*100, 0.2):
                         FAIL(ms, f"gain_loss_pct {glp} != gain_loss/entry_cost*100 {round(gl/ec*100,2)}")
+                    # DAY-1 RULE for member funds: strategy._day_open is persisted each run so the
+                    # fund's OWN day-1 can be identified (day_open == entry_cost means this fund's
+                    # value has never been carried forward from a prior day). On that day, Today's
+                    # Change must equal Total P&L exactly -- this is the invariant that was silently
+                    # broken by the missing positions/strategy/trade_log readback (fixed 2026-07-05).
+                    strat = st.get("strategy") if isinstance(st.get("strategy"), dict) else {}
+                    day_open = fnum(strat.get("_day_open"))
+                    if day_open is not None and ec is not None and tv is not None and gl is not None and approx(day_open, ec, max(1.0, abs(ec)*0.01)):
+                        m_day_pnl = round(tv - day_open, 2)
+                        if not approx(m_day_pnl, gl, max(1.0, abs(gl)*0.02)):
+                            FAIL(ms, f"MEMBER DAY-1: day_pnl {m_day_pnl} != gain_loss {gl} (day_open={day_open}, entry_cost={ec})")
                     # DATA-INTEGRITY RULE 0: member portfolios are INDEPENDENT simulations seeded at
                     # their OWN cost (N x $1,000) on their creation day -- they are NOT scaled from the
                     # platform, so member==public scaling is NO LONGER expected (a portfolio made on

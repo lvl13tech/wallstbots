@@ -2462,13 +2462,19 @@ async def internal_get_portfolio_fund_state(
         cursor = conn.cursor(row_factory=dict_row)
         cursor.execute("""
             SELECT fund_name, snapshot_date, total_value, entry_cost,
-                   gain_loss, gain_loss_pct, updated_at
+                   gain_loss, gain_loss_pct, updated_at,
+                   positions, strategy, trade_log
             FROM bot_fund_state
             WHERE bot_id = %s AND fund_name = %s
         """, (bot_id, fund_name))
         row = cursor.fetchone()
         if not row:
             return {"success": True, "state": None}
+        # positions/strategy/trade_log are JSONB -- same defensive parse used elsewhere
+        # in this file for this table (see internal_get_bot13_public_state ~line 2322).
+        positions = row["positions"] if isinstance(row["positions"], list) else json.loads(row["positions"] or "[]")
+        strategy  = row["strategy"]  if isinstance(row["strategy"],  dict) else json.loads(row["strategy"]  or "{}")
+        trade_log = row["trade_log"] if isinstance(row["trade_log"], list) else json.loads(row["trade_log"] or "[]")
         return {
             "success": True,
             "state": {
@@ -2479,6 +2485,9 @@ async def internal_get_portfolio_fund_state(
                 "gain_loss":     float(row["gain_loss"]     or 0),
                 "gain_loss_pct": float(row["gain_loss_pct"] or 0),
                 "updated_at":    str(row["updated_at"]),
+                "positions":     positions,
+                "strategy":      strategy,
+                "trade_log":     trade_log,
             }
         }
     finally:
