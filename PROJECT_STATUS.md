@@ -645,6 +645,35 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+- **2026-07-05 late (LEDGER IS THE ACCOUNT: commit `5ee9727` pushed — two
+  accounting bugs fixed in all 3 engines + audit coverage added).**
+  - Bug 1: BOT13 flat-day banking kept the previous run's price mark while the
+    trade ledger realized at the current run's price (live: box +$1,406.40 vs
+    Trade History +$1,528.68 on bitbot13). Now: flat balance = day_open + sum of
+    today's SELL realized — same numbers Trade History shows. Closed Holdings
+    rows also pinned to their SELL price (frozen receipt).
+  - Bug 2: Oracle/Wizard seed/rotation deleted the undeployed rounding remainder
+    (live: bitbot13 Wizard $13 short → Holdings P&L ≠ Total P&L box; this is the
+    owner's reported "-26 carryover" class). Now: remainder stays as cash;
+    rotations record strategy.deployed_capital; capped one-time restore recovers
+    already-lost remainders on next refresh.
+  - audit_integrity.py gained LEDGER==ACCOUNT and NO VANISHED CASH assertions —
+    neither bug class can pass silently again. Race section / fund cards / bot
+    pages reconcile automatically once the next engine run writes.
+  - **Verify after next refresh:** bitbot13 BOT13 total should read $51,528.68
+    (= $50,000 + $1,528.68 ledger) and Wizard's cash $13. If no engine run
+    happens before midnight ET, 7/5's snapshot keeps the $122 understatement in
+    history — run one manual refresh before midnight to correct it.
+  - **INCIDENT, resolved:** the local `.git` folder was DELETED mid-session
+    (~23:02), most likely by the desktop-session file-sync layer (same layer
+    showed truncated file mirrors all night). Rebuilt from GitHub with zero
+    working-file changes (RUN-GIT-RECOVER.bat, backup in
+    `_recover_backup_2026-07-05/`). Nothing lost. Keep running the truncation
+    guard + compile gate before every commit (tonight's scripts all do).
+  - **Still pending (next change, owner-approved scope):** refresh_portfolios.py
+    member-side — P1 carry-forward guards (handoff §5) + same two bug classes
+    on the member path.
+
 - **2026-07-05 evening (DEPLOY UNBLOCKED: commit `e33af74` pushed + live on Cloud
   Run — the portfolio-fund-state readback fix from HANDOFF_2026-07-05.md §2 is
   now deployed).** Revision `wallstbots-backend-00130-dg2`, serving 100% traffic,
