@@ -632,19 +632,19 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
 
             if fund_name == "bot13":
                 b13_capital = float(b13_state.get("total_value") or original_cost)
-                # -- CARRY-FORWARD SANITY GUARD (mirrors the public refresh) --------
-                # Member BOT13 reinvests its whole carried-forward balance each day
-                # (by design), so a one-time bad price (e.g. the JUP feed) inflates
-                # b13_capital and then COMPOUNDS daily. `member_value` above is the
-                # clean value scaled from the now-guarded public tracker, so it is a
-                # trustworthy sanity reference. If the stored capital is more than 4x
-                # that, it is corrupted -- fall back to the clean scaled value. Never
-                # clips real growth (the tracker scales with real gains in lockstep).
-                if member_value > 0 and b13_capital > member_value * 4.0:
+                # -- CARRY-FORWARD SANITY GUARD (Rule 0 compliant, 2026-07-06 fix) --
+                # Member portfolios are INDEPENDENT simulations: never compare or
+                # clamp against a platform-scaled number (the old guard's fallback to
+                # member_value re-introduced platform scaling whenever it fired).
+                # Corruption is detected the same way as the public engines: an
+                # impossible day-over-day jump vs the fund's OWN prior day-open
+                # (falling back to the member's own entry cost on day 1).
+                _own_ref = float((b13_state.get("strategy") or {}).get("_day_open") or 0) or original_cost
+                if _own_ref > 0 and b13_capital > _own_ref * 4.0:
                     print(f"  [portfolios] BOT13 carry-forward guard: stored "
-                          f"${b13_capital:,.0f} is {b13_capital/member_value:.1f}x the "
-                          f"clean scaled ${member_value:,.0f} -- bad data, using scaled.")
-                    b13_capital = member_value
+                          f"${b13_capital:,.0f} is {b13_capital/_own_ref:.1f}x this fund's OWN "
+                          f"prior day-open ${_own_ref:,.0f} -- bad data, using own prior value.")
+                    b13_capital = _own_ref
                 # Daily close-out: BOT13 must be fully flat by 3:30 PM ET (equity) /
                 # 9 PM ET (crypto). If we're past that cutoff and the member's stored
                 # state still shows today's strategy as TRADE with open positions, the
@@ -709,13 +709,15 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 holding_cash = b13_dec in ("CASH", "HOLD") or session_ended
 
             elif fund_name == "oracle":
-                # Carry-forward sanity guard (same as BOT13): if stored capital is
-                # >4x the clean tracker-scaled value, it's bad data -> use scaled.
-                if member_value > 0 and prev_oracle_total > member_value * 4.0:
+                # Carry-forward sanity guard (Rule 0 compliant, 2026-07-06 fix):
+                # detect corruption vs the fund's OWN prior day-open -- never clamp
+                # to a platform-scaled value (that re-introduced platform scaling).
+                _own_ref = float((oracle_state.get("strategy") or {}).get("_day_open") or 0) or original_cost
+                if _own_ref > 0 and prev_oracle_total > _own_ref * 4.0:
                     print(f"  [portfolios] Oracle carry-forward guard: stored "
-                          f"${prev_oracle_total:,.0f} vs clean ${member_value:,.0f} "
-                          f"-- bad data, using scaled.")
-                    prev_oracle_total = member_value
+                          f"${prev_oracle_total:,.0f} vs this fund's OWN prior ${_own_ref:,.0f} "
+                          f"-- bad data, using own prior value.")
+                    prev_oracle_total = _own_ref
                 if (oracle_day or not oracle_state.get("positions")) and win_open:  # never seed on a non-trading day
                     oracle_dec, oracle_pos, oracle_picks, oracle_rat, oracle_proj = run_oracle_for_universe(
                         universe, prices, prev_closes, hist_data, prev_oracle_total, week_str
@@ -734,13 +736,15 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 holding_cash = oracle_dec in ("CASH", "HOLD")
 
             elif fund_name == "wizard":
-                # Carry-forward sanity guard (same as BOT13): if stored capital is
-                # >4x the clean tracker-scaled value, it's bad data -> use scaled.
-                if member_value > 0 and prev_wizard_total > member_value * 4.0:
+                # Carry-forward sanity guard (Rule 0 compliant, 2026-07-06 fix):
+                # detect corruption vs the fund's OWN prior day-open -- never clamp
+                # to a platform-scaled value (that re-introduced platform scaling).
+                _own_ref = float((wizard_state.get("strategy") or {}).get("_day_open") or 0) or original_cost
+                if _own_ref > 0 and prev_wizard_total > _own_ref * 4.0:
                     print(f"  [portfolios] Wizard carry-forward guard: stored "
-                          f"${prev_wizard_total:,.0f} vs clean ${member_value:,.0f} "
-                          f"-- bad data, using scaled.")
-                    prev_wizard_total = member_value
+                          f"${prev_wizard_total:,.0f} vs this fund's OWN prior ${_own_ref:,.0f} "
+                          f"-- bad data, using own prior value.")
+                    prev_wizard_total = _own_ref
                 if (wizard_day or not wizard_state.get("positions")) and win_open:  # never seed on a non-trading day
                     wizard_dec, wizard_pos, wizard_picks, wizard_rat, wizard_proj = run_wizard_for_universe(
                         universe, prices, prev_closes, hist_data, prev_wizard_total, month_str
