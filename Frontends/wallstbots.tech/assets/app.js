@@ -1213,7 +1213,7 @@ async function applyRefCode() {
       GY_ADMIN_TIER = d.tier || 'insider';
       GY_REF        = '';
       GY_VALID      = false;
-      msg.innerHTML = '<span style="color:#ff8c00;font-weight:700">🎉 Admin code verified — free lifetime ' + GY_ADMIN_TIER.toUpperCase() + ' access! Enter your details below to claim.</span>';
+      msg.innerHTML = '<span style="color:#ff8c00;font-weight:700">🎉 Admin code verified — ' + (GY_ADMIN_TIER === 'free' ? 'FREE Starter account' : 'free lifetime ' + GY_ADMIN_TIER.toUpperCase() + ' access') + '! Enter your details below to claim.</span>';
       renderPaypalForm();
     } else if (d.valid) {
       GY_ADMIN_CODE = '';

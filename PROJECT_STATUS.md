@@ -662,6 +662,13 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
   - **Flagged, not fixed:** invite emails hardcode wallstbots.tech links for
     all platforms; FREE signups don't record the ref code (referrer credit
     only fires on paid checkout via Stripe webhook +$35) — owner decision.
+  - **Follow-up fix (commit `816261c`, verified live):** email click-tracking
+    strips #fragments, so even with the router fixed, emailed links dropped
+    invitees on the bare homepage. Invite emails now link `/?ref=CODE` (query
+    form, survives any redirect); route() on all 3 sites sends `/?ref=` to
+    Get Yours. Old emails still carry fragment links — send fresh invites.
+    Browser caveat: app.js caches 4h, so recently-visited browsers may need
+    a hard refresh (Ctrl+F5); new visitors unaffected.
 
 - **2026-07-05 late (LEDGER IS THE ACCOUNT: commit `5ee9727` pushed — two
   accounting bugs fixed in all 3 engines + audit coverage added).**
