@@ -14,6 +14,7 @@ class WallStBotsAuth {
     this.tokenKey = "aistocks_jwt";
     this.userKey = "aistocks_user";
     this.refreshTokenKey = "aistocks_refresh_token";
+    this.platform = "aistocks";  // tells the backend which site's login page the confirm-email link should return to
   }
 
   /**
@@ -28,6 +29,7 @@ class WallStBotsAuth {
           email,
           password,
           full_name: fullName,
+          platform: this.platform,
         }),
       });
 

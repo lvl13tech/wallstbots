@@ -14,6 +14,7 @@ class WallStBotsAuth {
     this.tokenKey = "bitbot13_jwt";
     this.userKey = "bitbot13_user";
     this.refreshTokenKey = "bitbot13_refresh_token";
+    this.platform = "bitbot13";  // tells the backend which site's login page the confirm-email link should return to
   }
 
   async signup(email, password, fullName = null) {
@@ -21,7 +22,7 @@ class WallStBotsAuth {
       const response = await fetch(`${this.apiBaseUrl}/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, full_name: fullName }),
+        body: JSON.stringify({ email, password, full_name: fullName, platform: this.platform }),
       });
 
       if (!response.ok) {

@@ -1335,7 +1335,7 @@ async function claimAdminAccess() {
     const r = await fetch('https://wallstbots-backend-868128114349.us-east1.run.app/auth/signup-with-admin-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: GY_ADMIN_CODE, email, password })
+      body: JSON.stringify({ code: GY_ADMIN_CODE, email, password, platform: 'bitbot13' })
     });
     const d = await r.json();
     if (!r.ok) { if (msgEl) msgEl.textContent = d.detail || 'Error — try again.'; return; }

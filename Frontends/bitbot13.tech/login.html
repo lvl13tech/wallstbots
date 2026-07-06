@@ -381,6 +381,35 @@
         setLoading("signupBtn", false, "Create Account");
       }
     }
+
+    // -- Post-confirmation landing (2026-07-05 referral-flow fix) --------------
+    // The Supabase confirm-email link now redirects here (login.html?confirmed=1).
+    // Two shapes can arrive:
+    //   1. #access_token=...&type=signup -> Supabase already started a session:
+    //      store it and go straight to the dashboard (no second login needed).
+    //   2. ?confirmed=1 with no tokens   -> show the "email confirmed" banner so
+    //      the user knows the click worked and logs in right here.
+    (function handleConfirmLanding() {
+      try {
+        var h = window.location.hash || "";
+        if (h.indexOf("access_token=") !== -1) {
+          var hp = new URLSearchParams(h.replace(/^#/, ""));
+          var at = hp.get("access_token");
+          var rt = hp.get("refresh_token");
+          if (at) {
+            auth.setToken(at);
+            if (rt) auth.setRefreshToken(rt);
+            history.replaceState(null, "", window.location.pathname); // scrub tokens from the URL
+            showSuccess("✓ Email confirmed! Taking you to your dashboard…");
+            setTimeout(function () { window.location.href = "/dashboard.html"; }, 800);
+            return;
+          }
+        }
+        if (new URLSearchParams(window.location.search).get("confirmed") === "1") {
+          showSuccess("✓ Email confirmed! Log in below to get started.");
+        }
+      } catch (e) { /* never block the login page */ }
+    })();
   </script>
 </body>
 </html>

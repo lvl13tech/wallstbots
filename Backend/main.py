@@ -12,6 +12,7 @@ from jwt import PyJWKClient
 import json
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Any
+from urllib.parse import quote as _urlquote
 from decimal import Decimal
 
 from fastapi import FastAPI, Depends, HTTPException, status, Header, Query, Request
@@ -211,6 +212,7 @@ class SignUpRequest(BaseModel):
     email: EmailStr
     password: str
     full_name: Optional[str] = None
+    platform: Optional[str] = None   # which site they signed up from -> confirm-email redirect
     turnstile_token: Optional[str] = None  # Cloudflare Turnstile captcha token
 
 class LoginRequest(BaseModel):
@@ -283,6 +285,7 @@ class AdminCodeClaimRequest(BaseModel):
     email: EmailStr
     password: str
     full_name: Optional[str] = None
+    platform: Optional[str] = None   # which site they signed up from -> confirm-email redirect
 
 class FreeSignupRequest(BaseModel):
     email: EmailStr
@@ -414,6 +417,22 @@ def verify_turnstile(token: str, remote_ip: str = None) -> bool:
         return False
 
 
+def _confirm_email_redirect(platform: str = None) -> str:
+    """Where Supabase sends the user AFTER they click the confirm-email link.
+    Without this, GoTrue falls back to the project's Site URL (a dashboard
+    setting) -- which, after the lvl13->aistocks migration, left verified users
+    stranded with no login page (referral signups reported 2026-07-05).
+    NOTE: each URL below must be in Supabase -> Authentication -> URL
+    Configuration -> Redirect URLs, or GoTrue ignores it and uses Site URL.
+    login.html detects ?confirmed=1 (and any #access_token) and takes it from there."""
+    base = {
+        "wallstbots": "https://wallstbots.tech",
+        "aistocks":   "https://aistocks.tech",
+        "bitbot13":   "https://bitbot13.tech",
+    }.get((platform or "").strip().lower(), "https://wallstbots.tech")
+    return f"{base}/login.html?confirmed=1"
+
+
 def call_supabase_auth(method: str, endpoint: str, data: dict = None) -> dict:
     url = f"{SUPABASE_URL}/auth/v1{endpoint}"
     headers = {"apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json"}
@@ -444,11 +463,14 @@ async def signup(request: SignUpRequest, http_request: Request):
     if not verify_turnstile(getattr(request, "turnstile_token", None)):
         raise HTTPException(status_code=400, detail="Captcha verification failed. Please try again.")
     try:
-        auth_response = call_supabase_auth("POST", "/signup", {
-            "email": request.email,
-            "password": request.password,
-            "user_metadata": {"full_name": request.full_name or ""}
-        })
+        auth_response = call_supabase_auth(
+            "POST",
+            f"/signup?redirect_to={_urlquote(_confirm_email_redirect(request.platform), safe='')}",
+            {
+                "email": request.email,
+                "password": request.password,
+                "user_metadata": {"full_name": request.full_name or ""}
+            })
 
         # Fix: new Supabase key format returns the user object at the top level
         # when email confirmation is required; fall back to nested {"user": {...}} format
@@ -535,6 +557,15 @@ async def login(request: LoginRequest, http_request: Request):
             "refresh_token": auth_response.get("refresh_token"),
             "expires_in":    auth_response.get("expires_in", 3600)
         }
+    except HTTPException as e:
+        # Surface the ONE actionable auth error: an unconfirmed email. Hiding it
+        # behind "Invalid email or password" sent new referral signups in circles
+        # (they had the right password -- they just hadn't clicked the confirm
+        # link). Everything else stays a generic 401 (no account enumeration).
+        if "not confirmed" in str(getattr(e, "detail", "")).lower():
+            raise HTTPException(status_code=401,
+                detail="Email not confirmed yet — click the link in your confirmation email, then log in.")
+        raise HTTPException(status_code=401, detail="Invalid email or password")
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
@@ -642,11 +673,14 @@ async def signup_with_admin_code(request: AdminCodeClaimRequest):
 
     # Create Supabase auth user
     try:
-        auth_response = call_supabase_auth("POST", "/signup", {
-            "email": request.email,
-            "password": request.password,
-            "user_metadata": {"full_name": request.full_name or ""}
-        })
+        auth_response = call_supabase_auth(
+            "POST",
+            f"/signup?redirect_to={_urlquote(_confirm_email_redirect(request.platform), safe='')}",
+            {
+                "email": request.email,
+                "password": request.password,
+                "user_metadata": {"full_name": request.full_name or ""}
+            })
     except HTTPException as e:
         raise HTTPException(status_code=400, detail=f"Signup failed: {e.detail}")
 
@@ -724,11 +758,14 @@ async def signup_free(request: FreeSignupRequest):
 
     # 1. Create the Supabase auth user (real email + password account)
     try:
-        auth_response = call_supabase_auth("POST", "/signup", {
-            "email": request.email,
-            "password": request.password,
-            "user_metadata": {"full_name": request.full_name or ""}
-        })
+        auth_response = call_supabase_auth(
+            "POST",
+            f"/signup?redirect_to={_urlquote(_confirm_email_redirect(request.platform), safe='')}",
+            {
+                "email": request.email,
+                "password": request.password,
+                "user_metadata": {"full_name": request.full_name or ""}
+            })
     except HTTPException as e:
         raise HTTPException(status_code=400, detail=f"Signup failed: {e.detail}")
 
