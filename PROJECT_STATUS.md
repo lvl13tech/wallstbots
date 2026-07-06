@@ -645,6 +645,16 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+- **2026-07-06 pm (DE-DUP increment 3 — COMPLETE, commit `063ff96`):**
+  oracle/wizard totals (residual cash + compounding) and BOT13 flat-day ledger
+  banking extracted to `bot13_engine.hold_fund_totals` / `bot13_bank_flat_day`.
+  With increments 1-2, ALL displayed-number math (position marking, day
+  reference, fund day fields, hold-fund totals, ledger banking) lives once in
+  bot13_engine.py — ~550 duplicated lines deleted, gates verified zero leftover
+  copies. Engines keep only decision/session flow. Remaining SEPARATE item:
+  refresh_portfolios.py P1 carry-forward guards (a behavior fix, not a clone
+  of these blocks — needs its own owner-approved change).
+
 - **2026-07-06 pm (DE-DUP increment 2, commit `ab57ff1`):** the fund-level
   Today's Change math (day_open from prior snapshot / day_pnl / day_pct) — NINE
   per-engine copies across oracle/wizard/equalizer-titan × 3 engines — now
