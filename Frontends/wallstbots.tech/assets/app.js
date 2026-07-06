@@ -78,7 +78,11 @@ function showDataLoadError(detail) {
 
 // ============ ROUTING ============
 function route() {
-  const path = (location.hash.replace(/^#/, '') || '/');
+  // Strip any ?query from the hash BEFORE matching routes: invite/referral links
+  // are shaped #/get-yours?ref=CODE, and matching the full string sent every
+  // invitee to the homepage instead (2026-07-05 fix). renderGetYours reads the
+  // ref from the hash query itself.
+  const path = (location.hash.replace(/^#/, '').split('?')[0] || '/');
   setActiveNav(path); closeMenu();
   window.scrollTo({ top: 0, behavior: 'instant' });
   if (path === '/' || path === '')           return renderHome();
