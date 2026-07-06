@@ -1069,6 +1069,60 @@ def day_boundary_payload(prices, today_iso):
             "prices": {s: round(float(v), 8) for s, v in prices.items() if v}}
 
 
+def hold_fund_totals(fund, sc, enriched, pos_val, new_positions, deploy_capital, strategy, tag):
+    """THE single copy of the oracle/wizard total/cash math (compounding +
+    residual cash). Returns (cash, total, pnl, pnl_pct, strategy).
+
+    RESIDUAL CASH IS REAL MONEY: score-weighted sizing leaves a small rounding
+    remainder undeployed at every rotation -- it stays in the fund as cash.
+    Rotations record strategy.deployed_capital so the residual is exact; a
+    capped one-time restore recovers remainders lost by pre-fix seeds.
+    Total P&L is SINCE LAUNCH (vs sc) and compounds across rotations.
+    """
+    _prev_total = float((fund.get("value", {}) or {}).get("total") or sc)
+    if new_positions:
+        cash = round(max(0.0, deploy_capital - sum(p["cost_basis"] for p in enriched)), 2)
+        strategy["deployed_capital"] = round(deploy_capital, 2)
+    else:
+        cash = float((fund.get("value", {}) or {}).get("cash") or 0)
+        if cash == 0 and enriched and (strategy or {}).get("deployed_capital") is None:
+            _resid = round(sc - sum(p["cost_basis"] for p in enriched), 2)
+            if 0 < _resid <= max(50.0, sc * 0.001):
+                print(f"  {tag}: restoring ${_resid} rounding residual lost by pre-fix seed")
+                cash = _resid
+    total   = (pos_val + cash) if enriched else _prev_total
+    pnl     = round(total - sc, 2)
+    pnl_pct = (pnl / sc * 100) if sc else 0
+    return cash, total, pnl, pnl_pct, strategy
+
+
+def bot13_bank_flat_day(value, today_iso, day_open, sc):
+    """LEDGER IS THE ACCOUNT: when BOT13 finishes a traded day FLAT, bank
+    total = day_open + sum(today's SELL realized) -- the exact numbers Trade
+    History shows -- and re-derive every dependent field. Mutates and returns
+    the value dict. THE single copy of this banking, used by all 3 engines."""
+    _tl = value.get("trade_log") or []
+    _sold_today = any(str(e.get("action", "")).upper() == "SELL"
+                      and str(e.get("ts", ""))[:10] == today_iso for e in _tl)
+    if not _sold_today:
+        return value
+    _realized = round(sum(float(e.get("realized") or 0) for e in _tl
+                          if str(e.get("action", "")).upper() == "SELL"
+                          and str(e.get("ts", ""))[:10] == today_iso), 2)
+    _bank = round(day_open + _realized, 2)
+    if abs(_bank - float(value.get("total") or 0)) > 0.005:
+        print(f"  [bot13] LEDGER RECONCILE: total {value.get('total')} -> {_bank} "
+              f"(day_open {round(day_open,2)} + realized {_realized})")
+    value["total"]   = _bank
+    value["cash"]    = _bank
+    value["pos_val"] = 0.0
+    value["pnl"]     = round(_bank - sc, 2)
+    value["pnl_pct"] = round((_bank - sc) / sc * 100, 2) if sc else 0
+    value["day_pnl"] = round(_bank - day_open, 2)
+    value["day_pct"] = round((_bank - day_open) / day_open * 100, 2) if day_open else 0
+    return value
+
+
 def fund_day_fields(total, fid, sc, snapshots, today_iso):
     """THE single copy of the fund-level Today's Change math.
 
