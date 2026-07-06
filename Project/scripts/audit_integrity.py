@@ -311,8 +311,16 @@ for platform, usize in PLATFORMS.items():
             rc.note("pos_val = sum(row values)", round(pos_val_sum,2), approx(PV, pos_val_sum, max(1.0, abs(PV)*0.02)), f"(pos_val={PV})")
             # Holdings TODAY column must sum to the fund's Today's Change box (a position
             # bought today shows day == its pnl, not a full-day move it never took).
+            # ROTATION-DAY identity: when a fund redeployed today, the box additionally
+            # carries the overnight move realized by the rotation sale, which no current
+            # holding shows: box == sum(day) + (deployed capital - day_open), where
+            # deployed = sum(cost_basis) + cash. Accept either exact identity.
             _pos_day = sum((fnum(p.get("day_pnl")) or 0) for p in positions)
-            if DPN is not None and not approx(_pos_day, DPN, max(2.0, abs(T or 0)*0.0015)):
+            _tol = max(2.0, abs(T or 0)*0.0015)
+            _plain_ok = DPN is None or approx(_pos_day, DPN, _tol)
+            _rot_ok   = (DPN is not None and DO is not None
+                         and approx(DPN, _pos_day + (sum_cost + (CH or 0) - DO), _tol))
+            if DPN is not None and not (_plain_ok or _rot_ok):
                 rc.note("Holdings TODAY sums to Today's Change", round(_pos_day,2), False, f"(sum {round(_pos_day,2)} vs box {DPN})")
 
         # ---------- HOLDOVER / RECONCILIATION GUARDS ----------
@@ -507,7 +515,10 @@ for platform, usize in PLATFORMS.items():
                     # broken by the missing positions/strategy/trade_log readback (fixed 2026-07-05).
                     strat = st.get("strategy") if isinstance(st.get("strategy"), dict) else {}
                     day_open = fnum(strat.get("_day_open"))
-                    if day_open is not None and ec is not None and tv is not None and gl is not None and approx(day_open, ec, max(1.0, abs(ec)*0.01)):
+                    # DAY-1 detection must be EXACT (seed sets _day_open = entry_cost to the
+                    # cent). The old 1% window mislabeled day-2+ funds as day 1 and flagged
+                    # perfectly consistent numbers (false positives, 2026-07-06 audit).
+                    if day_open is not None and ec is not None and tv is not None and gl is not None and approx(day_open, ec, max(0.02, abs(ec)*0.0001)):
                         m_day_pnl = round(tv - day_open, 2)
                         if not approx(m_day_pnl, gl, max(1.0, abs(gl)*0.02)):
                             FAIL(ms, f"MEMBER DAY-1: day_pnl {m_day_pnl} != gain_loss {gl} (day_open={day_open}, entry_cost={ec})")

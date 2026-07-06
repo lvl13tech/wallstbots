@@ -981,6 +981,31 @@ def main():
 
     print(f"[bitbot13] using {len(prices)}/{len(need_syms)} prices after all sources")
 
+    # -- ONE CLOCK FOR "TODAY" (2026-07-06 fix) --------------------------------
+    # "Today's Change" (total - yesterday's SNAPSHOT) and each Holdings row's
+    # TODAY column (price - reference close) must measure from the SAME moment.
+    # Crypto has no official close, so the feed's prev_close is a different
+    # clock than the fund snapshot -- the box and the column could never
+    # reconcile (audit 2026-07-06: all four hold funds failed exactly this way).
+    # Each run now stores the price map it wrote the snapshot from ("day
+    # boundary prices"); the NEXT day's display math uses those as its day
+    # reference, so both boxes derive from one clock. Trading signals still use
+    # the feed's prev_closes -- this changes DISPLAY references only.
+    _boundary = state_data.get("day_boundary") or {}
+    _prior_dates = [s.get("date") for s in snapshots if s.get("date") and s.get("date") < today_iso]
+    _prev_snap_date = max(_prior_dates) if _prior_dates else None
+    if _boundary.get("date") == _prev_snap_date and isinstance(_boundary.get("prices"), dict) and _boundary.get("prices"):
+        day_ref_closes = dict(prev_closes)
+        for _s, _v in _boundary["prices"].items():
+            try:
+                if _v and float(_v) > 0: day_ref_closes[_s] = float(_v)
+            except Exception:
+                pass
+        print(f"[bitbot13] day reference = boundary prices from {_boundary['date']} ({len(_boundary['prices'])} assets)")
+    else:
+        day_ref_closes = prev_closes
+        print("[bitbot13] day reference = feed prev_closes (no stored boundary for yesterday yet)")
+
     # -- Fetch historical data for oracle/wizard scoring -------------------------
     hist_data = get_hist_data(sorted(need_syms))
 
@@ -1369,11 +1394,14 @@ def main():
 
         if fid == "bot13":
             if b13_decision == "TRADE":
-                enriched  = [enrich_position(p, prices, prev_closes) for p in b13_positions]
+                enriched  = [enrich_position(p, prices, day_ref_closes) for p in b13_positions]
                 sum_pnl   = sum(p["pnl"]   for p in enriched)  # receipts: sum of position P&L
                 pos_val   = sum(p["value"] for p in enriched)
                 total     = b13_day_open + sum_pnl              # day_open + receipts = true total
-                cash      = 0.0
+                # cash = banked realized + undeployed capital, so total == cash +
+                # pos_val holds INTRADAY too (was hardcoded 0, which broke that
+                # identity whenever a rotation banked profit -- audit WARN class).
+                cash      = round(total - pos_val, 2)
             else:
                 # HOLD/CASH: no active positions. Use prev_b13_total so a completed
                 # intraday TRADE's gains are PRESERVED after the session closes -- the bot
@@ -1424,7 +1452,7 @@ def main():
                             and str(e.get("ts",""))[:10] == today_iso}
                 _pin = dict(prices)
                 _pin.update({s: p for s, p in _sell_px.items() if p > 0})
-                display_positions = [enrich_position(p, _pin, prev_closes) for p in stored_positions]
+                display_positions = [enrich_position(p, _pin, day_ref_closes) for p in stored_positions]
 
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
@@ -1476,7 +1504,7 @@ def main():
             # prev_close here left shares/cost_basis untouched, so enrich_position recomputed
             # cost_basis = shares*prev_close != deployed capital -> positions no longer summed to the
             # fund's Total P&L on seed day. Do not re-add this block.
-            enriched = [enrich_position(p, prices, prev_closes) for p in raw_pos]
+            enriched = [enrich_position(p, prices, day_ref_closes) for p in raw_pos]
             pos_val  = sum(p["value"]   for p in enriched)
             # CUMULATIVE / COMPOUNDING (mark-to-market on full balance): the entire
             # balance is deployed into the picks, so total = current market value of
@@ -1532,7 +1560,7 @@ def main():
             # close), each position's day change is measured from ENTRY (== its pnl) so
             # Holdings never shows a full-day move the fund never took. Detected by comparing
             # the positions' value-at-yesterday's-close to day_open (survives intraday reruns).
-            _held_val = sum(p["shares"] * prev_closes.get(p["symbol"], p["price"]) for p in enriched)
+            _held_val = sum(p["shares"] * day_ref_closes.get(p["symbol"], p["price"]) for p in enriched)
             if enriched and _oracle_day_open and abs(_held_val - _oracle_day_open) > max(1.0, _oracle_day_open * 0.001):
                 for _p in enriched:
                     _p["day_pnl"] = _p["pnl"]; _p["day_pct"] = _p["pnl_pct"]
@@ -1575,7 +1603,7 @@ def main():
             # fund's Total P&L on seed day. Do not re-add this block.
             enriched = []
             for p in raw_pos:
-                ep = enrich_position(p, prices, prev_closes)
+                ep = enrich_position(p, prices, day_ref_closes)
                 if ep["pnl_pct"] < -STOP_LOSS_PCT:
                     ep["stop_triggered"] = True
                 enriched.append(ep)
@@ -1616,7 +1644,7 @@ def main():
             # close), each position's day change is measured from ENTRY (== its pnl) so
             # Holdings never shows a full-day move the fund never took. Detected by comparing
             # the positions' value-at-yesterday's-close to day_open (survives intraday reruns).
-            _held_val = sum(p["shares"] * prev_closes.get(p["symbol"], p["price"]) for p in enriched)
+            _held_val = sum(p["shares"] * day_ref_closes.get(p["symbol"], p["price"]) for p in enriched)
             if enriched and _wiz_day_open and abs(_held_val - _wiz_day_open) > max(1.0, _wiz_day_open * 0.001):
                 for _p in enriched:
                     _p["day_pnl"] = _p["pnl"]; _p["day_pct"] = _p["pnl_pct"]
@@ -1673,7 +1701,7 @@ def main():
             # prev_close here left shares/cost_basis untouched, so enrich_position recomputed
             # cost_basis = shares*prev_close != deployed capital -> positions no longer summed to the
             # fund's Total P&L on seed day. Do not re-add this block.
-            enriched = [enrich_position(p, prices, prev_closes) for p in raw_pos]
+            enriched = [enrich_position(p, prices, day_ref_closes) for p in raw_pos]
             pos_val  = sum(p["value"]   for p in enriched)
             pnl      = sum(p["pnl"]     for p in enriched)
             total    = sc + pnl
@@ -1693,7 +1721,7 @@ def main():
             # close), each position's day change is measured from ENTRY (== its pnl) so
             # Holdings never shows a full-day move the fund never took. Detected by comparing
             # the positions' value-at-yesterday's-close to day_open (survives intraday reruns).
-            _held_val = sum(p["shares"] * prev_closes.get(p["symbol"], p["price"]) for p in enriched)
+            _held_val = sum(p["shares"] * day_ref_closes.get(p["symbol"], p["price"]) for p in enriched)
             if enriched and _eq_day_open and abs(_held_val - _eq_day_open) > max(1.0, _eq_day_open * 0.001):
                 for _p in enriched:
                     _p["day_pnl"] = _p["pnl"]; _p["day_pct"] = _p["pnl_pct"]
@@ -1842,6 +1870,11 @@ def main():
         "snapshots":        snapshots,
         "funds":            funds_out,
         "leaderboards":     {"week": wk_lb, "all": all_lb},
+        # ONE CLOCK: the prices this run's snapshot was written from. Tomorrow's
+        # runs use them as the day reference so Today's Change (vs yesterday's
+        # snapshot) and the Holdings TODAY column (vs these prices) reconcile.
+        "day_boundary":     {"date": today_iso,
+                             "prices": {s: round(float(v), 8) for s, v in prices.items() if v}},
     }
     STATE_FILE.write_text(json.dumps({"data": state_data}, indent=2))
     print(f"[bitbot13] state -- {len(funds_out)} funds, {len(snapshots)} snapshots")
