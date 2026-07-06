@@ -3,7 +3,14 @@
 **Keep this file honest and current.** Update it at the end of every work session.
 When Claude finishes a change, the LAST step is to update this file.
 
-Last updated: 2026-07-06 late (DATA-INTEGRITY FIX ROUND, owner-approved — engines + audit + frontends + one-time member repair; NOT YET PUSHED — RUN-PUSH-INTEGRITY-FIXES.bat, then RUN-REPAIR-MEMBERS.bat)
+Last updated: 2026-07-06 night — DATA-INTEGRITY FIX ROUND COMPLETE. Pushed (commit b38406d),
+member repair APPLIED (15 fund-states restarted portfolio-wide per owner rule — dry-run +
+before/after in RUN-REPAIR-MEMBERS_LOG.txt), and the full audit is GREEN: exit 0, zero
+failures on all 3 platforms including the member section. Independently re-verified against
+the live backend from the workbench. Remaining warnings only: aistocks 49/50 (clears when P
+tops up at the next session open) + benign 2dp display-rounding notes on sub-$2 coins.
+Small follow-up to commit: repair_member_states.py gained network retries + the
+PORTFOLIO-WIDE RESET rule after the main push — RUN-PUSH-REPAIR-TWEAKS.bat.
 
 ---
 

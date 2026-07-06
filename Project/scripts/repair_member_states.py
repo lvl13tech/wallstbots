@@ -53,10 +53,20 @@ FUNDS     = ["bot13", "oracle", "wizard", "equalizer", "titan"]
 TODAY     = datetime.now(ZoneInfo("America/New_York")).date()
 
 def get(url, key=None):
-    url += ("&" if "?" in url else "?") + "_ab=" + datetime.now().strftime("%Y%m%d%H%M%S%f")
-    req = urllib.request.Request(url, headers={"Cache-Control": "no-cache"})
-    if key: req.add_header("x-internal-key", key)
-    return json.load(urllib.request.urlopen(req, timeout=25))
+    # 3 attempts with backoff -- a single transient read timeout must not kill a repair
+    # run (it did on 2026-07-06: the APPLY pass crashed mid-scan on one slow response).
+    import time
+    last = None
+    for attempt in range(3):
+        u = url + ("&" if "?" in url else "?") + "_ab=" + datetime.now().strftime("%Y%m%d%H%M%S%f")
+        req = urllib.request.Request(u, headers={"Cache-Control": "no-cache"})
+        if key: req.add_header("x-internal-key", key)
+        try:
+            return json.load(urllib.request.urlopen(req, timeout=30))
+        except Exception as e:
+            last = e
+            time.sleep(2 * (attempt + 1))
+    raise last
 
 def post(url, payload, key):
     req = urllib.request.Request(url, data=json.dumps(payload).encode(),
@@ -74,6 +84,7 @@ for platform, (usize, cfg) in PLATFORMS.items():
     ports = get(f"{BACKEND}/internal/portfolios/active?platform={platform}", KEY).get("portfolios", [])
     for p in ports:
         bid = p["bot_id"]; n = len(p.get("holdings") or []); ec_true = n * 1000.0
+        _port_repairs, _port_kept = [], []   # per-portfolio buckets (see escalation below)
         for fund in FUNDS:
             st = (get(f"{BACKEND}/internal/portfolio-fund-state/{bid}/{fund}", KEY) or {}).get("state")
             if not st: continue
@@ -98,22 +109,35 @@ for platform, (usize, cfg) in PLATFORMS.items():
             if tv is not None and ec and tv > ec * 1.5:
                 reasons.append(f"IMPOSSIBLE CARRY tv={tv} > 1.5x cost {ec}")
             tag = f"{platform}/{str(bid)[:8]}/{fund}"
+            try:    starts = next_trading_day(cfg, TODAY).isoformat()
+            except Exception: starts = ""
+            _entry = {"tag": tag, "before": f"tv={tv} glp={st.get('gain_loss_pct')} day_open={mdo}",
+                      "reasons": reasons, "state": {
+                "bot_id": bid, "fund_name": fund, "positions": [], "trade_log": [],
+                "strategy": {"decision": "PENDING", "pending": True, "starts_on": starts,
+                             "rationale": f"Fund restarted at its own starting capital (data repair "
+                                          f"{TODAY.isoformat()}). Trading begins {starts}.",
+                             "_day_open": round(ec_true, 2), "_asof": TODAY.isoformat()},
+                "total_value": round(ec_true, 2), "entry_cost": round(ec_true, 2),
+                "gain_loss": 0.0, "gain_loss_pct": 0.0, "day_pnl": 0.0, "day_pct": 0.0,
+                "window_open": False, "holding_cash": True, "traded_today": False, "closed_out": False,
+            }}
             if reasons:
-                try:    starts = next_trading_day(cfg, TODAY).isoformat()
-                except Exception: starts = ""
-                repairs.append({"tag": tag, "before": f"tv={tv} glp={st.get('gain_loss_pct')} day_open={mdo}",
-                                "reasons": reasons, "state": {
-                    "bot_id": bid, "fund_name": fund, "positions": [], "trade_log": [],
-                    "strategy": {"decision": "PENDING", "pending": True, "starts_on": starts,
-                                 "rationale": f"Fund restarted at its own starting capital (data repair "
-                                              f"{TODAY.isoformat()}). Trading begins {starts}.",
-                                 "_day_open": round(ec_true, 2), "_asof": TODAY.isoformat()},
-                    "total_value": round(ec_true, 2), "entry_cost": round(ec_true, 2),
-                    "gain_loss": 0.0, "gain_loss_pct": 0.0, "day_pnl": 0.0, "day_pct": 0.0,
-                    "window_open": False, "holding_cash": True, "traded_today": False, "closed_out": False,
-                }})
+                _port_repairs.append(_entry)
             else:
-                kept.append(f"{tag}  tv={tv} glp={st.get('gain_loss_pct')}  (healthy -- untouched)")
+                _port_kept.append(_entry)
+
+        # PORTFOLIO-WIDE RESET (owner rule 2026-07-06): "on a reset every bot on that page
+        # needs to be reset." A member's 5 funds share one page and one story -- if ANY fund
+        # in a portfolio is corrupt, ALL 5 restart together at the member's own N x $1,000.
+        # Funds in fully-healthy portfolios are never touched.
+        if _port_repairs:
+            for e in _port_kept:
+                e["reasons"] = ["PORTFOLIO-WIDE RESET: sibling fund(s) corrupt -- every bot on the "
+                                "member's page restarts together (owner rule)"]
+            repairs.extend(_port_repairs + _port_kept)
+        else:
+            kept.extend(f"{e['tag']}  {e['before']}  (healthy -- untouched)" for e in _port_kept)
 
 print("=" * 78)
 print(f"  MEMBER FUND-STATE REPAIR  --  {TODAY.isoformat()}  --  mode: {'APPLY' if APPLY else 'DRY RUN'}")
