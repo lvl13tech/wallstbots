@@ -3,7 +3,102 @@
 **Keep this file honest and current.** Update it at the end of every work session.
 When Claude finishes a change, the LAST step is to update this file.
 
-Last updated: 2026-06-28 (BOT13 Today's-Strategy + Trade-History fixes built+verified, NOT YET PUSHED — DEPLOY-bot13-strategy-tradehistory_2026-06-28.bat)
+Last updated: 2026-07-06 late (DATA-INTEGRITY FIX ROUND, owner-approved — engines + audit + frontends + one-time member repair; NOT YET PUSHED — RUN-PUSH-INTEGRITY-FIXES.bat, then RUN-REPAIR-MEMBERS.bat)
+
+---
+
+**2026-07-06 (late) — Full data-integrity fix round (owner-approved item by item). NOT YET PUSHED.**
+Deploy order: 1) RUN-PUSH-INTEGRITY-FIXES.bat (commit+push everything) → 2) wait for the next
+scheduled refresh (or run one) so the fixed engines write fresh states → 3) RUN-REPAIR-MEMBERS.bat
+(one-time; dry-run report, then applies, then re-audits) → 4) RUN-AUDIT.bat any time after.
+
+- **A1 — Dead scaling code deleted** (`refresh_portfolios.py`): the old "member dollars scaled
+  from the platform" block and its false "confirmed correct" docstring are gone. The engine was
+  already independent (dollars from the member's own positions); this removes the trap.
+- **A2 — Crypto price parity** (`refresh_portfolios.py`): member coin prices now fetched with the
+  SAME Yahoo ticker mapping as the platform engine (ADA→ADA-USD, UNI→UNI7083-USD…, TRON→TRX-USD,
+  fallback SYM-USD). Root cause of bitbot13 member equalizer −37% fiction. Also: an unpriceable
+  symbol is now NEVER seeded at a fabricated $1.00 entry — it stays as cash and seeds itself at
+  the first real price; its cash stays in the fund total (baselines).
+- **A2b — aistocks members ran the CRYPTO engine** (`refresh_portfolios.py`): "aistocks" was
+  missing from PLATFORM_CFG, so member BOT13 on aistocks used crypto logic and crypto hours.
+  Added the equity entry. (Standalone CLI choices also gained "aistocks".)
+- **D — PSTG → P** (`refresh_aistocks.py`): Pure Storage rebranded to Everpure; ticker changed
+  PSTG→P (Apr 2026) which killed the feed — that was the missing 50th stock (SPCX is fine and
+  trading). Universe renamed. Plus **BASELINE TOP-UP** in all 3 public engines: a universe symbol
+  missing from an already-seeded equalizer/titan enters at the next open session's real price
+  with its idle per-slot dollars ($1,000 idle on aistocks eq + titan gets deployed next session).
+- **B — Audit member checks rewritten for independent sims** (`audit_integrity.py`): LOCKSTEP
+  (which assumed the old scaling engine) replaced by: OWN-POSITIONS (member total == sum of its
+  own holdings + baseline idle cash), per-position derivations, fabricated-$1.00-entry signature,
+  price/entry sanity band, IMPOSSIBLE MOVE derived from (total − _day_open)/_day_open (the
+  internal endpoint carries no day_pct), PLATFORM-DOLLAR-LEAK signature. Verified live: 25
+  failures across the 3 platforms, all pointing at the 7 known-corrupt member fund-states +
+  their fabricated positions; every healthy state passes.
+- **A3 — One-time repair** (`repair_member_states.py` + RUN-REPAIR-MEMBERS.bat): detects corrupt
+  member fund-states by signature (leak / impossible move / fabricated $1 entries / not-own-
+  derived / impossible carry >1.5×cost) and restarts ONLY those at the member's own N×$1,000,
+  trading begins next session. Dry-run verified live: flags exactly 7 (DoubleUp b13/oracle/
+  wizard, NextTech b13, TopCryp b13/equalizer/titan), keeps the 8 healthy ones. NOTHING deleted —
+  old rows/snapshots remain as the audit trail; charts era-guard at the repair boundary.
+- **C — Frontends, identical ×3 sites**: bot-detail chart now plots the member's OWN history
+  (was: platform history rescaled to member capital — forbidden pattern on display); bot-detail
+  My-Holdings Entry/Current now read from the member's own equalizer fund state (bot_holdings
+  carries no prices — every row showed "—"); leaderboard.html no longer hardcodes "+" (negative
+  returns render correctly in red).
+- **Known-good vs untested:** audit + repair-detection verified against live data from here.
+  Engine changes compile-gated in the push .bat (sandbox mirrors were NUL-corrupted, so compile
+  runs Windows-side at commit time). Frontend changes need a browser once deployed: bot-detail
+  chart title reads "Performance Trajectory — Your Portfolio", holdings show real Entry/Current.
+- **Open (optional, needs owner call):** a tiny internal GET for member history snapshots would
+  let the audit verify member charts point-by-point; internal fund-state endpoint could also
+  return day_pnl/day_pct so the audit checks the stored values directly.
+
+---
+
+**2026-07-06 (evening) — Visual walkthrough of all 3 sites + audit hardening. AUDIT-ONLY CHANGE (one file: Project/scripts/audit_integrity.py). NOT YET PUSHED — RUN-PUSH-audit-hardening.bat.**
+- **Walkthrough result: all 3 PUBLIC sites reconcile perfectly** (every box vs every box:
+  value=cash+holdings, P&L=value−start, today=value−prior close, holdings sums, leaderboard,
+  chart last point, BOT13 trade-history ledger). Home/race/fund pages share one data fetch,
+  so they cannot drift from each other.
+- **MEMBER data is corrupted on all 3 sites and the old audit could not see it** (it only
+  checked that member numbers agreed with each other, and corrupt numbers can be internally
+  consistent). Live examples found on the pages members see: DoubleUp (wallstbots, $20,000
+  start) shows $72,110 / +260.55% all-time / +31.11% today while platform BOT13 is +4.23%;
+  NextTech (aistocks) +120.96% today; TopCryp (bitbot13) equalizer −37%. Root signature:
+  PLATFORM-scale dollars ($55,000/$50,000 day-opens) stored inside member records + stale
+  pre-reset carries. The member engine (refresh_portfolios.py) computes member dollars by
+  SCALING from the platform tracker, so member pct must equal platform pct — divergence = corrupt.
+- **New audit checks added (all verified firing on the live data — 20 FAILURES, 4 new WARNs):**
+  LOCKSTEP (member pct must equal platform pct), PLATFORM-DOLLAR LEAK (member day_open must be
+  on the member's own N×$1,000 scale), STARTED-AT (entry_cost = N holdings × $1,000), STALE
+  STATE (member state must be same-day on a trading day), BOT13 INTRADAY CASH (cash = day_open −
+  deployed + realized, verified live on bitbot13 mid-session), BASELINE DEPLOYMENT (equalizer/
+  titan must hold the whole universe — caught aistocks equalizer AND titan at 49/50 with
+  ~$1,000 idle each), plus a CACHE-BUSTER on every audit fetch (an edge cache served an
+  18-hour-old state to an off-site audit run — audits must always judge live data).
+- **Known-good vs untested:** public-site data verified clean (live). New audit checks verified
+  firing (live). The MEMBER DATA ITSELF is still corrupt — the audit now reports it, nothing
+  repairs it. Repair is an engine/data decision the owner must approve separately.
+- **Owner decisions still open (NO changes made):**
+  1. The scaling formula in refresh_portfolios.py itself conflicts with Rule 0 (a portfolio
+     activated mid-era inherits the platform's since-reset gains). Keep scaling or switch
+     members to true independent sims? The audit documents both modes (see its docstring).
+  2. bot-detail.html trajectory chart draws PLATFORM history rescaled to member capital
+     (display-only Rule 0 concern, all 3 sites).
+  3. Member history (bot_performance_snapshots) has no internal read endpoint, so the audit
+     cannot yet verify member charts (DoubleUp's history shows $55,000 flat on 7/04–7/05 on a
+     $20,000 portfolio — visible corruption with no automated check). A tiny internal GET
+     would close this.
+  4. leaderboard.html hardcodes a "+" before gain_loss_pct (would render "+-3.00%" if a
+     negative ever ranks).
+- Sandbox mirror note: audit_integrity.py was served TRUNCATED (474 of 640 lines) by the sync
+  layer during this session — Windows-side file is complete and compile-gated in the push .bat.
+
+---
+
+(previous header, kept for history)
+2026-06-28 (BOT13 Today's-Strategy + Trade-History fixes built+verified, NOT YET PUSHED — DEPLOY-bot13-strategy-tradehistory_2026-06-28.bat)
 `refresh_lvl13.py`, `refresh_bitbot13.py` — written and verified locally, **NOT YET
 COMMITTED/PUSHED**) ·
 Status: **CODE FIXED AND COMPILE-VERIFIED ON ALL 3 PRODUCT SITES. Owner still needs to run
@@ -644,6 +739,15 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 ---
 
 ## Session Log (append newest at top)
+
+- **2026-07-06 pm (MEMBERS P1 FIXED, commit `1adaab9`):** the three
+  carry-forward guards in refresh_portfolios.py (bot13/oracle/wizard) no longer
+  clamp to the platform-scaled member_value — corruption is detected vs the
+  fund's OWN prior day-open and clamped to the member's own prior value. No
+  platform-scaled fallback remains in the member carry-forward path. With the
+  earlier readback fix (e33af74) and the audit's member assertions, the member
+  section's known integrity issues are all addressed. Verify: owner refresh +
+  RUN-AUDIT.bat (member section must reconcile with zero failures).
 
 - **2026-07-06 pm (DE-DUP increment 3 — COMPLETE, commit `063ff96`):**
   oracle/wizard totals (residual cash + compounding) and BOT13 flat-day ledger

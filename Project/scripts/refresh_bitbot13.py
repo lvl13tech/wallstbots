@@ -1572,6 +1572,34 @@ def main():
                                         "entry_price": round(price, price_dp), "cost_basis": round(per_rest, 2)})
                 print(f"  TITAN: seeded {len(raw_pos)} positions (top10 ${per_top:.0f} / rest ${per_rest:.0f})")
 
+            # BASELINE TOP-UP (2026-07-06, owner-approved): a universe symbol that was
+            # unpriceable at seed time never entered, and its per-slot dollars sat as idle
+            # cash forever -- the seed above only runs when the fund is EMPTY. Whenever a
+            # universe symbol is missing from an already-seeded baseline and has a live price
+            # during an open session, enter it NOW at that real price with the fund's per-slot
+            # dollars (equalizer: sc/N; titan: its stored per-top/per-rest split). A real
+            # entry at a real session price -- Day-1 rule safe.
+            if raw_pos and window_open and prices and fid in ("equalizer", "titan"):
+                _held_syms = {p.get("symbol") for p in raw_pos}
+                for sym in UNIVERSE:
+                    if sym in _held_syms:
+                        continue
+                    _px_top = prices.get(sym, 0)
+                    if not _px_top or _px_top <= 0:
+                        continue
+                    if fid == "equalizer":
+                        _slot = sc / len(UNIVERSE)
+                    else:
+                        _t10 = fund.get("top10") or []
+                        _slot = float(fund.get("per_top_dollars") or 0) if sym in _t10 \
+                                else float(fund.get("per_rest_dollars") or 0)
+                    if _slot <= 0:
+                        continue
+                    _dp_top = 8 if _px_top < 0.01 else (4 if _px_top < 1 else 2)
+                    raw_pos.append({"symbol": sym, "shares": round(_slot / _px_top, 6),
+                                    "entry_price": round(_px_top, _dp_top), "cost_basis": round(_slot, 2)})
+                    print(f"  {fid.upper()}: TOP-UP entered {sym} at ${_px_top} with ${_slot:.0f} (was idle cash)")
+
             # NOTE (2026-07-02): NO inception-day entry_price rebase. The seed functions already
             # set entry_price = the price the shares were bought at, so cost_basis (= shares*entry)
             # equals the capital deployed and Sum(position P&L) == fund P&L. Rebasing entry_price to

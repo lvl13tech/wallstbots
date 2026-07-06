@@ -63,7 +63,11 @@ BACKEND_URL = "https://wallstbots-backend-868128114349.us-east1.run.app"
 # -- Platform configs ----------------------------------------------------------
 
 PLATFORM_CFG = {
-    "lvl13":      {"market": "equity", "cfg": EQUITY_CFG},
+    "lvl13":      {"market": "equity", "cfg": EQUITY_CFG},   # legacy alias (pre-migration)
+    # (2026-07-06 fix) "aistocks" was MISSING here: refresh_aistocks.py calls
+    # run("aistocks"), which fell through to market=None -> is_equity False -> aistocks
+    # member BOT13 was simulated with the CRYPTO engine and crypto session hours.
+    "aistocks":   {"market": "equity", "cfg": EQUITY_CFG},
     "wallstbots": {"market": "equity", "cfg": EQUITY_CFG},
     "bitbot13":   {"market": "crypto", "cfg": CRYPTO_CFG},
 }
@@ -214,20 +218,30 @@ def push_bot_states(secrets, results):
         print(f"  [bot-state] error: {e}")
 
 
-def get_prices_for_symbols(symbols):
-    """Fetch live prices for a set of symbols via yfinance."""
+def get_prices_for_symbols(symbols, yf_map=None):
+    """Fetch live prices for a set of symbols via yfinance.
+
+    yf_map (2026-07-06 crypto-parity fix): optional {state_symbol: yahoo_ticker} mapping.
+    Crypto members' coins need Yahoo tickers ("ADA" -> "ADA-USD", "UNI" -> "UNI7083-USD");
+    downloading raw member symbols returned junk/no prices, which is what broke bitbot13
+    member baselines (-37% fiction). Same mapping source as the platform engine
+    (refresh_bitbot13.UNIVERSE_MAP) -- one truth for both public and member sims.
+    """
     if yf is None or not symbols:
         return {}, {}
     import pandas as pd
+    yf_map = yf_map or {}
+    dl_of  = {sym: (yf_map.get(sym) or sym) for sym in symbols}
     prices, prev_closes = {}, {}
     try:
-        raw = yf.download(list(symbols), period="2d", auto_adjust=True, progress=False)
+        raw = yf.download(list(set(dl_of.values())), period="2d", auto_adjust=True, progress=False)
         if raw.empty:
             return {}, {}
         for sym in symbols:
             try:
+                col = dl_of[sym]
                 if isinstance(raw.columns, pd.MultiIndex):
-                    closes = raw["Close"][sym].dropna()
+                    closes = raw["Close"][col].dropna()
                 else:
                     closes = raw["Close"].dropna()
                 if len(closes) >= 1:
@@ -261,20 +275,23 @@ def get_prices_for_symbols(symbols):
     return prices, prev_closes
 
 
-def get_hist_for_symbols(symbols):
-    """Fetch 90-day history for a set of symbols."""
+def get_hist_for_symbols(symbols, yf_map=None):
+    """Fetch 90-day history for a set of symbols. yf_map: see get_prices_for_symbols."""
     if yf is None or not symbols:
         return {}
     import pandas as pd
+    yf_map = yf_map or {}
+    dl_of  = {sym: (yf_map.get(sym) or sym) for sym in symbols}
     hist = {}
     try:
-        raw = yf.download(list(symbols), period="90d", auto_adjust=True, progress=False)
+        raw = yf.download(list(set(dl_of.values())), period="90d", auto_adjust=True, progress=False)
         if raw.empty:
             return {}
         for sym in symbols:
             try:
+                col = dl_of[sym]
                 if isinstance(raw.columns, pd.MultiIndex):
-                    closes = [float(x) for x in raw["Close"][sym].dropna().tolist()]
+                    closes = [float(x) for x in raw["Close"][col].dropna().tolist()]
                 else:
                     closes = [float(x) for x in raw["Close"].dropna().tolist()]
                 if len(closes) >= 20:
@@ -455,8 +472,15 @@ def build_baseline_positions(universe, prices, prev_closes, original_cost, prev_
             # First run for this holding -- set inception values now.
             # Use prev_close as entry price so P&L reflects real movement
             # from the prior close. If no prev_close, fall back to today's price.
+            # NO REAL PRICE -> NO POSITION (2026-07-06, Rule 0): the old fallback seeded a
+            # FABRICATED $1.00 entry, so when a real price later appeared the position showed
+            # a fictitious crash/moonshot (this built bitbot13 member equalizer's -37%). An
+            # unpriceable symbol is skipped -- its allocation stays as cash -- and it seeds
+            # itself at the real price on the first run that can price it.
+            if prev <= 0 and price <= 0:
+                continue
             alloc       = original_cost / len(universe) if universe else 0
-            entry_price = prev if prev > 0 else (price if price > 0 else 1.0)
+            entry_price = prev if prev > 0 else price
             shares      = alloc / entry_price if entry_price > 0 else 0
             cost_basis  = alloc
 
@@ -489,19 +513,17 @@ def build_baseline_positions(universe, prices, prev_closes, original_cost, prev_
 
 def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_data, secrets=None):
     """
-    Compute per-member portfolio values by scaling from the platform tracker state.
+    Compute per-member portfolio values as INDEPENDENT simulations (CLAUDE.md Rule 0).
 
-    Formula (confirmed correct):
-        member_value  = entry_cost × (platform_fund_total / platform_starting_capital)
-        gain_loss     = member_value - entry_cost
-        gain_loss_pct = gain_loss / entry_cost × 100
-        member_day_open = original_cost × (platform_day_open / platform_starting_capital)
-        day_pnl       = member_value - member_day_open   (== gain_loss on the member's day 1)
-        day_pct       = day_pnl / member_day_open × 100   (capital-neutral == platform day_pct)
+    Each member fund is its OWN simulation seeded at original_cost (= N x $1,000) on the
+    portfolio's creation day. Every dollar value is derived from the fund's OWN positions
+    at real entry prices -- see the "REAL, INDEPENDENT DOLLAR VALUES" block below. Member
+    values are NEVER scaled from the platform tracker (the pre-2026-07-06 engine scaled
+    member dollars by platform_total/platform_sc; that fabricated member gains and is the
+    exact corruption the audit's member checks now catch -- do not reintroduce it).
 
-    BOT13/Oracle/Wizard engines still run for strategy/picks/rationale display.
-    Equalizer/Titan reuse stored inception positions for holdings table.
-    All dollar values come from tracker ratios -- single source of truth.
+    The platform tracker is still fetched, but ONLY as an availability gate and for
+    logging -- never as a source of member dollar values.
     """
     if secrets is None:
         secrets = load_secrets()
@@ -539,7 +561,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
         print(f"  [portfolios] WARNING: could not fetch tracker state: {e}")
 
     if not platform_sc or platform_sc <= 0:
-        print(f"  [portfolios] ERROR: platform_sc={platform_sc} -- cannot scale member values. Aborting.")
+        print(f"  [portfolios] ERROR: platform_sc={platform_sc} -- tracker state unavailable. Aborting this run.")
         return []
 
     results = []
@@ -610,22 +632,13 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 print(f"  [portfolios] WARNING: no tracker data for {fund_name} -- skipping")
                 continue
 
-            # Core scaling formula
-            ratio        = tf["total"] / platform_sc
-            member_value = round(original_cost * ratio, 2)
-            gain_loss    = round(member_value - original_cost, 2)
-            gain_loss_pct= round(gain_loss / original_cost * 100, 4)
-            # Today's Change scaled the SAME way as member_value -- mirrors the public
-            # engine (day_pnl = total - day_open). On the member's FIRST day the platform
-            # day_open == platform_sc, so member_day_open == original_cost and day_pnl ==
-            # gain_loss EXACTLY (the one-day rule: Today's Change == Total P&L on day 1).
-            # day_pct is capital-neutral (== platform day_pct). Must stay in lockstep with
-            # the public engines -- see refresh_wallstbots/aistocks/bitbot13.py.
-            member_day_open = round(original_cost * (tf["day_open"] / platform_sc), 2) if platform_sc else original_cost
-            day_pnl         = round(member_value - member_day_open, 2)
-            day_pct         = round(day_pnl / member_day_open * 100, 4) if member_day_open else 0.0
+            # (2026-07-06) The old "core scaling formula" that computed member dollars from
+            # platform tracker ratios was DELETED here. It was dead code -- its outputs were
+            # overwritten by the REAL, INDEPENDENT DOLLAR VALUES block below -- but its
+            # presence (and a docstring calling it "confirmed correct") invited someone to
+            # trust it again. Member dollars come ONLY from the member's own positions.
 
-            # -- Strategy / positions (for display only -- not used for dollar values) --
+            # -- Strategy / positions --
             positions = []
             strategy  = {}
             _member_closed_out = False   # set True below if bot13 force-flattened today
@@ -848,8 +861,17 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
             elif fund_name == "wizard":
                 _carry = float(prev_wizard_total)
             else:
-                _carry = float(original_cost)            # equalizer/titan are always fully invested
+                _carry = float(original_cost)            # equalizer/titan capital is fixed at cost
             real_total = _pos_value if positions else round(_carry, 2)
+            # BASELINE IDLE CASH (2026-07-06, Rule 0): equalizer/titan hold $1,000 per stock;
+            # a symbol with no real price yet is NOT seeded (no fabricated entries), so its
+            # allocation sits as cash and MUST stay in the total (mirrors the public engine's
+            # NO VANISHED CASH rule). Baselines never compound, so idle = cost - deployed.
+            if fund_name in ("equalizer", "titan") and positions:
+                _deployed = sum(float(_p.get("cost_basis") or 0) for _p in positions)
+                _idle = max(0.0, float(original_cost) - _deployed)
+                if _idle > 0.005:
+                    real_total = round(_pos_value + _idle, 2)
 
             # Day-1 rule + day_open carry (per fund, ET). First-ever run -> day 1 opens at cost.
             _ps_map = {"bot13": b13_state, "oracle": oracle_state, "wizard": wizard_state,
@@ -929,16 +951,35 @@ def run(platform, prices=None, prev_closes=None, hist_data=None, secrets=None):
             if sym:
                 all_symbols.add(sym)
 
+    # CRYPTO PRICE PARITY (2026-07-06, owner-approved): on the crypto platform, member
+    # symbols must be fetched with the SAME Yahoo ticker mapping the platform engine uses
+    # ("ADA" -> "ADA-USD", "UNI" -> "UNI7083-USD", ...). Raw member symbols returned junk/no
+    # prices, which fabricated member baseline values (bitbot13 equalizer -37% fiction).
+    # Symbols outside the platform map fall back to "<SYM>-USD" (+ known aliases); anything
+    # STILL unpriceable is handled honestly downstream (stays as cash, never entry=$1).
+    yf_map = None
+    if PLATFORM_CFG.get(platform, {}).get("market") == "crypto":
+        yf_map = {}
+        try:
+            from refresh_bitbot13 import UNIVERSE_MAP as _platform_map   # lazy: avoids circular import at load
+            yf_map.update(_platform_map)
+        except Exception as _e:
+            print(f"  [portfolios] WARNING: could not load platform crypto map ({_e}); using -USD fallback only")
+        _CRYPTO_ALIASES = {"TRON": "TRX-USD"}   # member-entered names Yahoo knows differently
+        for _s in all_symbols:
+            if _s not in yf_map:
+                yf_map[_s] = _CRYPTO_ALIASES.get(_s, _s + "-USD")
+
     if prices is None or not prices:
         print(f"  [portfolios] fetching prices for {len(all_symbols)} unique symbols...")
-        prices, prev_closes = get_prices_for_symbols(all_symbols)
-        hist_data = get_hist_for_symbols(all_symbols)
+        prices, prev_closes = get_prices_for_symbols(all_symbols, yf_map)
+        hist_data = get_hist_for_symbols(all_symbols, yf_map)
     else:
         missing = all_symbols - set(prices.keys())
         if missing:
             print(f"  [portfolios] fetching {len(missing)} additional symbols not in global state...")
-            extra_p, extra_pc = get_prices_for_symbols(missing)
-            extra_h = get_hist_for_symbols(missing)
+            extra_p, extra_pc = get_prices_for_symbols(missing, yf_map)
+            extra_h = get_hist_for_symbols(missing, yf_map)
             prices      = {**prices, **extra_p}
             prev_closes = {**prev_closes, **extra_pc}
             hist_data   = {**hist_data, **extra_h}
@@ -952,7 +993,9 @@ def run(platform, prices=None, prev_closes=None, hist_data=None, secrets=None):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("platform", nargs="?", default="lvl13",
-                        choices=["lvl13", "wallstbots", "bitbot13"])
+    # (2026-07-06) choices updated: "aistocks" was missing (stale pre-migration list --
+    # the AI/quantum site moved from lvl13 to aistocks; lvl13 kept as a legacy alias).
+    parser.add_argument("platform", nargs="?", default="aistocks",
+                        choices=["lvl13", "aistocks", "wallstbots", "bitbot13"])
     args = parser.parse_args()
     run(args.platform)

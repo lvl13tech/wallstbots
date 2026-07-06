@@ -641,8 +641,14 @@ function renderHoldings() {
     + '<th style="padding:10px 16px;text-align:right;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:1px solid var(--border)"></th>'
     + '</tr></thead><tbody>'
     + holdings.map(h => {
-        const ep = parseFloat(h.entry_price) || 0;
-        const cp = parseFloat(h.current_price) || ep;
+        // (2026-07-06) bot_holdings rows carry no prices (Entry/Current showed "—" for
+        // every coin). Real prices live in the member's own EQUALIZER fund state --
+        // every holding at $1,000 with its true entry and current price -- so read them
+        // from there by symbol. Falls back to "—" until the fund's first session.
+        const _eqp = ((FUND_STATES.equalizer || {}).positions || [])
+                       .find(p => (p.symbol || '').toUpperCase() === (h.symbol || '').toUpperCase()) || {};
+        const ep = parseFloat(h.entry_price) || parseFloat(_eqp.entry_price) || 0;
+        const cp = parseFloat(h.current_price) || parseFloat(_eqp.price) || ep;
         const alloc = parseFloat(h.allocated) || 1000;
         const ret = ep > 0 ? ((cp - ep) / ep * 100) : 0;
         const pos = ret >= 0;
@@ -809,6 +815,7 @@ async function loadFundStates() {
     }));
     renderLeaderboard();  // re-render with real data once loaded
     renderRace();         // re-render race grid with actual fund values
+    renderHoldings();     // re-render holdings with real entry/current prices (equalizer state)
   } catch(e) {}
 }
 
@@ -947,58 +954,61 @@ function renderRace() {
 }
 
 // -- Performance Trajectory chart ----------------------------------------------
-function drawPortfolioChart() {
+// (2026-07-06, data-integrity Rule 0) This chart used to draw the PLATFORM's snapshot
+// history rescaled to the member's capital -- fictitious member history (the forbidden
+// scaling pattern, on display). It now plots the member's OWN performance snapshots,
+// the exact same source portfolio-fund.html uses. Era guard (bot13CurrentEra) keeps the
+// line to the current era so a reset boundary never reads as a real trading day.
+async function drawPortfolioChart() {
   const wrap = document.getElementById('chartWrap');
   const ctx  = document.getElementById('chartPortfolio');
   if (!wrap) return;
   if (ctx && CHARTS_BD.portfolio) CHARTS_BD.portfolio.destroy();
 
-  // Use tracker snapshots — same source as homescreen, scaled to member capital
-  const cap   = holdings.length * 1000;
-  const snaps = (STATE.funds && STATE.funds.snapshots) || [];
+  let snaps = [];
+  try { const d = await api.getBotPerformance(BOT_ID, 90); snaps = d?.snapshots || []; } catch(e) {}
 
+  const created = botData?.created_at
+    ? new Date(botData.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
+    : 'today';
+  const titleEl = document.getElementById('chartTitle');
+  if (titleEl) titleEl.innerHTML = 'Performance Trajectory — Your Portfolio';
   if (!snaps.length) {
-    const created = botData?.created_at
-      ? new Date(botData.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
-      : 'today';
     wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.8">Portfolio started ' + created + '.<br>Performance history appears after the first trading day.</div>';
     return;
   }
 
-  const platformCap = (STATE.funds && STATE.funds.starting_capital) || 50000;
-  const labels   = snaps.map(s => s.date);
-  const datasets = FUND_ORDER.map(fid => {
-    const meta = FUND_META[fid];
-    return {
-      label: meta.name,
-      data: snaps.map(s => {
-        const v = s[fid];
-        if (v == null) return null;
-        const pct = (v - platformCap) / platformCap;
-        return Math.round(cap + cap * pct);
-      }),
-      borderColor: meta.color,
-      backgroundColor: 'transparent',
-      tension: 0.3, borderWidth: 2, fill: false,
-      pointRadius: snaps.length > 30 ? 0 : 3,
-      spanGaps: true,
-    };
-  });
-
-  const titleEl = document.getElementById('chartTitle');
-  if (titleEl) titleEl.innerHTML = 'Performance Trajectory — All 5 Strategies';
+  const era    = bot13CurrentEra(snaps);          // current era only (post last reset)
+  const labels = era.map(s => s.date);
+  const values = era.map(s => s.total_value);
+  // The snapshots table can lag the live state by a day; end the line at the live
+  // total so the chart always matches the cards (same fix as portfolio-fund.html).
+  try {
+    const liveTotal = (botData && botData.performance && botData.performance.total_value != null)
+      ? Number(botData.performance.total_value) : null;
+    const liveDate  = (botData && botData.performance && botData.performance.snapshot_date)
+      ? String(botData.performance.snapshot_date) : null;
+    const lastLabel = labels[labels.length - 1];
+    if (liveTotal != null && liveDate) {
+      if (liveDate === lastLabel) values[values.length - 1] = liveTotal;
+      else if (liveDate > lastLabel) { labels.push(liveDate); values.push(liveTotal); }
+    }
+  } catch (e) {}
 
   CHARTS_BD.portfolio = new Chart(ctx, {
     type: 'line',
-    data: { labels, datasets },
+    data: { labels, datasets: [{
+      label: 'Your Portfolio',
+      data: values,
+      borderColor: '#00d4ff',
+      backgroundColor: '#00d4ff22',
+      tension: 0.3, borderWidth: 2, fill: true,
+      pointRadius: labels.length > 30 ? 0 : 3,
+      spanGaps: true,
+    }] },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: true,
-          labels: { color: '#9ca3af', boxWidth: 12, font: { size: 11 } }
-        }
-      },
+      plugins: { legend: { display: false } },
       scales: {
         x: { ticks: { color:'#7d8590', maxTicksLimit:8 }, grid: { color:'#1e2633' } },
         y: { ticks: { color:'#7d8590', callback: v => '$'+v.toLocaleString() }, grid: { color:'#1e2633' } }

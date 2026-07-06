@@ -64,7 +64,7 @@ UNIVERSE = [
     # AI Software & Infrastructure
     "CRM","NOW","SNOW","DDOG","NET","ZS","OKTA","PATH","PLTR","AI","BBAI","SOUN","UPST","RBRK",
     # AI Data, Security & Robotics
-    "PANW","ANET","PSTG","TSLA","ISRG",
+    "PANW","ANET","P","TSLA","ISRG",   # P = Everpure (Pure Storage rebrand; ticker changed PSTG->P Apr 2026)
     # AI Healthcare
     "RXRX","GRAL","SMMT",
     # Quantum Computing -- established
@@ -93,7 +93,7 @@ SECTORS = {
     "PLTR":"AI SOFTWARE","AI":"AI SOFTWARE","BBAI":"AI SOFTWARE","SOUN":"AI SOFTWARE",
     "UPST":"AI SOFTWARE","RBRK":"CYBER",
     # AI Data, Security & Robotics
-    "PANW":"CYBER","ANET":"AI INFRA","PSTG":"AI DATA","TSLA":"AI ROBOTICS","ISRG":"AI HEALTH",
+    "PANW":"CYBER","ANET":"AI INFRA","P":"AI DATA","TSLA":"AI ROBOTICS","ISRG":"AI HEALTH",
     # AI Healthcare
     "RXRX":"AI HEALTH","GRAL":"AI HEALTH","SMMT":"AI HEALTH",
     # Quantum Computing
@@ -1439,6 +1439,33 @@ def main():
                         raw_pos.append({"symbol": sym, "shares": round(per_rest / price, 6),
                                         "entry_price": round(price, 4), "cost_basis": round(per_rest, 2)})
                 print(f"  TITAN: seeded {len(raw_pos)} positions (top10 ${per_top:.0f} / rest ${per_rest:.0f})")
+
+            # BASELINE TOP-UP (2026-07-06, owner-approved): a universe symbol that was
+            # unpriceable at seed time (e.g. PSTG's ticker changed to P) never entered, and
+            # its per-slot dollars sat as idle cash forever -- the seed above only runs when
+            # the fund is EMPTY. Whenever a universe symbol is missing from an already-seeded
+            # baseline and has a live price during an open session, enter it NOW at that real
+            # price with the fund's per-slot dollars (equalizer: sc/N; titan: its stored
+            # per-top/per-rest split). A real entry at a real session price -- Day-1 rule safe.
+            if raw_pos and window_open and prices and fid in ("equalizer", "titan"):
+                _held_syms = {p.get("symbol") for p in raw_pos}
+                for sym in UNIVERSE:
+                    if sym in _held_syms:
+                        continue
+                    _px_top = prices.get(sym, 0)
+                    if not _px_top or _px_top <= 0:
+                        continue
+                    if fid == "equalizer":
+                        _slot = sc / len(UNIVERSE)
+                    else:
+                        _t10 = fund.get("top10") or []
+                        _slot = float(fund.get("per_top_dollars") or 0) if sym in _t10 \
+                                else float(fund.get("per_rest_dollars") or 0)
+                    if _slot <= 0:
+                        continue
+                    raw_pos.append({"symbol": sym, "shares": round(_slot / _px_top, 6),
+                                    "entry_price": round(_px_top, 4), "cost_basis": round(_slot, 2)})
+                    print(f"  {fid.upper()}: TOP-UP entered {sym} at ${_px_top} with ${_slot:.0f} (was idle cash)")
 
             # On inception day, reset entry prices to prev_close so pnl starts at 0
             # NOTE (2026-07-02): NO inception-day entry_price rebase. The seed functions already

@@ -62,11 +62,35 @@ STRATEGY box:
   oracle & wizard ...... decision MUST NOT be HOLD (they always deploy)
   bot13 ................ decision HOLD -> pos_val == 0
 
+BOT13 INTRADAY CASH (while invested, window open):
+  cash MUST = day_open - sum(cost_basis) + sum(today's SELL realized)
+  (no cash vanishes or appears during intraday rotations)
+
+BASELINE DEPLOYMENT (equalizer/titan, invested, not display-frozen):
+  positions count SHOULD = universe size (a missing asset leaves $1,000 idle) -> WARN
+
 MEMBER page (needs internal key; best-effort, skips cleanly if unavailable):
   fund state ........... total_value MUST = entry_cost + gain_loss
                          gain_loss_pct MUST = gain_loss / entry_cost * 100
-  member positions ..... same per-row reconciliation as public
-  member chart ......... last snapshot total_value ~ live total_value
+  "Started at" box ..... entry_cost MUST = n_holdings * 1000 (the member's own N)
+  STALE STATE .......... snapshot_date MUST be today on a trading day (else WARN + skip cross-checks)
+  INDEPENDENT SIMS (engine contract since 2026-07-06: each member fund is its OWN
+    simulation seeded at N x $1,000; dollars come ONLY from its own positions) ...
+    OWN-POSITIONS ...... total_value MUST = sum(position values) (+ idle cash
+                         ec - sum(cost) for equalizer/titan, which never compound)
+    per-position ....... value = shares x price ; cost = shares x entry ;
+                         pnl = value - cost  (verifiable from real entries)
+    IMPOSSIBLE MOVE .... |day_pct| beyond a sane one-day cap (30% equity / 50%
+                         crypto) = fabricated data, not trading
+  PLATFORM-DOLLAR LEAK . platform-scale dollars ($50k/$55k) must NEVER appear in a
+                         member record: _day_open ~ platform sc while entry_cost
+                         differs = the exact 2026-07-06 corruption signature
+                         (member _day_open stored 55000 on a $20,000 portfolio
+                         -> +260% fictitious all-time gain)
+  member chart ......... NOT auditable server-side yet: bot_performance_snapshots has
+                         no internal read endpoint (member-JWT only). History checks
+                         (each point pct==dollars; last point==live) need a tiny
+                         internal GET before they can be asserted here.
 ============================================================================
 """
 import json, sys, urllib.request, urllib.parse
@@ -114,8 +138,13 @@ TPCT = 0.06                  # percentage-point tolerance (exact)
 TPCTX = 0.20                 # percentage-point tolerance (cross)
 
 def get(url, key=None):
+    # Cache-buster (2026-07-06): /public/tracker/state is served through an edge cache; an
+    # audit run from a different network was handed an 18-hour-old copy (last_refresh 01:59
+    # vs live 20:00), which would make every cross-check meaningless. A unique query param
+    # forces an origin fetch so the audit ALWAYS judges live data.
+    url += ("&" if "?" in url else "?") + "_ab=" + datetime.now().strftime("%Y%m%d%H%M%S%f")
     try:
-        req = urllib.request.Request(url)
+        req = urllib.request.Request(url, headers={"Cache-Control": "no-cache"})
         if key: req.add_header("x-internal-key", key)
         return json.load(urllib.request.urlopen(req, timeout=25))
     except Exception as e:
@@ -411,6 +440,29 @@ for platform, usize in PLATFORMS.items():
                     FAIL(scope, f"LEDGER!=ACCOUNT: total {T} != day_open {DO} + realized "
                                 f"{round(_led - DO, 2)} = {_led} (Trade History and the Total "
                                 f"P&L box disagree -- two price sources)")
+        # BOT13 INTRADAY CASH (2026-07-06): while BOT13 is INVESTED mid-session, its cash
+        # must be exactly what the ledger implies: the day's opening balance minus what it
+        # deployed into today's positions plus what today's SELLs realized. Verified live
+        # (bitbot13 2026-07-06: 51406.40 - 51331.79 + 0 = 74.61 == cash). This is the
+        # invested-state twin of LEDGER==ACCOUNT above -- cash appearing or vanishing
+        # during an intraday rotation fails here.
+        if (fund == "bot13" and v.get("holding_cash") is not True and positions
+                and window_open is not False and CH is not None and DO is not None):
+            _r_today = sum(float(e.get("realized") or 0) for e in (v.get("trade_log") or [])
+                           if str(e.get("action","")).upper() == "SELL"
+                           and str(e.get("ts",""))[:10] == TODAY)
+            _exp_cash = round(DO - sum_cost + _r_today, 2)
+            if not approx(CH, _exp_cash, max(1.0, abs(T or 0) * 0.0005)):
+                FAIL(scope, f"INTRADAY CASH: cash {CH} != day_open {DO} - deployed cost {sum_cost} "
+                            f"+ realized {round(_r_today,2)} = {_exp_cash} (cash vanished/appeared mid-rotation)")
+        # BASELINE DEPLOYMENT (2026-07-06): equalizer/titan hold the WHOLE universe. Fewer
+        # positions than universe means an asset never entered and its $1,000 sits idle
+        # (live example: aistocks equalizer 49/50 with $1,000 cash). WARN -- can be a
+        # legitimately unpriceable/delisted asset, but the owner must know.
+        if fund in ("equalizer", "titan") and positions and not display_freeze:
+            if len(positions) < usize:
+                WARN(scope, f"only {len(positions)}/{usize} assets deployed -- "
+                            f"${round(CH or 0, 2)} idle cash (missing asset never entered)")
         # NO VANISHED CASH (2026-07-05): oracle/wizard deploy their capital minus a small
         # rounding remainder, which must REMAIN in the fund as cash. sum(cost_basis) + cash
         # must equal the deployed capital (strategy.deployed_capital once recorded by a
@@ -497,6 +549,7 @@ for platform, usize in PLATFORMS.items():
             for p in ports[:25]:
                 bid = p.get("bot_id") or p.get("id")
                 if not bid: continue
+                n_hold = len(p.get("holdings") or [])
                 for fund in FUNDS:
                     r = get(f"{BACKEND}/internal/portfolio-fund-state/{bid}/{fund}", KEY)
                     st = r.get("state") if isinstance(r, dict) else None
@@ -504,10 +557,76 @@ for platform, usize in PLATFORMS.items():
                     tv = fnum(st.get("total_value")); gl = fnum(st.get("gain_loss"))
                     ec = fnum(st.get("entry_cost")); glp = fnum(st.get("gain_loss_pct"))
                     ms = f"{platform}/member:{str(bid)[:8]}/{fund}"
+                    _mstrat = st.get("strategy") if isinstance(st.get("strategy"), dict) else {}
+                    _pending = (_mstrat.get("pending") is True) or (str(_mstrat.get("decision","")).upper() == "PENDING")
+                    # "Started at" box: the member's own N x $1,000 -- nothing else, ever.
+                    if ec is not None and n_hold and not approx(ec, n_hold * 1000.0, 0.5):
+                        FAIL(ms, f"STARTED-AT: entry_cost {ec} != {n_hold} holdings x $1,000 = {n_hold*1000.0}")
                     if tv is not None and gl is not None and ec is not None and not approx(tv, ec+gl, max(1.0, abs(tv)*0.01)):
                         FAIL(ms, f"total_value {tv} != entry_cost+gain_loss {round(ec+gl,2)}")
                     if glp is not None and gl is not None and ec not in (None,0) and not approx(glp, gl/ec*100, 0.2):
                         FAIL(ms, f"gain_loss_pct {glp} != gain_loss/entry_cost*100 {round(gl/ec*100,2)}")
+                    # STALE STATE: member state must be refreshed the same day as the platform on a
+                    # trading day. A stale row makes every cross-check below meaningless -> WARN + skip.
+                    _msnap = str(st.get("snapshot_date") or "")
+                    _stale = _today_is_trading and _msnap and _msnap < TODAY
+                    if _stale:
+                        WARN(ms, f"STALE: member state snapshot_date {_msnap} < today {TODAY} (member refresh lagging)")
+                    # INDEPENDENT SIMS (engine contract since 2026-07-06, refresh_portfolios.py):
+                    # each member fund is its OWN simulation; every dollar must be verifiable
+                    # from the member's own positions at real entry prices.
+                    _m_dpct = fnum(st.get("day_pct"))
+                    _mpos = st.get("positions") if isinstance(st.get("positions"), list) else []
+                    if not _pending and not _stale and _mpos:
+                        _sumval = 0.0; _sumcost = 0.0
+                        for _mp in _mpos:
+                            _msym = _mp.get("symbol", "?"); _mps = f"{ms}:{_msym}"
+                            _msh = fnum(_mp.get("shares")); _mpx = fnum(_mp.get("price"))
+                            _men = fnum(_mp.get("entry_price")); _mval = fnum(_mp.get("value"))
+                            _mcb = fnum(_mp.get("cost_basis")); _mpnl = fnum(_mp.get("pnl"))
+                            # FABRICATED SEED signature: the old engine seeded unpriceable
+                            # symbols at entry_price $1.00 exactly -- never a real entry.
+                            if _men is not None and _men == 1.0:
+                                FAIL(_mps, "member entry_price is exactly $1.00 (fabricated no-price seed, not a real entry)")
+                            # bad-feed guard (same [0.125, 8] band as the public checks)
+                            if _men and _mpx and _men > 0:
+                                _mr = _mpx / _men
+                                if _mr > 8.0 or _mr < 0.125:
+                                    FAIL(_mps, f"member price/entry={_mr:.2f}x outside sanity band (entry {_men}, price {_mpx})")
+                            if _msh and _mpx and _mval is not None and not approx(_mval, _msh*_mpx, max(0.5, abs(_msh*_mpx)*0.01)):
+                                FAIL(_mps, f"member value {_mval} != shares*price {round(_msh*_mpx,2)}")
+                            if _msh and _men and _mcb is not None and not approx(_mcb, _msh*_men, max(0.5, abs(_msh*_men)*0.01)):
+                                FAIL(_mps, f"member cost_basis {_mcb} != shares*entry {round(_msh*_men,2)}")
+                            if _mval is not None and _mcb is not None and _mpnl is not None and not approx(_mpnl, _mval-_mcb, max(0.5, abs(_mval)*0.01)):
+                                FAIL(_mps, f"member pnl {_mpnl} != value-cost {round(_mval-_mcb,2)}")
+                            if _mval is not None: _sumval += _mval
+                            if _mcb  is not None: _sumcost += _mcb
+                        # OWN-POSITIONS: the fund's total is the sum of its own holdings
+                        # (+ idle cash ec - sum(cost) for baselines, which never compound).
+                        _exp_tv = _sumval + (max(0.0, (ec or 0) - _sumcost) if fund in ("equalizer", "titan") else 0.0)
+                        if tv is not None and not approx(tv, _exp_tv, max(1.0, abs(tv) * 0.01)):
+                            FAIL(ms, f"OWN-POSITIONS: total_value {tv} != sum of own positions {round(_exp_tv,2)} "
+                                     f"(member dollars must be verifiable from the member's own entries)")
+                    # IMPOSSIBLE MOVE: a one-day move beyond a sane cap is fabricated data.
+                    # NOTE: the internal endpoint does NOT return day_pnl/day_pct, so the day
+                    # move is DERIVED from the state's own numbers: (total_value - _day_open)
+                    # / _day_open -- the same formula the engine uses to build the box.
+                    _move_cap = 50.0 if platform == "bitbot13" else 30.0
+                    _m_do_early = fnum(_mstrat.get("_day_open"))
+                    _impl_dpct = ((tv - _m_do_early) / _m_do_early * 100) if (tv is not None and _m_do_early) else None
+                    if not _pending and not _stale and _impl_dpct is not None and abs(_impl_dpct) > _move_cap:
+                        FAIL(ms, f"IMPOSSIBLE MOVE: implied day move {round(_impl_dpct,2)}% (total {tv} vs day_open "
+                                 f"{_m_do_early}) exceeds one-day sanity cap {_move_cap}% (fabricated/corrupt data, not trading)")
+                    # PLATFORM-DOLLAR LEAK: platform-scale dollars in a member record = the exact
+                    # 2026-07-06 corruption signature (member _day_open = 55000 on a $20,000
+                    # portfolio). A member fund whose _day_open sits at the PLATFORM's starting
+                    # capital while its own cost differs materially was contaminated.
+                    _m_do = fnum(_mstrat.get("_day_open"))
+                    if (not _pending and not _stale and _m_do is not None and ec not in (None, 0)
+                            and abs(ec - sc) > max(2.0, sc * 0.001)
+                            and approx(_m_do, sc, max(2.0, sc * 0.001))):
+                        FAIL(ms, f"PLATFORM-DOLLAR LEAK: member _day_open {_m_do} equals the PLATFORM starting "
+                                 f"capital {sc} but this member's own cost is {ec} (platform dollars in a member record)")
                     # DAY-1 RULE for member funds: strategy._day_open is persisted each run so the
                     # fund's OWN day-1 can be identified (day_open == entry_cost means this fund's
                     # value has never been carried forward from a prior day). On that day, Today's
@@ -522,12 +641,11 @@ for platform, usize in PLATFORMS.items():
                         m_day_pnl = round(tv - day_open, 2)
                         if not approx(m_day_pnl, gl, max(1.0, abs(gl)*0.02)):
                             FAIL(ms, f"MEMBER DAY-1: day_pnl {m_day_pnl} != gain_loss {gl} (day_open={day_open}, entry_cost={ec})")
-                    # DATA-INTEGRITY RULE 0: member portfolios are INDEPENDENT simulations seeded at
-                    # their OWN cost (N x $1,000) on their creation day -- they are NOT scaled from the
-                    # platform, so member==public scaling is NO LONGER expected (a portfolio made on
-                    # day 30 must start at 0%, not inherit the platform's since-launch gains). What
-                    # must hold is internal consistency, verifiable from the member's own entries:
-                    # Current Value == cost + P&L, and P&L% == P&L / cost (checked above).
+                    # DATA-INTEGRITY RULE 0 (owner decision 2026-07-06): member portfolios are
+                    # INDEPENDENT simulations. The checks above assert exactly that: every dollar
+                    # verifiable from the member's own positions, no platform-scale dollars, no
+                    # impossible moves. (The old platform-scaling engine and the member-vs-platform
+                    # percentage cross-checks that matched it are both gone -- do not reintroduce.)
                     checked += 1
             if not QUIET:
                 print(f"\n   MEMBER (independent sims): reconciled {checked} fund-states (total == cost + P&L; no platform scaling)")
