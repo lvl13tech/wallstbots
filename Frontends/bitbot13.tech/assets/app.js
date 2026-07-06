@@ -1319,7 +1319,7 @@ function renderThanks() {
   const siteBase = 'https://bitbot13.tech/#/get-yours';
   const refLink  = refCode ? siteBase+'?ref='+refCode : '';
   $('app').innerHTML = '<section class="hero"><div class="hero-content">'
-    + '<h1>You\'re in. 🎉</h1>'
+    + '<h1>You\'re in.</h1>'
     + '<p>Your BitBot13 tracker will be live within 24 hours. Check your email for your setup link.</p>'
     + '<div class="hero-ctas"><a class="btn btn-primary" href="#/">Back to Dashboard</a></div>'
     + '</div></section>'
@@ -1365,7 +1365,7 @@ function renderThanksAdmin() {
     + '</div>';
   $('app').innerHTML =
     '<section class="hero"><div class="hero-content">'
-    + '<h1>You\'re in. 🎉</h1>'
+    + '<h1>You\'re in.</h1>'
     + '<p style="font-size:1.15rem;margin-bottom:8px"><strong style="color:var(--blue)">' + tierLabel + ' FREE · LIFETIME</strong></p>'
     + '<p>Your free lifetime ' + tierLabel + ' access has been activated. Log in now to get started.</p>'
     + '<div class="hero-ctas">'

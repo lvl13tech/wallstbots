@@ -1383,7 +1383,7 @@ function renderThanksAdmin() {
     : '10 portfolios · Priority signals · Analytics dashboard<br>Want SYNDICATE? Upgrade for just <strong style="color:var(--fg)">$30/mo</strong> anytime.';
   $('app').innerHTML =
     '<section class="hero"><div class="hero-content">'
-    + '<h1>You\'re in. 🎉</h1>'
+    + '<h1>You\'re in.</h1>'
     + '<p style="color:var(--muted);font-size:16px">Welcome to <strong style="color:var(--fg)">Wall St. Bots</strong> — your account is live.</p>'
     + '<div style="background:var(--surface2);border:2px solid #ff8c00;border-radius:12px;padding:24px;margin:24px 0;max-width:420px">'
     + '<div style="font-size:11px;letter-spacing:1.5px;color:#ff8c00;font-weight:700;margin-bottom:6px;text-transform:uppercase">Your Tier</div>'
@@ -1404,7 +1404,7 @@ function renderThanks() {
   const refLink  = refCode ? siteBase + '?ref=' + refCode : '';
 
   $('app').innerHTML = '<section class="hero"><div class="hero-content">'
-    + '<h1>You\'re in. 🎉</h1>'
+    + '<h1>You\'re in.</h1>'
     + '<p>Your Wall St. Bots tracker will be live within 24 hours. Check your email for your setup link.</p>'
     + '<div class="hero-ctas"><a class="btn btn-primary" href="#/">Back to Dashboard</a></div>'
     + '</div></section>'
