@@ -645,6 +645,25 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+- **2026-07-06 (ONE CLOCK fix, commit `dd9c200` — audit run + diagnosis + owner-
+  approved fix, no resets, no box-formula changes).** Full audit
+  (`AUDIT_RESULT_2026-07-06.txt`): wallstbots + aistocks ALL CLEAN; 6 failures,
+  all explained: (1) bitbot13's 4 hold funds — Today's Change box (vs yesterday's
+  fund snapshot) and Holdings TODAY column (vs feed prev_close) measured from two
+  different clocks; crypto has no official close, so they could never reconcile.
+  Fix: engines store `day_boundary` prices (the prices each day's snapshot was
+  written from); next day's display math uses them — one clock, all 3 engines in
+  parity, signals untouched. (2) 2 member "DAY-1" failures were audit false
+  positives (1% detection window mislabeled day-2 funds) — detection now exact,
+  and the Holdings-TODAY check accepts the rotation-day identity. Also: BOT13
+  intraday cash = total − pos_val so total==cash+pos_val holds mid-session.
+  **Timing:** the first refresh after deploy still shows bitbot13's old
+  box-vs-column gap (no boundary stored yet); it stores today's boundary and the
+  gap closes at the NEXT day roll. Cash + audit fixes show immediately.
+  Commit-message tail mangled by a cmd %% expansion — cosmetic; code verified on
+  GitHub. Long-term direction (proposed, not started): ledger-as-source-of-truth
+  + one shared calc module (Recovery Order step 7).
+
 - **2026-07-06 early (REFERRAL FLOW end-to-end: commits `998e30f` + `92de513`
   pushed and verified live).** Two independent breaks fixed:
   (1) Router: `#/get-yours?ref=CODE` fell through to the homepage because
