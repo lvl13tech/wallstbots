@@ -1212,7 +1212,7 @@ function renderPaypalForm() {
   if (GY_ADMIN_CODE) {
     wrap.innerHTML =
       '<div style="background:var(--surface2);border-radius:12px;padding:24px;max-width:360px">'
-      + '<p style="color:#ff8c00;font-weight:700;margin-bottom:16px">🎉 Free Lifetime ' + GY_ADMIN_TIER.toUpperCase() + ' Access</p>'
+      + '<p style="color:#ff8c00;font-weight:700;margin-bottom:16px">Free Lifetime ' + GY_ADMIN_TIER.toUpperCase() + ' Access</p>'
       + '<div style="margin-bottom:12px"><label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px">EMAIL</label>'
       + '<input type="email" id="admin-email" placeholder="you@example.com" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:10px 14px;font-size:14px;box-sizing:border-box"></div>'
       + '<div style="margin-bottom:16px"><label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px">PASSWORD</label>'
