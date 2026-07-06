@@ -1067,3 +1067,21 @@ def day_boundary_payload(prices, today_iso):
     """The day_boundary block each engine stores with its state push."""
     return {"date": today_iso,
             "prices": {s: round(float(v), 8) for s, v in prices.items() if v}}
+
+
+def fund_day_fields(total, fid, sc, snapshots, today_iso):
+    """THE single copy of the fund-level Today's Change math.
+
+    day_open = the fund's most recent snapshot value strictly before today
+    (the reset baseline == sc on day 1, so day_pnl == pnl exactly -- the
+    owner's one-day rule). Returns (day_open, day_pnl, day_pct). Used by
+    oracle/wizard/equalizer/titan in ALL THREE engines -- this exact formula
+    previously existed as nine separate copies.
+    """
+    _prior = sorted([s for s in (snapshots or [])
+                     if s.get("date", "") < today_iso and s.get(fid) is not None],
+                    key=lambda s: s.get("date", ""))
+    day_open = float(_prior[-1].get(fid)) if _prior else sc
+    day_pnl  = total - day_open
+    day_pct  = (day_pnl / day_open * 100) if day_open else 0
+    return day_open, day_pnl, day_pct

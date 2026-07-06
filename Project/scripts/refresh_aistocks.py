@@ -35,7 +35,7 @@ from bot13_engine import (
     grade, grade_overall, et_now, window_open as _engine_window_open, is_trading_day,
     session_phase as _engine_session_phase, enrich_position as _engine_enrich,
     stamp_and_log, reconcile_bot13_log, past_close_out,
-    mark_position, build_day_reference, day_boundary_payload,
+    mark_position, build_day_reference, day_boundary_payload, fund_day_fields,
 )
 
 try:
@@ -1345,12 +1345,7 @@ def main():
             # only prior snapshot is the reset baseline (== sc) so day_open == sc and
             # day_pnl == pnl exactly (owner's one-day rule). Sourcing day_open from the
             # snapshot -- not the live mid-day total -- is what keeps Today's Change correct.
-            _prior_snaps = sorted([s for s in (snapshots or [])
-                                   if s.get("date","") < today_iso and s.get(fid) is not None],
-                                  key=lambda s: s.get("date",""))
-            _oracle_day_open = float(_prior_snaps[-1].get(fid)) if _prior_snaps else sc
-            day_pnl  = total - _oracle_day_open
-            day_pct  = (day_pnl / _oracle_day_open * 100) if _oracle_day_open else 0
+            _oracle_day_open, day_pnl, day_pct = fund_day_fields(total, fid, sc, snapshots, today_iso)  # SHARED math
 
             # Reconcile Holdings TODAY with the fund's Today's Change box. If the fund
             # deployed fresh capital today (these positions were NOT held at yesterday's
@@ -1432,12 +1427,7 @@ def main():
             pnl_pct  = (pnl / sc * 100) if sc else 0
             # Today's Change = total - today's OPENING total (consistent with Total P&L).
             # Today's Change = total - YESTERDAY'S close (prior-day snapshot) -- see oracle note.
-            _prior_snaps = sorted([s for s in (snapshots or [])
-                                   if s.get("date","") < today_iso and s.get(fid) is not None],
-                                  key=lambda s: s.get("date",""))
-            _wiz_day_open = float(_prior_snaps[-1].get(fid)) if _prior_snaps else sc
-            day_pnl  = total - _wiz_day_open
-            day_pct  = (day_pnl / _wiz_day_open * 100) if _wiz_day_open else 0
+            _wiz_day_open, day_pnl, day_pct = fund_day_fields(total, fid, sc, snapshots, today_iso)  # SHARED math
 
             # Reconcile Holdings TODAY with the fund's Today's Change box. If the fund
             # deployed fresh capital today (these positions were NOT held at yesterday's
@@ -1507,12 +1497,7 @@ def main():
             pnl_pct  = (pnl / sc * 100) if sc else 0
             # Today's Change = total - YESTERDAY'S close (prior-day snapshot), same rule as
             # oracle/wizard so day_pnl == pnl on day 1 and reconciles with Total P&L.
-            _prior_snaps = sorted([s for s in (snapshots or [])
-                                   if s.get("date","") < today_iso and s.get(fid) is not None],
-                                  key=lambda s: s.get("date",""))
-            _eq_day_open = float(_prior_snaps[-1].get(fid)) if _prior_snaps else sc
-            day_pnl  = total - _eq_day_open
-            day_pct  = (day_pnl / _eq_day_open * 100) if _eq_day_open else 0
+            _eq_day_open, day_pnl, day_pct = fund_day_fields(total, fid, sc, snapshots, today_iso)  # SHARED math
 
             # Reconcile Holdings TODAY with the fund's Today's Change box. If the fund
             # deployed fresh capital today (these positions were NOT held at yesterday's
