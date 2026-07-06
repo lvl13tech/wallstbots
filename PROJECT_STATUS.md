@@ -645,6 +645,24 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+- **2026-07-06 early (REFERRAL FLOW end-to-end: commits `998e30f` + `92de513`
+  pushed and verified live).** Two independent breaks fixed:
+  (1) Router: `#/get-yours?ref=CODE` fell through to the homepage because
+  route() matched the hash including the query — invitees never saw the signup
+  page or their code. Fixed (one line, all 3 sites).
+  (2) Confirm-email dead end: no signup path passed redirect_to to Supabase,
+  so the confirm link fell back to the project's stale Site URL. Backend now
+  sends per-platform redirect to login.html?confirmed=1; login.html (×3)
+  handles the return (auto-session or "confirmed" banner); login error now
+  says "Email not confirmed" when true.
+  - **OWNER ACTION REQUIRED (Supabase dashboard):** Authentication → URL
+    Configuration → Site URL = https://wallstbots.tech; add all three
+    https://<site>/login.html to Redirect URLs. Until then the confirm link
+    still uses the old Site URL.
+  - **Flagged, not fixed:** invite emails hardcode wallstbots.tech links for
+    all platforms; FREE signups don't record the ref code (referrer credit
+    only fires on paid checkout via Stripe webhook +$35) — owner decision.
+
 - **2026-07-05 late (LEDGER IS THE ACCOUNT: commit `5ee9727` pushed — two
   accounting bugs fixed in all 3 engines + audit coverage added).**
   - Bug 1: BOT13 flat-day banking kept the previous run's price mark while the
