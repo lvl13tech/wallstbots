@@ -645,6 +645,19 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+- **2026-07-06 pm (DE-DUP increment 1, commit `ef786ba` — owner-approved, NO new
+  features, no page changes).** The position mark-to-market math (incl.
+  bad-entry guard + opened-today baseline), the one-clock day-reference
+  resolver, and the day-boundary payload now live ONCE in `bot13_engine.py`;
+  all 3 engines delegate (net −109 lines). The three enrich_position copies had
+  ALREADY drifted (bitbot13 lacked current_price, preserved different fields) —
+  that drift class is now structurally impossible for this math. Equity vs
+  crypto output shapes reproduced exactly via a crypto flag.
+  **Still per-engine (next increment, same mechanical extraction):** the
+  fund-level value blocks (bot13/oracle/wizard/equalizer/titan totals) —
+  currently identical after this week's parity fixes — and the member engine
+  (refresh_portfolios P1 guards). Owner verifying via manual refresh + audit.
+
 - **2026-07-06 (ONE CLOCK fix, commit `dd9c200` — audit run + diagnosis + owner-
   approved fix, no resets, no box-formula changes).** Full audit
   (`AUDIT_RESULT_2026-07-06.txt`): wallstbots + aistocks ALL CLEAN; 6 failures,
