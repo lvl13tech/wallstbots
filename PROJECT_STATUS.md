@@ -11,6 +11,33 @@ the git commit/push step (see ".bat to run" below) before any live site picks th
 
 ---
 
+**2026-07-05 — Account-drawer duplication permanently fixed (bot-detail.html + portfolio-fund.html, all 3 sites). DEPLOYED (commit 927e3b8, pushed to master).**
+Deploy: DEPLOY-account-drawer-dedup_2026-07-05.bat (repaired mid-session — see note below).
+- Root cause: bot-detail.html and portfolio-fund.html each carried their own hand-copied,
+  stale "My Account" drawer (no Invite & Earn, no admin codes, no email prefs), separate
+  from dashboard.html's real implementation. Every account-drawer fix made this session
+  (JWT refresh, admin-invite role check) only ever reached dashboard.html.
+- Fix: bot-detail.html (3 sites) — My Account is now a plain link to dashboard.html (same
+  pattern leaderboard.html already used). portfolio-fund.html (3 sites) — duplicated
+  Profile/Referral/Reset-Password sections replaced with one "Manage Account & Referrals"
+  link; page-specific Portfolio Settings (privacy/leaderboard/share toggles) kept in place.
+  One real account drawer per site now, zero duplicates. 6 files, 60 insertions(-456
+  deletions).
+- Script note: the first version of the deploy script had a cmd.exe quoting bug in a
+  verification step (embedded `\"` inside a double-quoted argument silently swallowed
+  later script lines with no visible error) — its first run did NOT commit/push despite
+  printing PASS. Repaired: removed the broken step, added a hard post-commit check
+  (verifies HEAD subject actually mentions "account drawer", BLOCKS otherwise). Re-run
+  confirmed real: fb898c2..927e3b8 pushed, log matches expected commit hash.
+- Frontend-only change; Cloudflare Pages auto-deploys on push, no Cloud Run step needed.
+- **Still untested (owner to verify):** click My Account on bot-detail.html AND
+  portfolio-fund.html on all 3 sites -> lands on dashboard.html's Invite & Earn panel;
+  portfolio-fund.html's own Portfolio Settings toggles still open/work from their drawer.
+- Not yet actioned: cosmetic `alt="AI Stocks"` clone artifact on wallstbots.tech's
+  portfolio-fund.html logo image (flagged, lower priority).
+
+---
+
 **2026-06-28 — BOT13 Today's Strategy + Trade History fixes. Built + verified locally, NOT YET PUSHED.**
 Deploy: DEPLOY-bot13-strategy-tradehistory_2026-06-28.bat. All 3 sites + member pages.
 - Edge Score: close-out branches no longer zero b13_proj/rationale; they preserve the morning
@@ -617,6 +644,197 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 ---
 
 ## Session Log (append newest at top)
+
+- **2026-07-05 evening (DEPLOY UNBLOCKED: commit `e33af74` pushed + live on Cloud
+  Run — the portfolio-fund-state readback fix from HANDOFF_2026-07-05.md §2 is
+  now deployed).** Revision `wallstbots-backend-00130-dg2`, serving 100% traffic,
+  verified responding at `/public/tracker/state?platform=wallstbots`.
+  - The old deploy `.bat` hang (handoff §1) was bypassed with a redesigned script,
+    `RUN-DEPLOY-e33af74.bat`: no commit step (commit already existed), sets
+    `GIT_TERMINAL_PROMPT=0` + `GCM_INTERACTIVE=never` so git fails loudly instead
+    of waiting silently for hidden input, logs every step to
+    `RUN-DEPLOY-e33af74_LOG.txt`, and exits with no interactive pause. Ran clean
+    end-to-end on the first attempt: fetch → ahead/behind safety check → push →
+    .env load → docker build/tag/push → gcloud run deploy. Use this pattern for
+    all future deploy scripts.
+  - Diagnostics captured (log Step 0): `commit.gpgsign` is NOT set;
+    `credential.helper = manager` (Git Credential Manager). So the old hang was
+    most likely GCM opening an interactive prompt/window from inside the
+    double-clicked console, not GPG. Root cause not conclusively proven — the
+    new script pattern removes the exposure either way.
+  - **Known-good now:** backend live with the readback fix (all 3 product sites,
+    one shared backend); git origin/master == local master (`e33af74`).
+  - **Still UNTESTED (needs next `refresh_portfolios.py` cycle):** member
+    Oracle/Wizard "Today's Change" actually moving again (e.g. bitbot13 TopCryp)
+    instead of $0.00 every run. Verify after next refresh; the new
+    `audit_integrity.py` member day-1 assertion also only proves itself then.
+  - Working tree still has unrelated uncommitted items: modified
+    PROJECT_STATUS.md (this entry), untracked PRE_LAUNCH_ANALYSIS_2026-07-05.md,
+    RUNBOOK_MANUAL_DEPLOY_2026-07-05.md, `Invite`, `Send`. Owner to commit/push
+    when ready.
+
+- **2026-07-05 (PERMANENT FIX: stale duplicated "My Account" drawer removed from
+  bot-detail.html + portfolio-fund.html, all 3 sites -- 6 files). Built +
+  verified, staged.** Deploy: `DEPLOY-account-drawer-dedup_2026-07-05.bat`.
+  - Owner reported bitbot13.tech's bot-detail page showing an old, much simpler
+    "My Account" panel (just a referral code + copy button, no Invite & Earn, no
+    admin codes, no email prefs) -- looked like a regression / an old file
+    getting redeployed. Investigation found the real cause: `bot-detail.html`
+    and `portfolio-fund.html` each carry their OWN separate, hand-duplicated
+    copy of the account drawer, independent from `dashboard.html`'s real,
+    current implementation -- and this is true on **all 3 product sites**, not
+    just bitbot13 (owner had only tested the dashboard page on wallstbots/
+    aistocks, where the real drawer lives). Every fix made to the account
+    drawer today (JWT refresh, admin invite) only ever touched `dashboard.html`;
+    these two other page types kept the pre-rebuild stub and always will,
+    every time, until the duplication itself is removed.
+  - **Permanent fix (not a resync -- structural):** `leaderboard.html` already
+    had the correct pattern on all 3 sites -- its "My Account" button is just
+    `<a href="dashboard.html">`, no duplicated drawer at all. Applied the same
+    pattern to `bot-detail.html` (full removal: button is now a link, entire
+    stale drawer/password-modal markup + its JS functions deleted) on all 3
+    sites. For `portfolio-fund.html`, kept the drawer shell (it also houses
+    genuinely page-specific Portfolio Settings -- privacy/leaderboard/share
+    toggles -- which can't redirect anywhere) but stripped the duplicated
+    account-only sections (Profile/Referral/Reset-Password) down to a single
+    "Manage Account & Referrals →" link to `dashboard.html`, on all 3 sites.
+  - Verified safe: every `document.getElementById('drawerXxx')` call left
+    behind in surrounding code (population functions like `renderProfile()`,
+    `loadReferralCode()`) is either null-checked (`if (el) ...`) or wrapped in a
+    try/catch at the call site, confirmed identical across all 3 sites -- so
+    removing the DOM elements causes zero runtime errors, just harmless no-op
+    API calls (flagged as a minor follow-up cleanup, not urgent).
+  - Result: there is now exactly ONE real account drawer per site
+    (`dashboard.html`), and zero duplicated copies anywhere -- this class of
+    bug (a fix landing on one page but not others) cannot recur for the
+    account UI specifically.
+  - **Not yet done, related, lower priority:** `wallstbots.tech/portfolio-fund.html`
+    has a leftover `alt="AI Stocks"` on its logo (clone artifact, cosmetic,
+    unrelated to this fix -- flagged, not touched, one concern per change).
+
+- **2026-07-05 (RESEND_API_KEY restored -- fixes admin/personal invite emails +
+  support-ticket confirmations). Built + verified, staged.** Deploy:
+  `DEPLOY-backend-resend-env-fix_2026-07-05.bat` (git only) THEN
+  `DEPLOY-BACKEND.bat` (Cloud Run -- required).
+  - Same root cause pattern as the Stripe fix above: `RESEND_API_KEY` was
+    missing from both `Backend/.env` and `DEPLOY-BACKEND.bat`'s
+    `--set-env-vars` list, so `_send_resend_email()` always returned `False`
+    silently -- every email the backend sends (admin-code invites, personal
+    referral invites, support-ticket confirmations) failed with
+    "Failed to send invite email. Please try again."
+  - The pre-existing `wallstbots-backend` Resend key (490 total uses, active
+    ~19h ago -- something else, likely the GitHub Actions email pipeline, uses
+    it independently) could not be recovered: Resend never re-displays a key's
+    value after creation. Owner created a fresh key scoped for this purpose
+    and supplied it directly.
+  - Fix: added `RESEND_API_KEY` to `Backend/.env` (gitignored, never
+    committed -- confirmed via `.gitignore`) and wired it into
+    `DEPLOY-BACKEND.bat`'s env forwarding + `--set-env-vars` line, following
+    the same dated/logged/git-committed-wrapper discipline established for the
+    Stripe fix (no more silent hand-edits to the persistent deploy script).
+  - **Still untested:** owner needs to run `DEPLOY-backend-resend-env-fix_2026-07-05.bat`
+    THEN `DEPLOY-BACKEND.bat`, then test sending both a personal referral
+    invite and an admin-code (admin13/adminm13) invite on all 3 sites and
+    confirm the emails actually arrive.
+
+- **2026-07-05 (CRITICAL: Stripe checkout was silently broken on live backend --
+  DEPLOY-BACKEND.bat fixed, dead PayPal vars removed). Built + verified, staged.**
+  Deploy: `DEPLOY-backend-stripe-env-fix_2026-07-05.bat` (git only) THEN
+  `DEPLOY-BACKEND.bat` (Cloud Run -- required).
+  - Found while investigating the admin-invite email failure (owner asked for a
+    full code pass instead of a narrow patch): `DEPLOY-BACKEND.bat`'s
+    `gcloud run deploy --set-env-vars=...` REPLACES the entire Cloud Run env-var
+    set on every deploy (does not merge with the previous revision). Its list
+    was missing `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` -- both actively
+    used by `/stripe/create-checkout` and `/stripe/webhook` in `main.py` -- while
+    carrying `PAYPAL_CLIENT_ID`/`PAYPAL_CLIENT_SECRET`/`PAYPAL_MODE`, which are
+    referenced NOWHERE in `main.py` (confirmed via full-file search) and aren't
+    even present in `Backend/.env`.
+  - **Owner confirmed Stripe is the only checkout option.** Net effect: every
+    deploy via this script has been silently wiping the live Stripe keys (or
+    never setting them), so `/stripe/create-checkout` has been hard-failing with
+    `500 "Stripe not configured"` for every real customer trying to check out --
+    not a one-off bug, a standing checkout outage.
+  - Fix: `DEPLOY-BACKEND.bat` now forwards `STRIPE_SECRET_KEY` +
+    `STRIPE_WEBHOOK_SECRET` (real values already in `Backend/.env`) and no
+    longer references `PAYPAL_*` anywhere -- dead code removed, not left as
+    silent clutter.
+  - **Also still open (separate, needs owner input):** `RESEND_API_KEY` is
+    missing the same way (env var never forwarded, AND the real key value isn't
+    anywhere in this repo) -- this is the direct cause of "Failed to send invite
+    email" on both the admin-code and personal-referral invite paths, and also
+    affects support-ticket confirmation emails. Cannot fix until the owner
+    supplies the real Resend API key. `POLYGON_API_KEY` has the same gap but
+    degrades gracefully (falls back to manual ticker entry), lower priority.
+  - **Process correction (owner called this out directly):** the previous fix
+    in this session hand-edited `DEPLOY-BACKEND.bat` in place with no git commit
+    and no log, then told the owner to just re-run it -- this exact pattern (a
+    persistent, reused deploy script mutated silently) is how the Stripe-key gap
+    survived undetected through multiple prior deploys, and is called out as a
+    recurring cause of regressions blocking launch (see
+    [[feedback_never_hand_edit_persistent_deploy_script]] in memory). Going
+    forward: any change to a persistent/reusable script ships as its own new
+    dated, logged, git-committed wrapper script, same discipline as the
+    one-off frontend deploy scripts already use.
+  - **Still untested:** owner needs to run `DEPLOY-backend-stripe-env-fix_2026-07-05.bat`
+    (commits this fix to git) THEN `DEPLOY-BACKEND.bat` (actually pushes to Cloud
+    Run) THEN test a real Stripe checkout end-to-end.
+
+- **2026-07-05 (Admin-code invite "Admin access required" bug fixed -- backend
+  only, all 3 product sites since it's one shared endpoint). Built + verified,
+  staged.** Deploy: `DEPLOY-admin-invite-role-fix_2026-07-05.bat` (git only) THEN
+  `DEPLOY-BACKEND.bat` (Cloud Run -- required, git push alone does not update the
+  live backend).
+  - Owner reported: sending the adminm13 (Syndicate) comp-code invite from My
+    Account always failed with "Admin access required," even on the real
+    webmaster account.
+  - Root cause (2 stacked bugs in `POST /admin/send-invite`, `Backend/main.py`):
+    (1) used `Depends(get_current_user)` -- the lightweight auth dependency that
+    only returns `{user_id, email}`, never a `role` -- so `current_user.get("role")`
+    was always `None` and the check failed for every account, no exceptions.
+    (2) even with a role present, the check was `role in ("admin","webmaster")`,
+    but "webmaster" is a `subscription_tier` in this app, not a `role` value (see
+    `require_webmaster` and dashboard.html's `isWM` check) -- so it would still
+    have failed for a real webmaster account.
+  - Fix: switched to `Depends(get_current_user_with_role)` (does the DB lookup)
+    and now allows `role=="admin"` OR `subscription_tier` containing "webmaster",
+    matching the exact logic dashboard.html already uses to decide whether to
+    show the admin-code dropdown at all.
+  - Also fixed in the same pass: `DEPLOY-BACKEND.bat` was still `cd`-ing into the
+    OneDrive-path copy of this repo (the copy we've been told never to use --
+    see [[feedback_never_use_onedrive_folder]]). Changed to a relative `cd` off
+    its own location so it always builds from wherever this repo actually lives.
+  - **Still untested:** owner needs to run `DEPLOY-BACKEND.bat` after the git push
+    to actually push this live to Cloud Run, then re-test sending an adminm13/
+    admin13 invite from My Account.
+
+- **2026-07-05 (Invite-by-email "Token expired" bug fixed -- all 3 product sites,
+  frontend only). Built + verified, staged.** Deploy:
+  `DEPLOY-invite-token-refresh-fix_2026-07-05.bat`.
+  - Owner reported My Account -> Invite & Earn "Send" showing "Token expired" and no
+    invite email arriving. Root cause: `sendInviteEmail()` in `dashboard.html` read the
+    JWT straight out of `localStorage` and never refreshed it first, unlike every other
+    authenticated call on the page (which goes through `api.js`'s `request()`, which
+    always calls `auth.refreshTokenIfNeeded()` first). Supabase access tokens expire
+    after ~1hr, so any account session left open longer than that hit a 401 before the
+    invite endpoint was ever reached -- nothing was sent, and it looked intermittent.
+    Confirmed a real bug, not intended behavior; token expiry itself is untouched.
+  - Fix: `sendInviteEmail()` now calls `auth.refreshTokenIfNeeded()` first and reads the
+    fresh token via `auth.getToken()` (falling back to the old localStorage keys),
+    matching `api.js`'s pattern. On refresh failure it shows "session expired, please
+    log in again" instead of the raw backend error.
+  - Parity: identical bug in all 3 clones (per-site JWT key names differ only); fixed in
+    all 3 in the same change. `admin.html` has no separate copy -- admin-code invites
+    route through the same `sendInviteEmail()`, already covered. `lvl13.tech`: not
+    touched (no invite feature, not in this parity set).
+  - **Process note:** this fix was first (mistakenly) written to the OneDrive-path copy
+    of this repo (`C:\Users\...\OneDrive\...\WallStBots`), which is NOT the live repo --
+    confirmed with the owner that `C:\Claude\Websites\WallStBots` is the one that pushes
+    to GitHub/Cloudflare. The OneDrive copy is out of sync (missing today's day-1-
+    integrity fix below) and should not be edited or deployed from going forward -- it's
+    also the source of a past truncation issue. Re-applied correctly here.
+  - **Still untested:** live click-through on all 3 sites after deploy -- owner should
+    send one real test invite per site and confirm the email arrives.
 
 - **2026-07-05 (Next-session start — nothing trades on creation/reset day). Built + verified,
   staged.** Deploy: `DEPLOY-next-session-start_2026-07-05.bat`.

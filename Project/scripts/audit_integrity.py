@@ -389,6 +389,33 @@ for platform, usize in PLATFORMS.items():
                 FAIL(scope, f"SELL of {s} with no prior BUY in the trade_log "
                             f"(authoritative ledger should pair every SELL with its BUY)")
                 seen.add(s)  # avoid re-flagging every later rotation of the same symbol
+        # LEDGER == ACCOUNT (2026-07-05): when BOT13 finished a traded day FLAT, the banked
+        # balance must equal day_open + the SUM of today's SELL rows' realized P&L -- the
+        # Total P&L box and Trade History must tell the same story. This exact mismatch
+        # shipped live (bitbot13: box +$1,406.40 vs ledger +$1,528.68) with no audit check.
+        if fund == "bot13" and (v.get("holding_cash") is True):
+            _sells = [e for e in (v.get("trade_log") or [])
+                      if str(e.get("action","")).upper() == "SELL"
+                      and str(e.get("ts",""))[:10] == TODAY]
+            if _sells and DO is not None and T is not None:
+                _led = round(DO + sum(float(e.get("realized") or 0) for e in _sells), 2)
+                if not approx(T, _led, max(1.0, abs(T) * 0.0005)):
+                    FAIL(scope, f"LEDGER!=ACCOUNT: total {T} != day_open {DO} + realized "
+                                f"{round(_led - DO, 2)} = {_led} (Trade History and the Total "
+                                f"P&L box disagree -- two price sources)")
+        # NO VANISHED CASH (2026-07-05): oracle/wizard deploy their capital minus a small
+        # rounding remainder, which must REMAIN in the fund as cash. sum(cost_basis) + cash
+        # must equal the deployed capital (strategy.deployed_capital once recorded by a
+        # rotation; sc before the fund's first compounding rotation). Live example caught
+        # late: bitbot13 Wizard deployed $49,987 of $50,000 and the $13 was deleted.
+        if fund in ("oracle", "wizard") and positions:
+            _dep = fnum((f.get("current_strategy") or {}).get("deployed_capital"))
+            _base = _dep if _dep else sc
+            if _dep or abs(sum_cost - sc) <= sc * 0.02:
+                _acct = round(sum_cost + (CH or 0), 2)
+                if not approx(_acct, _base, max(2.0, _base * 0.0002)):
+                    FAIL(scope, f"VANISHED CASH: sum(cost_basis) {sum_cost} + cash {CH} = {_acct} "
+                                f"!= deployed capital {_base} (rounding remainder was deleted)")
         # No stale carry: bitbot13 trades daily, so BOT13 must not hold any position dated
         # before today. If it does, a day-roll/missed close-out left it stranded on the book.
         if fund == "bot13" and platform == "bitbot13":

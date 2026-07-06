@@ -1280,7 +1280,16 @@ def main():
             )
             display_positions = enriched
             if not enriched and traded_today and stored_positions:
-                display_positions = [enrich_position(p, prices, prev_closes) for p in stored_positions]
+                # FROZEN RECEIPT (2026-07-05): a CLOSED position's row must show the FINAL
+                # price its SELL was recorded at, not the live market -- otherwise every
+                # later refresh drifts the Holdings row away from Trade History's realized.
+                _sell_px = {str(e.get("symbol")): float(e.get("price") or 0)
+                            for e in _stored_log
+                            if str(e.get("action","")).upper() == "SELL"
+                            and str(e.get("ts",""))[:10] == today_iso}
+                _pin = dict(prices)
+                _pin.update({s: p for s, p in _sell_px.items() if p > 0})
+                display_positions = [enrich_position(p, _pin, prev_closes) for p in stored_positions]
 
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
@@ -1338,7 +1347,27 @@ def main():
             # deployed into picks so total = market value of positions; pnl vs original sc
             # so it compounds across rotations and NEVER resets to sc.
             _prev_total = float((fund.get("value", {}) or {}).get("total") or sc)
-            total    = pos_val if enriched else _prev_total
+            # RESIDUAL CASH IS REAL MONEY (2026-07-05 fix): score-weighted sizing leaves a
+            # small rounding remainder undeployed at every rotation. It stays in the fund as
+            # cash. The old code set total = pos_val and cash = max(0, total - pos_val) = 0,
+            # DELETING the remainder -- which is why Holdings P&L stopped summing to the
+            # Total P&L box (seen live: bitbot13 Wizard $13 short of its own holdings).
+            # Rotations now record strategy.deployed_capital so the residual is exact.
+            if oracle_new_positions:
+                cash = round(max(0.0, _oracle_capital - sum(p["cost_basis"] for p in enriched)), 2)
+                strategy["deployed_capital"] = round(_oracle_capital, 2)
+            else:
+                cash = float((fund.get("value", {}) or {}).get("cash") or 0)
+                if cash == 0 and enriched and (strategy or {}).get("deployed_capital") is None:
+                    # One-time restore for PRE-FIX states: every fund was seeded with exactly
+                    # sc (inception-day holdover guard) and none has rotated since the 7/4
+                    # reset, so a small positive (sc - deployed) gap IS the lost remainder.
+                    # Capped at rounding scale so a compounded balance can never match.
+                    _resid = round(sc - sum(p["cost_basis"] for p in enriched), 2)
+                    if 0 < _resid <= max(50.0, sc * 0.001):
+                        print(f"  ORACLE: restoring ${_resid} rounding residual lost by pre-fix seed")
+                        cash = _resid
+            total    = (pos_val + cash) if enriched else _prev_total
             # Total P&L = SINCE LAUNCH: current value vs the fund's original starting capital (sc).
             # It compounds across periods and never resets. "Today's Change" (day_pnl below) is the
             # separate per-day number. NOTE: entry_price on each holding is the REAL price paid at
@@ -1346,7 +1375,6 @@ def main():
             # will not always equal this since-launch box for oracle/wizard -- the difference is
             # prior periods' profit already reinvested into the carried-forward balance.
             pnl      = round(total - sc, 2)
-            cash     = max(0.0, total - pos_val)
             pnl_pct  = (pnl / sc * 100) if sc else 0
             # Today's Change = total - today's OPENING total (consistent with Total P&L;
             # on day 1 day_open == sc so day_pnl == pnl). day_open carries within a day,
@@ -1420,7 +1448,18 @@ def main():
             pos_val  = sum(p["value"]   for p in enriched)
             # CUMULATIVE / COMPOUNDING (mark-to-market on full balance) -- see oracle note.
             _prev_total = float((fund.get("value", {}) or {}).get("total") or sc)
-            total    = pos_val if enriched else _prev_total
+            # RESIDUAL CASH IS REAL MONEY (2026-07-05 fix) -- see oracle note above.
+            if wizard_new_positions:
+                cash = round(max(0.0, _wizard_capital - sum(p["cost_basis"] for p in enriched)), 2)
+                strategy["deployed_capital"] = round(_wizard_capital, 2)
+            else:
+                cash = float((fund.get("value", {}) or {}).get("cash") or 0)
+                if cash == 0 and enriched and (strategy or {}).get("deployed_capital") is None:
+                    _resid = round(sc - sum(p["cost_basis"] for p in enriched), 2)
+                    if 0 < _resid <= max(50.0, sc * 0.001):
+                        print(f"  WIZARD: restoring ${_resid} rounding residual lost by pre-fix seed")
+                        cash = _resid
+            total    = (pos_val + cash) if enriched else _prev_total
             # Total P&L = SINCE LAUNCH: current value vs the fund's original starting capital (sc).
             # It compounds across periods and never resets. "Today's Change" (day_pnl below) is the
             # separate per-day number. NOTE: entry_price on each holding is the REAL price paid at
@@ -1428,7 +1467,6 @@ def main():
             # will not always equal this since-launch box for oracle/wizard -- the difference is
             # prior periods' profit already reinvested into the carried-forward balance.
             pnl      = round(total - sc, 2)
-            cash     = max(0.0, total - pos_val)
             pnl_pct  = (pnl / sc * 100) if sc else 0
             # Today's Change = total - today's OPENING total (consistent with Total P&L).
             # Today's Change = total - YESTERDAY'S close (prior-day snapshot) -- see oracle note.
@@ -1560,6 +1598,33 @@ def main():
             value["trade_log"], value["_real_positions"] = reconcile_bot13_log(
                 _prev_real, _cur_real, _prev_log, today_iso,
                 EQUITY_CFG["session_end"], prices, _log_ts)
+            # -- LEDGER IS THE ACCOUNT (Rule 0 / 2026-07-05 fix) ---------------------
+            # When BOT13 finishes a traded day FLAT, its banked balance MUST equal
+            # day_open + the sum of today's SELL rows' realized P&L -- the exact numbers
+            # Trade History shows. Before this fix the flat balance kept the PREVIOUS
+            # run's price mark while the ledger realized at THIS run's price, so the
+            # Total P&L box and Trade History disagreed (seen live on bitbot13:
+            # box +$1,406.40 vs ledger +$1,528.68). One price source now: the ledger.
+            if not _cur_real:
+                _tl = value.get("trade_log") or []
+                _sold_today = any(str(e.get("action","")).upper() == "SELL"
+                                  and str(e.get("ts",""))[:10] == today_iso for e in _tl)
+                if _sold_today:
+                    _realized_today = round(sum(
+                        float(e.get("realized") or 0) for e in _tl
+                        if str(e.get("action","")).upper() == "SELL"
+                        and str(e.get("ts",""))[:10] == today_iso), 2)
+                    _bank = round(b13_day_open + _realized_today, 2)
+                    if abs(_bank - float(value.get("total") or 0)) > 0.005:
+                        print(f"  [bot13] LEDGER RECONCILE: total {value.get('total')} -> {_bank} "
+                              f"(day_open {round(b13_day_open,2)} + realized {_realized_today})")
+                    value["total"]   = _bank
+                    value["cash"]    = _bank
+                    value["pos_val"] = 0.0
+                    value["pnl"]     = round(_bank - sc, 2)
+                    value["pnl_pct"] = round((_bank - sc) / sc * 100, 2) if sc else 0
+                    value["day_pnl"] = round(_bank - b13_day_open, 2)
+                    value["day_pct"] = round((_bank - b13_day_open) / b13_day_open * 100, 2) if b13_day_open else 0
         else:
             value["trade_log"] = []
 
