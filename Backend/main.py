@@ -966,7 +966,10 @@ async def send_member_invite(request: MemberInviteRequest, current_user: dict = 
     if not ref_code:
         raise HTTPException(status_code=400, detail="Referral code missing.")
 
-    signup_link = f"https://wallstbots.tech/#/get-yours?ref={ref_code}"
+    # QUERY form, not #fragment: email click-tracking redirects strip URL fragments,
+    # which landed every invitee on the homepage. /?ref=CODE survives any redirect;
+    # the SPA routes it to Get Yours and auto-fills the code (route() handles it).
+    signup_link = f"https://wallstbots.tech/?ref={ref_code}"
 
     html = f"""
 <!DOCTYPE html>
@@ -1046,8 +1049,9 @@ async def send_admin_invite(request: AdminInviteRequest, current_user: dict = De
     tier_color = "#a855f7"   if code == "adminm13" else "#38bdf8"
     tier_perks = "Up to 25 portfolios" if code == "adminm13" else "Up to 10 portfolios"
 
-    # Signup link routes through get-yours with ref= so applyRefCode() auto-validates the admin code
-    signup_link = f"https://wallstbots.tech/#/get-yours?ref={code}"
+    # Signup link routes through get-yours with ref= so applyRefCode() auto-validates the admin code.
+    # QUERY form, not #fragment: email click-tracking redirects strip fragments (see member invite).
+    signup_link = f"https://wallstbots.tech/?ref={code}"
 
     note_block = ""
     if request.note and request.note.strip():

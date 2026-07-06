@@ -93,6 +93,14 @@ function route() {
   // invitee to the homepage instead (2026-07-05 fix). renderGetYours reads the
   // ref from the hash query itself.
   const path = (location.hash.replace(/^#/, '').split('?')[0] || '/');
+  // Tracker-proof invite links arrive as /?ref=CODE with NO #fragment (email
+  // click-tracking redirects strip fragments). Route them to Get Yours --
+  // renderGetYours reads the ref straight from location.search (2026-07-06 fix).
+  if ((path === '/' || path === '') && new URLSearchParams(location.search).get('ref')) {
+    setActiveNav(path); closeMenu();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    return renderGetYours();
+  }
   setActiveNav(path); closeMenu();
   window.scrollTo({ top: 0, behavior: 'instant' });
   // Auth route fall-throughs — mirror bitbot13/wallstbots

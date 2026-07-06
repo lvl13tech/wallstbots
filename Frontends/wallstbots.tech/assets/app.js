@@ -85,6 +85,11 @@ function route() {
   const path = (location.hash.replace(/^#/, '').split('?')[0] || '/');
   setActiveNav(path); closeMenu();
   window.scrollTo({ top: 0, behavior: 'instant' });
+  // Tracker-proof invite links arrive as /?ref=CODE with NO #fragment (email
+  // click-tracking redirects strip fragments). Route them to Get Yours --
+  // renderGetYours reads the ref straight from location.search (2026-07-06 fix).
+  if ((path === '/' || path === '') && new URLSearchParams(location.search).get('ref'))
+    return renderGetYours();
   if (path === '/' || path === '')           return renderHome();
   if (path === '/how')                       return renderHowItWorks();
   if (path === '/race')                      return renderRace();

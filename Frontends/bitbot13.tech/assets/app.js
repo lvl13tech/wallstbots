@@ -90,6 +90,11 @@ function route() {
   // Auth route fall-throughs — match wallstbots behavior
   if (path === '/login')  { window.location.href = '/login.html'; return; }
   if (path === '/signup') { window.location.href = '/login.html#signup'; return; }
+  // Tracker-proof invite links arrive as /?ref=CODE with NO #fragment (email
+  // click-tracking redirects strip fragments). Route them to Get Yours --
+  // renderGetYours reads the ref straight from location.search (2026-07-06 fix).
+  if ((path === '/' || path === '') && new URLSearchParams(location.search).get('ref'))
+    return renderGetYours();
   if (path === '/' || path === '')           return renderHome();
   if (path === '/how')                       return renderHowItWorks();
   if (path === '/race')                      return renderRace();
