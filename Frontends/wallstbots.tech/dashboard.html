@@ -1101,6 +1101,7 @@
         <option value="personal">My Personal Code (50% off referral)</option>
         <option value="admin13">Insider — Free Lifetime (admin13)</option>
         <option value="adminm13">Syndicate — Free Lifetime (adminm13)</option>
+        <option value="adminf13">Free — Starter Account (adminf13)</option>
       </select>
     </div>
 
@@ -2074,9 +2075,10 @@
       document.getElementById("drawerRefLink").value = window._personalRefLink || "—";
       if(howItWorks) howItWorks.innerHTML = '<strong style="color:var(--fg)">How it works:</strong> Your friend gets <strong style="color:var(--accent)">50% off their first month</strong> or <strong style="color:var(--accent)">$100 off annual</strong>. You earn <strong style="color:var(--accent)">$35 credit</strong> per signup — automatically applied to your next bill. No cap.';
     } else {
-      const tierName = sel==="adminm13" ? "Syndicate" : "Insider";
+      const tierName = sel==="adminm13" ? "Syndicate" : sel==="adminf13" ? "Free Starter" : "Insider";
       document.getElementById("drawerRefCode").textContent = sel;
-      document.getElementById("drawerRefLink").value = "https://wallstbots.tech/#/get-yours?ref="+sel;
+      // QUERY form (?ref=) not #fragment — survives email click-tracking redirects.
+      document.getElementById("drawerRefLink").value = "https://wallstbots.tech/?ref="+sel;
       if(howItWorks) howItWorks.innerHTML = '<strong style="color:var(--fg)">Admin code:</strong> Sends a <strong style="color:var(--accent)">free lifetime '+tierName+' account</strong> — no billing, ever. Use for comped accounts only.';
     }
   }
@@ -2108,7 +2110,7 @@
       // /admin/send-invite endpoint, which sends the "free lifetime account"
       // template. The personal code keeps using /account/invite (50%-off
       // referral template) exactly as before — no change for normal members.
-      const isAdminCode = (sel==="admin13"||sel==="adminm13");
+      const isAdminCode = (sel==="admin13"||sel==="adminm13"||sel==="adminf13");
       const url = isAdminCode ? (BACKEND_URL+"/admin/send-invite") : (BACKEND_URL+"/account/invite");
       const body = isAdminCode ? {email, admin_code: sel} : {email, referral_code: refCode};
       const res=await fetch(url,{

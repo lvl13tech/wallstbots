@@ -58,8 +58,8 @@ SUPPORT_NOTIFY_EMAIL     = "info@lvl13.tech"
 # Admin codes: grant free lifetime access — case-insensitive
 # admin13   → insider tier
 # adminm13  → syndicate tier
-ADMIN_CODES = {'admin13', 'adminm13'}
-ADMIN_CODE_TIERS = {'admin13': 'insider', 'adminm13': 'syndicate'}
+ADMIN_CODES = {'admin13', 'adminm13', 'adminf13'}
+ADMIN_CODE_TIERS = {'admin13': 'insider', 'adminm13': 'syndicate', 'adminf13': 'free'}
 
 # ── Verified coin universe for bitbot13 ──────────────────────────────────────
 # 278 coins verified against yfinance — no stablecoins, memecoins included.
@@ -1045,9 +1045,12 @@ async def send_admin_invite(request: AdminInviteRequest, current_user: dict = De
     if not email or "@" not in email:
         raise HTTPException(status_code=400, detail="Invalid email address.")
 
-    tier_name  = "Syndicate" if code == "adminm13" else "Insider"
-    tier_color = "#a855f7"   if code == "adminm13" else "#38bdf8"
-    tier_perks = "Up to 25 portfolios" if code == "adminm13" else "Up to 10 portfolios"
+    _tier_meta = {
+        "adminm13": ("Syndicate", "#a855f7", "Up to 25 portfolios"),
+        "admin13":  ("Insider",   "#38bdf8", "Up to 10 portfolios"),
+        "adminf13": ("Free",      "#10b981", "1 portfolio included"),
+    }
+    tier_name, tier_color, tier_perks = _tier_meta.get(code, _tier_meta["admin13"])
 
     # Signup link routes through get-yours with ref= so applyRefCode() auto-validates the admin code.
     # QUERY form, not #fragment: email click-tracking redirects strip fragments (see member invite).
