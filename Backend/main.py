@@ -2169,11 +2169,14 @@ async def wipe_portfolio_fund_snapshots(
     _: None = Depends(verify_internal_key)
 ):
     """
-    FULL RESET ONLY — permanently deletes ALL bot_performance_snapshots history
-    for every active portfolio on a platform (not just one date, not just one bot).
-    Used when the owner asks for a "full reset": old history must not just be
-    corrected in place, it must be deleted so it can't be read back. See
-    CLAUDE.md / project memory "full reset" definition before calling this.
+    FULL RESET ONLY — permanently deletes ALL member history for every active
+    portfolio on a platform (not just one date, not just one bot):
+      - bot_performance_snapshots (chart/track-record history)
+      - daily_fund_archive platform='member' rows (feeds member monthly statements)
+    Owner rule (2026-07-07): on a reset there is NO old data — it must be deleted,
+    not corrected in place, so it can never be read back or leak into reports.
+    (The PUBLIC archive already self-prunes to each fund's inception on every state
+    push; this endpoint gives member data the same guarantee, immediately.)
     """
     body = await request.json()
     platform = body.get("platform")
@@ -2191,12 +2194,20 @@ async def wipe_portfolio_fund_snapshots(
         bot_ids = [str(r["bot_id"]) for r in cursor.fetchall()]
 
         deleted = 0
+        archive_deleted = 0
         if bot_ids:
             cursor.execute(
                 "DELETE FROM bot_performance_snapshots WHERE bot_id = ANY(%s)",
                 (bot_ids,)
             )
             deleted = cursor.rowcount
+            # Member report archive: hard-delete too (owner rule -- resets keep NOTHING).
+            _ensure_archive_table(cursor)
+            cursor.execute(
+                "DELETE FROM daily_fund_archive WHERE platform = 'member' AND bot_id = ANY(%s::uuid[])",
+                (bot_ids,)
+            )
+            archive_deleted = cursor.rowcount
 
         conn.commit()
         return {
@@ -2204,6 +2215,7 @@ async def wipe_portfolio_fund_snapshots(
             "platform":          platform,
             "portfolios":        len(bot_ids),
             "snapshots_deleted": deleted,
+            "archive_deleted":   archive_deleted,
         }
     except Exception as e:
         conn.rollback()
@@ -2271,6 +2283,7 @@ async def upsert_portfolio_bot_state(
             cursor.execute(col_ddl)
 
         upserted = 0
+        _snap_wiped = set()   # bot_ids whose snapshots were wiped this call (pending restarts)
         for r in results:
             cursor.execute("""
                 INSERT INTO bot_fund_state
@@ -2312,6 +2325,26 @@ async def upsert_portfolio_bot_state(
                 bool(r.get("closed_out", False)),
             ))
             upserted += 1
+            # RESTART = NO OLD DATA (owner rule 2026-07-07): a PENDING state means this
+            # fund was reset/repaired to start fresh at the next session. Its prior
+            # history must be DELETED, never read back -- archive rows for the fund and,
+            # once per portfolio, its performance snapshots (restarts are portfolio-wide
+            # per the owner's standing rule, so all 5 funds arrive pending together).
+            _strat_in = r.get("strategy") or {}
+            if isinstance(_strat_in, dict) and _strat_in.get("pending") is True:
+                # Delete rows STRICTLY BEFORE today: engines re-emit the pending state on
+                # every refresh until starts_on, and today's clean day-0 row (written just
+                # below / by the snapshot refresh) must stay stable across those re-emits.
+                _ensure_archive_table(cursor)
+                cursor.execute(
+                    "DELETE FROM daily_fund_archive WHERE platform='member' AND bot_id=%s::uuid "
+                    "AND fund_name=%s AND archive_date < %s",
+                    (r["bot_id"], r["fund_name"], today_str))
+                if r["bot_id"] not in _snap_wiped:
+                    cursor.execute(
+                        "DELETE FROM bot_performance_snapshots WHERE bot_id=%s AND snapshot_date < %s",
+                        (r["bot_id"], today_str))
+                    _snap_wiped.add(r["bot_id"])
 
         conn.commit()
         # Durable monthly-report archive for member portfolios -- isolated; never blocks the upsert.

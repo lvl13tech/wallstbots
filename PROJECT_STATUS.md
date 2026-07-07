@@ -3,7 +3,30 @@
 **Keep this file honest and current.** Update it at the end of every work session.
 When Claude finishes a change, the LAST step is to update this file.
 
-Last updated: 2026-07-07 — ROOT-CAUSE FIX ROUND (owner-directed: "fix everything correctly, no
+Last updated: 2026-07-07 — SECOND-PASS AUDIT ROUND (owner rule: "on resets there is no old data;
+resets and new member portfolios never call on yesterday's data"). Second sweep verified clean:
+tracker push = full replace, git can't resurrect state (data files gitignored), engine day-math
+helpers read only the reset-seeded baseline, member creation path clean. Three leftovers fixed:
+R1 **Resets now HARD-DELETE all old member data in the DB** (Backend/main.py — needs deploy via
+   DEPLOY-BACKEND-ROOTCAUSE.bat): the wipe endpoint also deletes the member report archive
+   (daily_fund_archive platform='member' — it fed member monthly statements with corrupt-era
+   rows and had no reset pruning, unlike the public archive which self-prunes to inception);
+   and ANY pending restart arriving at the upsert (full reset OR repair) deletes that fund's
+   prior-day archive rows + the portfolio's prior-day performance snapshots. Deploy is image-
+   only (env vars preserved).
+R2 **Baseline funds enter at LIVE prices**: equalizer/titan seeds (3 engines) and the member
+   baseline builder used the PREVIOUS DAY'S CLOSE as entry — day 1 showed an overnight gap the
+   fund never held. All entries everywhere are now the live price at entry time; unpriceable
+   symbols stay as cash and self-seed at their first real price.
+R3 **Legacy state-writers retired**: fix_bitbot13_source.py and reset_lvl13.py now refuse to run
+   (both could inject old-era state if ever run again). One reset tool remains: full_reset_all.py.
+R4 OWNER ACTION: confirm Windows Task Scheduler only runs the intended refresh scripts.
+Deploy order: RUN-PUSH-SECONDPASS.bat → DEPLOY-BACKEND-ROOTCAUSE.bat (Docker Desktop + gcloud
+login required) → optional full_reset_all.py --all for a clean day 1.
+
+---
+
+Previous: 2026-07-07 — ROOT-CAUSE FIX ROUND (owner-directed: "fix everything correctly, no
 patches"). WHY DATA KEPT RE-CORRUPTING AFTER 7 DAILY RESETS — all causes found and fixed:
 1) **The reset tool itself corrupted members**: full_reset_all.py LAYER 2 wrote the PLATFORM's
    capital ($55k/$50k) into every member portfolio instead of the member's own N×$1,000 —

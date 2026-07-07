@@ -486,20 +486,17 @@ def build_baseline_positions(universe, prices, prev_closes, original_cost, prev_
             entry_price = float(stored.get("entry_price", price))
             cost_basis  = float(stored.get("cost_basis", 0))
         else:
-            # First run for this holding -- set inception values now.
-            # Use prev_close as entry price so P&L reflects real movement
-            # from the prior close. If no prev_close, fall back to today's price.
-            # NO REAL PRICE -> NO POSITION (2026-07-06, Rule 0): the old fallback seeded a
-            # FABRICATED $1.00 entry, so when a real price later appeared the position showed
-            # a fictitious crash/moonshot (this built bitbot13 member equalizer's -37%). An
-            # unpriceable symbol is skipped -- its allocation stays as cash -- and it seeds
-            # itself at the real price on the first run that can price it.
-            if prev <= 0 and price <= 0:
+            # First run for this holding -- set inception values now, at the LIVE price
+            # (2026-07-07, Rule 0: a real entry at a real price. The old prev_close entry
+            # counted an overnight gap the fund never held as day-1 P&L).
+            # NO REAL PRICE -> NO POSITION: an unpriceable symbol is skipped -- its
+            # allocation stays as cash -- and it seeds itself at the real price on the
+            # first run that can price it. Never a fabricated entry.
+            if price <= 0:
                 continue
             alloc       = original_cost / len(universe) if universe else 0
             # Shares from the ROUNDED entry so cost_basis == shares * entry_price exactly.
-            entry_price = prev if prev > 0 else price
-            entry_price = round(entry_price, _entry_dp(entry_price))
+            entry_price = round(price, _entry_dp(price))
             shares      = alloc / entry_price if entry_price > 0 else 0
             cost_basis  = alloc
 

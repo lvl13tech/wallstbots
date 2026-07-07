@@ -1409,7 +1409,7 @@ def main():
                and today_iso > str(fund.get("inception") or today_iso):
                 per_stock = sc / len(UNIVERSE)
                 for sym in UNIVERSE:
-                    price = prev_closes.get(sym) or prices.get(sym, 0)
+                    price = prices.get(sym, 0)   # LIVE price at entry (2026-07-07, Rule 0: a real entry at a real price -- prev_close counted an overnight gap the fund never held)
                     if price > 0:
                         raw_pos.append({
                             "symbol":      sym,
@@ -1426,12 +1426,12 @@ def main():
                 per_rest = float(fund.get("per_rest_dollars") or 0)
                 rest     = [s for s in UNIVERSE if s not in top10]
                 for sym in top10:
-                    price = prev_closes.get(sym) or prices.get(sym, 0)
+                    price = prices.get(sym, 0)   # LIVE price at entry (2026-07-07, Rule 0: a real entry at a real price -- prev_close counted an overnight gap the fund never held)
                     if price > 0 and per_top > 0:
                         raw_pos.append({"symbol": sym, "shares": round(per_top / price, 6),
                                         "entry_price": round(price, 4), "cost_basis": round(per_top, 2)})
                 for sym in rest:
-                    price = prev_closes.get(sym) or prices.get(sym, 0)
+                    price = prices.get(sym, 0)   # LIVE price at entry (2026-07-07, Rule 0: a real entry at a real price -- prev_close counted an overnight gap the fund never held)
                     if price > 0 and per_rest > 0:
                         raw_pos.append({"symbol": sym, "shares": round(per_rest / price, 6),
                                         "entry_price": round(price, 4), "cost_basis": round(per_rest, 2)})
