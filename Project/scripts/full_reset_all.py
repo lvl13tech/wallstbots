@@ -31,7 +31,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from datetime import date as _date, timedelta as _timedelta
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from bot13_engine import is_trading_day as _is_trading_day, EQUITY_CFG as _EQ_CFG, CRYPTO_CFG as _CR_CFG
+from bot13_engine import is_trading_day as _is_trading_day, next_trading_day as _next_trading_day, EQUITY_CFG as _EQ_CFG, CRYPTO_CFG as _CR_CFG
 
 def _last_trading_day(cfg, d):
     """Most recent real trading day on/before d (skips weekends + US market holidays)."""
@@ -56,10 +56,14 @@ _ALL = "--all" in sys.argv
 TODAY    = datetime.now(ZoneInfo("America/New_York")).date().isoformat()
 BOTS     = ["bot13", "oracle", "wizard", "equalizer", "titan"]
 
-# platform -> (universe size, disk state path or None if backend-only-authoritative)
+# platform -> (universe size, disk state path). ALL THREE disks must be written:
+# every engine (including aistocks) loads its DISK state.json FIRST and pushes it
+# back to the backend at the end of each run -- skipping the aistocks disk write
+# meant every aistocks reset was resurrected by the very next refresh (root-cause
+# finding, 2026-07-06). There is no "backend-only" platform.
 PLATFORMS = {
     "wallstbots": (55, ROOT / "Frontends" / "wallstbots.tech" / "data" / "state.json"),
-    "aistocks":   (50, None),  # backend-driven; disk file ignored/overwritten by engine
+    "aistocks":   (50, ROOT / "Frontends" / "aistocks.tech" / "data" / "state.json"),
     "bitbot13":   (50, ROOT / "Frontends" / "bitbot13.tech" / "data" / "state.json"),
 }
 
@@ -110,6 +114,10 @@ def reset_blob(state, start_cap, snap_date):
     n = len(state.get("snapshots", []))
     state["snapshots"] = [{"date": snap_date, **{b: start_cap for b in BOTS}}]  # last TRADING day, not a weekend/holiday
     print(f"    snapshots: deleted {n}, seeded 1 clean baseline row")
+    # Day 1 must not reference ANY prior-day data: drop the stale day_boundary block
+    # (yesterday's price map) so the first post-reset run uses the feed's own closes.
+    if state.pop("day_boundary", None) is not None:
+        print("    day_boundary: stale prior-day price block removed")
     lb = state.get("leaderboards", {})
     for period, rows in lb.items():
         for row in rows:
@@ -163,33 +171,56 @@ def main():
             print(f"    push -> HTTP {pr.status_code}")
 
         # LAYER 2: member DB
+        # ROOT-CAUSE FIX (2026-07-06): this layer used to write the PLATFORM's starting
+        # capital (start_cap, e.g. $55,000) into EVERY member portfolio regardless of the
+        # member's own size -- so every daily reset RE-CORRUPTED every member portfolio
+        # ($55,000 on a $20,000 portfolio = the +175% "gains" that reappeared each morning).
+        # A member portfolio's ONLY starting capital is its own N holdings x $1,000, and a
+        # reset writes the engine's PENDING shape (strategy.pending + starts_on) so the
+        # engines -- which honor PENDING -- take first real entries at the NEXT session.
         print("  LAYER 2: member DB")
         try:
             r = requests.get(f"{BACKEND}/internal/portfolios/active?platform={platform}",
                              headers=headers, timeout=20)
             body = r.json() if r.status_code == 200 else {}
             ports = body.get("portfolios", body if isinstance(body, list) else [])
-            bot_ids = [p.get("bot_id") or p.get("id") for p in ports]
         except Exception as e:
-            print(f"    WARNING listing portfolios: {e}"); bot_ids = []
-        print(f"    {len(bot_ids)} active portfolio(s)")
+            print(f"    WARNING listing portfolios: {e}"); ports = []
+        print(f"    {len(ports)} active portfolio(s)")
+        _starts = _next_trading_day(_cfg, _date.fromisoformat(TODAY)).isoformat()
         if not DRY:
             wr = requests.post(f"{BACKEND}/internal/portfolio-fund-snapshots/wipe",
                                json={"platform": platform}, headers=headers, timeout=30)
             print(f"    snapshots WIPE -> HTTP {wr.status_code} {wr.text[:120]}")
-            for bid in bot_ids:
+            for p in ports:
+                bid = p.get("bot_id") or p.get("id")
+                if not bid:
+                    continue
+                n_hold   = len(p.get("holdings") or [])
+                own_cost = round(n_hold * 1000.0, 2)          # the member's OWN capital
+                if own_cost <= 0:
+                    print(f"    portfolio {bid}: 0 holdings -- skipped"); continue
                 results = [{
-                    "bot_id": bid, "fund_name": fn, "positions": [],
-                    "strategy": clean_strategy(), "total_value": start_cap,
-                    "entry_cost": start_cap, "gain_loss": 0.0, "gain_loss_pct": 0.0,
+                    "bot_id": bid, "fund_name": fn, "positions": [], "trade_log": [],
+                    "strategy": {"decision": "PENDING", "pending": True, "starts_on": _starts,
+                                 "rationale": f"Full reset -- starting fresh at the member's own "
+                                              f"${own_cost:,.0f} ({n_hold} x $1,000). Trading begins {_starts}.",
+                                 "_day_open": own_cost, "_asof": TODAY},
+                    "total_value": own_cost, "entry_cost": own_cost,
+                    "gain_loss": 0.0, "gain_loss_pct": 0.0,
                     "day_pnl": 0.0, "day_pct": 0.0, "window_open": False,
-                    "holding_cash": True, "trade_log": [],
+                    "holding_cash": True, "traded_today": False, "closed_out": False,
                 } for fn in BOTS]
                 ur = requests.post(f"{BACKEND}/internal/portfolio-bot-state/upsert",
                                    json={"results": results}, headers=headers, timeout=30)
-                print(f"    portfolio {bid}: reset -> HTTP {ur.status_code}")
+                print(f"    portfolio {bid}: reset at own ${own_cost:,.0f} ({n_hold} holdings) -> HTTP {ur.status_code}")
             requests.post(f"{BACKEND}/internal/portfolio-fund-snapshots/refresh",
                           json={"platform": platform}, headers=headers, timeout=30)
+        else:
+            for p in ports:
+                n_hold = len(p.get("holdings") or [])
+                print(f"    would reset portfolio {(p.get('bot_id') or '')[:8]} at own "
+                      f"${n_hold * 1000:,.0f} ({n_hold} holdings), trading begins {_starts}")
 
         # LAYER 3: disk state.json (CLEAN write -- clears any NUL corruption)
         if disk_path is not None:
@@ -203,7 +234,8 @@ def main():
                 except Exception: ok = False
                 print(f"    wrote clean ({'OK' if ok else 'VERIFY FAILED'}, {len(raw)} bytes)")
         else:
-            print("  LAYER 3: (aistocks backend-driven -- disk skipped)")
+            # unreachable: every platform now has a disk path (all engines read disk first)
+            print("  LAYER 3: ERROR -- no disk path configured; every platform must have one")
 
     print(f"\n{'DRY RUN COMPLETE -- nothing changed.' if DRY else 'FULL RESET COMPLETE.'}")
 

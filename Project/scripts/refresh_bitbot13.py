@@ -35,7 +35,7 @@ from bot13_engine import (
     grade, grade_overall, et_now, window_open as _engine_window_open,
     stamp_and_log, reconcile_bot13_log, past_close_out,
     mark_position, build_day_reference, day_boundary_payload, fund_day_fields,
-    hold_fund_totals, bot13_bank_flat_day,
+    hold_fund_totals, bot13_bank_flat_day, reset_occurred_mid_run,
 )
 
 try:
@@ -877,6 +877,12 @@ def main():
     funds      = state_data.get("funds", {})
     snapshots  = list(state_data.get("snapshots", []))
     sc_global  = float(state_data.get("starting_capital") or len(UNIVERSE) * 1000)
+    # RESET-COLLISION GUARD (2026-07-06): remember each fund's inception AS LOADED.
+    # Just before the end-of-run write/push, reset_occurred_mid_run() compares these
+    # against the live backend -- if a full reset ran while this refresh was in
+    # flight, the run is ABANDONED so it can never overwrite the reset. (bitbot13
+    # refreshes 24/7, so every reset here used to collide with an in-flight run.)
+    _loaded_inceptions = {fid: (funds.get(fid) or {}).get("inception") for fid in funds}
 
     today      = et_now().date()
     today_iso  = today.isoformat()
@@ -1751,6 +1757,14 @@ def main():
         # ONE CLOCK: stored via the shared helper so all 3 engines stay identical.
         "day_boundary":     day_boundary_payload(prices, today_iso),
     }
+    # RESET-COLLISION GUARD: if a full reset ran while this refresh was in flight,
+    # abandon the ENTIRE run (no disk write, no pushes, no member sims) -- everything
+    # downstream derives from the stale pre-reset state this run loaded. The next
+    # scheduled run starts clean from the post-reset backend.
+    _rg_api = secrets.get("api_url") or os.environ.get("TRACKER_API_URL", BACKEND_URL)
+    if reset_occurred_mid_run("bitbot13", _loaded_inceptions, _rg_api):
+        print("[bitbot13] run ABANDONED (reset-collision guard) -- nothing written.")
+        sys.exit(0)
     STATE_FILE.write_text(json.dumps({"data": state_data}, indent=2))
     print(f"[bitbot13] state -- {len(funds_out)} funds, {len(snapshots)} snapshots")
     push_to_api("state", state_data, secrets)

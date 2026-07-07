@@ -1069,6 +1069,44 @@ def day_boundary_payload(prices, today_iso):
             "prices": {s: round(float(v), 8) for s, v in prices.items() if v}}
 
 
+def reset_occurred_mid_run(platform, loaded_inceptions, api_url):
+    """RESET-COLLISION GUARD (2026-07-06, root-cause fix -- shared by all 3 engines).
+
+    An engine loads state at the start of a run, computes for minutes, and pushes at
+    the end. If a FULL RESET runs in that window, the engine's end-of-run push would
+    overwrite the reset with pre-reset data -- this resurrected 'corrupt' numbers the
+    morning after every reset for a week (bitbot13 refreshes 24/7, so a reset there
+    almost always collided with an in-flight run).
+
+    A reset stamps every fund's inception with the reset date. Just before pushing,
+    the engine calls this with the inceptions it LOADED at run start; if the backend
+    now reports a different inception for any fund, a reset happened mid-run and the
+    caller must ABANDON the run (no disk write, no push). The next scheduled run
+    starts from the clean post-reset state. Fails OPEN (allows the push) only when
+    the backend cannot be reached -- the same condition under which a reset could
+    not have completed either.
+    """
+    import urllib.request as _url, json as _json
+    from datetime import datetime as _dt
+    try:
+        u = (f"{api_url}/public/tracker/state?platform={platform}"
+             f"&_rg={_dt.now().strftime('%H%M%S%f')}")   # cache-buster: must see LIVE state
+        req = _url.Request(u, headers={"Cache-Control": "no-cache"})
+        cur = _json.load(_url.urlopen(req, timeout=15))
+        cur_funds = ((cur or {}).get("data") or {}).get("funds") or {}
+    except Exception as e:
+        print(f"  [reset-guard] could not verify backend inception ({e}) -- allowing push")
+        return False
+    for fid, loaded_inc in (loaded_inceptions or {}).items():
+        cur_inc = (cur_funds.get(fid) or {}).get("inception")
+        if cur_inc and loaded_inc and str(cur_inc) != str(loaded_inc):
+            print(f"  [reset-guard] {fid}: inception changed {loaded_inc} -> {cur_inc} while this "
+                  f"run was in flight -- a RESET happened. ABANDONING this run so its stale "
+                  f"pre-reset data never overwrites the reset.")
+            return True
+    return False
+
+
 def hold_fund_totals(fund, sc, enriched, pos_val, new_positions, deploy_capital, strategy, tag):
     """THE single copy of the oracle/wizard total/cash math (compounding +
     residual cash). Returns (cash, total, pnl, pnl_pct, strategy).

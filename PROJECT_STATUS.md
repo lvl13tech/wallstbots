@@ -3,7 +3,33 @@
 **Keep this file honest and current.** Update it at the end of every work session.
 When Claude finishes a change, the LAST step is to update this file.
 
-Last updated: 2026-07-06 midnight — ROUND 3 (owner-directed, numbers only): the last audit red
+Last updated: 2026-07-07 — ROOT-CAUSE FIX ROUND (owner-directed: "fix everything correctly, no
+patches"). WHY DATA KEPT RE-CORRUPTING AFTER 7 DAILY RESETS — all causes found and fixed:
+1) **The reset tool itself corrupted members**: full_reset_all.py LAYER 2 wrote the PLATFORM's
+   capital ($55k/$50k) into every member portfolio instead of the member's own N×$1,000 —
+   every daily reset re-planted the +175%-style fictitious gains, and then reseeded each
+   member's day-0 history row from that wrong number. FIXED: members reset at their own
+   N×$1,000 in the engine's PENDING shape (first real entries next session; engines honor it).
+2) **aistocks resets were deterministically resurrected**: the reset skipped aistocks' disk
+   state.json ("backend-driven" was wrong — ALL 3 engines read disk FIRST and push it back).
+   FIXED: LAYER 3 now writes clean disk for all three platforms.
+3) **Reset-collision race**: engines load state, compute for minutes, push at the end — a
+   reset in that window was overwritten by the in-flight run (bitbot13 refreshes 24/7, so
+   near-guaranteed there). FIXED: shared reset_occurred_mid_run() guard in bot13_engine.py —
+   each engine re-checks fund inceptions on the backend just before its write/push and
+   ABANDONS the whole run if a reset happened mid-flight (no disk write, no pushes, no member
+   sims). Fails open only if the backend is unreachable.
+4) **Stale day_boundary**: reset now removes the prior-day price block — day 1 references NO
+   prior-day data anywhere.
+5) **full_reset_bitbot13.py retired**: it carried the same platform-capital member bug; it now
+   refuses to run and points to full_reset_all.py --platform bitbot13 (one reset path only).
+Member portfolio CREATION verified clean end-to-end (own N×$1,000, PENDING, first entries next
+session). Audit's STARTED-AT check (entry_cost == N×$1,000) would now catch a reset-tool
+regression the same day. NOT YET PUSHED — RUN-PUSH-ROOTCAUSE.bat.
+
+---
+
+Previous: 2026-07-06 midnight — ROUND 3 (owner-directed, numbers only): the last audit red
 was the bot13 Strategy-box prose after close. Owner spec: HOLD = no-edge days only; TRADE days
 keep the frozen, dated strategy box until the next trading day; "Session complete" prose is fine.
 Fixes: (1) the after-hours "graceful fallback" in all 3 engines now fires ONLY on a genuinely
