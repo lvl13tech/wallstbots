@@ -3,7 +3,29 @@
 **Keep this file honest and current.** Update it at the end of every work session.
 When Claude finishes a change, the LAST step is to update this file.
 
-Last updated: 2026-07-06 night — DATA-INTEGRITY FIX ROUND COMPLETE. Pushed (commit b38406d),
+Last updated: 2026-07-06 late night — ROUND 2 (owner-approved): bitbot13 kept trading after the
+member repair and the audit caught a re-corruption within the hour. Root causes fixed:
+1) ENGINE now HONORS a stored PENDING state until its starts_on date (previously only
+   creation-day portfolios waited, so repaired funds re-seeded mid-session) — refresh_portfolios.py.
+2) Titan's own inception block still fabricated $1.00 entries after the shared builder was fixed
+   (BNC/NOTE/POL/SAFE/XEC caught live) — now skips unpriced coins; they seed at their first real price.
+3) Entry-price precision: engine stores entries at tiered decimals (8dp sub-penny, 6dp <$1, 4dp <$10)
+   and computes shares from the ROUNDED entry so cost == shares × entry exactly (VET 1% drift fixed).
+   refresh_bitbot13.py seeding tiers matched.
+4) DISPLAY (owner request): Entry/Price columns show the full stored precision on bitbot13 ONLY
+   (fmtCrypto re-tiered in its app.js/portfolio-fund/bot-detail — >=$10 2dp, >=$1 4dp, >=1c 6dp,
+   sub-penny 8dp). wallstbots/aistocks are strictly stocks (owner) — their display files were NOT
+   touched this round (fmtCrypto is bitbot13's existing allowed asset-class difference).
+5) Audit sign checks now require a meaningfully nonzero percentage (a −$2.42 day rounding to
+   0.00% is not a sign disagreement). JUP needed no alias — the platform map already carries it.
+DEPLOY: RUN-PUSH-ROUND2.bat, then RUN-REPAIR-MEMBERS.bat again (TopCryp re-corrupted tonight;
+the PENDING gate — already live locally since engines run from this working copy — holds the
+restart until the next session this time). NOTE: bot13 rationale/picks prose mismatch on rotation
+(public bitbot13) is a separate open item, not yet investigated.
+
+---
+
+Previous header: 2026-07-06 night — DATA-INTEGRITY FIX ROUND COMPLETE. Pushed (commit b38406d),
 member repair APPLIED (15 fund-states restarted portfolio-wide per owner rule — dry-run +
 before/after in RUN-REPAIR-MEMBERS_LOG.txt), and the full audit is GREEN: exit 0, zero
 failures on all 3 platforms including the member section. Independently re-verified against

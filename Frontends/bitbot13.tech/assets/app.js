@@ -13,7 +13,10 @@ let PICKED_TICKERS = [];
 const fmt$  = n => { const v = n||0; return (v<0?'-$':'$') + Math.abs(v).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); };
 const fmt$0 = n => { const v = Math.round(n||0); return (v<0?'-$':'$') + Math.abs(v).toLocaleString(); };
 const fmtPct = n => (n>=0?'+':'') + (n||0).toFixed(2) + '%';
-function fmtCrypto(n){var x=Number(n)||0;if(x===0)return '0';var a=Math.abs(x);return a>=1?x.toFixed(2):a>=0.01?x.toFixed(4):a>=0.0001?x.toFixed(6):x.toFixed(8);}
+// (2026-07-06) finer tiers: $1-$10 coins lost real precision at 2dp (XRP showed $1.13 for
+// a true $1.1342 entry, making the % column look wrong). Matches the engine's stored
+// precision: >=$10 2dp, >=$1 4dp, >=1c 6dp, sub-penny 8dp.
+function fmtCrypto(n){var x=Number(n)||0;if(x===0)return '0';var a=Math.abs(x);return a>=10?x.toFixed(2):a>=1?x.toFixed(4):a>=0.01?x.toFixed(6):x.toFixed(8);}
 
 const cls   = n => n>=0 ? 'pos' : 'neg';
 const $     = id => document.getElementById(id);

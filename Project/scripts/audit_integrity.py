@@ -294,10 +294,11 @@ for platform, usize in PLATFORMS.items():
                 rc.note("holding_cash -> cash == total", CH, approx(CH, T, teq(T)))
         if invested and holding_cash is True:
             FAIL(scope, "holding_cash TRUE but pos_val>0 with live positions (contradiction)")
-        # sign sanity
-        if PN is not None and PP is not None and abs(PN) > 0.5 and (PN < 0) != (PP < 0):
+        # sign sanity -- both sides must be MEANINGFULLY nonzero: a -$2.42 day rounds to a
+        # displayed 0.00%, which is not a sign disagreement (false positive, 2026-07-06).
+        if PN is not None and PP is not None and abs(PN) > 0.5 and abs(PP) >= 0.005 and (PN < 0) != (PP < 0):
             FAIL(scope, f"pnl sign {PN} disagrees with pnl_pct sign {PP}")
-        if DPN is not None and DP is not None and abs(DPN) > 0.5 and (DPN < 0) != (DP < 0):
+        if DPN is not None and DP is not None and abs(DPN) > 0.5 and abs(DP) >= 0.005 and (DPN < 0) != (DP < 0):
             FAIL(scope, f"day_pnl sign {DPN} disagrees with day_pct sign {DP}")
 
         # ---------- POSITION-LEVEL derivations ----------
@@ -333,7 +334,7 @@ for platform, usize in PLATFORMS.items():
                 elif en and pr and en > 0 and not approx(ppct, (pr/en-1)*100, 0.25):
                     WARN(ps, f"display rounding: Holdings shows Entry ${en}/Price ${pr} -> looks like "
                              f"{round((pr/en-1)*100,2)}% but actual is {ppct}% (2dp too coarse for this price)")
-            if dpn is not None and dpc is not None and abs(dpn) > 0.5 and (dpn < 0) != (dpc < 0):
+            if dpn is not None and dpc is not None and abs(dpn) > 0.5 and abs(dpc) >= 0.005 and (dpn < 0) != (dpc < 0):
                 FAIL(ps, f"day_pnl sign {dpn} disagrees with day_pct {dpc}")
             if val is not None: pos_val_sum += val
         if invested and not display_freeze and PV is not None and positions:

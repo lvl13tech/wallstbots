@@ -73,6 +73,18 @@ PLATFORM_CFG = {
 }
 
 
+def _entry_dp(price):
+    """Decimal places for a stored entry price. Sub-penny coins need 8dp -- rounding a
+    half-cent coin to 4dp shifted cost_basis vs shares*entry by ~1% (audit-caught on VET,
+    2026-07-06). Same tiering as the platform crypto engine: 8dp < $0.01, 6dp < $1,
+    4dp < $10, 2dp above (real equity quotes are 2dp, so stocks are unaffected)."""
+    try:
+        p = float(price)
+    except Exception:
+        return 4
+    return 8 if p < 0.01 else (6 if p < 1 else (4 if p < 10 else 2))
+
+
 # -- Helpers -------------------------------------------------------------------
 
 def load_secrets():
@@ -351,12 +363,15 @@ def run_oracle_for_universe(universe, prices, prev_closes, hist_data, starting_c
     for i, (sym, score, ret5, ret20, rsi, vol_r) in enumerate(picks_raw):
         w      = weights[i]
         alloc  = starting_capital * w
-        price  = prices.get(sym, 0)
+        # Shares are computed from the ROUNDED entry so cost_basis == shares * entry_price
+        # exactly as stored (2026-07-06 fix: rounding after division left a ~1% gap on
+        # sub-penny coins, breaking the "verifiable from entry" identity).
+        price  = round(prices.get(sym, 0), _entry_dp(prices.get(sym, 0)))
         shares = alloc / price if price > 0 else 0
         positions.append({
             "symbol":      sym,
             "shares":      round(shares, 6),
-            "entry_price": round(price, 4),   # locked at time of rebalance
+            "entry_price": price,             # locked at time of rebalance
             "cost_basis":  round(alloc, 2),
         })
         picks.append({
@@ -415,12 +430,14 @@ def run_wizard_for_universe(universe, prices, prev_closes, hist_data, starting_c
     for i, (sym, score, ret20, ret60, sharpe, dist) in enumerate(picks_raw):
         w      = weights[i]
         alloc  = starting_capital * w
-        price  = prices.get(sym, 0)
+        # Shares from the ROUNDED entry so cost_basis == shares * entry_price exactly
+        # (2026-07-06 fix -- see run_oracle_for_universe).
+        price  = round(prices.get(sym, 0), _entry_dp(prices.get(sym, 0)))
         shares = alloc / price if price > 0 else 0
         positions.append({
             "symbol":      sym,
             "shares":      round(shares, 6),
-            "entry_price": round(price, 4),   # locked at time of rebalance
+            "entry_price": price,             # locked at time of rebalance
             "cost_basis":  round(alloc, 2),
         })
         picks.append({
@@ -480,7 +497,9 @@ def build_baseline_positions(universe, prices, prev_closes, original_cost, prev_
             if prev <= 0 and price <= 0:
                 continue
             alloc       = original_cost / len(universe) if universe else 0
+            # Shares from the ROUNDED entry so cost_basis == shares * entry_price exactly.
             entry_price = prev if prev > 0 else price
+            entry_price = round(entry_price, _entry_dp(entry_price))
             shares      = alloc / entry_price if entry_price > 0 else 0
             cost_basis  = alloc
 
@@ -493,7 +512,7 @@ def build_baseline_positions(universe, prices, prev_closes, original_cost, prev_
         positions.append({
             "symbol":        sym,
             "shares":        round(shares, 6),
-            "entry_price":   round(entry_price, 4),   # FIXED at inception, never updated
+            "entry_price":   round(entry_price, _entry_dp(entry_price)),   # FIXED at inception, never updated (8dp sub-penny)
             "price":         round(price, 4),
             "cost_basis":    round(cost_basis, 2),
             "value":         round(value, 2),
@@ -630,6 +649,26 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
             tf = tracker_funds.get(fund_name)
             if not tf or tf["total"] <= 0:
                 print(f"  [portfolios] WARNING: no tracker data for {fund_name} -- skipping")
+                continue
+
+            # HONOR A STORED PENDING STATE (2026-07-06 night fix): a data repair/reset writes
+            # strategy.pending=True with starts_on = the next trading session. The engine must
+            # NOT trade this fund before that date. Previously only creation-day portfolios got
+            # the wait rule, so a repaired fund re-seeded on the SAME mid-session refresh
+            # (bitbot13, 2026-07-06 21:15 ET) -- violating "first entries at the next session".
+            # Re-emit the pending state unchanged until starts_on arrives; on starts_on itself
+            # the fund simulates normally and takes its first real entries.
+            _pend_prev  = prev_states.get(fund_name) or {}
+            _pend_strat = _pend_prev.get("strategy") if isinstance(_pend_prev.get("strategy"), dict) else {}
+            if _pend_strat.get("pending") is True and str(_pend_strat.get("starts_on") or "") > today_iso:
+                results.append({
+                    "bot_id": bot_id, "fund_name": fund_name, "positions": [], "trade_log": [],
+                    "strategy": _pend_strat,
+                    "total_value": round(original_cost, 2), "entry_cost": round(original_cost, 2),
+                    "gain_loss": 0.0, "gain_loss_pct": 0.0, "day_pnl": 0.0, "day_pct": 0.0,
+                    "window_open": False, "holding_cash": True, "traded_today": False, "closed_out": False,
+                })
+                print(f"  [portfolios] bot_id={bot_id} {fund_name}: PENDING honored -- trading begins {_pend_strat.get('starts_on')}")
                 continue
 
             # (2026-07-06) The old "core scaling formula" that computed member dollars from
@@ -806,12 +845,19 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                         w     = weights.get(sym, 1.0 / n)
                         alloc = original_cost * w
                         price = prices.get(sym, 0)
-                        entry = price if price > 0 else 1.0
+                        # NO REAL PRICE -> NO POSITION (2026-07-06 night fix, Rule 0): this
+                        # block still fabricated a $1.00 entry after the shared builder was
+                        # fixed -- the audit caught it recurring the same evening (BNC/NOTE/
+                        # POL/SAFE/XEC). An unpriceable symbol stays as cash and seeds itself
+                        # at the first run that can price it.
+                        if price <= 0:
+                            continue
+                        entry  = round(price, _entry_dp(price))
                         shares = alloc / entry if entry > 0 else 0
                         inception_positions.append({
                             "symbol":      sym,
                             "shares":      round(shares, 6),
-                            "entry_price": round(entry, 4),
+                            "entry_price": entry,             # already rounded to _entry_dp
                             "cost_basis":  round(alloc, 2),
                         })
                     positions, _, _ = build_baseline_positions(

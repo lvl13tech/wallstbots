@@ -477,7 +477,7 @@ def run_oracle_decision(prices, prev_closes, hist_data, starting_capital, week_s
         alloc  = starting_capital * w
         price  = prices.get(sym, 0)
         shares = alloc / price if price > 0 else 0
-        price_dp = 8 if price < 0.01 else (4 if price < 1 else 2)
+        price_dp = 8 if price < 0.01 else (6 if price < 1 else (4 if price < 10 else 2))  # finer tiers 2026-07-06 (sub-$10 coins lost precision at 2dp)
         positions.append({
             "symbol":      sym,
             "shares":      round(shares, 6),
@@ -591,7 +591,7 @@ def run_wizard_decision(prices, prev_closes, hist_data, starting_capital, month_
         alloc  = starting_capital * w
         price  = prices.get(sym, 0)
         shares = alloc / price if price > 0 else 0
-        price_dp = 8 if price < 0.01 else (4 if price < 1 else 2)
+        price_dp = 8 if price < 0.01 else (6 if price < 1 else (4 if price < 10 else 2))  # finer tiers 2026-07-06 (sub-$10 coins lost precision at 2dp)
         positions.append({
             "symbol":      sym,
             "shares":      round(shares, 6),
@@ -644,7 +644,7 @@ def generate_signals(prices, prev_closes):
             signal = "HOLD";        reason = f"Flat {pct:+.2f}% -- no clear edge right now."
 
         summary[signal] += 1
-        price_dp = 8 if p < 0.01 else (4 if p < 1 else 2)
+        price_dp = 8 if p < 0.01 else (6 if p < 1 else (4 if p < 10 else 2))  # finer tiers 2026-07-06
         # Canonical shape matching lvl13: symbol/action/upside_pct/target/score/risk/rationale/indicators
         score   = round(pct * 5, 1)
         target  = round(p * (1 + pct/100), 8 if p < 0.01 else (4 if p < 1 else 2))
@@ -1543,7 +1543,7 @@ def main():
                 for sym in UNIVERSE:
                     price = prev_closes.get(sym) or prices.get(sym, 0)
                     if price > 0:
-                        price_dp = 8 if price < 0.01 else (4 if price < 1 else 2)
+                        price_dp = 8 if price < 0.01 else (6 if price < 1 else (4 if price < 10 else 2))  # finer tiers 2026-07-06 (sub-$10 coins lost precision at 2dp)
                         raw_pos.append({
                             "symbol":      sym,
                             "shares":      round(per_coin / price, 6),
@@ -1561,13 +1561,13 @@ def main():
                 for sym in top10:
                     price = prev_closes.get(sym) or prices.get(sym, 0)
                     if price > 0 and per_top > 0:
-                        price_dp = 8 if price < 0.01 else (4 if price < 1 else 2)
+                        price_dp = 8 if price < 0.01 else (6 if price < 1 else (4 if price < 10 else 2))  # finer tiers 2026-07-06 (sub-$10 coins lost precision at 2dp)
                         raw_pos.append({"symbol": sym, "shares": round(per_top / price, 6),
                                         "entry_price": round(price, price_dp), "cost_basis": round(per_top, 2)})
                 for sym in rest:
                     price = prev_closes.get(sym) or prices.get(sym, 0)
                     if price > 0 and per_rest > 0:
-                        price_dp = 8 if price < 0.01 else (4 if price < 1 else 2)
+                        price_dp = 8 if price < 0.01 else (6 if price < 1 else (4 if price < 10 else 2))  # finer tiers 2026-07-06 (sub-$10 coins lost precision at 2dp)
                         raw_pos.append({"symbol": sym, "shares": round(per_rest / price, 6),
                                         "entry_price": round(price, price_dp), "cost_basis": round(per_rest, 2)})
                 print(f"  TITAN: seeded {len(raw_pos)} positions (top10 ${per_top:.0f} / rest ${per_rest:.0f})")
