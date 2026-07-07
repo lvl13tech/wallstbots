@@ -3,7 +3,20 @@
 **Keep this file honest and current.** Update it at the end of every work session.
 When Claude finishes a change, the LAST step is to update this file.
 
-Last updated: 2026-07-06 late night — ROUND 2 (owner-approved): bitbot13 kept trading after the
+Last updated: 2026-07-06 midnight — ROUND 3 (owner-directed, numbers only): the last audit red
+was the bot13 Strategy-box prose after close. Owner spec: HOLD = no-edge days only; TRADE days
+keep the frozen, dated strategy box until the next trading day; "Session complete" prose is fine.
+Fixes: (1) the after-hours "graceful fallback" in all 3 engines now fires ONLY on a genuinely
+broken chain (stored strategy from a DIFFERENT day) — it was re-firing every post-close refresh
+and shuffling the frozen box (TRADE/HOLD oscillation). (2) The audit's prose/cards check is now
+a WARN that fires only when the prose names a DIFFERENT known symbol than the cards (stale-story
+signal); generic prose naming nothing is fine — words, not numbers. Verified live: bitbot13 now
+PASSES; whole system has zero failures (only the XRP 2dp display notes, which clear when round-2
+precision takes effect at the next session's entries). NOT YET PUSHED — RUN-PUSH-ROUND3.bat.
+
+---
+
+Previous: 2026-07-06 late night — ROUND 2 (owner-approved): bitbot13 kept trading after the
 member repair and the audit caught a re-corruption within the hour. Root causes fixed:
 1) ENGINE now HONORS a stored PENDING state until its starts_on date (previously only
    creation-day portfolios waited, so repaired funds re-seeded mid-session) — refresh_portfolios.py.

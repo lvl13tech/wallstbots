@@ -1208,13 +1208,15 @@ def main():
             b13_log       = (b13_prev_strategy or {}).get("session_log", [])
             b13_proj      = float((b13_prev_strategy or {}).get("projected_return", 0.0))
             print("  BOT13: HOLD (market closed -- no new positions after hours)")
-        elif _stored_pos:
-            # GRACEFUL FALLBACK: the prior strategy chain is broken/missing (e.g. a
-            # corrupted state, a platform migration, or a skipped run) so its
-            # decision isn't "TRADE" -- but there ARE positions stored from today.
-            # Preserve and re-price those (re-enriched below with live prices)
-            # instead of blanking the page to empty. Present them like a normal
-            # held session (decision "TRADE") so the page matches a healthy site.
+        elif _stored_pos and (b13_prev_strategy or {}).get("day") != today_iso:
+            # GRACEFUL FALLBACK -- BROKEN CHAIN ONLY (2026-07-06 fix: must NOT fire on a
+            # normal same-day close-out). The prior strategy chain is broken/missing (a
+            # corrupted state, a platform migration, or a skipped run: its stored day is
+            # NOT today) -- but there ARE positions stored. Preserve and re-price those
+            # instead of blanking the page. When the stored strategy IS from today, the
+            # branch below keeps the day's real story frozen (owner spec: the strategy
+            # box stays as-is, dated, until the next trading day) -- previously this
+            # recovery re-fired every post-close refresh and shuffled the box contents.
             b13_decision  = "TRADE"
             b13_positions = _stored_pos
             b13_picks     = (b13_prev_strategy or {}).get("picks", [])

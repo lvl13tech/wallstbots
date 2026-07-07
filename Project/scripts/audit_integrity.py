@@ -383,14 +383,25 @@ for platform, usize in PLATFORMS.items():
         # If it equals day_pct the drift bug is back (edge score = Today's Change).
         _strat0 = f.get("current_strategy") or {}
         _pr = fnum(_strat0.get("projected_return"))
-        # Strategy prose must name the SAME stocks as the pick cards (a rotation used to leave
-        # a stale rationale listing different names). Every pick symbol must appear in it.
+        # Strategy prose vs pick cards (2026-07-06, owner-refined): generic prose that names
+        # NO symbols ("Session complete -- ...") is FINE -- the picks are on the cards and in
+        # Trade History. The signal worth flagging is prose that names a DIFFERENT known
+        # symbol than the cards (the old stale-rationale bug). Words, not numbers -> WARN.
         if fund == "bot13" and str(_strat0.get("decision","")).upper() == "TRADE":
             _rtext = str(_strat0.get("rationale") or "")
-            _bad = [pk.get("symbol") for pk in (_strat0.get("picks") or [])
-                    if pk.get("symbol") and pk.get("symbol") not in _rtext]
-            if _bad and _rtext:
-                FAIL(scope, f"strategy rationale does not name its own picks {_bad} -- prose/cards mismatch")
+            _pick_syms = {pk.get("symbol") for pk in (_strat0.get("picks") or []) if pk.get("symbol")}
+            # Known symbols on this platform state: every fund's positions + trade logs.
+            _known = set()
+            for _kf in funds.values():
+                _kv = (_kf or {}).get("value") or {}
+                _known |= {p.get("symbol") for p in (_kv.get("positions") or []) if p.get("symbol")}
+                _known |= {e.get("symbol") for e in (_kv.get("trade_log") or []) if e.get("symbol")}
+            import re as _re
+            _named = {t for t in _re.findall(r"[A-Z]{2,6}", _rtext)} & _known
+            _foreign = _named - _pick_syms
+            if _rtext and _foreign:
+                WARN(scope, f"strategy prose names {sorted(_foreign)} but the pick cards show "
+                            f"{sorted(_pick_syms)} -- stale story (words only; numbers unaffected)")
         if fund == "bot13" and _pr is not None and DP is not None and abs(_pr) > 0.01 and approx(_pr, DP, 0.05):
             WARN(scope, f"Projected Edge Score {_pr} == Today's Change {DP} (should be the frozen decision-time score, not the live day return)")
         strat = f.get("current_strategy") or {}
