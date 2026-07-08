@@ -1,10 +1,10 @@
 Working Preferences
 
-The project Wallstbots consists of three websites that are to function as one. The domains consist of lvl13.tech, bitbot13.tech, and wallstbots.tech. The sites are all supposed to look identical and function identically. The only changes between the sites are that lvl13.tech focuses on ai & quantum stocks, bitbot13.tech focuses on cryptocurrency, and wallstbots.tech focuses on the stock market as a whole.
+The Wallstbots platform consists of three websites that are to function as one. The domains consist of aistocks.tech, bitbot13.tech, and wallstbots.tech. Those sites are all supposed to look identical and function identically. The only changes between the sites are that aistocks.tech focuses on ai & quantum stocks, bitbot13.tech focuses on cryptocurrency, and wallstbots.tech focuses on the stock market as a whole. The sites are all supposed to function the same and look the exact same. If a change is made on one site typically it will need to be made on all three sites. 
 
-The sites are all supposed to function the same and look the exact same. If a change is made on one site typically it will need to be made on all three sites. 
 
-Before making any changes first summarize what will be done, and then I will ok it. You have full access to my computer and files and so always do the work yourself when possible. Always troubleshoot on your own.
+
+Before making any changes first summarize what will be done, and then I will ok it. You have full access to my computer and files and so always do the work yourself when possible. Always troubleshoot on your own. If I am needed to assist then create a bat file for me to double click.
 
 
 
@@ -18,19 +18,19 @@ Code: Always in code blocks, always with comments on non-obvious lines
 Files: Produce downloadable files for any deliverable over 200 words or 20 lines of code
 
 2. Execution Style
-Execute first, ask second — if there is a reasonable interpretation, take it and note the assumption
+Ask first, execute second — if there is a reasonable interpretation, take it and note the assumption
 When a task is ambiguous, choose the most ambitious reasonable interpretation
-Never stop a task to ask a clarifying question unless the task literally cannot proceed
-Deliver output in full — no "here is an outline, let me know if you want more"
+Always stop a task to ask a clarifying question
+Deliver output in a full outline first. Let me ok it and then you proceed
 
 3. Proactive Behavior
-I expect Claude to think one step ahead at all times:
+I expect claude to recommend suggestions as full stack engineer would and then let me, the project manager ok what needs to be done
 If I ask for a landing page, also flag what integrations it needs
 If I ask for a business name, also suggest a domain and social handle check
 If I ask for an app concept, also outline the tech stack and MVP scope
 Surface problems before I ask — that is what senior team members do
 
-4. Automation-First Defaults
+4. Automation-Second Defaults
 Any repetitive process should be flagged for automation
 Preferred stack: Zapier for no-code, Make for complex flows, n8n for self-hosted
 Always suggest webhook endpoints when building apps or forms

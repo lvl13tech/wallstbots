@@ -150,14 +150,27 @@ def main():
         start_cap = float(usize * 1000)
         print(f"\n### {platform}  (universe {usize} -> ${start_cap:,.0f}) ###")
 
-        # Use the live backend blob as the structural template (guaranteed clean shape).
+        # Structural template resolution (2026-07-08 fix): the live backend blob is the
+        # first choice, but after an empty-site incident the backend itself can have NO
+        # funds -- which used to make the reset refuse to run (chicken-and-egg: the tool
+        # that restores a broken state needed a healthy state to run). Fallback: the
+        # platform's DISK state.json (a prior reset wrote a clean, complete blob there).
+        blob = {}
         try:
             r = requests.get(f"{BACKEND}/public/tracker/state?platform={platform}", timeout=20)
             blob = r.json().get("data", {}) or {}
         except Exception as e:
-            print(f"  ERROR fetching backend state: {e}"); continue
+            print(f"  WARNING fetching backend state: {e}")
         if not blob.get("funds"):
-            print("  ERROR: backend returned no funds -- skipping"); continue
+            print("  backend has no funds -- falling back to the disk state.json template")
+            try:
+                _draw = json.loads(disk_path.read_text(encoding="utf-8"))
+                blob = _draw.get("data", _draw) or {}
+            except Exception as e:
+                print(f"  ERROR: disk template also unusable ({e})")
+        if not blob.get("funds"):
+            print("  ERROR: no usable template (backend AND disk have no funds) -- skipping. "
+                  "Restore a clean state.json for this platform and re-run."); continue
 
         # LAYER 1: reset + push to backend cache
         print("  LAYER 1: backend cache")
