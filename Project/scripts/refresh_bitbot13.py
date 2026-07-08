@@ -860,6 +860,16 @@ def main():
             raw = json.loads(STATE_FILE.read_text())
         except Exception as e:
             print(f"  [state.json] parse error ({e}) -- falling back to live API")
+    # EMPTY-STATE GUARD (2026-07-08 root-cause fix): a disk file that PARSES but has
+    # no funds is just as poisonous as one that doesn't parse -- a run that starts
+    # from empty funds publishes an EMPTY SITE, writes the empty blob back to disk,
+    # and then feeds on its own poison forever (this blanked bitbot13 for two days
+    # after one transient failure). Rules now: (a) if the disk state has no funds,
+    # try the live API; (b) if the API state ALSO has no funds, ABORT the run --
+    # an engine must NEVER publish an empty site. Exit 1 so schedulers show a failure.
+    if raw is not None and not ((raw.get("data", raw) or {}).get("funds") or {}):
+        print("  [state.json] parsed but has NO funds (poisoned/empty) -- falling back to live API")
+        raw = None
     if raw is None:
         # Fallback: fetch current state from live backend API so a corrupted
         # state.json never silently kills the entire refresh run.
@@ -871,12 +881,17 @@ def main():
             raw = {"data": _fb.json().get("data", {})}
             print("  [state.json] recovered from live API ✅")
         except Exception as e2:
-            print(f"  [state.json] API fallback also failed ({e2}) -- using empty state")
-            raw = {"data": {}}
+            print(f"  [state.json] API fallback also failed ({e2}) -- ABORTING (never publish an empty site)")
+            sys.exit(1)
     state_data = raw.get("data", raw)
     funds      = state_data.get("funds", {})
     snapshots  = list(state_data.get("snapshots", []))
     sc_global  = float(state_data.get("starting_capital") or len(UNIVERSE) * 1000)
+    if not funds:
+        print("[bitbot13] run ABANDONED -- no fund data available from disk OR the live API. "
+              "Refusing to publish an empty site. Run full_reset_all.py --platform bitbot13 "
+              "(or restore state) and re-run.")
+        sys.exit(1)
     # RESET-COLLISION GUARD (2026-07-06): remember each fund's inception AS LOADED.
     # Just before the end-of-run write/push, reset_occurred_mid_run() compares these
     # against the live backend -- if a full reset ran while this refresh was in

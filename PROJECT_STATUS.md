@@ -3,7 +3,26 @@
 **Keep this file honest and current.** Update it at the end of every work session.
 When Claude finishes a change, the LAST step is to update this file.
 
-Last updated: 2026-07-07 — SECOND-PASS AUDIT ROUND (owner rule: "on resets there is no old data;
+Last updated: 2026-07-08 — EMPTY-SITE INCIDENT (audit caught it): bitbot13's live state has been
+EMPTY (funds {}) since shortly after the clean reset, refreshed every cycle by a runner that is
+NOT this folder (this folder's disk state.json is still the pristine reset blob — a healthy run
+rewrites it every cycle). Evidence points to a second checkout (old deploy scripts reference
+C:\Users\temps\OneDrive\Desktop\Claude\Websites\1. Wall St Bots) running OLD engine code whose
+worst path is: disk empty/corrupt + one API-fallback failure -> "using empty state" -> publishes
+an empty site -> writes the empty blob to its own disk -> feeds on its own poison forever. That
+runner also starves the member sims (bitbot13 member states stale).
+FIX (code, this folder): EMPTY-STATE GUARD in all 3 engines — a parsed-but-fundless disk state
+falls back to the live API; if the API also has no funds the run ABORTS (exit 1). An engine can
+never publish an empty site again. NOT YET PUSHED — RUN-PUSH-EMPTYGUARD.bat.
+OWNER ACTIONS (in this order): 1) Task Scheduler: find the bitbot13 refresh task; repoint it to
+C:\Claude\Websites\WallStBots (or disable the old-checkout task entirely — the rogue runner will
+otherwise keep re-poisoning bitbot13 no matter what we reset). 2) RUN-PUSH-EMPTYGUARD.bat.
+3) RUN-RESET-BITBOT13.bat to restore bitbot13's clean baseline. wallstbots + aistocks audited
+CLEAN after their first real trading day.
+
+---
+
+Previous: 2026-07-07 — SECOND-PASS AUDIT ROUND (owner rule: "on resets there is no old data;
 resets and new member portfolios never call on yesterday's data"). Second sweep verified clean:
 tracker push = full replace, git can't resurrect state (data files gitignored), engine day-math
 helpers read only the reset-seeded baseline, member creation path clean. Three leftovers fixed:
