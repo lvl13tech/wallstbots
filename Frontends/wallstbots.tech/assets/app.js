@@ -211,12 +211,14 @@ function renderPageHero(path) {
   if (!slot) return;
   const isVideo = (path === '/' || path === '' || path.startsWith('/fund/bot13'));
   const copy = heroCopy(path);
+  // Platform tagline on EVERY hero banner (owner rule — matches bot13.tech's hero-sub)
+  const tag = '<p class="hero13-tag">The Wall St. Bots Platform</p>';
   const overlay = (copy && copy.title)
     ? '<div class="hero13-overlay"><h1 class="hero13-title">' + copy.title + '</h1>'
       + (copy.sub ? '<p class="hero13-sub">' + copy.sub + '</p>' : '')
       + (copy.cta ? '<div class="hero13-ctas">' + copy.cta + '</div>' : '')
-      + '</div>'
-    : '<div class="hero13-overlay" style="background:none"></div>';
+      + tag + '</div>'
+    : '<div class="hero13-overlay">' + tag + '</div>';
   const media = isVideo
     ? '<video autoplay muted loop playsinline poster="assets/herobanner.png"><source src="assets/herobanner_vid.mp4" type="video/mp4"></video>'
     : '<img class="hero13-img" src="assets/herobanner.png" alt="">';
