@@ -3,7 +3,25 @@
 **Keep this file honest and current.** Update it at the end of every work session.
 When Claude finishes a change, the LAST step is to update this file.
 
-Last updated: 2026-07-08 — EMPTY-SITE INCIDENT (audit caught it): bitbot13's live state has been
+Last updated: 2026-07-09 — BOT13.TECH DESIGN LANGUAGE applied to all 3 product sites (STRICTLY
+COSMETIC — zero data/engine changes). Source: BOT13_DESIGN_SPEC.md + bot13.tech/site/assets/
+style.css (4th platform site, separate backend, untouched). Per site: new tokens (near-black bg,
+brand green #57ffb0 + blue #00d4ff, red #ff5a6e, NEVER pink — bot13's series color is now brand
+green), Rajdhani + Share Tech Mono (mono on ALL numbers), full-bleed 16:9 hero (video on home +
+bot13 page via assets/herobanner_vid.mp4 — bb video on bitbot13; static assets/herobanner.png
+elsewhere) with text on the RIGHT ONLY (owner rule: robot art owns the left) and the PAGE NAME
+shown on the right for every other page (News -> "NEWS"); ticker under the hero scrolling LEFT ->
+RIGHT with the 5 bots' day % best->worst (display-only, uses already-loaded state); spec buttons
+(accent primary w/ glow, ghost secondary); join strip above footer on public pages; restyled
+chatbot; new logo.png/favicon.png (header glow filter removed — it made the PNG look fuzzy);
+member pages (dashboard/login inline tokens + fonts; bot-detail/portfolio-fund/leaderboard inherit
+style.css?v=4). VERIFIED before deploy: desktop + mobile (390px) rendered in Chrome — hero art
+uncropped, title right-side (measured), no horizontal overflow, mobile hides hero CTAs per spec.
+NOT YET PUSHED — RUN-PUSH-RESTYLE.bat (Cloudflare Pages auto-deploys on push).
+
+---
+
+Previous: 2026-07-08 — EMPTY-SITE INCIDENT (audit caught it): bitbot13's live state has been
 EMPTY (funds {}) since shortly after the clean reset, refreshed every cycle by a runner that is
 NOT this folder (this folder's disk state.json is still the pristine reset blob — a healthy run
 rewrites it every cycle). Evidence points to a second checkout (old deploy scripts reference

@@ -17,7 +17,8 @@ const cls   = n => n>=0 ? 'pos' : 'neg';
 const $     = id => document.getElementById(id);
 
 const FUND_META = {
-  bot13:     { name:'BOT13',     icon:'13', color:'#ec4899', kind:'DAILY',
+  // (2026-07-09 restyle) bot13's series color is the BRAND GREEN — never pink (BOT13_DESIGN_SPEC).
+  bot13:     { name:'BOT13',     icon:'13', color:'#57ffb0', kind:'DAILY',
                tagline:"Daily intraday bot. Buys at open, sells before close. Skips the day if no edge." },
   oracle:    { name:'ORACLE',    icon:'OR', color:'#a855f7', kind:'WEEKLY',
                tagline:"Weekly bot. Trades every Monday. All-in on the week's best bets." },
@@ -103,6 +104,7 @@ function route() {
   }
   setActiveNav(path); closeMenu();
   window.scrollTo({ top: 0, behavior: 'instant' });
+  try { renderPageHero(path); } catch (e) { console.error('hero render', e); }
   // Auth route fall-throughs — mirror bitbot13/wallstbots
   if (path === '/login')  { window.location.href = '/login.html'; return; }
   if (path === '/signup') { window.location.href = '/login.html#signup'; return; }
@@ -169,8 +171,72 @@ function isAIQ(item) {
   return s.includes('ai') || s.includes('quantum');
 }
 function getYoursHint(msg) {
-  msg = msg || 'Like what you see? Join and run the same system on your own stocks.';
-  return '<a class="get-yours-hint" href="#/get-yours" style="text-decoration:none"><span class="arrow">→</span><span class="msg">'+msg+'</span><span class="pill">GET YOURS</span></a>';
+  // (2026-07-09 restyle) JOIN STRIP per BOT13_DESIGN_SPEC §7: every public page, above the footer.
+  msg = msg || '3-day free trial — see every live trade before you pay a dime.';
+  return '<div class="join-strip"><p>' + msg
+    + ' <a class="btn btn-primary" href="#/get-yours">Join Now</a></p></div>';
+}
+
+/* ============ PAGE HERO + TICKER (BOT13 design language, 2026-07-09) ============
+   Renders into the #pageHero slot ABOVE #app. Homepage + bot13 page get the VIDEO
+   hero; every other page gets the static banner. Artwork's robot occupies the LEFT
+   half of every banner — text sits on the RIGHT ONLY (owner rule). The ticker under
+   the hero scrolls LEFT -> RIGHT and shows the 5 bots' day %, best -> worst, from
+   the state the page already loaded (display-only — no extra data fetches). */
+function heroCopy(path) {
+  if (path === '/' || path === '') return {
+    title: 'FIVE BOTS. ONE RACE.',
+    sub: '<strong>BOT13</strong> only trades when it sees a real edge — no edge, no trade, no risk.',
+    cta: '<a class="btn btn-primary btn-lg" href="#/get-yours">Join Now</a> <a class="btn btn-secondary" href="#/race">See The Race</a>'
+  };
+  if (path.startsWith('/fund/bot13')) return {
+    title: 'BOT13 — THE ONE TO WATCH',
+    sub: 'Daily bot. Buys the edge at the open, banks it before close.',
+    cta: '<a class="btn btn-primary" href="#/get-yours">Run It On Your Stocks</a>'
+  };
+  // Every other page: the PAGE NAME on the RIGHT side of the banner (owner rule —
+  // the artwork's robot owns the left; text only ever sits right).
+  const names = {
+    '/news-all': 'NEWS', '/news': 'NEWS', '/how': 'HOW IT WORKS', '/race': 'THE RACE',
+    '/signals': 'SIGNALS', '/reports': 'REPORTS', '/get-yours': 'GET YOURS',
+    '/referral': 'REFER & EARN', '/thanks': 'WELCOME ABOARD', '/thanks-admin': 'WELCOME ABOARD'
+  };
+  let title = names[path];
+  if (!title && path.startsWith('/fund/'))   title = (FUND_META[path.split('/')[2]] || {}).name || 'THE RACE';
+  if (!title && path.startsWith('/report/')) title = 'MONTHLY REPORT';
+  if (!title) title = '';
+  return { title: title, sub: '', cta: '' };
+}
+function tickerRail() {
+  const f = (STATE.funds && STATE.funds.funds) || {};
+  const rows = FUND_ORDER
+    .map(fid => ({ fid, meta: FUND_META[fid], v: (f[fid] && f[fid].value) || null }))
+    .filter(r => r.v && r.v.day_pct != null)
+    .sort((a, b) => (b.v.day_pct || 0) - (a.v.day_pct || 0));
+  if (!rows.length) return '';
+  const cells = rows.map(r =>
+    '<span class="tick-item"><span class="sym">' + r.meta.name + '</span>'
+    + '<span class="cat">' + r.meta.kind + '</span>'
+    + '<span class="' + ((r.v.day_pct || 0) >= 0 ? 'pos' : 'neg') + '">' + fmtPct(r.v.day_pct) + '</span></span>'
+  ).join('');
+  // rail doubled so translateX(-50%) -> 0 loops seamlessly, moving LEFT -> RIGHT
+  return '<div class="ticker-wrap"><div class="ticker">' + cells + cells + '</div></div>';
+}
+function renderPageHero(path) {
+  const slot = $('pageHero');
+  if (!slot) return;
+  const isVideo = (path === '/' || path === '' || path.startsWith('/fund/bot13'));
+  const copy = heroCopy(path);
+  const overlay = (copy && copy.title)
+    ? '<div class="hero13-overlay"><h1 class="hero13-title">' + copy.title + '</h1>'
+      + (copy.sub ? '<p class="hero13-sub">' + copy.sub + '</p>' : '')
+      + (copy.cta ? '<div class="hero13-ctas">' + copy.cta + '</div>' : '')
+      + '</div>'
+    : '<div class="hero13-overlay" style="background:none"></div>';
+  const media = isVideo
+    ? '<video autoplay muted loop playsinline poster="assets/herobanner.png"><source src="assets/herobanner_vid.mp4" type="video/mp4"></video>'
+    : '<img class="hero13-img" src="assets/herobanner.png" alt="">';
+  slot.innerHTML = '<div class="hero13">' + media + overlay + '</div>' + tickerRail();
 }
 function fundCard(fid, data) {
   const meta = FUND_META[fid];
@@ -300,13 +366,11 @@ function renderHome() {
   const raceCards = FUND_ORDER.map(fid =>
     fundCard(fid, STATE.funds && STATE.funds.funds ? STATE.funds.funds[fid] : null)).join('');
 
+  // (2026-07-09 restyle) The page hero is now the full-bleed video banner rendered
+  // into #pageHero by route() — the old in-app hero section is gone. The page body
+  // starts with the intro line + BOT13 record tile.
   $('app').innerHTML =
-    '<section class="hero"><img src="assets/logo.svg" alt="" class="hero-robot">'
-    + '<div class="hero-content"><span class="hero-eyebrow">AI &amp; Quantum Stock Tracker</span>'
-    + '<h1>5 bots race on the same money. BOT13 is the one to watch.</h1>'
-    + '<p>Three bots — daily, weekly, monthly — trade head-to-head against two passive benchmarks on 50 hand-picked AI &amp; Quantum stocks. Same money. Same market. Every trade public. <strong style="color:var(--pink)">BOT13 is the one to watch</strong> — it only buys when it sees a real edge and holds cash when it doesn’t, so a quiet day costs you nothing. Daily Buy/Sell/Hold signals on every name. AI &amp; Quantum news, filtered. Monthly statements you can download. <strong>Welcome to AI Stocks.</strong></p>'
-    + '<div class="hero-ctas"><a class="btn btn-primary" href="#/race">See The Race</a>'
-    + '<a class="btn btn-secondary" href="#/how">How It Works</a></div></div></section>'
+    '<p class="sub" style="margin-top:6px">Three bots — daily, weekly, monthly — trade head-to-head against two passive benchmarks on 50 hand-picked AI &amp; Quantum stocks. Same money. Same market. Every trade public. <strong style="color:var(--green)">BOT13 only buys when it sees a real edge</strong> and holds cash when it doesn’t. Daily Buy/Sell/Hold signals on every name. Monthly statements you can download.</p>'
     + bot13RecordTile()
 
     + '<div class="section-head"><h3>Live Leaderboard — Today</h3>'
