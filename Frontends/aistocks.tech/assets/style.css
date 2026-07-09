@@ -734,8 +734,11 @@ td.num, th.num { text-align: right; }
   .hero13-overlay { padding: 0 4%; }
   .hero13-overlay > * { max-width: 60%; }           /* still right side — never cover the robot */
   .hero13-title { font-size: clamp(1.1rem, 5.4vw, 1.6rem); }
-  .hero13-sub { display: none; }                     /* short 16:9 frame — title + tagline only */
-  .hero13-ctas { display: none; }                    /* header already has the Join button */
+  .hero13-sub { display: none; }                     /* short 16:9 frame — title, button, tagline */
+  /* (2026-07-09 owner) Join Now button STAYS on mobile heroes — compact size to fit the frame */
+  .hero13-ctas { display: flex; }
+  .hero13-ctas .btn { padding: 6px 14px; font-size: .72rem; }
+  .hero13-ctas .btn-secondary { display: none; }     /* keep only the blue Join Now on mobile */
   .hero13-tag { font-size: .68rem; margin-top: 6px; }
   .tick-item { font-size: .78rem; }
   .join-strip { padding: 16px 4vw; }
