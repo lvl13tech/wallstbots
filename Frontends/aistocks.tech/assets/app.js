@@ -233,8 +233,9 @@ function renderPageHero(path) {
   const overlay = (copy && copy.title)
     ? '<div class="hero13-overlay"><h1 class="hero13-title">' + copy.title + '</h1>'
       + (copy.sub ? '<p class="hero13-sub">' + copy.sub + '</p>' : '')
+      + tag /* tagline sits ABOVE any buttons (owner rule 2026-07-09) */
       + (copy.cta ? '<div class="hero13-ctas">' + copy.cta + '</div>' : '')
-      + tag + '</div>'
+      + '</div>'
     : '<div class="hero13-overlay">' + tag + '</div>';
   const media = isVideo
     ? '<video autoplay muted loop playsinline poster="assets/herobanner.png"><source src="assets/herobanner_vid.mp4" type="video/mp4"></video>'
