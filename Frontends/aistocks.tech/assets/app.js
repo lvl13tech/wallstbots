@@ -219,7 +219,8 @@ function tickerRail() {
     + '<span class="cat">' + r.meta.kind + '</span>'
     + '<span class="' + ((r.v.day_pct || 0) >= 0 ? 'pos' : 'neg') + '">' + fmtPct(r.v.day_pct) + '</span></span>'
   ).join('');
-  // rail doubled so translateX(-50%) -> 0 loops seamlessly, moving LEFT -> RIGHT
+  // rail doubled so translateX(0) -> -50% loops seamlessly — classic ticker: text
+  // enters from the RIGHT edge and continuously shifts LEFT (owner spec).
   return '<div class="ticker-wrap"><div class="ticker">' + cells + cells + '</div></div>';
 }
 function renderPageHero(path) {

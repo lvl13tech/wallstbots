@@ -701,8 +701,10 @@ td.num, th.num { text-align: right; }
 .tick-item { display: inline-flex; gap: 8px; align-items: center; font-size: .85rem; white-space: nowrap; }
 .tick-item .sym { color: var(--text); font-weight: 600; font-family: var(--font); }
 .tick-item .cat { color: var(--muted); font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; font-family: var(--font); }
-/* rail content is doubled in app.js, so sliding -50% -> 0 loops seamlessly (moves L -> R) */
-@keyframes tick { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+/* rail content is doubled in app.js, so sliding 0 -> -50% loops seamlessly.
+   (2026-07-09 owner correction) Classic ticker direction: text enters from the
+   RIGHT edge and continuously shifts LEFT. */
+@keyframes tick { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* ---------- green banner (spec §7) ---------- */
 .green-banner { padding: 26px 20px; text-align: center; border-top: 1px solid var(--border);
