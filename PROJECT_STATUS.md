@@ -850,6 +850,16 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+- **2026-07-10 (MISSION AUDIT fixes):** (1) bot13_engine.mark_position bad-data guard no longer
+  REWRITES recorded entry_price/shares — it clamps the bad mark to the last good price (copy-trade
+  receipts are immutable). (2) Copy-trade disclosure line ("simulated fills at feed prices at decision
+  time; excludes spreads/commissions/fees") added to the BOT13 fund page in all THREE product sites'
+  app.js AND all three portfolio-fund.html member pages (Rule 3 parity, members included).
+  (3) Verified refresh_portfolios.py inherits the 7/10 live-entry fix via its run_bot13_equity/crypto
+  imports and never mutates entries in its own mark function. NUL-byte tails stripped from the three
+  app.js copies (mount write artifact) — node --check passes on all three.
+  REGRESSION: fund pages render on all 3 sites + member portfolio page renders; disclosure visible
+  at page bottom. lvl13 untouched (Rule 10).
 - **2026-07-10 (COPY-TRADE ENTRY FIX, bot13_engine.py):** BOT13 entries now fill at the
   LIVE price at decision time instead of the prior close, in BOTH build sites of the shared
   engine (run_bot13_equity ~line 693 and the crypto build ~line 899). Owner's mission ruling:

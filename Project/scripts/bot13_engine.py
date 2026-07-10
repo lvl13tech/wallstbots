@@ -978,16 +978,14 @@ def mark_position(pos, prices, prev_closes, crypto=False):
     shares     = float(pos.get("shares") or 0)
     entry      = float(pos.get("entry_price") or pos.get("entry") or 0)
     price      = prices.get(sym, entry)
-    # BAD-ENTRY SANITY GUARD: a garbage feed price locked in at seed time marks
-    # up a phantom multiple forever. >8x or <0.125x vs entry while held is bad
-    # data -> re-base entry to live price AND shares /= ratio so the dollar
-    # size returns to the intended weight.
+    # BAD-DATA MARK GUARD (2026-07-10, Rule 0 / copy-trade): a >8x or <0.125x print
+    # vs entry while held is a garbage feed price, not profit. Clamp the bad MARK by
+    # keeping the last good price — NEVER rewrite the recorded entry_price or shares.
+    # A member copied the trade at the recorded entry; receipts are immutable.
     if entry > 0 and price > 0:
         _ratio = price / entry
         if _ratio > 8.0 or _ratio < 0.125:
-            shares = shares / _ratio
-            entry  = price
-            pos["entry_price"] = price
+            price = float(pos.get("price") or pos.get("current_price") or entry)
             pos["shares"]      = shares
     cost_basis = shares * entry  # always recompute; stored cost may be stale
     prev       = prev_closes.get(sym, price)

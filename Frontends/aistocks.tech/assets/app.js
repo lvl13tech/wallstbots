@@ -687,6 +687,8 @@ function renderFund(fid) {
     + '<tbody>'+positionRows+'</tbody></table></div></div>'
     + renderTradeLog((v.trade_log||[]), fid, windowOpen)
     + (fid === 'bot13' ? bot13RecordTile() : '')
+    // COPY-TRADE DISCLOSURE (2026-07-10, Rule 0): honest expectations for copiers
+    + '<p style="color:var(--muted);font-size:11px;text-align:center;max-width:760px;margin:14px auto 0">All results are simulated fills at real market feed prices recorded at decision time. Feed prices can lag live markets by a few minutes, and results exclude broker spreads, commissions, and fees \u2014 copying trades in real time should produce closely similar, not identical, results.</p>'
     + getYoursHint('Want a '+meta.name.toLowerCase()+'-style bot picking from YOUR stock list?');
 }
 
