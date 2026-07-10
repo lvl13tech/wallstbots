@@ -1013,6 +1013,14 @@ def main():
         if b13_prev_strategy.get("day") == today_iso
         else prev_b13_total   # new day: yesterday's close becomes today's open
     )
+    # BANKED REALIZED (Phase 0 fix, 2026-07-10): running sum of TODAY's realized P&L
+    # from intraday exits (rotations / stop-loss re-entries). Without this, a rotation
+    # redeployed the full day_open while realized P&L vanished -> negative cash and a
+    # drifted total (audit INTRADAY CASH failure; ledger shadow write-refusal).
+    b13_banked = (
+        float(funds.get("bot13", {}).get("value", {}).get("banked_today") or 0)
+        if (b13_prev_strategy or {}).get("day") == today_iso else 0.0
+    )
     b13_inception  = funds.get("bot13", {}).get("inception", today_iso)
     stored_positions = funds.get("bot13", {}).get("value", {}).get("positions", [])
 
@@ -1130,8 +1138,15 @@ def main():
                     p["exit_reason"]    = f"stop_loss (>{CRYPTO_CFG['stop_display']}% loss)"
                     p["exit_time"]      = now_exit
         print(f"  BOT13: stop-loss triggered -- closing stopped positions, re-picking...")
+        # Bank realized P&L of the ENTIRE book: a stop-loss re-pick closes every
+        # position before re-entering, so all of today's realized must carry into
+        # the new capital base (Phase 0 fix, 2026-07-10).
+        for _p in stored_positions:
+            _s = _p.get("symbol"); _e = float(_p.get("entry_price") or 0); _h = float(_p.get("shares") or 0)
+            if _s and _e > 0 and _h > 0:
+                b13_banked += _h * (float(prices.get(_s, _e)) - _e)
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = run_bot13_crypto(
-            CRYPTO_CFG, UNIVERSE, prices, prev_closes, intraday_data, b13_day_open, today_iso, b13_prev_strategy
+            CRYPTO_CFG, UNIVERSE, prices, prev_closes, intraday_data, b13_day_open + b13_banked, today_iso, b13_prev_strategy
         )
         print(f"  BOT13: re-entered with {len(b13_picks)} new picks after stop-loss")
     elif same_day_trade:
@@ -1145,7 +1160,7 @@ def main():
         SWITCH_MARGIN_PCT = 18.0
         _fresh = run_bot13_crypto(
             CRYPTO_CFG, UNIVERSE, prices, prev_closes, intraday_data,
-            b13_day_open, today_iso, b13_prev_strategy
+            b13_day_open + b13_banked, today_iso, b13_prev_strategy
         )
         _f_decision, _f_positions, _f_picks, _f_rationale, _f_log, _f_proj = _fresh
         _held_syms  = {p.get("symbol") for p in stored_positions if p.get("symbol")}
@@ -1170,6 +1185,7 @@ def main():
             _ppct  = ((_cur / _entry) - 1) * 100 if _entry > 0 else 0.0
             if (_ppct <= -_stop_pct) or (_ppct <= -LOSS_EXIT_PCT and _sym not in _fresh_syms):
                 _exited.append(_sym); _exit_scores.append(float(_p.get("score") or 0))
+                b13_banked += float(_p.get("shares") or 0) * (_cur - _entry)   # bank the realized P&L of this exit (Phase 0 fix)
             else:
                 _kept.append(_p)                       # HOLD -- original position untouched
         _kept_syms = {p.get("symbol") for p in _kept}
@@ -1182,6 +1198,20 @@ def main():
                 if _cs > 0 and (_bar <= 0 or _cs >= _bar * (1 + SWITCH_MARGIN_PCT/100.0)):
                     _added.append(_fresh_by_sym[_s])   # rotate a loser into a DIFFERENT stronger name
         _added_syms = {a.get("symbol") for a in _added}
+        if _added:
+            # AFFORDABILITY RESIZE (Phase 0 fix, 2026-07-10): additions may only spend
+            # the cash actually available (day_open + banked realized - kept cost).
+            # The fresh run sized them from the full day_open, which overdrafts by
+            # exactly the realized P&L of the exited losers. Never spend money the
+            # fund does not have.
+            _kept_cost = sum(float(p.get("entry_price") or 0) * float(p.get("shares") or 0) for p in _kept)
+            _avail     = max(0.0, b13_day_open + b13_banked - _kept_cost)
+            _add_cost  = sum(float(a.get("entry_price") or 0) * float(a.get("shares") or 0) for a in _added)
+            if _add_cost > 0:
+                _scale = _avail / _add_cost
+                if abs(_scale - 1.0) > 0.0001:
+                    for a in _added:
+                        a["shares"] = float(a.get("shares") or 0) * _scale
         if not _exited and not _added:
             # Pure hold -- no losers to rotate, nothing stronger to add. NO churn.
             b13_positions = stored_positions
@@ -1350,7 +1380,7 @@ def main():
                 enriched  = [enrich_position(p, prices, day_ref_closes) for p in b13_positions]
                 sum_pnl   = sum(p["pnl"]   for p in enriched)  # receipts: sum of position P&L
                 pos_val   = sum(p["value"] for p in enriched)
-                total     = b13_day_open + sum_pnl              # day_open + receipts = true total
+                total     = b13_day_open + b13_banked + sum_pnl              # day_open + receipts = true total
                 # cash = banked realized + undeployed capital, so total == cash +
                 # pos_val holds INTRADAY too (was hardcoded 0, which broke that
                 # identity whenever a rotation banked profit -- audit WARN class).
@@ -1410,7 +1440,7 @@ def main():
             value    = {"total": round(total,2), "cash": round(cash,2), "pos_val": round(pos_val,2),
                         "pnl": round(pnl,2), "pnl_pct": round(pnl_pct,2),
                         "day_pnl": round(day_pnl_total,2), "day_pct": round(day_pct,2),
-                        "day_open": round(b13_day_open,2), "holding_cash": holding_cash,
+                        "banked_today": round(b13_banked,2), "day_open": round(b13_day_open,2), "holding_cash": holding_cash,
                         "window_open": window_open,
                         "traded_today": traded_today,
                         "session_open_et": f"{TRADING_WINDOW_START}:00",

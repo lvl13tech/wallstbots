@@ -689,7 +689,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 # impossible day-over-day jump vs the fund's OWN prior day-open
                 # (falling back to the member's own entry cost on day 1).
                 _own_ref = float((b13_state.get("strategy") or {}).get("_day_open") or 0) or original_cost
-                if _own_ref > 0 and b13_capital > _own_ref * 4.0:
+                if _own_ref > 0 and b13_capital > _own_ref * 1.5:
                     print(f"  [portfolios] BOT13 carry-forward guard: stored "
                           f"${b13_capital:,.0f} is {b13_capital/_own_ref:.1f}x this fund's OWN "
                           f"prior day-open ${_own_ref:,.0f} -- bad data, using own prior value.")
@@ -762,7 +762,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 # detect corruption vs the fund's OWN prior day-open -- never clamp
                 # to a platform-scaled value (that re-introduced platform scaling).
                 _own_ref = float((oracle_state.get("strategy") or {}).get("_day_open") or 0) or original_cost
-                if _own_ref > 0 and prev_oracle_total > _own_ref * 4.0:
+                if _own_ref > 0 and prev_oracle_total > _own_ref * 1.5:
                     print(f"  [portfolios] Oracle carry-forward guard: stored "
                           f"${prev_oracle_total:,.0f} vs this fund's OWN prior ${_own_ref:,.0f} "
                           f"-- bad data, using own prior value.")
@@ -789,7 +789,7 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 # detect corruption vs the fund's OWN prior day-open -- never clamp
                 # to a platform-scaled value (that re-introduced platform scaling).
                 _own_ref = float((wizard_state.get("strategy") or {}).get("_day_open") or 0) or original_cost
-                if _own_ref > 0 and prev_wizard_total > _own_ref * 4.0:
+                if _own_ref > 0 and prev_wizard_total > _own_ref * 1.5:
                     print(f"  [portfolios] Wizard carry-forward guard: stored "
                           f"${prev_wizard_total:,.0f} vs this fund's OWN prior ${_own_ref:,.0f} "
                           f"-- bad data, using own prior value.")

@@ -1126,10 +1126,16 @@ def hold_fund_totals(fund, sc, enriched, pos_val, new_positions, deploy_capital,
         strategy["deployed_capital"] = round(deploy_capital, 2)
     else:
         cash = float((fund.get("value", {}) or {}).get("cash") or 0)
-        if cash == 0 and enriched and (strategy or {}).get("deployed_capital") is None:
-            _resid = round(sc - sum(p["cost_basis"] for p in enriched), 2)
+        if cash == 0 and enriched:
+            # RESTORE LOST RESIDUAL (Phase 0 fix, 2026-07-10): the remainder is real
+            # money whether or not deployed_capital was recorded. Reference = recorded
+            # deployed_capital when present (exact), else sc (pre-fix seeds). The old
+            # None-only condition left bitbot13 oracle/wizard $21.62/$23.06 short
+            # (VANISHED CASH audit failure) because their seeds DID record 50000.
+            _ref   = float((strategy or {}).get("deployed_capital") or sc)
+            _resid = round(_ref - sum(p["cost_basis"] for p in enriched), 2)
             if 0 < _resid <= max(50.0, sc * 0.001):
-                print(f"  {tag}: restoring ${_resid} rounding residual lost by pre-fix seed")
+                print(f"  {tag}: restoring ${_resid} rounding residual lost at seed")
                 cash = _resid
     total   = (pos_val + cash) if enriched else _prev_total
     pnl     = round(total - sc, 2)
@@ -1170,4 +1176,13 @@ def fund_day_fields(total, fid, sc, snapshots, today_iso):
     day_open = the fund's most recent snapshot value strictly before today
     (the reset baseline == sc on day 1, so day_pnl == pnl exactly -- the
     owner's one-day rule). Returns (day_open, day_pnl, day_pct). Used by
-    oracle/wizard/equalizer/titan in ALL THREE engines -- this e
+    oracle/wizard/equalizer/titan in ALL THREE engines -- this exact formula
+    previously existed as nine separate copies.
+    """
+    _prior = sorted([s for s in (snapshots or [])
+                     if s.get("date", "") < today_iso and s.get(fid) is not None],
+                    key=lambda s: s.get("date", ""))
+    day_open = float(_prior[-1].get(fid)) if _prior else sc
+    day_pnl  = total - day_open
+    day_pct  = (day_pnl / day_open * 100) if day_open else 0
+    return day_open, day_pnl, day_pct

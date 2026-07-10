@@ -850,6 +850,33 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+### 2026-07-10 (evening) — PHASE 0 COMPLETE: audit is GREEN (PASS, 0 failures)
+- **BOT13 banked-realized fix (all 3 engines, parity):** rotations/stop-loss re-entries now
+  BANK today's realized P&L (`banked_today` persisted in value), total = day_open + banked +
+  open P&L, and new adds are AFFORDABILITY-RESIZED so the fund never spends money it doesn't
+  have (root cause of the -$51.82 negative-cash / INTRADAY CASH failure).
+- **Vanished-cash fix (bot13_engine.hold_fund_totals, shared):** rounding residual restore now
+  covers funds WITH deployed_capital recorded; live bitbot13 oracle (+$21.62) and wizard
+  (+$23.06) corrected via tracker push immediately (fix-now rule) and verified.
+- **Member corruption:** bitbot13 member f74ae1f8 bot13 had a self-compounding fabricated
+  value ($27k -> $71.9k, value==cost positions). HARD-RESET to clean day-1 ($27,000, PENDING,
+  trades next session) and verified. Carry-forward guard tightened 4.0x -> 1.5x (all funds,
+  refresh_portfolios.py).
+- **Audit fix:** day-1 detection was $30-loose and falsely flagged aistocks wizard (real prior
+  close 50,027.71 matched 50,000). Now exact (0.011).
+- **CRITICAL REPAIR:** commit 4ebf20e (precision fix) TRUNCATED bot13_engine.py's tail --
+  fund_day_fields lost its body; every engine import would have crashed at the next scheduled
+  run. Tail restored from 3f170a0, precision changes preserved, compile-verified.
+- **Audit result after all fixes + live-data repairs: PASS, 0 failures, 2 known cosmetic
+  rounding warnings (age out after tonight's close-out).**
+- **Known-good:** all touched scripts py_compile clean; audit green against live. **Untested:**
+  first live session with banked-realized rotation math (verify tomorrow's audit + ledger
+  shadow COMPARE report).
+- Consolidated `BOT13TECH_LEDGER_ADOPTION_GUIDE_2026-07-10.md` (single doc: architecture +
+  all bug-class fixes) for owner to upload to the bot13.tech folder.
+- Deploy: `DEPLOY-phase0-integrity-fixes_2026-07-10.bat`
+
+
 ### 2026-07-10 — Ledger rebuild: roadmap + Phase 1 shadow engine BUILT & VERIFIED
 - **Roadmap:** `LEDGER_REBUILD_ROADMAP_2026-07-10.md` (owner-approved permanent fix: immutable
   fill ledger = single source of truth; cash/total/P&L derived, never stored; one engine,

@@ -269,7 +269,9 @@ for platform, usize in PLATFORMS.items():
 
         # day_open must equal prior-day snapshot close (or sc on day 1)
         exp_open = prior_close.get(fund, sc)
-        is_day1 = approx(exp_open, sc, teq(sc))   # only the reset baseline precedes today
+        is_day1 = approx(exp_open, sc, 0.011)    # EXACT: day-1 means prior close IS the seed
+        # (teq(sc)=$30 loose match falsely flagged a real prior close of 50,027.71 as
+        #  the 50,000 baseline -> phantom DAY-1 failure on aistocks wizard, 2026-07-10)
         if DO is not None:
             rc.check("day_open = prior-day close", DO, exp_open, tcross(exp_open))
         if DPN is not None and DO is not None:
