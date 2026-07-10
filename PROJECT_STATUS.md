@@ -850,6 +850,17 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+- **2026-07-10 (COPY-TRADE ENTRY FIX, bot13_engine.py):** BOT13 entries now fill at the
+  LIVE price at decision time instead of the prior close, in BOTH build sites of the shared
+  engine (run_bot13_equity ~line 693 and the crypto build ~line 899). Owner's mission ruling:
+  members must be able to copy any trade in real time at its recorded price — the prior close
+  is the SIGNAL baseline only, never a fill. Affects the platform BOT13 funds on all three
+  product sites (wallstbots/aistocks/bitbot13) via the shared import; member portfolios were
+  already fixed 2026-07-07 (real entry at real price). No other logic touched (Rule 1).
+  UNTESTED until the next live session: verify each site's BOT13 entry_price equals the price
+  at decision time, not yesterday's close (REGRESSION: BOT13 fund card + holdings on all 3
+  sites; member portfolios unaffected). lvl13 untouched (Rule 10). Same fix + data void done
+  on bot13.tech the same day.
 - **2026-07-06 pm (MEMBERS P1 FIXED, commit `1adaab9`):** the three
   carry-forward guards in refresh_portfolios.py (bot13/oracle/wizard) no longer
   clamp to the platform-scaled member_value — corruption is detected vs the

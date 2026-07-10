@@ -690,7 +690,10 @@ def run_bot13_equity(
         alloc  = starting_capital * w
         price  = prices.get(sym, 0)
         prev   = prev_closes.get(sym, price)
-        entry  = prev if prev > 0 else price
+        # COPY-TRADE INTEGRITY (2026-07-10, Rule 0): entry = the LIVE price at decision
+        # time — the fill a member copying this trade right now would actually get.
+        # prev_close remains the SIGNAL baseline only; it is never a fill price.
+        entry  = price if price > 0 else prev
         shares = alloc / entry if entry > 0 else 0
         pnl    = shares * price - alloc
         pnl_pct = (price / entry - 1) * 100 if entry > 0 else 0
@@ -893,7 +896,9 @@ def run_bot13_crypto(
         prev  = prev_closes.get(sym, price)
         if price <= 0:
             continue
-        entry    = prev if prev > 0 else price
+        # COPY-TRADE INTEGRITY (2026-07-10, Rule 0): entry = the LIVE price at decision
+        # time — never the prior close. Members copying the trade get this same fill.
+        entry    = price
         shares   = per / entry
         pnl      = shares * price - per
         pnl_pct  = (price / entry - 1) * 100 if entry > 0 else 0
