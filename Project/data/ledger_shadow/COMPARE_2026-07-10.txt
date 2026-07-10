@@ -1,0 +1,29 @@
+==========================================================================
+  LEDGER SHADOW COMPARISON  --  2026-07-10 17:38 ET
+  (shadow ledger derived numbers vs live displayed numbers)
+==========================================================================
+
+## wallstbots  (last_refresh=2026-07-10T21:03:36)
+  [bot13] OK   fills+0 (ledger n=0) | ledger total 62788.86 vs live 62788.86
+  [oracle] OK   fills+0 (ledger n=0) | ledger total 53300.80 vs live 53300.80
+  [wizard] OK   fills+0 (ledger n=0) | ledger total 54713.66 vs live 54713.66
+  [equalizer] OK   fills+0 (ledger n=0) | ledger total 54598.57 vs live 54598.56
+  [titan] OK   fills+0 (ledger n=0) | ledger total 54826.95 vs live 54826.93
+
+## aistocks  (last_refresh=2026-07-10T21:02:13)
+  [bot13] OK   fills+0 (ledger n=0) | ledger total 59435.73 vs live 59435.73
+  [oracle] OK   fills+0 (ledger n=0) | ledger total 46575.49 vs live 46575.48
+  [wizard] OK   fills+0 (ledger n=0) | ledger total 47980.85 vs live 47980.86
+  [equalizer] OK   fills+0 (ledger n=0) | ledger total 49199.18 vs live 49199.20
+  [titan] OK   fills+0 (ledger n=0) | ledger total 49993.19 vs live 49993.17
+
+## bitbot13  (last_refresh=2026-07-10T21:01:19)
+  [bot13] OK   fills+0 (ledger n=0) | ledger total 58013.26 vs live 58013.25
+  [oracle] OK   fills+0 (ledger n=0) | ledger total 49926.37 vs live 49911.52
+  [wizard] OK   fills+0 (ledger n=0) | ledger total 49955.31 vs live 49976.47
+  [equalizer] OK   fills+0 (ledger n=0) | ledger total 50742.23 vs live 50742.50
+  [titan] OK   fills+0 (ledger n=0) | ledger total 50629.40 vs live 50628.69
+
+==========================================================================
+RESULT: 0 unexplained differences -- ledger matches live exactly.
+==========================================================================

@@ -1,0 +1,62 @@
+name: Ledger Shadow (Phase 1-2, no live changes)
+
+# Runs the shadow fill-ledger after sessions close and commits the ledger +
+# daily comparison report back to the repo. Reads live data only; writes only
+# under Project/data/ledger_shadow/. See LEDGER_REBUILD_ROADMAP_2026-07-10.md.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 21 * * 1-5'   # 5:15 PM ET weekdays (after equity 4:45 final snapshot)
+    - cron: '30 1 * * *'      # 9:30 PM ET daily (after bitbot13 9:00 PM close-out)
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ledger-shadow
+  cancel-in-progress: false
+
+jobs:
+  shadow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run shadow ledger + comparison
+        id: shadow
+        continue-on-error: true   # a DIFF day is data we want committed, not a dead run
+        env:
+          BACKEND_API_URL: ${{ secrets.BACKEND_API_URL }}
+        run: |
+          python Project/scripts/ledger_shadow_run.py
+
+      - name: Commit ledger + report
+        run: |
+          git config user.name  "ledger-shadow-bot"
+          git config user.email "actions@github.com"
+          git add -f Project/data/ledger_shadow/
+          if git diff --cached --quiet; then
+            echo "nothing new to commit"
+          else
+            git commit -m "ledger-shadow: $(date -u +%F) ingest + comparison [skip ci]"
+            git pull --no-rebase origin master
+            git push origin master
+          fi
+
+      - name: Surface result
+        run: |
+          if [ "${{ steps.shadow.outcome }}" = "failure" ]; then
+            echo "::warning::Shadow comparison found differences or refusals today -- see Project/data/ledger_shadow/COMPARE_*.txt"
+          else
+            echo "Shadow comparison clean."
+          fi
