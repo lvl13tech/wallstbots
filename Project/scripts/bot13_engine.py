@@ -903,7 +903,7 @@ def run_bot13_crypto(
         pnl      = shares * price - per
         pnl_pct  = (price / entry - 1) * 100 if entry > 0 else 0
         day_pnl  = shares * (price - entry)
-        price_dp = 8 if price < 0.01 else (4 if price < 1 else 2)
+        price_dp = 8 if price < 0.01 else (6 if price < 1 else (4 if price < 10 else 2))  # storage tiers match refresh_portfolios._entry_dp (audit 2026-07-11: $1-$10 coins at 2dp shifted real P&L%)
 
         positions.append({
             "symbol":         sym,
@@ -1000,7 +1000,7 @@ def mark_position(pos, prices, prev_closes, crypto=False):
     day_pnl = shares * (price - prev)
     day_pct = (price / prev - 1) * 100 if prev > 0 else 0
     if crypto:
-        price_dp = 8 if price < 0.01 else (4 if price < 1 else 2)
+        price_dp = 8 if price < 0.01 else (6 if price < 1 else (4 if price < 10 else 2))  # storage tiers match refresh_portfolios._entry_dp (audit 2026-07-11: $1-$10 coins at 2dp shifted real P&L%)
         out = {
             "symbol":      sym,
             "shares":      round(shares, 6),
@@ -1170,13 +1170,4 @@ def fund_day_fields(total, fid, sc, snapshots, today_iso):
     day_open = the fund's most recent snapshot value strictly before today
     (the reset baseline == sc on day 1, so day_pnl == pnl exactly -- the
     owner's one-day rule). Returns (day_open, day_pnl, day_pct). Used by
-    oracle/wizard/equalizer/titan in ALL THREE engines -- this exact formula
-    previously existed as nine separate copies.
-    """
-    _prior = sorted([s for s in (snapshots or [])
-                     if s.get("date", "") < today_iso and s.get(fid) is not None],
-                    key=lambda s: s.get("date", ""))
-    day_open = float(_prior[-1].get(fid)) if _prior else sc
-    day_pnl  = total - day_open
-    day_pct  = (day_pnl / day_open * 100) if day_open else 0
-    return day_open, day_pnl, day_pct
+    oracle/wizard/equalizer/titan in ALL THREE engines -- this e

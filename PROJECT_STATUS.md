@@ -850,6 +850,8 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+- **2026-07-11 (STORAGE PRECISION FIX, bot13_engine.py):** owner's audit caught $1-$10 coins storing entry_price at 2dp (real -2.82% showed -2.56% on bitbot13). Both price_dp lines (equity+crypto builds) now use the members-engine tiers: 8dp <$0.01, 6dp <$1, 4dp <$10, 2dp above. Display (fmtCrypto) was already correct — the stored receipt was the bug. Existing coarse entries cycle out at close-out; not rewritten (receipts immutable). REGRESSION: bitbot13 holdings P&L% vs entry after next session.
+
 - **2026-07-10 (DISPLAY SPEC v1):** unified number formatting across the family (owner decision): prices asset-aware (stocks $2dp, sub-$1 4dp via fmtPxS; crypto fmtCrypto dynamic; futures tick-true on bot13.tech), quantities Trade History 4dp / Holdings 2dp / commas+whole units >=1,000 (fmtShares). Applied to all THREE product sites' app.js (Rule 3 parity) + index.html app.js?v=9 cache-bust. Display-only — no engine or data changes. REGRESSION: trade log + holdings render on all 3 sites.
 
 - **2026-07-10 (MISSION AUDIT fixes):** (1) bot13_engine.mark_position bad-data guard no longer
