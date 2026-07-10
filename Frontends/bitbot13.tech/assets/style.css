@@ -1,39 +1,50 @@
 /* ================================================================
-   LVL13.TECH — brand stylesheet  v3
-   Dark, bold, mobile-first, crisp on retina
+   WALL ST. BOTS — brand stylesheet  v4 (BOT13.TECH design language)
+   Source of truth: BOT13_DESIGN_SPEC.md / bot13.tech assets/style.css
+   Near-black bg · brand green #57ffb0 + brand blue #00d4ff · Rajdhani +
+   Share Tech Mono · negatives #ff5a6e · NEVER pink.
    ================================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
 
 :root {
-  --bg:        #06080d;
-  --panel:     #0d1117;
-  --panel2:    #141b27;
-  --border:    #1e2633;
-  --text:      #e6edf3;
-  --muted:     #7d8590;
-  --green:     #3fb950;
-  --red:       #f85149;
-  --blue:      #00d4ff;
-  --orange:    #ff8c00;
-  --purple:    #a855f7;
-  --pink:      #ec4899;
-  --emerald:   #10b981;
+  --bg:        #050608;   /* page background — near-black */
+  --panel:     #0b0d12;   /* card/panel background */
+  --panel2:    #11141c;   /* inner boxes */
+  --border:    #1c2130;   /* borders and dividers */
+  --text:      #e8ecf4;
+  --muted:     #8b93a7;
+  --green:     #57ffb0;   /* brand green — positives, brand text */
+  --green-dim: #2fe08c;
+  --red:       #ff5a6e;   /* negatives — everywhere, no exceptions */
+  --blue:      #00d4ff;   /* brand blue (accent) — CTAs, headings */
+  --accent:    #00d4ff;
+  --orange:    #ff8c00;   /* titan series color (data-viz, not brand) */
+  --purple:    #a855f7;   /* oracle series color (data-viz, not brand) */
+  --pink:      #57ffb0;   /* LEGACY ALIAS — bot13's old pink now maps to brand green */
+  --emerald:   #10b981;   /* wizard series color (data-viz, not brand) */
   --gold:      #facc15;
-  --radius:    10px;
+  --radius:    12px;
   --pad:       20px;
   --shadow:    0 4px 24px rgba(0,0,0,0.5);
   --max:       1400px;
+  --font: 'Rajdhani','Segoe UI',system-ui,sans-serif;
+  --mono: 'Share Tech Mono','Consolas',monospace;
 }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body {
   background: var(--bg); color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
-  font-size: 15px; line-height: 1.5;
+  font-family: var(--font);
+  font-size: 16px; line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
   min-height: 100vh; display: flex; flex-direction: column;
 }
+h1, h2, h3, h4, .btn { letter-spacing: .03em; }
+/* Numbers, money, tickers, tables — ALWAYS the mono data font */
+.fund-value, .fund-pnl, .stat-val, .lb-pct, td.num, th.num, .num,
+.tick-item, .pick-meta, .pick-indicators, .stat-value, .session-stat-value { font-family: var(--mono); }
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }
 img, svg {
@@ -57,11 +68,9 @@ img, svg {
 .brand-link { display: flex; align-items: center; gap: 12px; }
 .brand-logo {
   height: 42px; width: auto; display: block;
-  filter: drop-shadow(0 0 8px rgba(0,212,255,0.55));
-  /* keep SVG sharp on hi-DPI */
-  shape-rendering: geometricPrecision;
-  -webkit-transform: translate3d(0,0,0);
-  transform: translate3d(0,0,0);
+  /* (2026-07-09) NO glow filter: the drop-shadow was built for the old flat SVG and
+     made the detailed robot PNG look fuzzy at header size. bot13.tech renders the
+     same file plain at 42px — crisp. */
 }
 .footer-robot { height: 30px; width: auto; filter: drop-shadow(0 0 4px rgba(0,212,255,0.35)); }
 
@@ -143,15 +152,18 @@ p  { margin: 0 0 12px; }
 
 .btn {
   display: inline-flex; align-items: center;
-  padding: 12px 22px; border-radius: 8px;
-  font-weight: 700; font-size: 14px;
+  padding: 9px 22px; border-radius: 8px;
+  font-weight: 600; font-size: 14px; letter-spacing: .03em;
   border: 1px solid transparent; text-decoration: none;
-  transition: transform .12s, background .15s;
+  transition: transform .12s, background .15s, filter .12s;
 }
 .btn:hover { transform: translateY(-1px); }
-.btn-primary { background: var(--blue); color: var(--bg); }
-.btn-secondary { background: var(--panel2); border-color: var(--border); color: var(--text); }
-.btn-secondary:hover { border-color: #2e3947; }
+/* spec §5: primary = solid accent, near-black text, glow; ghost = line border, green on hover */
+.btn-primary { background: var(--accent); color: #050608; box-shadow: 0 0 18px rgba(0,212,255,.45); }
+.btn-primary:hover { filter: brightness(1.12); }
+.btn-secondary { background: transparent; border-color: var(--border); color: var(--text); }
+.btn-secondary:hover { border-color: var(--green); color: var(--green); }
+.btn-lg { padding: 13px 34px; font-size: 16px; }
 
 /* ============ GRIDS ============ */
 .grid { display: grid; gap: 14px; }
@@ -657,4 +669,80 @@ td.num, th.num { text-align: right; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
   .card.clickable:hover, .btn:hover, .chatbot-toggle:hover { transform: none; }
+}
+
+/* ================================================================
+   BOT13.TECH DESIGN LANGUAGE — spec components (2026-07-09)
+   Copied from bot13.tech assets/style.css per BOT13_DESIGN_SPEC.md
+   ================================================================ */
+
+/* ---------- media hero (spec §3): full-bleed 16:9, ZERO cropping ----------
+   Artwork's robot occupies the LEFT — text sits on the RIGHT ONLY. */
+.hero13 { position: relative; height: auto; aspect-ratio: 16/9; overflow: hidden;
+  border-radius: 14px; border: 1px solid var(--border); margin-bottom: 0; }
+.hero13 video, .hero13 .hero13-img { position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center top; }  /* top-anchored: the robot's head never crops */
+.hero13-overlay { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column;
+  justify-content: center; align-items: flex-end; text-align: right; padding: 0 5%;
+  background: linear-gradient(270deg, rgba(5,6,8,.82) 0%, rgba(5,6,8,.25) 55%, transparent 100%); }
+.hero13-overlay > * { max-width: 46%; }             /* right half only — never cover the art */
+.hero13-title { font-size: clamp(1.6rem, 3.6vw, 3rem); letter-spacing: .06em; color: var(--green);
+  text-shadow: 0 0 24px rgba(87,255,176,.55); line-height: 1.12; margin: 0 0 10px; font-weight: 700; }
+.hero13-sub { color: var(--text); font-size: clamp(.85rem, 1.5vw, 1.05rem); margin: 0 0 16px; }
+.hero13-sub strong { color: var(--green); }
+.hero13-ctas { display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
+/* platform tagline — on EVERY hero banner (matches bot13.tech's .hero-sub line) */
+.hero13-tag { margin: 10px 0 0; color: var(--muted); font-size: .95rem; letter-spacing: .04em; }
+
+/* ---------- ticker (spec §4): one slim line, scrolls LEFT -> RIGHT ---------- */
+.ticker-wrap { overflow: hidden; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  background: #07090d; padding: 7px 0; width: 100%; margin: 0 0 22px; }
+.ticker { display: flex; flex-wrap: nowrap; gap: 38px; width: max-content; white-space: nowrap;
+  animation: tick 60s linear infinite; }
+.ticker-wrap:hover .ticker { animation-play-state: paused; }
+.tick-item { display: inline-flex; gap: 8px; align-items: center; font-size: .85rem; white-space: nowrap; }
+.tick-item .sym { color: var(--text); font-weight: 600; font-family: var(--font); }
+.tick-item .cat { color: var(--muted); font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; font-family: var(--font); }
+/* rail content is doubled in app.js, so sliding 0 -> -50% loops seamlessly.
+   (2026-07-09 owner correction) Classic ticker direction: text enters from the
+   RIGHT edge and continuously shifts LEFT. */
+@keyframes tick { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ---------- green banner (spec §7) ---------- */
+.green-banner { padding: 26px 20px; text-align: center; border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border); border-radius: 12px; margin: 22px 0;
+  background: radial-gradient(ellipse at center, rgba(87,255,176,.08), transparent 70%); }
+.green-banner h2 { font-size: clamp(1.6rem, 3.4vw, 2.4rem); color: var(--green);
+  text-shadow: 0 0 18px rgba(87,255,176,.5); margin: 0; }
+
+/* ---------- join strip (spec §7): every public page, above the footer ---------- */
+.join-strip { border-top: 1px solid rgba(87,255,176,.35); background: rgba(87,255,176,.05);
+  padding: 20px 6vw; text-align: center; margin: 28px -20px -20px; }
+.join-strip p { color: var(--text); font-size: 1.02rem; display: flex; align-items: center;
+  justify-content: center; gap: 16px; flex-wrap: wrap; margin: 0; }
+.join-strip .btn { white-space: nowrap; }
+
+/* ---------- footer accents (spec §7) ---------- */
+.site-footer .footer-title, .foot-brand { color: var(--green); font-weight: 700; letter-spacing: .08em; }
+.site-footer a:hover { color: var(--green); }
+
+/* ---------- leaderboard tiles (spec §6) ---------- */
+.lb-strip .card, .grid-5 .fund-card { border-color: rgba(0,212,255,.35); }
+
+/* ---------- mobile additions (spec §9) ---------- */
+@media (max-width: 700px) {
+  .hero13-overlay { padding: 0 4%; }
+  .hero13-overlay > * { max-width: 60%; }           /* still right side — never cover the robot */
+  .hero13-title { font-size: clamp(1.1rem, 5.4vw, 1.6rem); }
+  .hero13-sub { display: none; }                     /* short 16:9 frame — title, button, tagline */
+  /* (2026-07-09 owner) Join Now button STAYS on mobile heroes — compact size to fit the frame */
+  .hero13-ctas { display: flex; }
+  .hero13-ctas .btn { padding: 6px 14px; font-size: .72rem; }
+  .hero13-ctas .btn-secondary { display: none; }     /* keep only the blue Join Now on mobile */
+  .hero13-tag { font-size: .68rem; margin-top: 6px; }
+  .tick-item { font-size: .78rem; }
+  .join-strip { padding: 16px 4vw; }
+  .site-footer { padding-bottom: 80px; }             /* clears the chatbot pill */
+  .panel, .tbl-wrap { overflow-x: auto; }
+  .chatbot-panel { right: 10px; left: 10px; width: auto; max-height: 65vh; }
 }
