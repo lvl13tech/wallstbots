@@ -850,6 +850,8 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+- **2026-07-10 (DISPLAY SPEC v1):** unified number formatting across the family (owner decision): prices asset-aware (stocks $2dp, sub-$1 4dp via fmtPxS; crypto fmtCrypto dynamic; futures tick-true on bot13.tech), quantities Trade History 4dp / Holdings 2dp / commas+whole units >=1,000 (fmtShares). Applied to all THREE product sites' app.js (Rule 3 parity) + index.html app.js?v=9 cache-bust. Display-only — no engine or data changes. REGRESSION: trade log + holdings render on all 3 sites.
+
 - **2026-07-10 (MISSION AUDIT fixes):** (1) bot13_engine.mark_position bad-data guard no longer
   REWRITES recorded entry_price/shares — it clamps the bad mark to the last good price (copy-trade
   receipts are immutable). (2) Copy-trade disclosure line ("simulated fills at feed prices at decision
@@ -1836,5 +1838,4 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
   `lvl13 data refresh` writing to the now-removed `Frontends/lvl13.tech/data/` path (it caused
   a merge conflict and re-creates files nobody reads). Retire or repoint that GitHub Actions
   job next.
-- **2026-06-15 (later)** — Corrected the whole doc set to the real platform model: 3 product sites (wallstbots/aistocks/bitbot13) + lvl13 parent landing page (read-only, hands-off, Rule 10). Recorded migration history (aistocks was originally lvl13), Stripe-as-active-checkout (PayPal legacy), and lvl13's exact backend surface. Verified live lvl13 and backed it up. Wrote `HANDOFF_2026-06-15.md`. Archived dated historical docs to `_archive/`. No product-site code changed yet. Next: run the regression checklist to populate the per-site status table.
-- **2026-06-15** — Created control documents (ARCHITECTURE, PROJECT_STATUS, SESSION_START, CLAUDE.md, REGRESSION_CHECKLIST) after the platform reached a fully-broken state from clone drift. No code changed yet.
+- **2026-06-15 (later)** — Corrected the whole doc set to the real platform model: 3 product sites (wallstbots/aistocks/bitbot13) + lvl13 parent landing page (read-only, hands-off, Rule 10). Recorded migration history (aistocks was originally lvl13), Stripe-as-active-checkout (PayPal legacy), and lvl13's exact backend surface. Veri

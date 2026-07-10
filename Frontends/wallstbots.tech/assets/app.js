@@ -492,6 +492,16 @@ function fmtTradeTime(iso){
 //    PAIRS ordered by the symbol's earliest BUY time. Reads as a clean round-trip
 //    log: 9:35 BUY SPCX / 2:00 SELL SPCX, then 9:35 BUY XYZ / 2:00 SELL XYZ, ...
 //    Close-out sells therefore sit with their buys, and the day reads in order.
+// DISPLAY SPEC v1 (2026-07-10, all platforms): asset-aware precision, same RULES everywhere.
+// Stocks: $ + 2dp, sub-$1 stocks 4dp. Crypto: fmtCrypto dynamic (8/4/2). Quantities:
+// Trade History 4dp (the receipt), Holdings 2dp, whole units + commas once qty >= 1,000.
+function fmtPxS(v){ if(v==null||isNaN(v)) return '-'; v=Number(v);
+  var dp = v<1?4:2;
+  return '$'+v.toLocaleString(undefined,{minimumFractionDigits:dp,maximumFractionDigits:dp}); }
+function fmtShares(v,dp){ if(v==null||isNaN(v)) return '-'; v=Number(v);
+  if(v>=1000) return v.toLocaleString(undefined,{maximumFractionDigits:0});
+  return v.toFixed(dp); }
+
 function sortTradeLog(tl, windowOpen){
   var arr = (tl||[]).slice();
   if (windowOpen) {
@@ -557,7 +567,7 @@ function renderTradeLog(tl, fid, windowOpen){
     return '<tr><td style="white-space:nowrap;color:var(--muted);font-size:12px">'+escapeHtml(fmtTradeTime(t.ts))+'</td>'
       + '<td><strong style="color:'+c+'">'+escapeHtml(act)+'</strong></td>'
       + '<td><strong>'+escapeHtml(t.symbol||'')+'</strong></td>'
-      + '<td class="num">'+(t.shares!=null?Number(t.shares).toFixed(4):'-')+'</td>'
+      + '<td class="num">'+fmtShares(t.shares,4)+'</td>'
       + '<td class="num">$'+(t.price!=null?Number(t.price).toFixed(2):'-')+'</td>'
       + realized
       + '<td style="color:var(--muted);font-size:12px">'+escapeHtml(t.reason||'')+'</td></tr>';
@@ -606,9 +616,9 @@ function renderFund(fid) {
         const dayPnl = p.day_pnl != null ? p.day_pnl : 0;
         const dayPct = p.day_pct != null ? p.day_pct : 0;
         return '<tr><td><strong>'+p.symbol+'</strong></td>'
-          + '<td class="num">'+shares.toFixed(2)+'</td>'
-          + '<td class="num">$'+entry.toFixed(2)+'</td>'
-          + '<td class="num">$'+price.toFixed(2)+'</td>'
+          + '<td class="num">'+fmtShares(shares,2)+'</td>'
+          + '<td class="num">'+fmtPxS(entry)+'</td>'
+          + '<td class="num">'+fmtPxS(price)+'</td>'
           + '<td class="num">'+fmt$0(value)+'</td>'
           + '<td class="num '+cls(dayPnl)+'">'+fmtPct(dayPct)+'</td>'
           + '<td class="num '+cls(pnl)+'">'+fmt$0(pnl)+'</td>'
