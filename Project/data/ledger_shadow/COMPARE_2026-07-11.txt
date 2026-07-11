@@ -1,0 +1,38 @@
+==========================================================================
+  LEDGER SHADOW COMPARISON  --  2026-07-11 00:43 ET
+  (shadow ledger derived numbers vs live displayed numbers)
+==========================================================================
+
+## wallstbots  (last_refresh=2026-07-10T21:03:36)
+  [bot13] WRITE REFUSED (nothing ingested): c09ae7a6c44d06d3: cash would go negative (-640.5663) after BUY KR -- refusing entire batch
+  [oracle] OK   fills+0 (ledger n=0) | ledger total 53300.80 vs live 53300.80
+  [wizard] OK   fills+0 (ledger n=0) | ledger total 54713.66 vs live 54713.66
+  [equalizer] OK   fills+0 (ledger n=0) | ledger total 54598.57 vs live 54598.56
+  [titan] OK   fills+0 (ledger n=0) | ledger total 54826.95 vs live 54826.93
+
+## aistocks  (last_refresh=2026-07-10T21:02:13)
+  [bot13] WRITE REFUSED (nothing ingested): 6f8ec1a520366609: cash would go negative (-12649.3991) after BUY CBRS -- refusing entire batch
+  [oracle] OK   fills+0 (ledger n=0) | ledger total 46575.49 vs live 46575.48
+  [wizard] OK   fills+0 (ledger n=0) | ledger total 47980.85 vs live 47980.86
+  [equalizer] OK   fills+0 (ledger n=0) | ledger total 49199.18 vs live 49199.20
+  [titan] OK   fills+0 (ledger n=0) | ledger total 49993.19 vs live 49993.17
+
+## bitbot13  (last_refresh=2026-07-11T03:24:43)
+  [bot13] WRITE REFUSED (nothing ingested): 42d53342b4e45021: non-positive price 0.0
+  [oracle] DIFF fills+0 (ledger n=0) | ledger total 50119.81 vs live 50141.43
+  [wizard] DIFF fills+0 (ledger n=0) | ledger total 50695.46 vs live 50718.52
+  [equalizer] OK   fills+0 (ledger n=0) | ledger total 51006.01 vs live 51001.71
+  [titan] OK   fills+0 (ledger n=0) | ledger total 50807.29 vs live 50798.21
+
+==========================================================================
+WRITE REFUSALS (3):
+  X [wallstbots/bot13] REFUSED: c09ae7a6c44d06d3: cash would go negative (-640.5663) after BUY KR -- refusing entire batch
+  X [aistocks/bot13] REFUSED: 6f8ec1a520366609: cash would go negative (-12649.3991) after BUY CBRS -- refusing entire batch
+  X [bitbot13/bot13] REFUSED: 42d53342b4e45021: non-positive price 0.0
+DIFFERENCES (2):
+  X [bitbot13/oracle] cash: ledger 0.00 vs live 21.62 (diff -21.62)
+  X [bitbot13/wizard] cash: ledger 0.00 vs live 23.06 (diff -23.06)
+
+Each line is either a shadow-ledger bug (fix the ledger) or a live-engine
+bug the ledger caught (fix the engine). Truth = real fill prices.
+==========================================================================
