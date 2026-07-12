@@ -616,12 +616,18 @@ def run_bot13_equity(
     breadth_pct   = n_green / n_priced if n_priced else 0
     sell_pressure = n_red   / n_priced if n_priced else 0
 
+    # -- 2026-07-11 OWNER DECISION ("Option 3", all platforms): the breadth veto is
+    #    DEMOTED from a stop sign to a yellow light. Broad selling pressure (>33% of
+    #    the universe down >2%) no longer cancels the session — it raises the required
+    #    edge bar 1.5x instead (1.74% -> 2.61%), stated in the rationale. Stops are
+    #    executed, so a bad day is capped per position.
+    #    IF RESULTS DEGRADE, REVISIT THIS CHANGE FIRST.
+    eff_threshold = cfg["proj_threshold"]
+    breadth_note  = ""
     if sell_pressure > 0.33:
-        return _cash_return(
-            f"CASH — broad selling pressure ({int(sell_pressure*100)}% of stocks down >2%). No trades today.",
-            "CASH — MARKET HEALTH FAIL",
-            f"{int(sell_pressure*100)}% of universe down >2%. Broad selling pressure detected — protecting capital.",
-        )
+        eff_threshold = round(eff_threshold * 1.5, 2)
+        breadth_note  = (f" Caution: broad selling pressure ({int(sell_pressure*100)}% of "
+                         f"universe down >2%) — edge bar raised to {eff_threshold:.2f}%.")
 
     # -- Score each candidate -------------------------------------------------
     scored = []
@@ -673,13 +679,13 @@ def run_bot13_equity(
     projected_return = round(
         sum(w * day_pct for (_, day_pct, _), w in zip(top_picks, weights)), 2
     )
-    if projected_return <= cfg["proj_threshold"]:
+    if projected_return <= eff_threshold:
         return _hold_return(
-            f"HOLD — calculated edge score {projected_return:.2f}% ≤ {cfg['proj_threshold']}% threshold. "
-            "Not enough edge today.",
+            f"HOLD — calculated edge score {projected_return:.2f}% ≤ {eff_threshold:g}% threshold. "
+            "Not enough edge today." + breadth_note,
             f"HOLD — INSUFFICIENT EDGE ({projected_return:.2f}%)",
-            f"Calculated edge score {projected_return:.2f}% ≤ {cfg['proj_threshold']}% threshold. "
-            "Not enough edge to justify risk today. Holding for the day.",
+            f"Calculated edge score {projected_return:.2f}% ≤ {eff_threshold:g}% threshold. "
+            "Not enough edge to justify risk today. Holding for the day." + breadth_note,
             projected_return,
         )
 
@@ -756,6 +762,7 @@ def run_bot13_equity(
         f"Deployed into {len(picks)} high-conviction names ({pos_summary}). "
         f"Market breadth: {breadth_label}. "
         f"Weighted by signal strength. Stop -{stop_display}% | Target +{target_pct}%."
+        + breadth_note
     )
     return "TRADE", positions, picks, rationale, session_log, projected_return
 

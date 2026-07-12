@@ -868,6 +868,23 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+### 2026-07-11 (night) — BREADTH VETO DEMOTED, owner "Option 3" (shared bot13_engine.py)
+- ⚠️ STRATEGY CHANGE — if numbers degrade, revisit THIS first. The equity engine's market-
+  health veto (>33% of universe down >2% → CASH day) no longer cancels the session: it now
+  raises the required edge bar 1.5x (proj_threshold 1.74% → effective 2.61%) and prints the
+  caution in the rationale/log ("Caution: broad selling pressure (NN% of universe down >2%)
+  — edge bar raised to 2.61%."). Owner reasoning: stops are executed, so bad days are capped
+  per position; the full-day veto was leaving too many sessions untraded. Applies to
+  wallstbots + aistocks stock engines AND member portfolios (shared engine import). The
+  crypto engine (bitbot13) never had a breadth veto — unchanged. Same change already live
+  on bot13.tech (its PROJECT_STATUS 2026-07-11 entry).
+
+### 2026-07-11 (night) — crisp header logo, all 3 product sites (commit 572ea1d)
+- Replaced `Frontends/{wallstbots,aistocks,bitbot13}.tech/assets/logo.png` with a pre-sized
+  84px export (15KB, was a 1.47MB full-res image the browser downscaled fuzzily to 42px).
+  Same new file also on bot13.tech. Display-only; no code, no data. Verified live on all
+  four domains (15,662 bytes each). lvl13.tech untouched (Rule 10).
+
 ### 2026-07-10 (evening) — PHASE 0 COMPLETE: audit is GREEN (PASS, 0 failures)
 - **BOT13 banked-realized fix (all 3 engines, parity):** rotations/stop-loss re-entries now
   BANK today's realized P&L (`banked_today` persisted in value), total = day_open + banked +
