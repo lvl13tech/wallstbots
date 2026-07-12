@@ -394,7 +394,7 @@ function renderHome() {
     + '<div class="card" style="display:flex;flex-direction:column">'
     + '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--blue);margin-bottom:12px;text-transform:uppercase">Our<br>Wall Street<br>Bots</div>'
     + '<a href="https://wallstbots.tech" target="_blank" rel="noopener">'
-    + '<img src="assets/logo-wallstbots.png" alt="Wall St. Bots" style="width:100%;max-width:200px;height:auto;display:block;margin-bottom:14px;border-radius:8px"></a>'
+    + '<img src="assets/logo-wallstbots.png" alt="Wall St. Bots" style="width:100%;max-width:260px;height:auto;display:block;margin-bottom:14px;border-radius:8px"></a>'
     + '<p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 14px;flex:1">Five AI bots tracking top stocks across every sector — plus the hottest new IPOs. Daily signals, live leaderboards, and downloadable monthly statements.</p>'
     + '<a class="btn btn-secondary" href="https://wallstbots.tech" target="_blank" rel="noopener" style="font-size:12px;margin-top:auto">Visit wallstbots.tech →</a>'
     + '</div>'
