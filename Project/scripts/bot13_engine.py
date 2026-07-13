@@ -427,9 +427,12 @@ def reconcile_bot13_log(held_book, real_now, trade_log, today_iso, session_end, 
     log_is_today = bool(log) and str(log[-1].get("ts", ""))[:10] == today_iso
     stale = {s: p for s, p in book.items() if _day(p) and _day(p) < today_iso}
     if stale or not log_is_today:
+        _roll_seen = {(str(e.get("ts")), str(e.get("action")), str(e.get("symbol"))) for e in log}
         for s, p in sorted(stale.items(), key=lambda kv: _day(kv[1])):
             d = _day(p) or today_iso
             ts = f"{d}T{eh:02d}:{em:02d}:00"
+            if (ts, "SELL", s) in _roll_seen:   # idempotency: never re-log the same close-out
+                continue
             entry = float(p.get("entry_price") or 0)
             sh    = float(p.get("shares") or 0)
             px    = float(prices.get(s, p.get("price") or entry) or entry)
@@ -442,6 +445,22 @@ def reconcile_bot13_log(held_book, real_now, trade_log, today_iso, session_end, 
 
     now = {p["symbol"]: dict(p) for p in (real_now or []) if p.get("symbol")}
     last_buy = {e["symbol"]: e["ts"] for e in log if e.get("action") == "BUY" and e.get("symbol")}
+
+    # -- IDEMPOTENCY GUARD (2026-07-13, fixes bitbot13 duplicate trade rows) --------
+    # The runner starts with no state.json and the backend doesn't persist the
+    # internal "_real_positions" book, so a run can re-diff against an empty or
+    # display-only book and RE-LOG trades it already recorded. A re-logged phantom
+    # always carries the SAME timestamp (the position's original entry/exit time);
+    # a genuine re-entry gets a NEW timestamp. So: never append a row whose
+    # (ts, action, symbol) already exists in today's log. Duplicates become
+    # impossible; real trades are never suppressed.
+    _seen = {(str(e.get("ts")), str(e.get("action")), str(e.get("symbol"))) for e in log}
+    def _append_once(row):
+        key = (str(row["ts"]), str(row["action"]), str(row["symbol"]))
+        if key not in _seen:
+            _seen.add(key)
+            log.append(row)
+
     # SELLs: on the book, no longer held now
     for s, p in book.items():
         if s not in now:
@@ -452,17 +471,17 @@ def reconcile_bot13_log(held_book, real_now, trade_log, today_iso, session_end, 
             fl = last_buy.get(s)
             if fl and str(fl) > str(ts):  # a SELL can never predate its own BUY
                 ts = fl
-            log.append({"ts": ts, "action": "SELL", "symbol": s, "shares": round(sh, 6),
-                        "price": round(px, 4), "reason": p.get("exit_reason") or "closed",
-                        "realized": round((px - entry) * sh, 2) if entry else 0.0})
+            _append_once({"ts": ts, "action": "SELL", "symbol": s, "shares": round(sh, 6),
+                          "price": round(px, 4), "reason": p.get("exit_reason") or "closed",
+                          "realized": round((px - entry) * sh, 2) if entry else 0.0})
     # BUYs: held now, not previously on the book
     for s, p in now.items():
         if s not in book:
             entry = float(p.get("entry_price") or p.get("price") or 0)
             sh    = float(p.get("shares") or 0)
             ts = p.get("entry_time") or now_iso
-            log.append({"ts": ts, "action": "BUY", "symbol": s, "shares": round(sh, 6),
-                        "price": round(entry, 4), "reason": "opened"})
+            _append_once({"ts": ts, "action": "BUY", "symbol": s, "shares": round(sh, 6),
+                          "price": round(entry, 4), "reason": "opened"})
     return log[-200:], list(real_now or [])
 
 
@@ -616,18 +635,19 @@ def run_bot13_equity(
     breadth_pct   = n_green / n_priced if n_priced else 0
     sell_pressure = n_red   / n_priced if n_priced else 0
 
-    # -- 2026-07-11 OWNER DECISION ("Option 3", all platforms): the breadth veto is
-    #    DEMOTED from a stop sign to a yellow light. Broad selling pressure (>33% of
-    #    the universe down >2%) no longer cancels the session — it raises the required
-    #    edge bar 1.5x instead (1.74% -> 2.61%), stated in the rationale. Stops are
-    #    executed, so a bad day is capped per position.
-    #    IF RESULTS DEGRADE, REVISIT THIS CHANGE FIRST.
+    # -- 2026-07-13 OWNER REVERT: Option 3 (2026-07-11) produced results the owner
+    #    rejected after its first live session. The FULL market-health veto is
+    #    restored: broad selling pressure = 100% CASH day. Owner's words: "I'd rather
+    #    hold cash than lose money." Do not soften this again without an explicit
+    #    owner order.
     eff_threshold = cfg["proj_threshold"]
     breadth_note  = ""
     if sell_pressure > 0.33:
-        eff_threshold = round(eff_threshold * 1.5, 2)
-        breadth_note  = (f" Caution: broad selling pressure ({int(sell_pressure*100)}% of "
-                         f"universe down >2%) — edge bar raised to {eff_threshold:.2f}%.")
+        return _cash_return(
+            f"CASH — broad selling pressure ({int(sell_pressure*100)}% of stocks down >2%). No trades today.",
+            "CASH — MARKET HEALTH FAIL",
+            f"{int(sell_pressure*100)}% of universe down >2%. Broad selling pressure detected — protecting capital.",
+        )
 
     # -- Score each candidate -------------------------------------------------
     scored = []

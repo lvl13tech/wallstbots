@@ -868,6 +868,20 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+### 2026-07-13 — OWNER REVERT of Option 3 + bitbot13 duplicate-trade fix (shared engine)
+- **Breadth veto RESTORED** (owner, after first live session under Option 3: "I'd rather
+  hold cash than lose money"): >33% of universe down >2% = full CASH day again, in the
+  shared bot13_engine equity path. Do not soften again without an explicit owner order.
+- **bitbot13 duplicate trades root-caused + fixed:** runner starts without state.json →
+  falls back to the API, whose positions are DISPLAY copies (closed holdings re-shown
+  after hours) and which never carry the internal _real_positions book (backend drops
+  it). The ledger re-diffed that amnesiac book and re-logged identical BUY/SELL rows.
+  Fix: reconcile_bot13_log is now IDEMPOTENT — a (ts, action, symbol) row can only be
+  logged once (incl. day-roll close-outs). Genuine re-entries carry a new ts and are
+  unaffected. Shared engine → wallstbots/aistocks/bitbot13 + members all inherit.
+- NOTE: existing duplicate rows already in bitbot13's stored trade_log are DATA, not
+  code — cleaning them requires owner sign-off (ask-before-purge rule).
+
 ### 2026-07-11 (night) — BREADTH VETO DEMOTED, owner "Option 3" (shared bot13_engine.py)
 - ⚠️ STRATEGY CHANGE — if numbers degrade, revisit THIS first. The equity engine's market-
   health veto (>33% of universe down >2% → CASH day) no longer cancels the session: it now
