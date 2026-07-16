@@ -868,6 +868,24 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+### 2026-07-16 (later) — reset-tool review + fix (owner request)
+- Reviewed RUN-FULL-RESET-ALL / full_reset_all.py end to end. The classic
+  "day boxes read yesterday" reset bug IS handled correctly (baseline snapshot
+  seeded at last trading day = start capital, so Today's Change reads 0; stale
+  day_boundary block dropped; members reset PENDING at their own N x $1,000).
+- FIXED one real gap: the bat promised "report archive hard-deleted" but the
+  script never wiped daily_fund_archive — Reports kept serving pre-reset months.
+  Added LAYER 2b (direct DB delete per platform, dry-run aware).
+- CORRECTION (verified in code): platform funds CANNOT trade on reset day — all
+  three refresh engines gate on `inception >= today` ("Pre-inception hold") and the
+  reset stamps inception=TODAY. My earlier same-day-entry warning was wrong. The
+  reset rationale text now states "Trading begins at the next session" explicitly
+  (owner order 2026-07-16). Members likewise PENDING. Whole platform waits.
+- bot13.tech got its own reset tool (engines/full_reset_bot13.py +
+  RESET-ALL-22-MARKETS bat): backup-first, dry-run, typed RESET confirmation,
+  wipes trades/snapshots/fund_state, clears inception so the engine's own Day-1
+  gate guarantees first entries at the NEXT session. Membership data untouched.
+
 ### 2026-07-16 — LEDGER LAW (owner order: "no patch fixes — the system is wrong")
 - bitbot13 DOUBLE-SOLD the same MANTA lot (9:31 + 11:16). The 7/13 timestamp-dedupe
   was a symptom patch — phantoms with fresh timestamps sailed through. ROOT DESIGN

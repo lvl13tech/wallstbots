@@ -92,9 +92,12 @@ def clean_value(start_cap, prior=None):
 
 
 def clean_strategy():
+    # Platform funds CANNOT trade on reset day: every engine has the inception gate
+    # ("do not trade on inception day itself") and reset_blob stamps inception=TODAY.
+    # Owner confirmation 2026-07-16 — the rationale now says so on the site.
     return {"day": TODAY, "week": TODAY, "month": TODAY, "picks": [], "decision": "HOLD",
-            "rationale": "Full reset -- starting fresh.", "session_log": [],
-            "projected_return": 0.0}
+            "rationale": "Full reset -- starting fresh. Trading begins at the next session.",
+            "session_log": [], "projected_return": 0.0}
 
 
 def reset_blob(state, start_cap, snap_date):
@@ -234,6 +237,29 @@ def main():
                 n_hold = len(p.get("holdings") or [])
                 print(f"    would reset portfolio {(p.get('bot_id') or '')[:8]} at own "
                       f"${n_hold * 1000:,.0f} ({n_hold} holdings), trading begins {_starts}")
+
+        # LAYER 2b (added 2026-07-16 review): the monthly-report archive. The bat has
+        # always PROMISED "report archive hard-deleted" but this layer was missing --
+        # after a reset the Reports section still served pre-reset history. Direct DB
+        # delete (no backend endpoint exists for it); DATABASE_URL from Backend/.env.
+        print("  LAYER 2b: report archive (daily_fund_archive)")
+        if not DRY:
+            try:
+                import psycopg
+                _db_url = os.environ.get("DATABASE_URL", "")
+                if not _db_url:
+                    for _ln in (ROOT / "Backend" / ".env").read_text(encoding="utf-8").splitlines():
+                        if _ln.startswith("DATABASE_URL="):
+                            _db_url = _ln.split("=", 1)[1].strip(); break
+                with psycopg.connect(_db_url) as _c:
+                    _n = _c.execute("DELETE FROM daily_fund_archive WHERE platform=%s",
+                                    (platform,)).rowcount
+                    _c.commit()
+                print(f"    archive rows deleted: {_n}")
+            except Exception as e:
+                print(f"    WARNING: archive wipe failed ({e}) -- Reports may show pre-reset history")
+        else:
+            print("    (dry run -- would delete this platform's archive rows)")
 
         # LAYER 3: disk state.json (CLEAN write -- clears any NUL corruption)
         if disk_path is not None:
