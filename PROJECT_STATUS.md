@@ -868,6 +868,18 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+### 2026-07-16 (night) — members-area referral fixes, all 3 dashboards
+- Invite links (personal + admin comp codes) now use window.location.origin — they
+  were hardcoded to wallstbots.tech on bitbot13 and aistocks, so those members were
+  sending friends to the wrong platform.
+- "Webmaster Plan Plan" doubled word fixed (drawerTierName now guards like line 1812).
+- bot13.tech got the FULL wallstbots members-area referral port (owner order):
+  Copy Code / Copy Link, invite-by-email, and the webmaster-only CODE TO SHARE
+  dropdown (personal 50%-off vs ADMINM13 free-lifetime comp). New bot13 backend
+  endpoints /account/invite + /webmaster/send-invite (wallstbots contract). NOTE:
+  bot13 email sends report "not configured" until Resend (launch item 2) is set up —
+  Copy Link works today.
+
 ### 2026-07-16 (later) — reset-tool review + fix (owner request)
 - Reviewed RUN-FULL-RESET-ALL / full_reset_all.py end to end. The classic
   "day boxes read yesterday" reset bug IS handled correctly (baseline snapshot

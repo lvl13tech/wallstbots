@@ -1303,7 +1303,7 @@
     }
     document.getElementById("drawerTierBadge").textContent = plan;
     document.getElementById("drawerTierBadge").className = "tier-badge " + badgeClass;
-    document.getElementById("drawerTierName").textContent = plan + " Plan";
+    document.getElementById("drawerTierName").textContent = plan + (/(plan)$/i.test(plan) ? "" : " Plan");   // fixes "Webmaster Plan Plan"
     const status = subscription.status || "active";
     document.getElementById("drawerStatus").textContent = status.charAt(0).toUpperCase() + status.slice(1);
     const billDate = subscription.current_period_end || subscription.next_billing_date || subscription.renewal_date;
@@ -1316,7 +1316,8 @@
       api.getReferralStats().then(r => {
         if (!r) return;
         window._personalRefCode = r.referral_code || "—";
-        window._personalRefLink = r.share_link || ("https://wallstbots.tech/#/get-yours?ref=" + (r.referral_code || ""));
+        // invite link points at THIS site (was hardcoded wallstbots.tech on every platform)
+        window._personalRefLink = window.location.origin + "/?ref=" + (r.referral_code || "");
         document.getElementById("drawerRefCode").textContent   = window._personalRefCode;
         document.getElementById("drawerRefCount").textContent  = r.referred_count  || 0;
         document.getElementById("drawerCreditBalance").textContent = "$" + (parseFloat(r.credit_balance  || 0).toFixed(2));
@@ -1612,7 +1613,7 @@
       const tierName = sel==="adminm13" ? "Syndicate" : sel==="adminf13" ? "Free Starter" : "Insider";
       document.getElementById("drawerRefCode").textContent = sel;
       // QUERY form (?ref=) not #fragment — survives email click-tracking redirects.
-      document.getElementById("drawerRefLink").value = "https://wallstbots.tech/?ref="+sel;
+      document.getElementById("drawerRefLink").value = window.location.origin + "/?ref="+sel;
       if(howItWorks) howItWorks.innerHTML = '<strong style="color:var(--fg)">Admin code:</strong> Sends a <strong style="color:var(--accent)">free lifetime '+tierName+' account</strong> — no billing, ever. Use for comped accounts only.';
     }
   }
