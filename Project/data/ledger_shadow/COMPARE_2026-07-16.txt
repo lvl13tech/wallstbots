@@ -1,0 +1,66 @@
+==========================================================================
+  LEDGER SHADOW COMPARISON  --  2026-07-16 00:39 ET
+  (shadow ledger derived numbers vs live displayed numbers)
+==========================================================================
+
+## wallstbots  (last_refresh=2026-07-15T21:40:44)
+  [bot13] WRITE REFUSED (nothing ingested): d8265e57028ceb0a: SELL 48.185526 AAPL but ledger holds 41.351314
+  [oracle] DIFF fills+0 (ledger n=0) | ledger total 35716.88 vs live 53671.65
+  [wizard] OK   fills+0 (ledger n=0) | ledger total 51719.49 vs live 51719.49
+  [equalizer] OK   fills+0 (ledger n=0) | ledger total 54084.54 vs live 54084.57
+  [titan] OK   fills+0 (ledger n=0) | ledger total 54873.14 vs live 54873.11
+
+## aistocks  (last_refresh=2026-07-15T21:37:05)
+  [bot13] WRITE REFUSED (nothing ingested): 54c18e283e6ef9d3: cash would go negative (-1542.2533) after BUY HQ -- refusing entire batch
+  [oracle] DIFF fills+0 (ledger n=0) | ledger total 16942.65 vs live 47475.80
+  [wizard] OK   fills+0 (ledger n=0) | ledger total 46879.33 vs live 46879.34
+  [equalizer] OK   fills+0 (ledger n=0) | ledger total 47288.30 vs live 47288.26
+  [titan] OK   fills+0 (ledger n=0) | ledger total 48117.16 vs live 48117.14
+
+## bitbot13  (last_refresh=2026-07-16T03:20:06)
+  [bot13] WRITE REFUSED (nothing ingested): a3e1f20f51ed06de: cash would go negative (-7993.3356) after BUY ONDO -- refusing entire batch
+  [oracle] DIFF fills+0 (ledger n=0) | ledger total 37559.28 vs live 50598.80
+  [wizard] DIFF fills+0 (ledger n=0) | ledger total 52801.90 vs live 52824.96
+  [equalizer] OK   fills+0 (ledger n=0) | ledger total 51297.59 vs live 51293.42
+  [titan] OK   fills+0 (ledger n=0) | ledger total 51168.67 vs live 51159.68
+
+==========================================================================
+WRITE REFUSALS (3):
+  X [wallstbots/bot13] REFUSED: d8265e57028ceb0a: SELL 48.185526 AAPL but ledger holds 41.351314
+  X [aistocks/bot13] REFUSED: 54c18e283e6ef9d3: cash would go negative (-1542.2533) after BUY HQ -- refusing entire batch
+  X [bitbot13/bot13] REFUSED: a3e1f20f51ed06de: cash would go negative (-7993.3356) after BUY ONDO -- refusing entire batch
+DIFFERENCES (30):
+  X [wallstbots/oracle] pos_val: ledger 35716.88 vs live 53671.65 (diff -17954.77)
+  X [wallstbots/oracle] total: ledger 35716.88 vs live 53671.65 (diff -17954.77)
+  X [wallstbots/oracle] shares AFRM: ledger 162.996762 vs live 123.817765
+  X [wallstbots/oracle] shares GRAL: ledger 0.0 vs live 169.667513
+  X [wallstbots/oracle] shares META: ledger 0.0 vs live 17.601947
+  X [wallstbots/oracle] shares RBRK: ledger 125.634815 vs live 98.67339
+  X [wallstbots/oracle] shares RDDT: ledger 62.111256 vs live 55.619213
+  X [wallstbots/oracle] shares RTX: ledger 43.661489 vs live 0.0
+  X [wallstbots/oracle] shares WELL: ledger 36.336334 vs live 0.0
+  X [aistocks/oracle] pos_val: ledger 16942.65 vs live 47475.80 (diff -30533.15)
+  X [aistocks/oracle] total: ledger 16942.65 vs live 47475.80 (diff -30533.15)
+  X [aistocks/oracle] shares ANET: ledger 0.0 vs live 38.032744
+  X [aistocks/oracle] shares ARQQ: ledger 316.059964 vs live 0.0
+  X [aistocks/oracle] shares GRAL: ledger 0.0 vs live 118.231506
+  X [aistocks/oracle] shares HQ: ledger 773.283731 vs live 803.333677
+  X [aistocks/oracle] shares META: ledger 0.0 vs live 12.271328
+  X [aistocks/oracle] shares OKTA: ledger 58.699369 vs live 0.0
+  X [aistocks/oracle] shares PANW: ledger 25.088724 vs live 0.0
+  X [aistocks/oracle] shares PATH: ledger 0.0 vs live 517.481392
+  X [aistocks/oracle] shares RXRX: ledger 1812.672015 vs live 0.0
+  X [bitbot13/oracle] cash: ledger 0.00 vs live 0.41 (diff -0.41)
+  X [bitbot13/oracle] pos_val: ledger 37559.28 vs live 50598.39 (diff -13039.11)
+  X [bitbot13/oracle] total: ledger 37559.28 vs live 50598.80 (diff -13039.52)
+  X [bitbot13/oracle] shares AAVE: ledger 0.0 vs live 134.222191
+  X [bitbot13/oracle] shares ARB: ledger 69188.621078 vs live 141728.838068
+  X [bitbot13/oracle] shares BCH: ledger 28.609111 vs live 27.619475
+  X [bitbot13/oracle] shares EGLD: ledger 4191.626784 vs live 2888.895502
+  X [bitbot13/oracle] shares PENDLE: ledger 9003.646187 vs live 0.0
+  X [bitbot13/oracle] shares UNI: ledger 3156.959665 vs live 2668.66546
+  X [bitbot13/wizard] cash: ledger 0.00 vs live 23.06 (diff -23.06)
+
+Each line is either a shadow-ledger bug (fix the ledger) or a live-engine
+bug the ledger caught (fix the engine). Truth = real fill prices.
+==========================================================================
