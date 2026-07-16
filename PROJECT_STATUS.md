@@ -868,6 +868,19 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+### 2026-07-16 — LEDGER LAW (owner order: "no patch fixes — the system is wrong")
+- bitbot13 DOUBLE-SOLD the same MANTA lot (9:31 + 11:16). The 7/13 timestamp-dedupe
+  was a symptom patch — phantoms with fresh timestamps sailed through. ROOT DESIGN
+  FLAW: the ledger diffed an in-memory book that doesn't survive between runs.
+- REWRITE (reconcile_bot13_log, shared engine → all 3 product sites + members +
+  bot13.tech gold copy): the PERSISTED trade log is now the only authority. A SELL
+  requires an open lot in the ledger (realized computed from the ledger's own entry);
+  a BUY requires no open lot; day-roll closes prior-day open lots from the ledger.
+  Double-sell/double-buy now structurally impossible. 5/5 unit tests incl. an exact
+  replay of the MANTA failure; genuine re-entries (BUY-SELL-BUY) verified working.
+- repair_bitbot13_ledger.py + bat: one-time removal of stored phantom rows (backup
+  first; drops only ledger-impossible rows). Gold copy re-synced (md5 53a3ab5b...).
+
 ### 2026-07-13 — OWNER REVERT of Option 3 + bitbot13 duplicate-trade fix (shared engine)
 - **Breadth veto RESTORED** (owner, after first live session under Option 3: "I'd rather
   hold cash than lose money"): >33% of universe down >2% = full CASH day again, in the
