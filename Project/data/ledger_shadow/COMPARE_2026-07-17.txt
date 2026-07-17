@@ -1,0 +1,409 @@
+==========================================================================
+  LEDGER SHADOW COMPARISON  --  2026-07-17 00:42 ET
+  (shadow ledger derived numbers vs live displayed numbers)
+==========================================================================
+
+## wallstbots  (last_refresh=2026-07-16T21:47:00)
+  [bot13] DIFF fills+0 (ledger n=16) | ledger total 62659.88 vs live 55000.00
+  [oracle] DIFF fills+0 (ledger n=0) | ledger total 0.00 vs live 55000.00
+  [wizard] DIFF fills+0 (ledger n=0) | ledger total 0.00 vs live 55000.00
+  [equalizer] DIFF fills+0 (ledger n=0) | ledger total 0.00 vs live 55000.00
+  [titan] DIFF fills+0 (ledger n=0) | ledger total 0.06 vs live 55000.00
+
+## aistocks  (last_refresh=2026-07-16T21:43:09)
+  [bot13] DIFF fills+0 (ledger n=0) | ledger total 59435.73 vs live 50000.00
+  [oracle] DIFF fills+0 (ledger n=0) | ledger total 0.00 vs live 50000.00
+  [wizard] DIFF fills+0 (ledger n=0) | ledger total 0.02 vs live 50000.00
+  [equalizer] DIFF fills+0 (ledger n=0) | ledger total 0.00 vs live 50000.00
+  [titan] DIFF fills+0 (ledger n=0) | ledger total 371.60 vs live 50000.00
+
+## bitbot13  (last_refresh=2026-07-17T03:23:11)
+  [bot13] DIFF fills+0 (ledger n=0) | ledger total 0.00 vs live 50000.00
+  [oracle] DIFF fills+0 (ledger n=0) | ledger total 0.00 vs live 50000.00
+  [wizard] DIFF fills+0 (ledger n=0) | ledger total 0.00 vs live 50000.00
+  [equalizer] DIFF fills+0 (ledger n=0) | ledger total 0.00 vs live 50000.00
+  [titan] DIFF fills+0 (ledger n=0) | ledger total 0.00 vs live 50000.00
+
+==========================================================================
+DIFFERENCES (377):
+  X [wallstbots/bot13] cash: ledger 62659.88 vs live 55000.00 (diff +7659.88)
+  X [wallstbots/bot13] total: ledger 62659.88 vs live 55000.00 (diff +7659.88)
+  X [wallstbots/oracle] cash: ledger 0.00 vs live 55000.00 (diff -55000.00)
+  X [wallstbots/oracle] total: ledger 0.00 vs live 55000.00 (diff -55000.00)
+  X [wallstbots/oracle] shares AFRM: ledger 162.996762 vs live 0.0
+  X [wallstbots/oracle] shares RBRK: ledger 125.634815 vs live 0.0
+  X [wallstbots/oracle] shares RDDT: ledger 62.111256 vs live 0.0
+  X [wallstbots/oracle] shares RTX: ledger 43.661489 vs live 0.0
+  X [wallstbots/oracle] shares WELL: ledger 36.336334 vs live 0.0
+  X [wallstbots/wizard] cash: ledger 0.00 vs live 55000.00 (diff -55000.00)
+  X [wallstbots/wizard] total: ledger 0.00 vs live 55000.00 (diff -55000.00)
+  X [wallstbots/wizard] shares AFRM: ledger 75.606917 vs live 0.0
+  X [wallstbots/wizard] shares ALAB: ledger 26.670753 vs live 0.0
+  X [wallstbots/wizard] shares ARM: ledger 21.120559 vs live 0.0
+  X [wallstbots/wizard] shares GE: ledger 9.593862 vs live 0.0
+  X [wallstbots/wizard] shares GRAL: ledger 94.503162 vs live 0.0
+  X [wallstbots/wizard] shares RBRK: ledger 122.755435 vs live 0.0
+  X [wallstbots/wizard] shares RDDT: ledger 32.426356 vs live 0.0
+  X [wallstbots/wizard] shares UNH: ledger 8.522563 vs live 0.0
+  X [wallstbots/equalizer] cash: ledger 0.00 vs live 55000.00 (diff -55000.00)
+  X [wallstbots/equalizer] total: ledger 0.00 vs live 55000.00 (diff -55000.00)
+  X [wallstbots/equalizer] shares AAPL: ledger 3.19048 vs live 0.0
+  X [wallstbots/equalizer] shares AFRM: ledger 11.608335 vs live 0.0
+  X [wallstbots/equalizer] shares ALAB: ledger 2.456942 vs live 0.0
+  X [wallstbots/equalizer] shares ALB: ledger 7.714859 vs live 0.0
+  X [wallstbots/equalizer] shares AMT: ledger 6.079767 vs live 0.0
+  X [wallstbots/equalizer] shares AMZN: ledger 4.07365 vs live 0.0
+  X [wallstbots/equalizer] shares APD: ledger 3.238866 vs live 0.0
+  X [wallstbots/equalizer] shares ARM: ledger 3.242752 vs live 0.0
+  X [wallstbots/equalizer] shares BIRK: ledger 21.663778 vs live 0.0
+  X [wallstbots/equalizer] shares BRK.B: ledger 1.960784 vs live 0.0
+  X [wallstbots/equalizer] shares CART: ledger 20.894275 vs live 0.0
+  X [wallstbots/equalizer] shares CAT: ledger 1.059389 vs live 0.0
+  X [wallstbots/equalizer] shares COP: ledger 9.536525 vs live 0.0
+  X [wallstbots/equalizer] shares COST: ledger 1.035143 vs live 0.0
+  X [wallstbots/equalizer] shares CVX: ledger 5.861321 vs live 0.0
+  X [wallstbots/equalizer] shares DUK: ledger 7.861326 vs live 0.0
+  X [wallstbots/equalizer] shares EQIX: ledger 1.001161 vs live 0.0
+  X [wallstbots/equalizer] shares FANG: ledger 5.687473 vs live 0.0
+  X [wallstbots/equalizer] shares FCX: ledger 16.641704 vs live 0.0
+  X [wallstbots/equalizer] shares GE: ledger 2.651395 vs live 0.0
+  X [wallstbots/equalizer] shares GOOGL: ledger 2.72257 vs live 0.0
+  X [wallstbots/equalizer] shares GRAL: ledger 14.509576 vs live 0.0
+  X [wallstbots/equalizer] shares HD: ledger 2.826695 vs live 0.0
+  X [wallstbots/equalizer] shares HON: ledger 4.338489 vs live 0.0
+  X [wallstbots/equalizer] shares IBTA: ledger 30.202356 vs live 0.0
+  X [wallstbots/equalizer] shares JNJ: ledger 3.771379 vs live 0.0
+  X [wallstbots/equalizer] shares JPM: ledger 2.936901 vs live 0.0
+  X [wallstbots/equalizer] shares KR: ledger 17.002465 vs live 0.0
+  X [wallstbots/equalizer] shares LIN: ledger 1.828037 vs live 0.0
+  X [wallstbots/equalizer] shares LINE: ledger 22.583559 vs live 0.0
+  X [wallstbots/equalizer] shares LLY: ledger 0.814014 vs live 0.0
+  X [wallstbots/equalizer] shares META: ledger 1.649471 vs live 0.0
+  X [wallstbots/equalizer] shares MSFT: ledger 2.552746 vs live 0.0
+  X [wallstbots/equalizer] shares NEE: ledger 11.325028 vs live 0.0
+  X [wallstbots/equalizer] shares NFLX: ledger 12.888259 vs live 0.0
+  X [wallstbots/equalizer] shares NVDA: ledger 5.212406 vs live 0.0
+  X [wallstbots/equalizer] shares OKLO: ledger 19.603999 vs live 0.0
+  X [wallstbots/equalizer] shares PG: ledger 6.56211 vs live 0.0
+  X [wallstbots/equalizer] shares PLD: ledger 7.104291 vs live 0.0
+  X [wallstbots/equalizer] shares RBRK: ledger 11.30838 vs live 0.0
+  X [wallstbots/equalizer] shares RDDT: ledger 4.978592 vs live 0.0
+  X [wallstbots/equalizer] shares RTX: ledger 4.91763 vs live 0.0
+  X [wallstbots/equalizer] shares SHW: ledger 2.849003 vs live 0.0
+  X [wallstbots/equalizer] shares SMMT: ledger 62.735257 vs live 0.0
+  X [wallstbots/equalizer] shares SO: ledger 10.311404 vs live 0.0
+  X [wallstbots/equalizer] shares SOFI: ledger 54.083288 vs live 0.0
+  X [wallstbots/equalizer] shares SPCX: ledger 6.326311 vs live 0.0
+  X [wallstbots/equalizer] shares SPOT: ledger 2.029633 vs live 0.0
+  X [wallstbots/equalizer] shares TSLA: ledger 2.396566 vs live 0.0
+  X [wallstbots/equalizer] shares UNH: ledger 2.355326 vs live 0.0
+  X [wallstbots/equalizer] shares V: ledger 2.870594 vs live 0.0
+  X [wallstbots/equalizer] shares VST: ledger 6.387197 vs live 0.0
+  X [wallstbots/equalizer] shares WELL: ledger 4.277617 vs live 0.0
+  X [wallstbots/equalizer] shares WMT: ledger 8.896797 vs live 0.0
+  X [wallstbots/equalizer] shares XOM: ledger 7.194762 vs live 0.0
+  X [wallstbots/titan] cash: ledger 0.06 vs live 55000.00 (diff -54999.94)
+  X [wallstbots/titan] total: ledger 0.06 vs live 55000.00 (diff -54999.94)
+  X [wallstbots/titan] shares AAPL: ledger 8.773819 vs live 0.0
+  X [wallstbots/titan] shares AFRM: ledger 7.093969 vs live 0.0
+  X [wallstbots/titan] shares ALAB: ledger 1.501462 vs live 0.0
+  X [wallstbots/titan] shares ALB: ledger 4.714627 vs live 0.0
+  X [wallstbots/titan] shares AMT: ledger 3.715406 vs live 0.0
+  X [wallstbots/titan] shares AMZN: ledger 11.202537 vs live 0.0
+  X [wallstbots/titan] shares APD: ledger 1.979304 vs live 0.0
+  X [wallstbots/titan] shares ARM: ledger 1.981678 vs live 0.0
+  X [wallstbots/titan] shares BIRK: ledger 13.238951 vs live 0.0
+  X [wallstbots/titan] shares BRK.B: ledger 5.392157 vs live 0.0
+  X [wallstbots/titan] shares CART: ledger 12.7687 vs live 0.0
+  X [wallstbots/titan] shares CAT: ledger 0.647403 vs live 0.0
+  X [wallstbots/titan] shares COP: ledger 5.827866 vs live 0.0
+  X [wallstbots/titan] shares COST: ledger 0.632586 vs live 0.0
+  X [wallstbots/titan] shares CVX: ledger 3.581912 vs live 0.0
+  X [wallstbots/titan] shares DUK: ledger 4.804135 vs live 0.0
+  X [wallstbots/titan] shares EQIX: ledger 0.61182 vs live 0.0
+  X [wallstbots/titan] shares FANG: ledger 3.475672 vs live 0.0
+  X [wallstbots/titan] shares FCX: ledger 10.169912 vs live 0.0
+  X [wallstbots/titan] shares GE: ledger 1.620294 vs live 0.0
+  X [wallstbots/titan] shares GOOGL: ledger 7.487068 vs live 0.0
+  X [wallstbots/titan] shares GRAL: ledger 8.866947 vs live 0.0
+  X [wallstbots/titan] shares HD: ledger 1.727422 vs live 0.0
+  X [wallstbots/titan] shares HON: ledger 2.651294 vs live 0.0
+  X [wallstbots/titan] shares IBTA: ledger 18.456962 vs live 0.0
+  X [wallstbots/titan] shares JNJ: ledger 2.304727 vs live 0.0
+  X [wallstbots/titan] shares JPM: ledger 8.076477 vs live 0.0
+  X [wallstbots/titan] shares KR: ledger 10.390377 vs live 0.0
+  X [wallstbots/titan] shares LIN: ledger 1.117131 vs live 0.0
+  X [wallstbots/titan] shares LINE: ledger 13.801039 vs live 0.0
+  X [wallstbots/titan] shares LLY: ledger 2.238539 vs live 0.0
+  X [wallstbots/titan] shares META: ledger 4.536045 vs live 0.0
+  X [wallstbots/titan] shares MSFT: ledger 7.020052 vs live 0.0
+  X [wallstbots/titan] shares NEE: ledger 6.920838 vs live 0.0
+  X [wallstbots/titan] shares NFLX: ledger 35.442712 vs live 0.0
+  X [wallstbots/titan] shares NVDA: ledger 14.334115 vs live 0.0
+  X [wallstbots/titan] shares OKLO: ledger 11.9802 vs live 0.0
+  X [wallstbots/titan] shares PG: ledger 4.010171 vs live 0.0
+  X [wallstbots/titan] shares PLD: ledger 4.341503 vs live 0.0
+  X [wallstbots/titan] shares RBRK: ledger 6.910664 vs live 0.0
+  X [wallstbots/titan] shares RDDT: ledger 3.042467 vs live 0.0
+  X [wallstbots/titan] shares RTX: ledger 3.005213 vs live 0.0
+  X [wallstbots/titan] shares SHW: ledger 1.741054 vs live 0.0
+  X [wallstbots/titan] shares SMMT: ledger 38.338143 vs live 0.0
+  X [wallstbots/titan] shares SO: ledger 6.301402 vs live 0.0
+  X [wallstbots/titan] shares SOFI: ledger 33.050838 vs live 0.0
+  X [wallstbots/titan] shares SPCX: ledger 3.866072 vs live 0.0
+  X [wallstbots/titan] shares SPOT: ledger 1.240329 vs live 0.0
+  X [wallstbots/titan] shares TSLA: ledger 1.464565 vs live 0.0
+  X [wallstbots/titan] shares UNH: ledger 1.439364 vs live 0.0
+  X [wallstbots/titan] shares V: ledger 1.754248 vs live 0.0
+  X [wallstbots/titan] shares VST: ledger 3.90328 vs live 0.0
+  X [wallstbots/titan] shares WELL: ledger 2.614095 vs live 0.0
+  X [wallstbots/titan] shares WMT: ledger 5.436922 vs live 0.0
+  X [wallstbots/titan] shares XOM: ledger 4.396791 vs live 0.0
+  X [aistocks/bot13] cash: ledger 59435.73 vs live 50000.00 (diff +9435.73)
+  X [aistocks/bot13] total: ledger 59435.73 vs live 50000.00 (diff +9435.73)
+  X [aistocks/oracle] cash: ledger 0.00 vs live 50000.00 (diff -50000.00)
+  X [aistocks/oracle] total: ledger 0.00 vs live 50000.00 (diff -50000.00)
+  X [aistocks/oracle] shares ARQQ: ledger 316.059964 vs live 0.0
+  X [aistocks/oracle] shares HQ: ledger 773.283731 vs live 0.0
+  X [aistocks/oracle] shares OKTA: ledger 58.699369 vs live 0.0
+  X [aistocks/oracle] shares PANW: ledger 25.088724 vs live 0.0
+  X [aistocks/oracle] shares RXRX: ledger 1812.672015 vs live 0.0
+  X [aistocks/wizard] cash: ledger 0.02 vs live 50000.00 (diff -49999.98)
+  X [aistocks/wizard] total: ledger 0.02 vs live 50000.00 (diff -49999.98)
+  X [aistocks/wizard] shares ALAB: ledger 24.157406 vs live 0.0
+  X [aistocks/wizard] shares ARQQ: ledger 275.396516 vs live 0.0
+  X [aistocks/wizard] shares DDOG: ledger 22.861207 vs live 0.0
+  X [aistocks/wizard] shares HQ: ledger 419.932811 vs live 0.0
+  X [aistocks/wizard] shares OKTA: ledger 39.534303 vs live 0.0
+  X [aistocks/wizard] shares PANW: ledger 16.52333 vs live 0.0
+  X [aistocks/wizard] shares RBRK: ledger 36.960378 vs live 0.0
+  X [aistocks/wizard] shares SNOW: ledger 12.329593 vs live 0.0
+  X [aistocks/equalizer] cash: ledger 0.00 vs live 50000.00 (diff -50000.00)
+  X [aistocks/equalizer] total: ledger 0.00 vs live 50000.00 (diff -50000.00)
+  X [aistocks/equalizer] shares AI: ledger 106.723586 vs live 0.0
+  X [aistocks/equalizer] shares ALAB: ledger 2.44795 vs live 0.0
+  X [aistocks/equalizer] shares AMD: ledger 1.934779 vs live 0.0
+  X [aistocks/equalizer] shares AMZN: ledger 4.06595 vs live 0.0
+  X [aistocks/equalizer] shares ANET: ledger 5.952381 vs live 0.0
+  X [aistocks/equalizer] shares ARM: ledger 3.225598 vs live 0.0
+  X [aistocks/equalizer] shares ARQQ: ledger 46.511412 vs live 0.0
+  X [aistocks/equalizer] shares AVGO: ledger 2.690993 vs live 0.0
+  X [aistocks/equalizer] shares BBAI: ledger 281.682206 vs live 0.0
+  X [aistocks/equalizer] shares CBRS: ledger 5.494505 vs live 0.0
+  X [aistocks/equalizer] shares CRDO: ledger 3.959063 vs live 0.0
+  X [aistocks/equalizer] shares CRM: ledger 5.913835 vs live 0.0
+  X [aistocks/equalizer] shares DDOG: ledger 3.861004 vs live 0.0
+  X [aistocks/equalizer] shares GOOGL: ledger 2.717687 vs live 0.0
+  X [aistocks/equalizer] shares GRAL: ledger 14.509576 vs live 0.0
+  X [aistocks/equalizer] shares HQ: ledger 42.553191 vs live 0.0
+  X [aistocks/equalizer] shares IBM: ledger 3.270887 vs live 0.0
+  X [aistocks/equalizer] shares INFQ: ledger 82.247664 vs live 0.0
+  X [aistocks/equalizer] shares INTC: ledger 8.678747 vs live 0.0
+  X [aistocks/equalizer] shares IONQ: ledger 21.034918 vs live 0.0
+  X [aistocks/equalizer] shares ISRG: ledger 2.273244 vs live 0.0
+  X [aistocks/equalizer] shares META: ledger 1.652838 vs live 0.0
+  X [aistocks/equalizer] shares MRVL: ledger 4.248088 vs live 0.0
+  X [aistocks/equalizer] shares MSFT: ledger 2.546603 vs live 0.0
+  X [aistocks/equalizer] shares MU: ledger 1.08066 vs live 0.0
+  X [aistocks/equalizer] shares NET: ledger 3.845902 vs live 0.0
+  X [aistocks/equalizer] shares NOW: ledger 9.032445 vs live 0.0
+  X [aistocks/equalizer] shares NVDA: ledger 5.221387 vs live 0.0
+  X [aistocks/equalizer] shares NVTS: ledger 69.808028 vs live 0.0
+  X [aistocks/equalizer] shares OKTA: ledger 6.676905 vs live 0.0
+  X [aistocks/equalizer] shares ORCL: ledger 6.960395 vs live 0.0
+  X [aistocks/equalizer] shares P: ledger 12.865046 vs live 0.0
+  X [aistocks/equalizer] shares PANW: ledger 2.790607 vs live 0.0
+  X [aistocks/equalizer] shares PATH: ledger 82.373001 vs live 0.0
+  X [aistocks/equalizer] shares PLTR: ledger 7.511455 vs live 0.0
+  X [aistocks/equalizer] shares QBTS: ledger 45.323108 vs live 0.0
+  X [aistocks/equalizer] shares QCOM: ledger 5.540473 vs live 0.0
+  X [aistocks/equalizer] shares QUBT: ledger 109.649123 vs live 0.0
+  X [aistocks/equalizer] shares RBRK: ledger 11.235955 vs live 0.0
+  X [aistocks/equalizer] shares RGTI: ledger 57.603687 vs live 0.0
+  X [aistocks/equalizer] shares RXRX: ledger 250.0 vs live 0.0
+  X [aistocks/equalizer] shares SMCI: ledger 37.397158 vs live 0.0
+  X [aistocks/equalizer] shares SMMT: ledger 62.656642 vs live 0.0
+  X [aistocks/equalizer] shares SNOW: ledger 3.748196 vs live 0.0
+  X [aistocks/equalizer] shares SOUN: ledger 145.348837 vs live 0.0
+  X [aistocks/equalizer] shares SPCX: ledger 6.344775 vs live 0.0
+  X [aistocks/equalizer] shares TSLA: ledger 2.394693 vs live 0.0
+  X [aistocks/equalizer] shares UPST: ledger 28.860029 vs live 0.0
+  X [aistocks/equalizer] shares XNDU: ledger 85.910653 vs live 0.0
+  X [aistocks/equalizer] shares ZS: ledger 6.578515 vs live 0.0
+  X [aistocks/titan] cash: ledger 371.60 vs live 50000.00 (diff -49628.40)
+  X [aistocks/titan] total: ledger 371.60 vs live 50000.00 (diff -49628.40)
+  X [aistocks/titan] shares AI: ledger 67.044824 vs live 0.0
+  X [aistocks/titan] shares ALAB: ledger 1.537827 vs live 0.0
+  X [aistocks/titan] shares AMD: ledger 4.740208 vs live 0.0
+  X [aistocks/titan] shares AMZN: ledger 9.961577 vs live 0.0
+  X [aistocks/titan] shares ANET: ledger 3.739345 vs live 0.0
+  X [aistocks/titan] shares ARM: ledger 7.902716 vs live 0.0
+  X [aistocks/titan] shares ARQQ: ledger 29.218934 vs live 0.0
+  X [aistocks/titan] shares AVGO: ledger 6.592933 vs live 0.0
+  X [aistocks/titan] shares BBAI: ledger 176.955579 vs live 0.0
+  X [aistocks/titan] shares CBRS: ledger 3.451703 vs live 0.0
+  X [aistocks/titan] shares CRDO: ledger 2.487123 vs live 0.0
+  X [aistocks/titan] shares CRM: ledger 3.715131 vs live 0.0
+  X [aistocks/titan] shares DDOG: ledger 2.425521 vs live 0.0
+  X [aistocks/titan] shares GOOGL: ledger 6.658332 vs live 0.0
+  X [aistocks/titan] shares GRAL: ledger 9.115061 vs live 0.0
+  X [aistocks/titan] shares HQ: ledger 26.73234 vs live 0.0
+  X [aistocks/titan] shares IBM: ledger 8.013672 vs live 0.0
+  X [aistocks/titan] shares INFQ: ledger 51.668805 vs live 0.0
+  X [aistocks/titan] shares INTC: ledger 5.452076 vs live 0.0
+  X [aistocks/titan] shares IONQ: ledger 13.214346 vs live 0.0
+  X [aistocks/titan] shares ISRG: ledger 1.428075 vs live 0.0
+  X [aistocks/titan] shares META: ledger 4.049453 vs live 0.0
+  X [aistocks/titan] shares MRVL: ledger 2.668692 vs live 0.0
+  X [aistocks/titan] shares MSFT: ledger 6.239177 vs live 0.0
+  X [aistocks/titan] shares MU: ledger 0.678882 vs live 0.0
+  X [aistocks/titan] shares NET: ledger 2.416034 vs live 0.0
+  X [aistocks/titan] shares NOW: ledger 5.674272 vs live 0.0
+  X [aistocks/titan] shares NVDA: ledger 12.792398 vs live 0.0
+  X [aistocks/titan] shares NVTS: ledger 43.854101 vs live 0.0
+  X [aistocks/titan] shares OKTA: ledger 4.194498 vs live 0.0
+  X [aistocks/titan] shares ORCL: ledger 4.37259 vs live 0.0
+  X [aistocks/titan] shares P: ledger 8.08195 vs live 0.0
+  X [aistocks/titan] shares PANW: ledger 1.753087 vs live 0.0
+  X [aistocks/titan] shares PATH: ledger 51.747543 vs live 0.0
+  X [aistocks/titan] shares PLTR: ledger 4.718771 vs live 0.0
+  X [aistocks/titan] shares QBTS: ledger 28.47243 vs live 0.0
+  X [aistocks/titan] shares QCOM: ledger 3.480581 vs live 0.0
+  X [aistocks/titan] shares QUBT: ledger 68.882675 vs live 0.0
+  X [aistocks/titan] shares RBRK: ledger 7.058539 vs live 0.0
+  X [aistocks/titan] shares RGTI: ledger 36.187212 vs live 0.0
+  X [aistocks/titan] shares RXRX: ledger 157.0525 vs live 0.0
+  X [aistocks/titan] shares SMCI: ledger 23.493269 vs live 0.0
+  X [aistocks/titan] shares SMMT: ledger 39.361529 vs live 0.0
+  X [aistocks/titan] shares SNOW: ledger 2.354654 vs live 0.0
+  X [aistocks/titan] shares SOUN: ledger 91.309593 vs live 0.0
+  X [aistocks/titan] shares SPCX: ledger 3.985851 vs live 0.0
+  X [aistocks/titan] shares TSLA: ledger 5.866999 vs live 0.0
+  X [aistocks/titan] shares UPST: ledger 18.130159 vs live 0.0
+  X [aistocks/titan] shares XNDU: ledger 53.969931 vs live 0.0
+  X [aistocks/titan] shares ZS: ledger 4.132689 vs live 0.0
+  X [bitbot13/bot13] cash: ledger 0.00 vs live 50000.00 (diff -50000.00)
+  X [bitbot13/bot13] total: ledger 0.00 vs live 50000.00 (diff -50000.00)
+  X [bitbot13/bot13] shares SHIB: ledger 13305792533.593897 vs live 0.0
+  X [bitbot13/oracle] cash: ledger 0.00 vs live 50000.00 (diff -50000.00)
+  X [bitbot13/oracle] total: ledger 0.00 vs live 50000.00 (diff -50000.00)
+  X [bitbot13/oracle] shares ARB: ledger 69188.621078 vs live 0.0
+  X [bitbot13/oracle] shares BCH: ledger 28.609111 vs live 0.0
+  X [bitbot13/oracle] shares EGLD: ledger 4191.626784 vs live 0.0
+  X [bitbot13/oracle] shares PENDLE: ledger 9003.646187 vs live 0.0
+  X [bitbot13/oracle] shares UNI: ledger 3156.959665 vs live 0.0
+  X [bitbot13/wizard] cash: ledger 0.00 vs live 50000.00 (diff -50000.00)
+  X [bitbot13/wizard] total: ledger 0.00 vs live 50000.00 (diff -50000.00)
+  X [bitbot13/wizard] shares INJ: ledger 1960.374371 vs live 0.0
+  X [bitbot13/wizard] shares NEAR: ledger 8302.521534 vs live 0.0
+  X [bitbot13/wizard] shares TON: ledger 1305999.587707 vs live 0.0
+  X [bitbot13/wizard] shares WLD: ledger 24901.087548 vs live 0.0
+  X [bitbot13/wizard] shares XLM: ledger 29411.450754 vs live 0.0
+  X [bitbot13/equalizer] cash: ledger 0.00 vs live 50000.00 (diff -50000.00)
+  X [bitbot13/equalizer] total: ledger 0.00 vs live 50000.00 (diff -50000.00)
+  X [bitbot13/equalizer] shares AAVE: ledger 11.058277 vs live 0.0
+  X [bitbot13/equalizer] shares ADA: ledger 5903.187494 vs live 0.0
+  X [bitbot13/equalizer] shares ALGO: ledger 11764.705759 vs live 0.0
+  X [bitbot13/equalizer] shares APT: ledger 1595.405231 vs live 0.0
+  X [bitbot13/equalizer] shares ARB: ledger 11614.402241 vs live 0.0
+  X [bitbot13/equalizer] shares ATOM: ledger 640.204851 vs live 0.0
+  X [bitbot13/equalizer] shares AVAX: ledger 148.58841 vs live 0.0
+  X [bitbot13/equalizer] shares BCH: ledger 4.211058 vs live 0.0
+  X [bitbot13/equalizer] shares BNB: ledger 1.755834 vs live 0.0
+  X [bitbot13/equalizer] shares BTC: ledger 0.015947 vs live 0.0
+  X [bitbot13/equalizer] shares CRV: ledger 4990.020088 vs live 0.0
+  X [bitbot13/equalizer] shares DOGE: ledger 13817.880302 vs live 0.0
+  X [bitbot13/equalizer] shares DOT: ledger 1206.272623 vs live 0.0
+  X [bitbot13/equalizer] shares EGLD: ledger 330.033006 vs live 0.0
+  X [bitbot13/equalizer] shares ETC: ledger 142.653348 vs live 0.0
+  X [bitbot13/equalizer] shares ETH: ledger 0.573256 vs live 0.0
+  X [bitbot13/equalizer] shares FET: ledger 6253.908899 vs live 0.0
+  X [bitbot13/equalizer] shares FIL: ledger 1291.989682 vs live 0.0
+  X [bitbot13/equalizer] shares FLOKI: ledger 43859647.571454 vs live 0.0
+  X [bitbot13/equalizer] shares HBAR: ledger 14210.600385 vs live 0.0
+  X [bitbot13/equalizer] shares ICP: ledger 440.917129 vs live 0.0
+  X [bitbot13/equalizer] shares INJ: ledger 204.750212 vs live 0.0
+  X [bitbot13/equalizer] shares JUP: ledger 83884121.64572 vs live 0.0
+  X [bitbot13/equalizer] shares KAS: ledger 34303.303123 vs live 0.0
+  X [bitbot13/equalizer] shares LINK: ledger 129.332646 vs live 0.0
+  X [bitbot13/equalizer] shares LTC: ledger 22.722109 vs live 0.0
+  X [bitbot13/equalizer] shares MANTA: ledger 17459.292733 vs live 0.0
+  X [bitbot13/equalizer] shares MKR: ledger 0.725112 vs live 0.0
+  X [bitbot13/equalizer] shares NEAR: ledger 520.291349 vs live 0.0
+  X [bitbot13/equalizer] shares NOT: ledger 2599323.184952 vs live 0.0
+  X [bitbot13/equalizer] shares ONDO: ledger 3165.558742 vs live 0.0
+  X [bitbot13/equalizer] shares OP: ledger 9708.737853 vs live 0.0
+  X [bitbot13/equalizer] shares PENDLE: ledger 640.614995 vs live 0.0
+  X [bitbot13/equalizer] shares PEPE: ledger 383141775.602386 vs live 0.0
+  X [bitbot13/equalizer] shares QNT: ledger 15.089785 vs live 0.0
+  X [bitbot13/equalizer] shares RENDER: ledger 642.673524 vs live 0.0
+  X [bitbot13/equalizer] shares RUNE: ledger 2567.35977 vs live 0.0
+  X [bitbot13/equalizer] shares SEI: ledger 20872.468721 vs live 0.0
+  X [bitbot13/equalizer] shares SHIB: ledger 233644848.238917 vs live 0.0
+  X [bitbot13/equalizer] shares SOL: ledger 12.846866 vs live 0.0
+  X [bitbot13/equalizer] shares SUI: ledger 1390.047284 vs live 0.0
+  X [bitbot13/equalizer] shares THETA: ledger 7295.498793 vs live 0.0
+  X [bitbot13/equalizer] shares TON: ledger 136404.401383 vs live 0.0
+  X [bitbot13/equalizer] shares TRX: ledger 3025.718274 vs live 0.0
+  X [bitbot13/equalizer] shares UNI: ledger 300.842369 vs live 0.0
+  X [bitbot13/equalizer] shares VET: ledger 211864.402987 vs live 0.0
+  X [bitbot13/equalizer] shares WIF: ledger 6289.308398 vs live 0.0
+  X [bitbot13/equalizer] shares WLD: ledger 2600.780255 vs live 0.0
+  X [bitbot13/equalizer] shares XLM: ledger 5529.352742 vs live 0.0
+  X [bitbot13/equalizer] shares XRP: ledger 911.826427 vs live 0.0
+  X [bitbot13/titan] cash: ledger 0.00 vs live 50000.00 (diff -50000.00)
+  X [bitbot13/titan] total: ledger 0.00 vs live 50000.00 (diff -50000.00)
+  X [bitbot13/titan] shares AAVE: ledger 6.911423 vs live 0.0
+  X [bitbot13/titan] shares ADA: ledger 14757.968734 vs live 0.0
+  X [bitbot13/titan] shares ALGO: ledger 7352.941099 vs live 0.0
+  X [bitbot13/titan] shares APT: ledger 997.12827 vs live 0.0
+  X [bitbot13/titan] shares ARB: ledger 7259.001401 vs live 0.0
+  X [bitbot13/titan] shares ATOM: ledger 400.128032 vs live 0.0
+  X [bitbot13/titan] shares AVAX: ledger 371.471024 vs live 0.0
+  X [bitbot13/titan] shares BCH: ledger 2.631911 vs live 0.0
+  X [bitbot13/titan] shares BNB: ledger 4.389584 vs live 0.0
+  X [bitbot13/titan] shares BTC: ledger 0.039868 vs live 0.0
+  X [bitbot13/titan] shares CRV: ledger 3118.762555 vs live 0.0
+  X [bitbot13/titan] shares DOGE: ledger 34544.700755 vs live 0.0
+  X [bitbot13/titan] shares DOT: ledger 753.920389 vs live 0.0
+  X [bitbot13/titan] shares EGLD: ledger 206.270629 vs live 0.0
+  X [bitbot13/titan] shares ETC: ledger 89.158342 vs live 0.0
+  X [bitbot13/titan] shares ETH: ledger 1.433141 vs live 0.0
+  X [bitbot13/titan] shares FET: ledger 3908.693062 vs live 0.0
+  X [bitbot13/titan] shares FIL: ledger 807.493551 vs live 0.0
+  X [bitbot13/titan] shares FLOKI: ledger 27412279.732159 vs live 0.0
+  X [bitbot13/titan] shares HBAR: ledger 8881.625241 vs live 0.0
+  X [bitbot13/titan] shares ICP: ledger 275.573206 vs live 0.0
+  X [bitbot13/titan] shares INJ: ledger 127.968883 vs live 0.0
+  X [bitbot13/titan] shares JUP: ledger 52427576.028575 vs live 0.0
+  X [bitbot13/titan] shares KAS: ledger 21439.564452 vs live 0.0
+  X [bitbot13/titan] shares LINK: ledger 80.832904 vs live 0.0
+  X [bitbot13/titan] shares LTC: ledger 14.201318 vs live 0.0
+  X [bitbot13/titan] shares MANTA: ledger 10912.057958 vs live 0.0
+  X [bitbot13/titan] shares MKR: ledger 0.453195 vs live 0.0
+  X [bitbot13/titan] shares NEAR: ledger 325.182093 vs live 0.0
+  X [bitbot13/titan] shares NOT: ledger 1624576.990595 vs live 0.0
+  X [bitbot13/titan] shares ONDO: ledger 1978.474214 vs live 0.0
+  X [bitbot13/titan] shares OP: ledger 6067.961158 vs live 0.0
+  X [bitbot13/titan] shares PENDLE: ledger 400.384372 vs live 0.0
+  X [bitbot13/titan] shares PEPE: ledger 239463609.751491 vs live 0.0
+  X [bitbot13/titan] shares QNT: ledger 9.431116 vs live 0.0
+  X [bitbot13/titan] shares RENDER: ledger 401.670953 vs live 0.0
+  X [bitbot13/titan] shares RUNE: ledger 1604.599856 vs live 0.0
+  X [bitbot13/titan] shares SEI: ledger 13045.292951 vs live 0.0
+  X [bitbot13/titan] shares SHIB: ledger 146028030.149323 vs live 0.0
+  X [bitbot13/titan] shares SOL: ledger 32.117165 vs live 0.0
+  X [bitbot13/titan] shares SUI: ledger 868.779552 vs live 0.0
+  X [bitbot13/titan] shares THETA: ledger 4559.686746 vs live 0.0
+  X [bitbot13/titan] shares TON: ledger 341011.003457 vs live 0.0
+  X [bitbot13/titan] shares TRX: ledger 7564.295686 vs live 0.0
+  X [bitbot13/titan] shares UNI: ledger 188.026481 vs live 0.0
+  X [bitbot13/titan] shares VET: ledger 132415.251867 vs live 0.0
+  X [bitbot13/titan] shares WIF: ledger 3930.817749 vs live 0.0
+  X [bitbot13/titan] shares WLD: ledger 1625.487659 vs live 0.0
+  X [bitbot13/titan] shares XLM: ledger 3455.845464 vs live 0.0
+  X [bitbot13/titan] shares XRP: ledger 2279.566068 vs live 0.0
+
+Each line is either a shadow-ledger bug (fix the ledger) or a live-engine
+bug the ledger caught (fix the engine). Truth = real fill prices.
+==========================================================================
