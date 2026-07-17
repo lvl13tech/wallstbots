@@ -564,6 +564,172 @@ def resolve_edge_score(prev_strategy, fresh_proj, picks, today_iso, session_ende
     return display, [round(x, 2) for x in samples], last_set
 
 
+def _run_open_market(cfg, universe, prices, prev_closes, hist_data, intraday_data,
+                     starting_capital, today_iso, prev_strategy=None, atr_scale=1.0):
+    """BOT13 OPEN-MARKET EDGE v1 — THE ONE DECISION PIPELINE, ALL PLATFORMS
+    (owner-defined 2026-07-16; adopted platform-wide 2026-07-17, pre-reset).
+
+    THE OWNER'S DEFINITION GOVERNS: the Projected Edge Score is the return BOT13
+    projects it can STILL earn from here today. At or under proj_threshold (1.74%)
+    it sits the day out. Movers that already spent their move are REJECTED by the
+    STILL-IN-PLAY test instead of shrinking the universe:
+      * FADED        — price below 90% of today's high
+      * STALLED      — latest bar below the prior bar (buyers gone quiet)
+      * OVERSTRETCHED— day move > 4x the name's own ATR14 (a gap, not a trend)
+    Then gold sizing (dampening, top 5, cfg weight clamps) and the forward edge:
+    edge = sum(weight x 0.5 x pick's own ATR14%). Opening read: no first decision in
+    the first 15 minutes after session start. Entries at LIVE prices (copy-trade law).
+    intraday_data: {sym:{"closes":[...]}} bars if the caller has them (crypto passes
+    hourly bars); equity callers pass None and the shortlist's 15-min bars are
+    fetched here (top 40 only — tiny load)."""
+    now        = et_now()
+    phase      = session_phase(cfg)
+    time_label = f"{now.hour}:{now.minute:02d} {'AM' if now.hour < 12 else 'PM'}"
+
+    def _ret(decision, reason, action, detail, proj=0.0, positions=None, picks=None):
+        entry = {"time": time_label, "phase": phase.upper(), "action": action, "detail": detail}
+        slog = _append_log(prev_strategy, today_iso, entry)
+        return decision, positions or [], picks or [], reason, slog, round(float(proj or 0.0), 2)
+
+    # -- opening read: the in-play test needs real tape; skip the first 15 minutes --
+    sh, sm = cfg["session_start"]
+    first_ok = sh * 60 + sm + 15
+    already_decided = bool(prev_strategy and prev_strategy.get("day") == today_iso
+                           and prev_strategy.get("picks"))
+    if not already_decided and (now.hour * 60 + now.minute) < first_ok:
+        return _ret("HOLD", f"Opening read — BOT13 watches the first 15 minutes before deciding. "
+                            f"First decision at {first_ok//60}:{first_ok%60:02d} ET.",
+                    "OPENING READ", "Waiting for real tape before the first decision.")
+
+    # -- day moves + breadth veto (owner-restored 2026-07-13) ------------------------
+    day, n_red, n_priced = {}, 0, 0
+    for s in universe:
+        p, pc = prices.get(s, 0), prev_closes.get(s, 0)
+        if p <= 0 or pc <= 0:
+            continue
+        pct = (p / pc - 1) * 100
+        if abs(pct) > cfg.get("sane_move_cap_pct", 40.0):
+            continue
+        day[s] = pct
+        n_priced += 1
+        if pct <= -2.0:
+            n_red += 1
+    if not n_priced:
+        return _ret("CASH", "CASH — no clean prices this session.", "CASH", "No prices.")
+    if n_red / n_priced > 0.33:
+        r = (f"CASH — broad selling pressure ({int(n_red/n_priced*100)}% of the universe "
+             "down >2%). Protecting capital.")
+        return _ret("CASH", r, "CASH — MARKET HEALTH FAIL", r)
+
+    # -- entry hurdle (gold ATR rule) ------------------------------------------------
+    hurdle = 1.0
+    if cfg.get("atr_volatility_cap", 0) > 0 and hist_data:
+        atrs = [compute_atr_pct((hist_data.get(s) or {}).get("closes", []))
+                for s in universe if len((hist_data.get(s) or {}).get("closes", [])) >= 5]
+        if atrs and sum(atrs) / len(atrs) > cfg["atr_volatility_cap"]:
+            hurdle = cfg["atr_high_threshold"]
+
+    movers = sorted(((s, p) for s, p in day.items() if p >= hurdle), key=lambda x: -x[1])[:40]
+    if len(movers) < cfg["min_picks"]:
+        r = f"CASH — only {len(movers)} name(s) cleared the {hurdle:g}% hurdle. Sitting out."
+        return _ret("CASH", r, "CASH — INSUFFICIENT BREADTH", r)
+
+    # -- STILL-IN-PLAY test (intraday bars) ------------------------------------------
+    bars_map = {}
+    if intraday_data:
+        bars_map = {s: (intraday_data.get(s) or {}).get("closes") or [] for s, _ in movers}
+    else:
+        try:
+            import yfinance as yf
+            df = yf.download([s for s, _ in movers], period="1d", interval="15m",
+                             progress=False, group_by="ticker", threads=True, auto_adjust=True)
+            for s, _ in movers:
+                try:
+                    sub = df[s].dropna() if len(movers) > 1 else df.dropna()
+                    bars_map[s] = [float(x) for x in sub["Close"]]
+                except Exception:
+                    bars_map[s] = []
+        except Exception:
+            bars_map = {}
+    survivors, rej = [], {"faded": 0, "stalled": 0, "stretched": 0, "nodata": 0}
+    for s, pct in movers:
+        bars = (bars_map.get(s) or [])[-26:]          # today's tape (or latest bars)
+        if len(bars) < 2:
+            rej["nodata"] += 1; continue
+        day_high, last, prev_bar = max(bars), bars[-1], bars[-2]
+        # atr_scale converts intraday-bar ATR to daily terms when the caller's
+        # history is hourly (crypto: sqrt(24) ≈ 4.9). Equity passes daily bars, scale 1.
+        hcloses = (hist_data.get(s) or {}).get("closes", []) if hist_data else []
+        # "normal range" must be measured BEFORE today's move — otherwise the very
+        # spike being tested inflates the ATR and every gap looks normal. Daily
+        # history: drop the latest bar. Hourly history (crypto): drop the last 24.
+        prior = hcloses[:-1] if atr_scale == 1.0 else hcloses[:-24]
+        if len(prior) < 15:
+            # can't measure the name's normal range -> can't honestly judge
+            # "still in play" or project a forward return. Reject, never guess.
+            rej["nodata"] += 1; continue
+        atrp = compute_atr_pct(prior) * atr_scale
+        if last < 0.90 * day_high:
+            rej["faded"] += 1; continue
+        if last < prev_bar:
+            rej["stalled"] += 1; continue
+        if atrp > 0 and pct > 4.0 * atrp:
+            rej["stretched"] += 1; continue
+        survivors.append((s, pct, atrp or 1.0, last))
+    n_rej = sum(rej.values())
+    if len(survivors) < cfg["min_picks"]:
+        r = (f"CASH — {len(movers)} strong movers found, but only {len(survivors)} still in play "
+             f"(rejected {rej['faded']} faded, {rej['stalled']} stalled, {rej['stretched']} "
+             "overstretched). A move already taken can't be copied. Sitting out.")
+        return _ret("CASH", r, "CASH — NOTHING STILL IN PLAY", r)
+
+    # -- gold sizing + THE OWNER'S FORWARD EDGE ---------------------------------------
+    scored = sorted(((s, p, p * (0.55 if p > 8 else 0.80 if p > 5 else 1.0), a, px)
+                     for s, p, a, px in survivors), key=lambda x: -x[2])
+    top = scored[:5]
+    tot = sum(x[2] for x in top)
+    raw = [x[2] / tot for x in top]
+    cl  = [max(cfg["weight_min"], min(cfg["weight_max"], w)) for w in raw]
+    weights = [c / sum(cl) for c in cl]
+    proj = round(sum(w * (0.5 * x[3]) for x, w in zip(top, weights)), 2)
+    if proj <= cfg["proj_threshold"]:
+        r = (f"HOLD — projected remaining return {proj:.2f}% ≤ {cfg['proj_threshold']}% threshold. "
+             f"{len(survivors)} names still in play, but not enough left in the tank. "
+             "No edge, no trade, no risk.")
+        return _ret("HOLD", r, f"HOLD — INSUFFICIENT EDGE ({proj:.2f}%)", r, proj)
+
+    stop_display, target_pct = cfg["stop_display"], cfg["target_pct"]
+    positions, picks = [], []
+    for (s, pct, strength, atrp, last), w in zip(top, weights):
+        entry  = float(last) if last > 0 else float(prices.get(s, 0))   # LIVE fill
+        alloc  = starting_capital * w
+        shares = alloc / entry if entry > 0 else 0
+        positions.append({
+            "symbol": s, "shares": round(shares, 6), "entry_price": round(entry, 4),
+            "current_price": round(entry, 4), "cost_basis": round(alloc, 2),
+            "price": round(entry, 4), "value": round(shares * entry, 2),
+            "pnl": 0.0, "pnl_pct": 0.0, "day_pnl": 0.0, "day_pct": round(pct, 2),
+            "stop_pct": -stop_display, "target_pct": target_pct,
+            "entry_time": now.isoformat(timespec="seconds"),
+            "stop_triggered": False, "exit_reason": None,
+        })
+        picks.append({
+            "symbol": s, "weight": round(w, 4), "score": round(strength * 10, 1),
+            "rationale": (f"{s}: up {pct:+.2f}% and STILL IN PLAY — holding its highs, buyers "
+                          f"active, {pct/atrp:.1f}x its normal range. Projected {0.5*atrp:.2f}% "
+                          f"more from here — {w*100:.0f}% allocation (${alloc:,.0f}). "
+                          f"Stop: -{stop_display}% | Target: +{target_pct}%."),
+        })
+    r = (f"Deployed into {len(top)} names still in play — projected {proj:.2f}% more from here "
+         f"(cleared the {cfg['proj_threshold']}% bar). Screened {n_priced:,} names, {len(movers)} "
+         f"strong movers, rejected {n_rej} that had already spent their move "
+         f"({rej['faded']} faded, {rej['stalled']} stalled, {rej['stretched']} overstretched). "
+         f"Stop -{stop_display}% | Target +{target_pct}%.")
+    return _ret("TRADE", r, f"ENTERED {len(top)} positions",
+                f"{', '.join(f'{x[0]} {x[1]:+.2f}%' for x in top)}. Projected +{proj:.2f}% remaining.",
+                proj, positions, picks)
+
+
 def run_bot13_equity(
     cfg, universe, prices, prev_closes, hist_data,
     starting_capital, today_iso, prev_strategy=None,
@@ -586,6 +752,13 @@ def run_bot13_equity(
     -------
     (decision, positions, picks, rationale, session_log, projected_return)
     """
+    # >>> OPEN-MARKET EDGE v1 IS THE ACTIVE PIPELINE (owner order 2026-07-17,
+    # all platforms, pre-reset). Everything below this return is the legacy
+    # momentum body — DEAD CODE kept for reference only. Do not resurrect it
+    # without an explicit owner order.
+    return _run_open_market(cfg, universe, prices, prev_closes, hist_data, None,
+                            starting_capital, today_iso, prev_strategy)
+
     phase      = session_phase(cfg)
     now        = et_now()
     time_label = f"{now.hour}:{now.minute:02d} {'AM' if now.hour < 12 else 'PM'}"
@@ -827,6 +1000,15 @@ def run_bot13_crypto(
     -------
     (decision, positions, picks, rationale, session_log, projected_return)
     """
+    # >>> OPEN-MARKET EDGE v1 IS THE ACTIVE PIPELINE (owner order 2026-07-17,
+    # all platforms, pre-reset). Crypto passes its hourly bars as the intraday
+    # tape for the still-in-play test. Legacy composite body below is DEAD CODE
+    # kept for reference only.
+    return _run_open_market(cfg, universe, prices, prev_closes,
+                            intraday_data or {}, intraday_data,
+                            starting_capital, today_iso, prev_strategy,
+                            atr_scale=4.9)   # hourly bars -> daily ATR (sqrt(24))
+
     now_iso    = et_now().isoformat(timespec="seconds")
     now        = et_now()
     time_label = f"{now.hour}:{now.minute:02d} {'AM' if now.hour < 12 else 'PM'}"

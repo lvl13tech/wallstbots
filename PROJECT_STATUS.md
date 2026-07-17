@@ -868,6 +868,22 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+### 2026-07-17 — OPEN-MARKET EDGE v1 ADOPTED PLATFORM-WIDE (owner order, pre-reset)
+- Owner: no paying members, full reset imminent — no reason to stage. The owner-defined
+  pipeline is now THE shared engine decision for equity AND crypto (_run_open_market in
+  bot13_engine.py; run_bot13_equity/run_bot13_crypto delegate to it, legacy bodies kept
+  as dead reference code). Zero call-site changes — all 3 product sites + members +
+  bot13.tech (gold copy re-synced, md5 ea9ccdf8) upgraded at once.
+- THE DEFINITION (owner's): Projected Edge Score = the return BOT13 projects it can
+  STILL earn from here today; ≤1.74% = sit out. Pipeline: opening read (first 15 min),
+  breadth veto, full scan, STILL-IN-PLAY test on top 40 movers (reject faded <90% of
+  day high / stalled last bar / overstretched >4x own PRIOR ATR — spike excluded from
+  its own baseline), gold sizing, edge = Σ w × 0.5 × own daily ATR%. Crypto uses hourly
+  bars with sqrt(24) ATR scaling. Unit-tested: faded/stalled/stretched rejected on both
+  wrappers; genuine in-play names picked; edges forward-looking (1.5-3.2% in tests).
+- FIRST LIVE SESSIONS: next market day, all platforms. Owner resets everything to zero
+  before launch, so any surprises are correctable same-day.
+
 ### 2026-07-16 (night) — members-area referral fixes, all 3 dashboards
 - Invite links (personal + admin comp codes) now use window.location.origin — they
   were hardcoded to wallstbots.tech on bitbot13 and aistocks, so those members were
