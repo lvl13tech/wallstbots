@@ -1,48 +1,49 @@
 ==========================================================================
-  LEDGER SHADOW COMPARISON  --  2026-07-20 01:06 ET
+  LEDGER SHADOW COMPARISON  --  2026-07-20 18:10 ET
   (shadow ledger derived numbers vs live displayed numbers)
 ==========================================================================
 
-## wallstbots  (last_refresh=2026-07-17T21:36:12)
-  [bot13] DIFF fills+0 (ledger n=16) | ledger total 62659.88 vs live 55000.00
-  [oracle] DIFF fills+0 (ledger n=0) | ledger total 8838.81 vs live 54967.42
-  [wizard] DIFF fills+0 (ledger n=0) | ledger total 20188.20 vs live 55864.80
-  [equalizer] DIFF fills+0 (ledger n=0) | ledger total 53389.86 vs live 55219.02
-  [titan] DIFF fills+0 (ledger n=0) | ledger total 53923.75 vs live 55319.68
+## wallstbots  (last_refresh=2026-07-20T21:49:43)
+  [bot13] DIFF fills+12 (ledger n=28) | ledger total 62406.73 vs live 54746.85
+  [oracle] DIFF fills+0 (ledger n=0) | ledger total 8896.59 vs live 54904.09
+  [wizard] DIFF fills+0 (ledger n=0) | ledger total 19701.92 vs live 54679.55
+  [equalizer] DIFF fills+0 (ledger n=0) | ledger total 53113.45 vs live 54928.47
+  [titan] DIFF fills+0 (ledger n=0) | ledger total 53705.53 vs live 55086.75
 
-## aistocks  (last_refresh=2026-07-17T21:29:44)
-  [bot13] DIFF fills+0 (ledger n=16) | ledger total 58967.87 vs live 49532.12
-  [oracle] DIFF fills+0 (ledger n=0) | ledger total 17765.57 vs live 50911.46
-  [wizard] DIFF fills+0 (ledger n=0) | ledger total 21060.45 vs live 51508.17
-  [equalizer] DIFF fills+0 (ledger n=0) | ledger total 45113.84 vs live 50899.16
-  [titan] DIFF fills+0 (ledger n=0) | ledger total 46026.45 vs live 50761.66
+## aistocks  (last_refresh=2026-07-20T21:47:37)
+  [bot13] WRITE REFUSED (nothing ingested): 80be2428526ae85b: cash would go negative (-9957.6340) after BUY CRDO -- refusing entire batch
+  [oracle] DIFF fills+0 (ledger n=0) | ledger total 8711.57 vs live 50483.03
+  [wizard] DIFF fills+0 (ledger n=0) | ledger total 21027.90 vs live 51261.07
+  [equalizer] DIFF fills+0 (ledger n=0) | ledger total 45115.68 vs live 50896.69
+  [titan] DIFF fills+0 (ledger n=0) | ledger total 46147.69 vs live 50883.15
 
-## bitbot13  (last_refresh=2026-07-20T03:47:23)
-  [bot13] WRITE REFUSED (nothing ingested): 5c539ab8cf968f19: cash would go negative (-47750.2798) after BUY MANTA -- refusing entire batch
-  [oracle] DIFF fills+0 (ledger n=0) | ledger total 33333.08 vs live 49335.36
-  [wizard] DIFF fills+0 (ledger n=0) | ledger total 50515.11 vs live 49762.62
-  [equalizer] DIFF fills+0 (ledger n=0) | ledger total 70857.44 vs live 50340.23
-  [titan] DIFF fills+0 (ledger n=0) | ledger total 63177.43 vs live 50658.03
+## bitbot13  (last_refresh=2026-07-20T22:01:19)
+  [bot13] WRITE REFUSED (nothing ingested): 5fc2960510e7e62a: cash would go negative (-9434.3618) after BUY AVAX -- refusing entire batch
+  [oracle] DIFF fills+0 (ledger n=0) | ledger total 24593.93 vs live 49033.44
+  [wizard] DIFF fills+0 (ledger n=0) | ledger total 51539.47 vs live 50750.84
+  [equalizer] DIFF fills+0 (ledger n=0) | ledger total 71836.03 vs live 50978.25
+  [titan] DIFF fills+0 (ledger n=0) | ledger total 63893.95 vs live 51164.25
 
 ==========================================================================
-WRITE REFUSALS (1):
-  X [bitbot13/bot13] REFUSED: 5c539ab8cf968f19: cash would go negative (-47750.2798) after BUY MANTA -- refusing entire batch
+WRITE REFUSALS (2):
+  X [aistocks/bot13] REFUSED: 80be2428526ae85b: cash would go negative (-9957.6340) after BUY CRDO -- refusing entire batch
+  X [bitbot13/bot13] REFUSED: 5fc2960510e7e62a: cash would go negative (-9434.3618) after BUY AVAX -- refusing entire batch
 DIFFERENCES (393):
-  X [wallstbots/bot13] cash: ledger 62659.88 vs live 55000.00 (diff +7659.88)
-  X [wallstbots/bot13] total: ledger 62659.88 vs live 55000.00 (diff +7659.88)
-  X [wallstbots/oracle] pos_val: ledger 8838.81 vs live 54967.42 (diff -46128.61)
-  X [wallstbots/oracle] total: ledger 8838.81 vs live 54967.42 (diff -46128.61)
-  X [wallstbots/oracle] shares AAPL: ledger 0.0 vs live 25.909256
+  X [wallstbots/bot13] cash: ledger 62406.73 vs live 54746.85 (diff +7659.88)
+  X [wallstbots/bot13] total: ledger 62406.73 vs live 54746.85 (diff +7659.88)
+  X [wallstbots/oracle] pos_val: ledger 8896.59 vs live 54904.09 (diff -46007.50)
+  X [wallstbots/oracle] total: ledger 8896.59 vs live 54904.09 (diff -46007.50)
   X [wallstbots/oracle] shares AFRM: ledger 162.996762 vs live 0.0
-  X [wallstbots/oracle] shares COP: ledger 0.0 vs live 79.068424
-  X [wallstbots/oracle] shares PLD: ledger 0.0 vs live 78.943091
+  X [wallstbots/oracle] shares COP: ledger 0.0 vs live 82.537181
+  X [wallstbots/oracle] shares META: ledger 0.0 vs live 14.979724
+  X [wallstbots/oracle] shares MSFT: ledger 0.0 vs live 27.995757
   X [wallstbots/oracle] shares RBRK: ledger 125.634815 vs live 0.0
   X [wallstbots/oracle] shares RDDT: ledger 62.111256 vs live 0.0
   X [wallstbots/oracle] shares RTX: ledger 43.661489 vs live 0.0
-  X [wallstbots/oracle] shares V: ledger 0.0 vs live 26.770365
-  X [wallstbots/oracle] shares WELL: ledger 36.336334 vs live 65.064116
-  X [wallstbots/wizard] pos_val: ledger 20188.20 vs live 55864.80 (diff -35676.60)
-  X [wallstbots/wizard] total: ledger 20188.20 vs live 55864.80 (diff -35676.60)
+  X [wallstbots/oracle] shares WELL: ledger 36.336334 vs live 60.036527
+  X [wallstbots/oracle] shares XOM: ledger 0.0 vs live 65.514906
+  X [wallstbots/wizard] pos_val: ledger 19701.92 vs live 54679.55 (diff -34977.63)
+  X [wallstbots/wizard] total: ledger 19701.92 vs live 54679.55 (diff -34977.63)
   X [wallstbots/wizard] shares AAPL: ledger 0.0 vs live 19.615582
   X [wallstbots/wizard] shares AFRM: ledger 75.606917 vs live 0.0
   X [wallstbots/wizard] shares ALAB: ledger 26.670753 vs live 0.0
@@ -56,8 +57,8 @@ DIFFERENCES (393):
   X [wallstbots/wizard] shares UNH: ledger 8.522563 vs live 8.500132
   X [wallstbots/wizard] shares V: ledger 0.0 vs live 9.979085
   X [wallstbots/wizard] shares WELL: ledger 0.0 vs live 26.970715
-  X [wallstbots/equalizer] pos_val: ledger 53389.86 vs live 55219.02 (diff -1829.16)
-  X [wallstbots/equalizer] total: ledger 53389.86 vs live 55219.02 (diff -1829.16)
+  X [wallstbots/equalizer] pos_val: ledger 53113.45 vs live 54928.46 (diff -1815.01)
+  X [wallstbots/equalizer] total: ledger 53113.45 vs live 54928.47 (diff -1815.02)
   X [wallstbots/equalizer] shares AAPL: ledger 3.19048 vs live 3.011685
   X [wallstbots/equalizer] shares AFRM: ledger 11.608335 vs live 13.077007
   X [wallstbots/equalizer] shares ALAB: ledger 2.456942 vs live 3.28877
@@ -113,8 +114,8 @@ DIFFERENCES (393):
   X [wallstbots/equalizer] shares WELL: ledger 4.277617 vs live 4.140958
   X [wallstbots/equalizer] shares WMT: ledger 8.896797 vs live 8.549201
   X [wallstbots/equalizer] shares XOM: ledger 7.194762 vs live 6.688963
-  X [wallstbots/titan] pos_val: ledger 53923.69 vs live 55319.63 (diff -1395.94)
-  X [wallstbots/titan] total: ledger 53923.75 vs live 55319.68 (diff -1395.93)
+  X [wallstbots/titan] pos_val: ledger 53705.47 vs live 55086.71 (diff -1381.24)
+  X [wallstbots/titan] total: ledger 53705.53 vs live 55086.75 (diff -1381.22)
   X [wallstbots/titan] shares AAPL: ledger 8.773819 vs live 8.282135
   X [wallstbots/titan] shares AFRM: ledger 7.093969 vs live 7.991489
   X [wallstbots/titan] shares ALAB: ledger 1.501462 vs live 2.009801
@@ -170,20 +171,19 @@ DIFFERENCES (393):
   X [wallstbots/titan] shares WELL: ledger 2.614095 vs live 2.530581
   X [wallstbots/titan] shares WMT: ledger 5.436922 vs live 5.224502
   X [wallstbots/titan] shares XOM: ledger 4.396791 vs live 4.087692
-  X [aistocks/bot13] cash: ledger 58967.87 vs live 49532.12 (diff +9435.75)
-  X [aistocks/bot13] total: ledger 58967.87 vs live 49532.12 (diff +9435.75)
-  X [aistocks/oracle] pos_val: ledger 17765.57 vs live 50911.46 (diff -33145.89)
-  X [aistocks/oracle] total: ledger 17765.57 vs live 50911.46 (diff -33145.89)
+  X [aistocks/oracle] pos_val: ledger 8711.57 vs live 50483.03 (diff -41771.46)
+  X [aistocks/oracle] total: ledger 8711.57 vs live 50483.03 (diff -41771.46)
   X [aistocks/oracle] shares ARQQ: ledger 316.059964 vs live 0.0
-  X [aistocks/oracle] shares CRM: ledger 0.0 vs live 47.139583
+  X [aistocks/oracle] shares CRM: ledger 0.0 vs live 56.342486
   X [aistocks/oracle] shares HQ: ledger 773.283731 vs live 0.0
-  X [aistocks/oracle] shares META: ledger 0.0 vs live 9.624563
-  X [aistocks/oracle] shares OKTA: ledger 58.699369 vs live 90.118352
-  X [aistocks/oracle] shares PANW: ledger 25.088724 vs live 37.632096
-  X [aistocks/oracle] shares PATH: ledger 0.0 vs live 797.268234
+  X [aistocks/oracle] shares NET: ledger 0.0 vs live 38.543207
+  X [aistocks/oracle] shares OKTA: ledger 58.699369 vs live 75.519573
+  X [aistocks/oracle] shares PANW: ledger 25.088724 vs live 0.0
+  X [aistocks/oracle] shares PATH: ledger 0.0 vs live 789.635725
   X [aistocks/oracle] shares RXRX: ledger 1812.672015 vs live 0.0
-  X [aistocks/wizard] pos_val: ledger 21060.43 vs live 51508.15 (diff -30447.72)
-  X [aistocks/wizard] total: ledger 21060.45 vs live 51508.17 (diff -30447.72)
+  X [aistocks/oracle] shares SNOW: ledger 0.0 vs live 34.196631
+  X [aistocks/wizard] pos_val: ledger 21027.88 vs live 51261.05 (diff -30233.17)
+  X [aistocks/wizard] total: ledger 21027.90 vs live 51261.07 (diff -30233.17)
   X [aistocks/wizard] shares ALAB: ledger 24.157406 vs live 0.0
   X [aistocks/wizard] shares AMD: ledger 0.0 vs live 12.366701
   X [aistocks/wizard] shares ARQQ: ledger 275.396516 vs live 0.0
@@ -196,8 +196,8 @@ DIFFERENCES (393):
   X [aistocks/wizard] shares PANW: ledger 16.52333 vs live 28.398334
   X [aistocks/wizard] shares RBRK: ledger 36.960378 vs live 0.0
   X [aistocks/wizard] shares SNOW: ledger 12.329593 vs live 22.481453
-  X [aistocks/equalizer] pos_val: ledger 45113.84 vs live 50899.16 (diff -5785.32)
-  X [aistocks/equalizer] total: ledger 45113.84 vs live 50899.16 (diff -5785.32)
+  X [aistocks/equalizer] pos_val: ledger 45115.68 vs live 50896.69 (diff -5781.01)
+  X [aistocks/equalizer] total: ledger 45115.68 vs live 50896.69 (diff -5781.01)
   X [aistocks/equalizer] shares AI: ledger 106.723586 vs live 113.765643
   X [aistocks/equalizer] shares ALAB: ledger 2.44795 vs live 3.277936
   X [aistocks/equalizer] shares AMD: ledger 1.934779 vs live 2.088598
@@ -248,8 +248,8 @@ DIFFERENCES (393):
   X [aistocks/equalizer] shares UPST: ledger 28.860029 vs live 33.738078
   X [aistocks/equalizer] shares XNDU: ledger 85.910653 vs live 100.200401
   X [aistocks/equalizer] shares ZS: ledger 6.578515 vs live 6.831068
-  X [aistocks/titan] pos_val: ledger 45654.85 vs live 50390.06 (diff -4735.21)
-  X [aistocks/titan] total: ledger 46026.45 vs live 50761.66 (diff -4735.21)
+  X [aistocks/titan] pos_val: ledger 45776.09 vs live 50511.55 (diff -4735.46)
+  X [aistocks/titan] total: ledger 46147.69 vs live 50883.15 (diff -4735.46)
   X [aistocks/titan] shares AI: ledger 67.044824 vs live 71.468714
   X [aistocks/titan] shares ALAB: ledger 1.537827 vs live 2.059232
   X [aistocks/titan] shares AMD: ledger 4.740208 vs live 5.117066
@@ -300,17 +300,18 @@ DIFFERENCES (393):
   X [aistocks/titan] shares UPST: ledger 18.130159 vs live 21.194598
   X [aistocks/titan] shares XNDU: ledger 53.969931 vs live 62.946894
   X [aistocks/titan] shares ZS: ledger 4.132689 vs live 4.291345
-  X [bitbot13/oracle] pos_val: ledger 33333.08 vs live 49335.36 (diff -16002.28)
-  X [bitbot13/oracle] total: ledger 33333.08 vs live 49335.36 (diff -16002.28)
-  X [bitbot13/oracle] shares ARB: ledger 69188.621078 vs live 77703.95892
+  X [bitbot13/oracle] pos_val: ledger 24593.93 vs live 49033.44 (diff -24439.51)
+  X [bitbot13/oracle] total: ledger 24593.93 vs live 49033.44 (diff -24439.51)
+  X [bitbot13/oracle] shares ARB: ledger 69188.621078 vs live 0.0
   X [bitbot13/oracle] shares BCH: ledger 28.609111 vs live 0.0
-  X [bitbot13/oracle] shares EGLD: ledger 4191.626784 vs live 2523.025119
-  X [bitbot13/oracle] shares ETH: ledger 0.0 vs live 4.12773
-  X [bitbot13/oracle] shares ONDO: ledger 0.0 vs live 47516.269719
-  X [bitbot13/oracle] shares PENDLE: ledger 9003.646187 vs live 6660.422399
-  X [bitbot13/oracle] shares UNI: ledger 3156.959665 vs live 0.0
-  X [bitbot13/wizard] pos_val: ledger 50515.11 vs live 49762.62 (diff +752.49)
-  X [bitbot13/wizard] total: ledger 50515.11 vs live 49762.62 (diff +752.49)
+  X [bitbot13/oracle] shares EGLD: ledger 4191.626784 vs live 2616.241046
+  X [bitbot13/oracle] shares INJ: ledger 0.0 vs live 2198.582294
+  X [bitbot13/oracle] shares LTC: ledger 0.0 vs live 170.974663
+  X [bitbot13/oracle] shares PENDLE: ledger 9003.646187 vs live 0.0
+  X [bitbot13/oracle] shares PEPE: ledger 0.0 vs live 3199800311.856966
+  X [bitbot13/oracle] shares UNI: ledger 3156.959665 vs live 3222.951481
+  X [bitbot13/wizard] pos_val: ledger 51539.47 vs live 50750.84 (diff +788.63)
+  X [bitbot13/wizard] total: ledger 51539.47 vs live 50750.84 (diff +788.63)
   X [bitbot13/wizard] shares INJ: ledger 1960.374371 vs live 755.944769
   X [bitbot13/wizard] shares NEAR: ledger 8302.521534 vs live 1957.682711
   X [bitbot13/wizard] shares ONDO: ledger 0.0 vs live 18013.242639
@@ -318,8 +319,8 @@ DIFFERENCES (393):
   X [bitbot13/wizard] shares UNI: ledger 0.0 vs live 1933.895138
   X [bitbot13/wizard] shares WLD: ledger 24901.087548 vs live 29566.903886
   X [bitbot13/wizard] shares XLM: ledger 29411.450754 vs live 61154.524082
-  X [bitbot13/equalizer] pos_val: ledger 70857.44 vs live 50340.21 (diff +20517.23)
-  X [bitbot13/equalizer] total: ledger 70857.44 vs live 50340.23 (diff +20517.21)
+  X [bitbot13/equalizer] pos_val: ledger 71836.03 vs live 50978.24 (diff +20857.79)
+  X [bitbot13/equalizer] total: ledger 71836.03 vs live 50978.25 (diff +20857.78)
   X [bitbot13/equalizer] shares AAVE: ledger 11.058277 vs live 11.071745
   X [bitbot13/equalizer] shares ADA: ledger 5903.187494 vs live 6269.592364
   X [bitbot13/equalizer] shares ALGO: ledger 11764.705759 vs live 12091.898543
@@ -369,8 +370,8 @@ DIFFERENCES (393):
   X [bitbot13/equalizer] shares WLD: ledger 2600.780255 vs live 2641.31008
   X [bitbot13/equalizer] shares XLM: ledger 5529.352742 vs live 5463.137485
   X [bitbot13/equalizer] shares XRP: ledger 911.826427 vs live 929.108963
-  X [bitbot13/titan] pos_val: ledger 63177.43 vs live 50658.03 (diff +12519.40)
-  X [bitbot13/titan] total: ledger 63177.43 vs live 50658.03 (diff +12519.40)
+  X [bitbot13/titan] pos_val: ledger 63893.95 vs live 51164.25 (diff +12729.70)
+  X [bitbot13/titan] total: ledger 63893.95 vs live 51164.25 (diff +12729.70)
   X [bitbot13/titan] shares AAVE: ledger 6.911423 vs live 6.919841
   X [bitbot13/titan] shares ADA: ledger 14757.968734 vs live 15673.98091
   X [bitbot13/titan] shares ALGO: ledger 7352.941099 vs live 7557.436589
