@@ -484,7 +484,12 @@ def build_baseline_positions(universe, prices, prev_closes, original_cost, prev_
             stored = prev_lookup[sym]
             shares      = float(stored.get("shares", 0))
             entry_price = float(stored.get("entry_price", price))
-            cost_basis  = float(stored.get("cost_basis", 0))
+            # LEDGER-DERIVED (owner order 2026-07-21, kills JUP-class bugs for good):
+            # cost basis is NEVER read from a stored aggregate -- it is re-derived from
+            # the immutable receipt pair (shares x entry_price) on every run. A stored
+            # aggregate corrupted once (JUP price-feed glitch) was carried forward
+            # forever; receipt math self-heals it on the next refresh.
+            cost_basis  = round(shares * entry_price, 2) if entry_price > 0 else float(stored.get("cost_basis", 0))
         else:
             # First run for this holding -- set inception values now, at the LIVE price
             # (2026-07-07, Rule 0: a real entry at a real price. The old prev_close entry
@@ -886,7 +891,11 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                 _sh = float(_p.get("shares") or 0)
                 _px = float(prices.get(_p.get("symbol"), _p.get("price") or 0) or 0)
                 _en = float(_p.get("entry_price") or 0)
-                _cb = float(_p.get("cost_basis") or (_sh * _en))
+                # LEDGER-DERIVED (owner order 2026-07-21): cost basis = shares x entry
+                # (the immutable receipt), never the stored aggregate. Self-heals any
+                # historically corrupted cost_basis (the JUP bug) on the next refresh.
+                _cb = round(_sh * _en, 2) if _en > 0 else float(_p.get("cost_basis") or 0)
+                _p["cost_basis"] = _cb
                 _val = round(_sh * _px, 2)
                 _pc = float(prev_closes.get(_p.get("symbol"), _px) or _px)
                 _p["price"]   = _px

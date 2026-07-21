@@ -868,6 +868,26 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+### 2026-07-21 — LEDGER-DERIVED MEMBER MATH + 6DP RECEIPTS + EMAIL TIME GATE (owner order)
+- **Ledger-derived cost basis (kills the JUP bug permanently):** refresh_portfolios.py no
+  longer trusts any stored cost_basis aggregate — it re-derives cost = shares × entry_price
+  (the immutable receipt) on every run, in both build_baseline_positions and the live
+  marking block, and writes the derived value back. The corrupt bitbot13 member JUP row
+  self-heals on the next scheduled refresh; no DB surgery. Same architecture that fixed
+  bot13.tech: derived numbers are computed from receipts, never stored and re-trusted.
+- **6dp receipt precision (shared engine, both platforms):** treasury futures tick in
+  1/64ths; 4dp receipts dropped the 5th decimal so booked P&L no longer re-multiplied from
+  the receipt (bot13 audit: 2 fails, pennies). _price_dp now stores 6dp for everything
+  ≥ $0.01 (8dp below). Gold copy re-synced to bot13.tech (md5 60b37c29). The two 2026-07-21
+  ZN/ZT rows keep their 4dp receipts (money is correct; artifact ages out of the audit window).
+- **Email time gate (pushed earlier today, db89f8b):** open ≥ 9:00 AM ET, stock close
+  ≥ 4:00 PM ET, crypto close ≥ 9:00 PM ET; trade alerts real-time. No more 2–3 AM sends.
+- **Flagged, not changed:** Project/data/ledger_shadow/* scaffold only ever ingested
+  wallstbots/bot13 fills — its daily COMPARE files are garbage-in noise and its workflow
+  commits daily. Recommend retiring the shadow job (owner decision).
+- Known-good: audit_integrity ALL CLEAN pre-change; member fix is read-path only.
+  Untested until next scheduled refresh: JUP self-heal (verify via audit after a refresh).
+
 ### 2026-07-17 — OPEN-MARKET EDGE v1 ADOPTED PLATFORM-WIDE (owner order, pre-reset)
 - Owner: no paying members, full reset imminent — no reason to stage. The owner-defined
   pipeline is now THE shared engine decision for equity AND crypto (_run_open_market in

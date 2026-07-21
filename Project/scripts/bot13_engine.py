@@ -408,9 +408,12 @@ def stamp_and_log(prev_positions, new_positions, trade_log, now_iso, max_entries
 def _price_dp(p):
     """Receipt precision: a recorded price must never lose information (audit
     2026-07-20: SHIB/XEC receipts rounded to $0.0000 by hardcoded 4dp).
-    8dp under 1 cent, 6dp under $1, else 4dp — matches Display Spec v1 storage."""
+    8dp under 1 cent, 6dp under $1, else 6dp — audit 2026-07-21: treasury
+    futures tick in 1/64ths (e.g. 108.65625); 4dp dropped the 5th decimal so
+    receipts no longer re-multiplied to the booked P&L. 6dp everywhere >= $0.01
+    keeps every real fill price fully verifiable from its receipt."""
     p = abs(float(p or 0))
-    return 8 if p < 0.01 else (6 if p < 1 else 4)
+    return 8 if p < 0.01 else 6
 
 
 def reconcile_bot13_log(held_book, real_now, trade_log, today_iso, session_end, prices, now_iso):
