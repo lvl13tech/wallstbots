@@ -405,6 +405,14 @@ def stamp_and_log(prev_positions, new_positions, trade_log, now_iso, max_entries
     return log[-max_entries:]
 
 
+def _price_dp(p):
+    """Receipt precision: a recorded price must never lose information (audit
+    2026-07-20: SHIB/XEC receipts rounded to $0.0000 by hardcoded 4dp).
+    8dp under 1 cent, 6dp under $1, else 4dp — matches Display Spec v1 storage."""
+    p = abs(float(p or 0))
+    return 8 if p < 0.01 else (6 if p < 1 else 4)
+
+
 def reconcile_bot13_log(held_book, real_now, trade_log, today_iso, session_end, prices, now_iso):
     """THE LEDGER IS THE ONLY AUTHORITY (2026-07-16, owner order: "no patch fixes").
 
@@ -454,7 +462,7 @@ def reconcile_bot13_log(held_book, real_now, trade_log, today_iso, session_end, 
             sh    = float(b.get("shares") or 0)
             px    = float(prices.get(s, entry) or entry)
             log.append({"ts": ts, "action": "SELL", "symbol": s, "shares": round(sh, 6),
-                        "price": round(px, 4), "reason": "daily close-out",
+                        "price": round(px, _price_dp(px)), "reason": "daily close-out",
                         "realized": round((px - entry) * sh, 2) if entry else 0.0})
     log = [e for e in log if str(e.get("ts", ""))[:10] == today_iso]   # today-only
 
@@ -473,7 +481,7 @@ def reconcile_bot13_log(held_book, real_now, trade_log, today_iso, session_end, 
             if str(b.get("ts", "")) > str(ts):               # SELL never predates its BUY
                 ts = str(b.get("ts"))
             log.append({"ts": ts, "action": "SELL", "symbol": s, "shares": round(sh, 6),
-                        "price": round(px, 4), "reason": hb.get("exit_reason") or "closed",
+                        "price": round(px, _price_dp(px)), "reason": hb.get("exit_reason") or "closed",
                         "realized": round((px - entry) * sh, 2) if entry else 0.0})
     # BUYs: held now, but the LEDGER shows no open lot.
     for s, p in sorted(now.items()):
@@ -482,7 +490,7 @@ def reconcile_bot13_log(held_book, real_now, trade_log, today_iso, session_end, 
             sh    = float(p.get("shares") or 0)
             ts = p.get("entry_time") or now_iso
             log.append({"ts": ts, "action": "BUY", "symbol": s, "shares": round(sh, 6),
-                        "price": round(entry, 4), "reason": "opened"})
+                        "price": round(entry, _price_dp(entry)), "reason": "opened"})
     return log[-200:], list(real_now or [])
 
 
@@ -705,9 +713,9 @@ def _run_open_market(cfg, universe, prices, prev_closes, hist_data, intraday_dat
         alloc  = starting_capital * w
         shares = alloc / entry if entry > 0 else 0
         positions.append({
-            "symbol": s, "shares": round(shares, 6), "entry_price": round(entry, 4),
-            "current_price": round(entry, 4), "cost_basis": round(alloc, 2),
-            "price": round(entry, 4), "value": round(shares * entry, 2),
+            "symbol": s, "shares": round(shares, 6), "entry_price": round(entry, _price_dp(entry)),
+            "current_price": round(entry, _price_dp(entry)), "cost_basis": round(alloc, 2),
+            "price": round(entry, _price_dp(entry)), "value": round(shares * entry, 2),
             "pnl": 0.0, "pnl_pct": 0.0, "day_pnl": 0.0, "day_pct": round(pct, 2),
             "stop_pct": -stop_display, "target_pct": target_pct,
             "entry_time": now.isoformat(timespec="seconds"),
