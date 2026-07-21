@@ -340,6 +340,23 @@ def run(kind: str = "open", is_weekly: bool = False, is_monthly: bool = False,
         print("[send_emails] No subscribers — done.")
         return
 
+    # ---- EARLIEST-SEND TIME GATE (owner order 2026-07-21) --------------------
+    # The once-per-ET-day markers fire on the FIRST run of the new ET day — and
+    # the 24/7 bitbot13 workflow made that 2-3 AM. Members never get mail in the
+    # middle of the night again: each kind has an earliest ET send time, and the
+    # every-15/30-min crons deliver within minutes of the window opening.
+    #   open         -> 9:00 AM ET (market/day open digest)
+    #   close-stock  -> 4:00 PM ET (after the equity close)
+    #   close-crypto -> 9:00 PM ET (after the crypto close)
+    #   trade        -> not gated (real-time alerts are the product)
+    EARLIEST_ET = {"open": 9 * 60, "close-stock": 16 * 60, "close-crypto": 21 * 60}
+    _now_et = datetime.now(ZoneInfo("America/New_York"))
+    _mins = _now_et.hour * 60 + _now_et.minute
+    if kind in EARLIEST_ET and _mins < EARLIEST_ET[kind] and not FORCE_SEND:
+        h, m = divmod(EARLIEST_ET[kind], 60)
+        print(f"[send_emails] {kind}: {_now_et:%H:%M} ET is before the {h:02d}:{m:02d} ET send window — skipping.")
+        return
+
     # ---- OPEN digest (A weekday / B weekend) --------------------------------
     if kind == "open":
         if weekend_only and not weekend:
