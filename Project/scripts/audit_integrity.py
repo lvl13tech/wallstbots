@@ -432,14 +432,30 @@ for platform, usize in PLATFORMS.items():
         # session end, so it never carries a position across midnight. Therefore every SELL
         # must have a matching prior BUY in the same (today-only) log -- on ALL sites now
         # (the old "crypto carries overnight" WARN exception no longer applies).
-        seen = set()
-        for e in sorted(v.get("trade_log") or [], key=lambda e: str(e.get("ts",""))):
+        # LEDGER SEQUENCE (upgraded after bot13.tech's 2026-07-21 phantom-sell incident:
+        # a stale-state run re-"closed" already-sold lots; the old seen-set check here
+        # could not catch that -- once a symbol had ANY buy, every later phantom sell
+        # passed). Walk the log in time order tracking open QUANTITY per symbol:
+        #   * SELL bigger than the open lot  -> phantom/duplicate close
+        #   * BUY stacked onto an open lot   -> duplicate open
+        # Same-second receipts sort opens-first so an exit stamped with its entry's
+        # ts doesn't false-flag.
+        _lots = {}
+        for e in sorted(v.get("trade_log") or [],
+                        key=lambda e: (str(e.get("ts","")),
+                                       0 if str(e.get("action","")).upper() == "BUY" else 1)):
             act = str(e.get("action","")).upper(); s = e.get("symbol")
-            if act == "BUY": seen.add(s)
-            elif act == "SELL" and s not in seen:
-                FAIL(scope, f"SELL of {s} with no prior BUY in the trade_log "
-                            f"(authoritative ledger should pair every SELL with its BUY)")
-                seen.add(s)  # avoid re-flagging every later rotation of the same symbol
+            q = float(e.get("shares") or e.get("qty") or 0)
+            cur = _lots.get(s, 0.0)
+            eps = max(1e-6, q * 1e-3)
+            if act == "BUY":
+                if cur > eps:
+                    FAIL(scope, f"BUY of {s} x{q:g} onto an already-open lot ({cur:g}) -- duplicate open (ledger law)")
+                _lots[s] = cur + q
+            elif act == "SELL":
+                if cur < q - eps:
+                    FAIL(scope, f"SELL of {s} x{q:g} with only {cur:g} open -- phantom/duplicate close (ledger law)")
+                _lots[s] = max(0.0, cur - q)
         # LEDGER == ACCOUNT (2026-07-05): when BOT13 finished a traded day FLAT, the banked
         # balance must equal day_open + the SUM of today's SELL rows' realized P&L -- the
         # Total P&L box and Trade History must tell the same story. This exact mismatch
