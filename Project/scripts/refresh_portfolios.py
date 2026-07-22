@@ -756,6 +756,23 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                         held_positions=b13_state.get("positions") or [],   # QUALITY OVER QUANTITY
                     )
                 positions = b13_pos if b13_dec == "TRADE" and b13_pos else []
+                # LEDGER CASH CARRY (2026-07-21 night fix, audit-caught): under
+                # hold-the-book the engine may keep only PART of the day's book
+                # (a stop closed a name) or none of it (done for the day). The
+                # exited names' liquidation cash must stay in the member's total
+                # or the fund looks like it lost the whole allocation (live
+                # example: member fund showed -66% because 1 kept position was
+                # counted as the entire fund). Banked cash accumulates across
+                # today's runs in strategy["_banked"] and resets on a new day.
+                _banked_b13 = 0.0
+                if (prev_b13_strategy or {}).get("day") == today_iso:
+                    _banked_b13 = float((prev_b13_strategy or {}).get("_banked") or 0.0)
+                    _kept_syms = {p.get("symbol") for p in positions}
+                    for _hp in (b13_state.get("positions") or []):
+                        _s = _hp.get("symbol")
+                        if _s and _s not in _kept_syms:
+                            _px = float(prices.get(_s) or _hp.get("price") or _hp.get("entry_price") or 0)
+                            _banked_b13 += float(_hp.get("shares") or 0) * _px
                 b13_proj, _b13_samps, _b13_lastset = resolve_edge_score(prev_b13_strategy, b13_proj, b13_picks, today_iso, session_ended)  # FREEZE decision-time edge score (parity w/ engines)
                 strategy  = {
                     "decision": b13_dec, "picks": b13_picks, "rationale": b13_rat,
@@ -919,6 +936,12 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
             else:
                 _carry = float(original_cost)            # equalizer/titan capital is fixed at cost
             real_total = _pos_value if positions else round(_carry, 2)
+            # LEDGER CASH CARRY (2026-07-21): bot13's banked cash from today's
+            # exited names stays in the total (see _banked_b13 above).
+            if fund_name == "bot13":
+                if _banked_b13 > 0.005:
+                    real_total = round(_pos_value + _banked_b13, 2)
+                strategy["_banked"] = round(_banked_b13, 2)
             # BASELINE IDLE CASH (2026-07-06, Rule 0): equalizer/titan hold $1,000 per stock;
             # a symbol with no real price yet is NOT seeded (no fabricated entries), so its
             # allocation sits as cash and MUST stay in the total (mirrors the public engine's
