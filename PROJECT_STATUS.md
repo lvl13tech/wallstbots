@@ -868,6 +868,26 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+### 2026-07-22 — DAY 1 REVIEW: STALE-BOOK GUARD + STRICT BREADTH VETO (owner orders)
+- Day-1 of quality-over-quantity: churn eliminated everywhere (12 closed trades platform-
+  wide vs 23 on aistocks alone the day before); bitbot13 held 5 names all day, zero
+  rotations. BUT the equity sites (wallstbots/aistocks) held YESTERDAY'S book all day:
+  orchestrators stamp strategy.day=today on overnight runs while carrying yesterday's
+  picks/display positions, so the hold-the-book logic captured a stale book (flat-at-close
+  law broken; zero receipts today on those two sites; their 07-22 day P&L came from lots
+  entered 07-21). Fix: engine demands DATE PROOF — a position counts as today's book only
+  if its own entry_time is from today, and DONE-for-day requires the dated ENTERED marker
+  the engine now writes into the session log. Unit-tested 4/4 incl. the exact stale replay.
+- BREADTH VETO restored STRICT (owner: loosening it was a mistake): 30% of the universe
+  red by ANY amount = cash day (was >33% down more than 2%). Do not soften again without
+  an explicit owner order.
+- One-time repair shipped for member fund 8d1303b1/bot13 (display bug had left total at
+  6,635.77): restored to its own verifiable 07-21 close 19,881.23; 07-22 recorded flat.
+- Verified today: bot13.tech audit 241 OK / 0 FAIL / 0 warn; JUP member corruption healed
+  by the receipt-derived cost basis (confirmed gone from audit).
+- UNTESTED until 07-23 live: date-proof guard on real overnight states; strict veto
+  frequency (expect many more cash days by design).
+
 ### 2026-07-21 (night) — QUALITY OVER QUANTITY (owner order; shared engine, all 4 platforms)
 - Post-mortem of aistocks 2026-07-20 (-3.63%): 23 sells / 6 winners — the pipeline re-ranked
   the whole book every 15 min, the stop handler flattened ALL positions and re-picked, and

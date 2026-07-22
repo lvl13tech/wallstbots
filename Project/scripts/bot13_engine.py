@@ -607,7 +607,8 @@ def _run_open_market(cfg, universe, prices, prev_closes, hist_data, intraday_dat
     time_label = f"{now.hour}:{now.minute:02d} {'AM' if now.hour < 12 else 'PM'}"
 
     def _ret(decision, reason, action, detail, proj=0.0, positions=None, picks=None):
-        entry = {"time": time_label, "phase": phase.upper(), "action": action, "detail": detail}
+        entry = {"time": time_label, "phase": phase.upper(), "action": action, "detail": detail,
+                 "date": today_iso}   # dated: the stale-book guard needs proof of WHICH day
         slog = _append_log(prev_strategy, today_iso, entry)
         return decision, positions or [], picks or [], reason, slog, round(float(proj or 0.0), 2)
 
@@ -631,8 +632,20 @@ def _run_open_market(cfg, universe, prices, prev_closes, hist_data, intraday_dat
     #     +$1,204 on 2026-07-21 was a six-hour hold.)
     #   * When the day's positions have exited, BOT13 is DONE for the day. One
     #     deliberate entry, no revenge re-entries into falling knives.
+    # STALE-BOOK GUARD (incident 2026-07-22): orchestrators stamp strategy "day"
+    # with today's date on every push — including overnight runs that carry
+    # YESTERDAY's picks and display positions. The first version of this block
+    # trusted "day == today + picks" and captured yesterday's book at the open
+    # (wallstbots/aistocks held 2026-07-21 lots all of 2026-07-22 — flat-at-close
+    # law broken, zero receipts). Now nothing counts as "today's book" without
+    # DATE PROOF: a position's own entry_time must be from today, and the day's
+    # ENTERED marker in the session log must carry today's date.
     if already_decided:
-        held = [dict(p) for p in (held_positions or []) if p.get("symbol")]
+        held = [dict(p) for p in (held_positions or []) if p.get("symbol")
+                and str(p.get("entry_time") or "")[:10] == today_iso]
+        entered_today = any(str(e.get("action", "")).startswith("ENTERED")
+                            and e.get("date") == today_iso
+                            for e in (prev_strategy.get("session_log") or []))
         if held:
             kept, exits = [], []
             stop_pct_cfg = abs(float(cfg.get("stop_internal") or cfg.get("stop_display") or 1.5))
@@ -661,13 +674,16 @@ def _run_open_market(cfg, universe, prices, prev_closes, hist_data, intraday_dat
                      f"rotations members can't copy.{exl}")
                 return _ret("TRADE", r, "HOLDING — QUALITY OVER QUANTITY",
                             exl.strip() or "No changes to the book.", proj_prev, kept, prev_picks)
-        # decided today but the book is empty (stops, close-out, or all exits):
-        # DONE for the day — one deliberate entry, never a revenge re-entry.
-        r = ("CASH — today's positions have exited. One deliberate entry per day: "
-             "BOT13 banks the result and waits for the next session instead of "
-             "re-entering names that already proved wrong.")
-        return _ret("CASH", r, "DONE FOR THE DAY", r, 0.0, None,
-                    list(prev_strategy.get("picks") or []))
+        # entered today (date-proven) and the book is empty (stops, close-out,
+        # or all exits): DONE for the day — never a revenge re-entry. Without
+        # the dated ENTERED marker this is NOT a traded day (a stale overnight
+        # stamp) — fall through to the normal pipeline instead.
+        if entered_today:
+            r = ("CASH — today's positions have exited. One deliberate entry per day: "
+                 "BOT13 banks the result and waits for the next session instead of "
+                 "re-entering names that already proved wrong.")
+            return _ret("CASH", r, "DONE FOR THE DAY", r, 0.0, None,
+                        list(prev_strategy.get("picks") or []))
 
     # -- day moves + breadth veto (owner-restored 2026-07-13) ------------------------
     day, n_red, n_priced = {}, 0, 0
@@ -680,13 +696,17 @@ def _run_open_market(cfg, universe, prices, prev_closes, hist_data, intraday_dat
             continue
         day[s] = pct
         n_priced += 1
-        if pct <= -2.0:
+        # BREADTH VETO — owner-restored STRICT form (order 2026-07-22): a name
+        # counts as red if it is down AT ALL, and 30% red means sit in cash.
+        # The looser "down >2%" definition was a mistake ("I'd rather hold cash
+        # than lose money") — do not soften without an explicit owner order.
+        if pct < 0.0:
             n_red += 1
     if not n_priced:
         return _ret("CASH", "CASH — no clean prices this session.", "CASH", "No prices.")
-    if n_red / n_priced > 0.33:
+    if n_red / n_priced > 0.30:
         r = (f"CASH — broad selling pressure ({int(n_red/n_priced*100)}% of the universe "
-             "down >2%). Protecting capital.")
+             "is red). Protecting capital.")
         return _ret("CASH", r, "CASH — MARKET HEALTH FAIL", r)
 
     # -- entry hurdle (gold ATR rule) ------------------------------------------------
