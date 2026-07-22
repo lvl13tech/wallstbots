@@ -868,6 +868,24 @@ data. Owner to verify dashboard + bot-detail + portfolio-fund after deploy.
 
 ## Session Log (append newest at top)
 
+### 2026-07-21 (night) — QUALITY OVER QUANTITY (owner order; shared engine, all 4 platforms)
+- Post-mortem of aistocks 2026-07-20 (-3.63%): 23 sells / 6 winners — the pipeline re-ranked
+  the whole book every 15 min, the stop handler flattened ALL positions and re-picked, and
+  the drawdown kill switch UN-LATCHED itself (it only marked open positions, so a flattened
+  book read as "no drawdown" and the next run re-entered — the 11:30 re-entry).
+- New law in the shared engine (_run_open_market held_positions param): once deployed for
+  the day BOT13 HOLDS its picks — exits only on a position's own stop or the close-out,
+  never because another name ranks higher; when the book has exited, DONE for the day (no
+  revenge re-entries). check_drawdown is now banked-aware and LATCHES (realized losses
+  count; stays tripped all day). Orchestrator stop branches (all 3 product sites) now close
+  ONLY the stopped names and hold the rest — no more re-picking (would have saved CBRS
+  +$1,204 alongside the ALAB stop on 2026-07-21). Members (refresh_portfolios) get the same
+  via prev_strategy/held_positions passthrough. Unit-tested: hold-bias, stop→done,
+  no-revenge, latch — 4/4. Gold copy synced to bot13.tech (md5 acdcabf2).
+- Expected member experience: 2–3 copyable trades a day, losers die small and once,
+  winners ride to the close. UNTESTED until tomorrow's live sessions — verify win/loss
+  pattern and audits after the first full day.
+
 ### 2026-07-21 — LEDGER-DERIVED MEMBER MATH + 6DP RECEIPTS + EMAIL TIME GATE (owner order)
 - **Ledger-derived cost basis (kills the JUP bug permanently):** refresh_portfolios.py no
   longer trusts any stored cost_basis aggregate — it re-derives cost = shares × entry_price

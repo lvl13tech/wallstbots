@@ -926,7 +926,9 @@ def main():
     _stop_internal = EQUITY_CFG["stop_internal"]   # 1.35% -- internal trigger (vs 1.5% display)
 
     # Account-level daily drawdown kill switch
-    drawdown_hit = check_drawdown(EQUITY_CFG, b13_day_open, stored_positions, prices)
+    # banked-aware + LATCHED (owner order 2026-07-21): realized losses count and
+    # the switch stays tripped all day even after the book is flattened.
+    drawdown_hit = check_drawdown(EQUITY_CFG, b13_day_open, stored_positions, prices, b13_banked)
 
     # Check if any held position has triggered stop-loss (>_stop_internal% down from entry)
     stops_triggered = any(
@@ -975,29 +977,39 @@ def main():
         b13_proj      = 0.0
         print(f"  BOT13: HOLD (daily drawdown kill switch -- {_dd_pct:.2f}% loss vs {EQUITY_CFG['max_daily_drawdown']*100:.1f}% limit)")
     elif stops_triggered:
-        # Stop-loss triggered -- mark stopped positions, then re-enter fresh picks
+        # QUALITY OVER QUANTITY (owner order 2026-07-21): a stop closes ONLY the
+        # stopped name(s). The rest of the book keeps riding to its own stop or the
+        # 3:30 close-out. The old behavior flattened the ENTIRE book and re-picked
+        # a fresh one -- that is the churn that bled aistocks -3.63% on 2026-07-20
+        # (23 sells, 6 winners) and it would have dumped CBRS (+$1,204 six-hour
+        # hold) along with the loser. No re-picking, no revenge re-entries.
         now_exit = et_now().isoformat(timespec="seconds")
+        _kept_after_stop = []
+        _n_stopped = 0
         for p in stored_positions:
             sym = p.get("symbol")
-            if sym:
-                cur = prices.get(sym, float(p.get("entry_price", 0)))
-                ep  = float(p.get("entry_price") or 0)
-                if ep > 0 and (cur / ep - 1) * 100 < -_stop_internal:
-                    p["stop_triggered"] = True
-                    p["exit_reason"]    = f"stop_loss (>{EQUITY_CFG['stop_display']}% loss)"
-                    p["exit_time"]      = now_exit
-        print(f"  BOT13: stop-loss triggered -- closing stopped positions, re-picking...")
-        # Bank realized P&L of the ENTIRE book: a stop-loss re-pick closes every
-        # position before re-entering, so all of today's realized must carry into
-        # the new capital base (Phase 0 fix, 2026-07-10).
-        for _p in stored_positions:
-            _s = _p.get("symbol"); _e = float(_p.get("entry_price") or 0); _h = float(_p.get("shares") or 0)
-            if _s and _e > 0 and _h > 0:
-                b13_banked += _h * (float(prices.get(_s, _e)) - _e)
-        b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = run_bot13_equity(
-            EQUITY_CFG, UNIVERSE, prices, prev_closes, hist_data, b13_day_open + b13_banked, today_iso, prev_b13_strategy
-        )
-        print(f"  BOT13: re-entered with {len(b13_picks)} new picks after stop-loss")
+            if not sym:
+                continue
+            cur = float(prices.get(sym, float(p.get("entry_price", 0))))
+            ep  = float(p.get("entry_price") or 0)
+            if ep > 0 and (cur / ep - 1) * 100 < -_stop_internal:
+                p["stop_triggered"] = True
+                p["exit_reason"]    = f"stop_loss (>{EQUITY_CFG['stop_display']}% loss)"
+                p["exit_time"]      = now_exit
+                b13_banked += float(p.get("shares") or 0) * (cur - ep)   # bank ONLY the stopped name
+                _n_stopped += 1
+            else:
+                _kept_after_stop.append(p)
+        b13_decision  = "TRADE" if _kept_after_stop else "CASH"
+        b13_positions = _kept_after_stop
+        b13_picks     = (prev_b13_strategy or {}).get("picks", [])
+        b13_rationale = (f"Stop hit -- closed {_n_stopped} position(s), holding the remaining "
+                         f"{len(_kept_after_stop)}. Quality over quantity: BOT13 never re-picks "
+                         "after a stop." if _kept_after_stop else
+                         "CASH -- all positions stopped out. Done for the day; no revenge re-entries.")
+        b13_log       = (prev_b13_strategy or {}).get("session_log", [])
+        b13_proj      = float((prev_b13_strategy or {}).get("projected_return", 0.0))
+        print(f"  BOT13: stop-loss -- closed {_n_stopped}, holding {len(_kept_after_stop)} (no re-pick)")
     elif close_out_due:
         # 3:30 PM ET close-out -- force-flatten every held position right now with
         # a genuine exit_time, so the trade log records a real same-day SELL.
@@ -1028,7 +1040,8 @@ def main():
         SWITCH_MARGIN_PCT = 18.0
         _fresh = run_bot13_equity(
             EQUITY_CFG, UNIVERSE, prices, prev_closes, hist_data,
-            b13_day_open + b13_banked, today_iso, prev_b13_strategy
+            b13_day_open + b13_banked, today_iso, prev_b13_strategy,
+            held_positions=stored_positions,   # QUALITY OVER QUANTITY: engine holds the book
         )
         _f_decision, _f_positions, _f_picks, _f_rationale, _f_log, _f_proj = _fresh
         _held_syms  = {p.get("symbol") for p in stored_positions if p.get("symbol")}
@@ -1169,7 +1182,8 @@ def main():
             print("  BOT13: HOLD (market closed -- no new positions after hours)")
     else:
         b13_decision, b13_positions, b13_picks, b13_rationale, b13_log, b13_proj = run_bot13_equity(
-            EQUITY_CFG, UNIVERSE, prices, prev_closes, hist_data, b13_day_open, today_iso, prev_b13_strategy
+            EQUITY_CFG, UNIVERSE, prices, prev_closes, hist_data, b13_day_open, today_iso, prev_b13_strategy,
+            held_positions=stored_positions,   # QUALITY OVER QUANTITY: done-for-day after exits
         )
         print(f"  BOT13: {b13_decision} ({len(b13_picks)} picks)")
 

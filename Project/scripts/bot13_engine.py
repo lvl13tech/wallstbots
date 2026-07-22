@@ -497,20 +497,28 @@ def reconcile_bot13_log(held_book, real_now, trade_log, today_iso, session_end, 
     return log[-200:], list(real_now or [])
 
 
-def check_drawdown(cfg, day_open, stored_positions, prices):
+def check_drawdown(cfg, day_open, stored_positions, prices, banked_today=0.0):
     """
     Return True if the account-level daily drawdown limit has been hit.
-    Drawdown is computed as current mark-to-market portfolio value vs day_open.
+
+    LATCHED (owner order 2026-07-21): the old check compared day_open to the mark
+    of OPEN positions only, so the moment the book was flattened (or a rotation
+    banked the loss to cash) it read "no positions, no drawdown" and the next run
+    re-entered — aistocks bled to -3.63% on 2026-07-20 straight through a 1.5%
+    kill switch. Now the account value is day_open + banked realized P&L +
+    unrealized P&L of the open book, so once realized losses cross the limit the
+    switch stays tripped for the rest of the day no matter what the book looks like.
     """
-    if not stored_positions or day_open <= 0:
+    if day_open <= 0:
         return False
-    current = sum(
-        prices.get(p["symbol"], float(p.get("entry_price", 0))) * float(p.get("shares", 0))
-        for p in stored_positions if p.get("symbol")
+    unreal = sum(
+        float(p.get("shares") or 0) *
+        (float(prices.get(p.get("symbol"), float(p.get("entry_price") or 0)) or 0)
+         - float(p.get("entry_price") or 0))
+        for p in (stored_positions or []) if p.get("symbol")
     )
-    if current <= 0:
-        return False
-    drawdown_pct = (day_open - current) / day_open
+    account_now = day_open + float(banked_today or 0.0) + unreal
+    drawdown_pct = (day_open - account_now) / day_open
     return drawdown_pct >= cfg["max_daily_drawdown"]
 
 
@@ -576,7 +584,8 @@ def resolve_edge_score(prev_strategy, fresh_proj, picks, today_iso, session_ende
 
 
 def _run_open_market(cfg, universe, prices, prev_closes, hist_data, intraday_data,
-                     starting_capital, today_iso, prev_strategy=None, atr_scale=1.0):
+                     starting_capital, today_iso, prev_strategy=None, atr_scale=1.0,
+                     held_positions=None):
     """BOT13 OPEN-MARKET EDGE v1 — THE ONE DECISION PIPELINE, ALL PLATFORMS
     (owner-defined 2026-07-16; adopted platform-wide 2026-07-17, pre-reset).
 
@@ -611,6 +620,54 @@ def _run_open_market(cfg, universe, prices, prev_closes, hist_data, intraday_dat
         return _ret("HOLD", f"Opening read — BOT13 watches the first 15 minutes before deciding. "
                             f"First decision at {first_ok//60}:{first_ok%60:02d} ET.",
                     "OPENING READ", "Waiting for real tape before the first decision.")
+
+    # ---- QUALITY OVER QUANTITY (owner order 2026-07-21) -----------------------
+    # 2026-07-20 post-mortem (aistocks -3.63%): the pipeline re-ranked the whole
+    # book every 15 minutes — 23 sells, 6 winners, six rotations paying the spread
+    # each time. Members copy trades; nobody can copy a machine gun. New law:
+    #   * Once BOT13 has deployed for the day it HOLDS its picks. A position exits
+    #     only on its stop or the daily close-out — never because another name now
+    #     ranks higher. (The day's big winners come from held positions: CBRS
+    #     +$1,204 on 2026-07-21 was a six-hour hold.)
+    #   * When the day's positions have exited, BOT13 is DONE for the day. One
+    #     deliberate entry, no revenge re-entries into falling knives.
+    if already_decided:
+        held = [dict(p) for p in (held_positions or []) if p.get("symbol")]
+        if held:
+            kept, exits = [], []
+            stop_pct_cfg = abs(float(cfg.get("stop_internal") or cfg.get("stop_display") or 1.5))
+            for p in held:
+                s  = p["symbol"]
+                en = float(p.get("entry_price") or 0)
+                px = float(prices.get(s) or p.get("price") or en or 0)
+                chg = (px / en - 1) * 100 if en > 0 else 0.0
+                sp  = abs(float(p.get("stop_pct") or stop_pct_cfg))
+                if en > 0 and chg <= -sp:
+                    p["stop_triggered"] = True
+                    p["exit_reason"] = p.get("exit_reason") or "stop hit"
+                    exits.append((s, chg)); continue
+                p["price"] = p["current_price"] = round(px, _price_dp(px))
+                p["value"]   = round(float(p.get("shares") or 0) * px, 2)
+                p["pnl"]     = round(p["value"] - float(p.get("cost_basis") or 0), 2)
+                p["pnl_pct"] = round(chg, 2)
+                kept.append(p)
+            prev_picks = [pk for pk in (prev_strategy.get("picks") or [])]
+            proj_prev  = float(prev_strategy.get("projected_return") or 0)
+            if kept:
+                exl = ("" if not exits else
+                       " Stopped out: " + ", ".join(f"{s} ({c:+.2f}%)" for s, c in exits) + ".")
+                r = (f"HOLDING {len(kept)} position(s) — quality over quantity. BOT13 rides "
+                     f"today's picks to their stop, target, or the close; it does not churn "
+                     f"rotations members can't copy.{exl}")
+                return _ret("TRADE", r, "HOLDING — QUALITY OVER QUANTITY",
+                            exl.strip() or "No changes to the book.", proj_prev, kept, prev_picks)
+        # decided today but the book is empty (stops, close-out, or all exits):
+        # DONE for the day — one deliberate entry, never a revenge re-entry.
+        r = ("CASH — today's positions have exited. One deliberate entry per day: "
+             "BOT13 banks the result and waits for the next session instead of "
+             "re-entering names that already proved wrong.")
+        return _ret("CASH", r, "DONE FOR THE DAY", r, 0.0, None,
+                    list(prev_strategy.get("picks") or []))
 
     # -- day moves + breadth veto (owner-restored 2026-07-13) ------------------------
     day, n_red, n_priced = {}, 0, 0
@@ -743,7 +800,7 @@ def _run_open_market(cfg, universe, prices, prev_closes, hist_data, intraday_dat
 
 def run_bot13_equity(
     cfg, universe, prices, prev_closes, hist_data,
-    starting_capital, today_iso, prev_strategy=None,
+    starting_capital, today_iso, prev_strategy=None, held_positions=None,
 ):
     """
     Compute BOT13 equity decision.
@@ -768,7 +825,8 @@ def run_bot13_equity(
     # momentum body — DEAD CODE kept for reference only. Do not resurrect it
     # without an explicit owner order.
     return _run_open_market(cfg, universe, prices, prev_closes, hist_data, None,
-                            starting_capital, today_iso, prev_strategy)
+                            starting_capital, today_iso, prev_strategy,
+                            held_positions=held_positions)
 
     phase      = session_phase(cfg)
     now        = et_now()
@@ -991,7 +1049,7 @@ def run_bot13_equity(
 
 def run_bot13_crypto(
     cfg, universe, prices, prev_closes, intraday_data,
-    starting_capital, today_iso, prev_strategy=None,
+    starting_capital, today_iso, prev_strategy=None, held_positions=None,
 ):
     """
     Compute BOT13 crypto decision.
@@ -1018,7 +1076,8 @@ def run_bot13_crypto(
     return _run_open_market(cfg, universe, prices, prev_closes,
                             intraday_data or {}, intraday_data,
                             starting_capital, today_iso, prev_strategy,
-                            atr_scale=4.9)   # hourly bars -> daily ATR (sqrt(24))
+                            atr_scale=4.9,   # hourly bars -> daily ATR (sqrt(24))
+                            held_positions=held_positions)
 
     now_iso    = et_now().isoformat(timespec="seconds")
     now        = et_now()

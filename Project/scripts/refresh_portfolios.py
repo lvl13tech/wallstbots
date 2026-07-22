@@ -745,11 +745,15 @@ def run_portfolio_simulations(platform, portfolios, prices, prev_closes, hist_da
                     portfolio_cfg = dict(cfg)
                     portfolio_cfg["min_picks"] = max(1, min(3, max(1, round(len(universe) / 3))))
                     b13_dec, b13_pos, b13_picks, b13_rat, b13_log, b13_proj = run_bot13_equity(
-                        portfolio_cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
+                        portfolio_cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso,
+                        prev_strategy=prev_b13_strategy,
+                        held_positions=b13_state.get("positions") or [],   # QUALITY OVER QUANTITY
                     )
                 else:
                     b13_dec, b13_pos, b13_picks, b13_rat, b13_log, b13_proj = run_bot13_crypto(
-                        cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso
+                        cfg, universe, prices, prev_closes, hist_data, b13_capital, today_iso,
+                        prev_strategy=prev_b13_strategy,
+                        held_positions=b13_state.get("positions") or [],   # QUALITY OVER QUANTITY
                     )
                 positions = b13_pos if b13_dec == "TRADE" and b13_pos else []
                 b13_proj, _b13_samps, _b13_lastset = resolve_edge_score(prev_b13_strategy, b13_proj, b13_picks, today_iso, session_ended)  # FREEZE decision-time edge score (parity w/ engines)
