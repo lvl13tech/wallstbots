@@ -1121,6 +1121,15 @@ function renderGetYours() {
       ).join('')
     + '</div>'
 
+    // ── FREE lane, visible next to the paid tiers (owner order 2026-07-23:
+    // the free option was buried at the very bottom of the page) ──
+    + '<div class="panel" style="margin-bottom:24px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:space-between;border:1px solid rgba(16,185,129,0.4)">'
+    + '<div style="flex:1;min-width:220px"><span style="font-weight:800;color:#10b981">FREE — $0</span> '
+    + '<span style="color:var(--muted);font-size:13px">· 1 portfolio · daily Buy/Sell/Hold signals to your inbox · no card required</span></div>'
+    + '<button onclick="var el=document.getElementById(\'freeEmail\');if(el){el.scrollIntoView({behavior:\'smooth\',block:\'center\'});setTimeout(function(){el.focus()},600);}" '
+    + 'style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid #10b981;border-radius:8px;padding:10px 18px;font-weight:700;cursor:pointer">Create free account ↓</button>'
+    + '</div>'
+
     // ── Referral code ──
     + '<div class="panel" style="margin-bottom:24px">'
     + '<h3 style="margin-bottom:12px">Have a Referral Code?</h3>'
@@ -1195,6 +1204,8 @@ function renderGetYours() {
   GY_ADMIN_TIER = 'insider';
   updateGyPricing();
   if (urlRef) { const inp = $('refInput'); if (inp) inp.value = urlRef.toUpperCase(); applyRefCode(); }
+  // Resume a checkout that was interrupted by account creation (2026-07-23).
+  gyResumeCheckout();
 }
 
 async function gyFreeSignup() {
@@ -1357,6 +1368,24 @@ function renderPaypalForm() {
     ? 'Subscribe — $' + refPrice + ' today, then $' + base + (annual ? '/yr' : '/mo')
     : 'Subscribe — $' + base + (annual ? '/yr' : '/mo');
 
+  // NEW-VISITOR LANE (owner order 2026-07-23): a logged-out visitor used to hit
+  // "Your session expired. Please log in again" — a fake error to someone who
+  // never had a session — then had to find the signup tab, confirm email, log
+  // in, come BACK here and re-pick the plan. Now: one honest button that saves
+  // the chosen plan, sends them to the signup form, and checkout RESUMES
+  // automatically the moment their account is live (see gyResumeCheckout).
+  if (!getJWT()) {
+    wrap.innerHTML =
+      '<button onclick="gyGoSignup()" '
+      + 'style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:14px;font-size:15px;font-weight:700;cursor:pointer">'
+      + 'Create account & subscribe — ' + (ref ? '$' + refPrice : '$' + base) + (annual ? '/yr' : '/mo') + '</button>'
+      + '<div style="font-size:12px;margin-top:8px;color:var(--muted);text-align:center">Takes ~30 seconds. Your '
+      + TIER_META[GY_TIER].label + ' plan is remembered — checkout continues automatically after signup.</div>'
+      + '<div style="font-size:12px;margin-top:6px;color:var(--muted);text-align:center">Already a member? '
+      + '<a href="/login.html" style="color:var(--blue)">Log in</a></div>';
+    return;
+  }
+
   wrap.innerHTML =
     '<button id="stripeCheckoutBtn" onclick="startStripeCheckout()" '
     + 'style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;transition:opacity 0.15s">'
@@ -1405,6 +1434,35 @@ async function ensureFreshJWT() {
     }
     return false;
   } catch (e) { return false; }
+}
+
+// Save the chosen plan and hand off to the signup form (which owns the captcha).
+function gyGoSignup() {
+  try {
+    localStorage.setItem('gy_pending', JSON.stringify(
+      { t: GY_TIER, c: GY_CYCLE, r: GY_VALID ? GY_REF : '' }));
+  } catch (e) {}
+  window.location.href = '/login.html#signup';
+}
+
+// Called on get-yours load: a pending plan + a live login = resume checkout
+// automatically (after signup->email confirm->auto-login, or a normal login).
+function gyResumeCheckout() {
+  let pending = null;
+  try { pending = JSON.parse(localStorage.getItem('gy_pending') || 'null'); } catch (e) {}
+  if (!pending || !getJWT()) return false;
+  try { localStorage.removeItem('gy_pending'); } catch (e) {}
+  if (pending.t && PRICING[pending.t]) GY_TIER = pending.t;
+  if (pending.c === 'annual' || pending.c === 'monthly') GY_CYCLE = pending.c;
+  if (pending.r) { GY_REF = pending.r; GY_VALID = true; }
+  updateGyPricing();
+  const wrap = $('paypalFormWrap');
+  if (wrap) wrap.innerHTML =
+    '<div style="text-align:center;color:var(--muted);font-size:14px;padding:14px 0">'
+    + '✓ Account ready — resuming your ' + (TIER_META[GY_TIER] || {}).label
+    + ' checkout…</div>';
+  setTimeout(startStripeCheckout, 400);
+  return true;
 }
 
 async function startStripeCheckout() {

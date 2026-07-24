@@ -354,6 +354,9 @@
 
       try {
         await auth.login(email, password);
+        // Pending plan from Get Yours? Resume that checkout instead of the dashboard.
+        var gyp = null; try { gyp = localStorage.getItem("gy_pending"); } catch (e) {}
+        if (gyp) { window.location.href = "/#/get-yours"; return; }
         const redirect = new URLSearchParams(window.location.search).get("redirect");
         window.location.href = redirect || "/dashboard.html";
       } catch (err) {
@@ -375,7 +378,10 @@
 
       try {
         const result = await auth.signup(email, password, name || null);
-        showSuccess(result.message || "Account created! Check your email to confirm, then log in.");
+        var gyp3 = null; try { gyp3 = localStorage.getItem("gy_pending"); } catch (e) {}
+        showSuccess(result.message || (gyp3
+          ? "Account created! Check your email and click the confirmation link — your checkout continues automatically right after."
+          : "Account created! Check your email to confirm, then log in."));
         setLoading("signupBtn", false, "Create Account");
 
         // If token was returned (auto-login), go to dashboard
@@ -406,6 +412,12 @@
             auth.setToken(at);
             if (rt) auth.setRefreshToken(rt);
             history.replaceState(null, "", window.location.pathname); // scrub tokens from the URL
+            var gyp2 = null; try { gyp2 = localStorage.getItem("gy_pending"); } catch (e) {}
+            if (gyp2) {
+              showSuccess("✓ Email confirmed! Resuming your checkout…");
+              setTimeout(function () { window.location.href = "/#/get-yours"; }, 800);
+              return;
+            }
             showSuccess("✓ Email confirmed! Taking you to your dashboard…");
             setTimeout(function () { window.location.href = "/dashboard.html"; }, 800);
             return;
